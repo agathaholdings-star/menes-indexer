@@ -1,0 +1,675 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<!--[if lt IE 9]><meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1" /><![endif]-->
+<meta name="viewport" content="width=device-width,user-scalable=no" />
+<meta name="robots" content="noindex,nofollow" />
+<title>グループチャットページ - 口コミ評判サイトのメンエス</title>
+<meta name="description" content="メンエスのグループチャットページです。">
+
+<link rel="shortcut icon" href="common/img/favicon.ico" type="image/vnd.microsoft.icon">
+<link rel="apple-touch-icon" href="common/img/home-icon.png" />
+
+<link rel="stylesheet" href="common/css/basic.css?1769997015" type="text/css" media="all">
+<link rel="stylesheet" href="common/css/chat.css?1769997015" type="text/css" media="all">
+<link rel="stylesheet" href="common/css/luminous-basic.min.css" type="text/css">
+<link rel="stylesheet" href="common/css/magnific-popup.css?1769997015">
+<link rel="stylesheet" href="common/css/iziModal.css?1769997015">
+<link rel="stylesheet" href="common/js/toast//toaster-box.css">
+<style>
+.lum-gallery-button { display:none!important; }
+.chatToast { border-radius: 5px; background:#606060; color:#fff; }
+.chatToast span { display:block; text-align:center; width:100%; }
+</style>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-127662327-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-127662327-1');
+</script>
+</head>
+
+<body class="nav-md drawer drawer--right">
+
+<!-- header -->
+<header>
+	
+<div class="pcView"><!-- PC -->
+<nav>
+<div class="cnt">
+<div class="logo HvOc"><a href="/"><img src="/common/img/logo-anniv.png" width="240" height="61" alt="メンエス"/></a></div>
+<ul>
+<li><a href="/list-newtherapist.php">新人セラピスト一覧</a></li>
+<li><a href="/list-column.php">コラム一覧</a></li>
+<li><a href="/list-report.php">体験レポート一覧</a></li>
+<li><a href="/search.php">サロン検索</a></li>
+<li><a href="/search-therapist.php">セラピスト検索</a></li>
+</ul>
+
+<div class="limitDate">JIN00さんの閲覧日数: 
+
+
+<span>無期限</span>
+
+</div>
+
+</div>
+</nav>
+</div>
+
+<div class="secondLine">
+<div class="cnt">
+<ul class="secondNav">
+
+<li class="bh"><a href="/list-accident.php"><span>BHリスト</span></a></li>
+
+<li class="newBush"><a href="/list-newly.php"><span>新着口コミ一覧</span></a></li>
+
+<li class="favList"><a href="favorite-list.php"><span>お気に入りリスト</span></a></li>
+
+<li class="board"><a href="list-board.php"><span>掲示板</span></a></li>
+
+<li class="board"><a href="vip-list-board.php"><span>【VIP限定】掲示板</span></a></li>
+	
+<li class="chat"><a href="chat.php"><span>チャット</span><div class="new">NEW</div></a></li>
+	
+<li class="chat"><a href="list-groupchat.php"><span>グループチャット</span></a></li>
+	
+<li class="chat"><a href="groupchat.php"><span>参加中のグループチャット</span></a></li>
+
+<li class="mypage"><a href="/mypage.php"><span>MYページ</span></a></li>
+<li class="logout"><a href="/logout.php"><span>ログアウト</span></a></li>
+</ul>
+</div>
+</div>
+
+
+
+
+</div><!-- /PC -->
+
+<div class="spView"><!-- SP -->
+<div class="inline" style="position: relative;">
+<div class="Logo"><a href="/"><img src="/common/img/logo-anniv.png" width="170" height="49" alt="メンエス"/></a></div>
+
+<div class="loginName">JIN00さん</div>
+
+<a id="menuBtn" class="menuBtn" href="#">MENU</a>
+<a href="/search.php" class="salonSearchBtn">検索</a>
+</div>
+</div><!-- /SP -->
+</header>
+<!-- /header -->
+
+
+
+
+
+
+
+<div id="curtain" class="curtain spView"></div>
+<nav id="menu" class="menu spView"><!-- sp menu -->
+<aside>
+
+
+<ul>
+
+<a class="long" href="/"><li class="btn"><div class="icon home"></div>TOP</li></a>
+<a class="long" href="/mypage.php"><li class="btn"><div class="icon mypage"></div>MYページ</li></a>
+<a class="long" href="/logout.php"><li class="btn"><div class="icon login"></div>ログアウト</li></a>
+
+<a class="long" href="/area-list.php"><li class="btn"><div class="icon area"></div>エリア検索</li></a>
+	
+<a class="long" href="/kuchikomi.php"><li class="btn"><div class="icon bush"></div>口コミを書く</li></a>
+
+<a href="/list-newtherapist.php"><li class="btn"><div class="icon newtherapist"></div>新人セラピスト一覧</li></a>
+
+<a href="/list-report.php"><li class="btn"><div class="icon exp"></div>体験レポート一覧</li></a>
+	
+<a href="/faq.php"><li class="btn"><div class="icon faq"></div>よくある質問</li></a>
+	
+<a href="/contact/"><li class="btn"><div class="icon cntct"></div>お問い合わせ</li></a>
+
+<a class="paying long" href="/list-newly.php"><li class="newBush"><div class="icon newbush"></div><span>新着口コミ一覧</span></li></a>
+	
+<a class="paying" href="/list-accident.php"><li class="payingBtn"><div class="icon bh"></div><span>BHリスト</span></li></a>
+
+
+
+<a class="paying" href="favorite-list.php"><li class="favList"><div class="icon fav"></div><span>お気に入りリスト</span></li></a>
+
+<a class="paying" href="list-board.php"><li class="payingBtn"><div class="icon board"></div><span>掲示板</span></li></a>
+
+<a class="paying" href="vip-list-board.php"><li class="payingBtn"><div class="icon vipboard"></div><span>【VIP限定】掲示板</span></li></a>
+	
+<a class="paying" href="list-groupchat.php"><li class="payingBtn"><div class="icon chat"></div><span>グループチャット</span></li></a>
+	
+<a class="paying" href="groupchat.php"><li class="payingBtn"><div class="icon chat"></div><span>参加中のグループチャット</span></li></a>
+	
+<a class="paying" href="chat.php"><li class="payingBtn"><div class="icon chat"></div><span>チャット</span><div class="new">NEW</div></li></a>
+	
+<a class="paying" href="/paying-contact/" target="_blank"><li class="payingBtn"><div class="icon mail"></div><span>有料会員専用お問い合わせ</span></li></a>
+
+<a href="/rule.php"><li>利用規約</li></a>
+<a href="/membership-agreement.php"><li>会員規約</li></a>
+
+
+</ul>
+
+</aside>
+</nav><!-- /sp menu -->
+
+
+
+<!-- 閲覧日数ポップアップ -->
+<a class="popup-modal" href="#limitDayModal"></a>
+<div id="limitDayModal" class="mfp-hide white-popup-block">
+<button title="Close (Esc)" type="button" class="mfp-close"></button>
+<div class="Cnt">
+<h3>閲覧日数とは</h3>
+<p>閲覧日数とは、「口コミを閲覧できる残日数」を意味します。<br>
+閲覧日数は口コミを書いて頂くと運営側で口コミの質によって日数を付与しております。<br>
+1つの口コミで7日～25日付与しており、文字数が少ない場合には上記よりも少なくなる可能性もあります。<br>
+よりリアルな質の高い口コミ投稿をお待ちしております。
+</p>
+<div class="Footer">
+<a href="kuchikomi.php"><div class="kuchikomiBtn Hv">口コミ投稿する</div></a>
+<a href="mypage.php"><div class="mypageBtn Hv">Myページへ</div></a>
+<a href="#cancel" class="popup-modal-dismiss"><div class="cancelBtn Hv">閉じる</div></a>
+</div>
+</div>
+</div>
+<!-- 閲覧日数ポップアップ -->
+
+
+
+<!-- BHリストポップアップ -->
+<a class="popup-modal" href="#payingMemberBHModal"></a>
+<div id="payingMemberBHModal" class="mfp-hide white-popup-block">
+<button title="Close (Esc)" type="button" class="mfp-close"></button>
+<div class="Cnt">
+<figure><img src="common/img/icon-limited.png" width="60" height="82" alt="メンエス有料会員メニュー"/></figure>
+<figure class="plan"><img src="common/img/paying/label-eco.png" width="200" height="57" alt=""/></figure>
+<p class="txt-c">こちらは有料会員限定のメニューです。</p>
+<h3>BHリストとは</h3>
+<p>有料会員だけにセラピスト選びの手助けとして、寛容なセラピストや過激さを好むユーザーに送るリストです。</p>
+<div class="Footer">
+<a href="/paying-contact"><div class="cBtn blue mgb-4 Hv">プラン変更のお問い合わせ</div></a>
+<a href="#cancel" class="popup-modal-dismiss"><div class="cBtn gray Hv">閉じる</div></a>
+</div>
+</div>
+</div>
+<!-- BHリストポップアップ -->
+
+
+
+<!-- 新着口コミ一覧ポップアップ -->
+<a class="popup-modal" href="#payingNEWMemberModal"></a>
+<div id="payingMemberNEWModal" class="mfp-hide white-popup-block">
+<button title="Close (Esc)" type="button" class="mfp-close"></button>
+<div class="Cnt">
+<figure><img src="common/img/icon-limited.png" width="60" height="82" alt="メンエス有料会員メニュー"/></figure>
+<figure class="plan"><img src="common/img/paying/label-eco.png" width="200" height="57" alt=""/></figure>
+<p class="txt-c">こちらは有料会員限定のメニューです。</p>
+<h3>新着口コミとは</h3>
+<p>膨大な口コミの中からエリアやサロン名を絞り込み、新着順に自分好みのセラピストを探すことが可能です。</p>
+<div class="Footer">
+<a href="/paying-contact"><div class="cBtn blue mgb-4 Hv">プラン変更のお問い合わせ</div></a>
+<a href="#cancel" class="popup-modal-dismiss"><div class="cBtn gray Hv">閉じる</div></a>
+</div>
+</div>
+</div>
+<!-- 新着口コミ一覧ポップアップ -->
+
+
+<!-- お気に入りリストポップアップ -->
+<a class="popup-modal" href="#payingMemberFAVModal"></a>
+<div id="payingMemberFAVModal" class="mfp-hide white-popup-block">
+<button title="Close (Esc)" type="button" class="mfp-close"></button>
+<div class="Cnt">
+<figure><img src="common/img/icon-limited.png" width="60" height="82" alt="メンエス有料会員メニュー"/></figure>
+<figure class="plan"><img src="common/img/paying/label-all.png" width="200" height="57" alt=""/></figure>
+<p class="txt-c">こちらは有料会員限定のメニューです。</p>
+<h3>お気に入りリストとは</h3>
+<p>自分だけの備忘録として、お気に入りに追加したセラピストを一覧表示し、「体験有無」とコメントを残すことが可能です。また、このリストは気の合うユーザーと共有することも可能です。</p>
+<div class="Footer">
+	<a href="paying-member.php"><div class="cBtn blue mgb-4 Hv">有料会員の詳細を見る</div></a>
+<a href="#cancel" class="popup-modal-dismiss"><div class="cBtn gray Hv">閉じる</div></a>
+</div>
+</div>
+</div>
+<!-- お気に入りリストポップアップ -->
+
+
+<!-- 掲示板ポップアップ -->
+<a class="popup-modal" href="#payingMemberBOARDModal"></a>
+<div id="payingMemberBOARDModal" class="mfp-hide white-popup-block">
+<button title="Close (Esc)" type="button" class="mfp-close"></button>
+<div class="Cnt">
+<figure><img src="common/img/icon-limited.png" width="60" height="82" alt="メンエス有料会員メニュー"/></figure>
+<figure class="plan"><img src="common/img/paying/label-all.png" width="200" height="57" alt=""/></figure>
+<p class="txt-c">こちらは有料会員限定のメニューです。</p>
+<h3>掲示板とは</h3>
+<p>Yahoo!知恵袋のような形の機能で、おすすめのお店はもちろん、新人についての情報、セラピストの容姿、施術内容などなど、自分が質問したいように聞くことが可能です。</p>
+<div class="Footer">
+	<a href="paying-member.php"><div class="cBtn blue mgb-4 Hv">有料会員の詳細を見る</div></a>
+<a href="#cancel" class="popup-modal-dismiss"><div class="cBtn gray Hv">閉じる</div></a>
+</div>
+</div>
+</div>
+<!-- 掲示板ポップアップ -->
+
+
+<!-- VIP掲示板ポップアップ -->
+<a class="popup-modal" href="#payingMemberVIPBOARDModal"></a>
+<div id="payingMemberVIPBOARDModal" class="mfp-hide white-popup-block">
+<button title="Close (Esc)" type="button" class="mfp-close"></button>
+<div class="Cnt">
+<figure><img src="common/img/icon-limited.png" width="60" height="82" alt="メンエス有料会員メニュー"/></figure>
+<figure class="plan"><img src="common/img/paying/label-pre.png" width="200" height="57" alt=""/></figure>
+<p class="txt-c">こちらは有料会員限定のメニューです。</p>
+<h3>【VIP限定】掲示板とは</h3>
+<p>VIP会員のみが使用できる、非常に貴重な情報が集まる掲示板です。</p>
+<div class="Footer">
+<a href="/paying-contact"><div class="cBtn blue mgb-4 Hv">プラン変更のお問い合わせ</div></a>
+<a href="#cancel" class="popup-modal-dismiss"><div class="cBtn gray Hv">閉じる</div></a>
+</div>
+</div>
+</div>
+<!-- VIP掲示板ポップアップ -->
+
+
+<!-- チャットポップアップ -->
+<a class="popup-modal" href="#payingMemberDMModal"></a>
+<div id="payingMemberDMModal" class="mfp-hide white-popup-block">
+<button title="Close (Esc)" type="button" class="mfp-close"></button>
+<div class="Cnt">
+<figure><img src="common/img/icon-limited.png" width="60" height="82" alt="メンエス有料会員メニュー"/></figure>
+<figure class="plan"><img src="common/img/paying/label-all.png" width="200" height="57" alt=""/></figure>
+<p class="txt-c">こちらは有料会員限定のメニューです。</p>
+<h3>チャットとは</h3>
+<p>有料会員同士でDMを送り合い、情報交換できる機能です。</p>
+<div class="Footer">
+	<a href="paying-member.php"><div class="cBtn blue mgb-4 Hv">有料会員の詳細を見る</div></a>
+<a href="#cancel" class="popup-modal-dismiss"><div class="cBtn gray Hv">閉じる</div></a>
+</div>
+</div>
+</div>
+<!-- チャットポップアップ -->
+
+
+<!-- お問い合わせポップアップ -->
+<a class="popup-modal" href="#payingMemberCONTACTModal"></a>
+<div id="payingMemberCONTACTModal" class="mfp-hide white-popup-block">
+<button title="Close (Esc)" type="button" class="mfp-close"></button>
+<div class="Cnt">
+<figure><img src="common/img/icon-limited.png" width="60" height="82" alt="メンエス有料会員メニュー"/></figure>
+<figure class="plan"><img src="common/img/paying/label-all.png" width="200" height="57" alt=""/></figure>
+<p class="txt-c">こちらは有料会員限定のメニューです。</p>
+<div class="Footer">
+	<a href="paying-member.php"><div class="cBtn blue mgb-4 Hv">有料会員の詳細を見る</div></a>
+<a href="#cancel" class="popup-modal-dismiss"><div class="cBtn gray Hv">閉じる</div></a>
+</div>
+</div>
+</div>
+<!-- お問い合わせポップアップ -->
+
+
+<!-- お問い合わせポップアップ -->
+<a class="popup-modal" href="#payingMemberPROFModal"></a>
+<div id="payingMemberPROFModal" class="mfp-hide white-popup-block">
+<button title="Close (Esc)" type="button" class="mfp-close"></button>
+<div class="Cnt">
+<figure><img src="common/img/icon-limited.png" width="60" height="82" alt="メンエス有料会員メニュー"/></figure>
+<figure class="plan"><img src="common/img/paying/label-all.png" width="200" height="57" alt=""/></figure>
+<p class="txt-c">こちらは有料会員限定のメニューです。</p>
+<h3>他のユーザーのプロフィールについて</h3>
+<p><span class="y-bold">このユーザーの口コミが信頼できるものか判断できるページとなります。</span>ステマ口コミに騙されないために、このユーザーが過去にどのような口コミをしているのか？口コミの評価は？会員の信頼度を表す称号を確認することができます。</p>
+<div class="Footer">
+	<a href="paying-member.php"><div class="cBtn blue mgb-4 Hv">有料会員の詳細を見る</div></a>
+<a href="#cancel" class="popup-modal-dismiss"><div class="cBtn gray Hv">閉じる</div></a>
+</div>
+</div>
+</div>
+<!-- お問い合わせポップアップ -->
+
+
+
+<!-- Contents -->
+<div id="Contents" class="gcContents">
+
+
+	
+<div id="Main"><!-- Main -->
+
+	<div class="gChatFixedBtns flex">
+		<div class="Cnt">
+			<a href="list-groupchat.php"><div class="btn Hv">グループチャット<br class="spView">TOP</div></a>
+			<a href="#" class="disabled"><div class="btn disabled pcView">参加中グループ<br class="spView">チャット一覧</div></a>
+			<a class="popup-modal spView" href="#gcListModal"><div class="btn">参加中グループ<br class="spView">チャット</div></a>
+			<a class="popup-modal" href="#newGcMemberModal" style="display:none;"><div class="btn"><span class="new">NEW</span>新メンバーを<br class="spView">募集する</div></a>
+		</div>
+	</div>
+	
+	<div class="chatContainer gChat">
+
+		<div class="chatTo">
+
+			<div class="name">
+				<div class="room_name txt"></div>
+				<div class="bt spView"><a href="#edit_room" style="display:none;"><div class="opBtn auth Hv">管理者<br>編集</div></a></div>
+			</div>
+
+			<div class="btns pcView">
+				<a href="#do_gcMemberModal"><div class="opBtn Hv">参加者一覧</div></a>
+				<a href="#do_gcDetailModal"><div class="opBtn Hv">入室条件</div></a>
+				<a href="#do_gcConditionModal"><div class="opBtn Hv">メンバー条件</div></a>
+				<a href="#do_gcGaiyouModal"><div class="opBtn Hv">グループ概要</div></a>
+				<a href="#do_gcMemoModal"><div class="opBtn Hv">グループMEMO</div></a>
+				<a href="/list-groupchat.php"><div class="opBtn arrow Hv">グループチャット一覧へ</div></a>
+				<a href="#edit_room" style="display:none;"><div class="opBtn auth arrow Hv">管理者編集</div></a>
+			</div>
+
+						<!-- 新メンバーポップアップ -->
+						<div id="newGcMemberModal" class="mfp-hide white-popup-block">
+							<button title="Close (Esc)" type="button" class="mfp-close"></button>
+							<div class="Cnt">
+								<h3>新しいメンバーを増やしましょう！ </h3>
+								<p>あなたのグループチャットをもっと活発にするために、新しいメンバーを募集してより良い情報交換ができるグループにしましょう！</p>
+								<p>また、「募集更新」ボタンを押すことであなたのグループが上位に表示され、より多くの有料会員からあなたのグループに入室申請が届きます。</p>
+								<div class="Footer">
+									<a href="#edit_room_app"><div class="cBtn blue Hv" style="margin-bottom: 10px;">メンバーを募集する</div></a>
+									<a href="#cancel" class="popup-modal-dismiss"><div class="cBtn gray Hv">閉じる</div></a>
+								</div>
+							</div>
+						</div>
+						<!-- 参加者一覧ポップアップ -->
+			
+			
+						<!-- 参加者一覧ポップアップ -->
+						<a class="popup-modal" href="#gcMemberModal"></a>
+						<div id="gcMemberModal" class="mfp-hide white-popup-block">
+							<button title="Close (Esc)" type="button" class="mfp-close"></button>
+							<div class="Cnt">
+								<div class="info"></div>
+								<div class="Footer">
+									<a href="#cancel" class="popup-modal-dismiss"><div class="cBtn gray Hv">閉じる</div></a>
+                                    <a class="popup-modal" href="#aboutSecretModal">
+                                        <div class="cBtn blue Hv" style="margin-top: 15px;">
+                                                                                            ニックネームを「シークレット」にする
+                                                                                    </div>
+                                    </a>
+									<a class="popup-modal" href="#gcExitModal"><div class="cBtn red Hv" style="margin-top: 15px; text-align:center;">自主退室する</div></a>
+								</div>
+							</div>
+						</div>
+						<!-- 参加者一覧ポップアップ -->
+
+						<!-- 入室条件ポップアップ -->
+						<a class="popup-modal" href="#gcDetailModal"></a>
+						<div id="gcDetailModal" class="mfp-hide white-popup-block">
+							<button title="Close (Esc)" type="button" class="mfp-close"></button>
+							<div class="Cnt">
+								<div class="info"></div>
+								<div class="Footer">
+								<a href="#cancel" class="popup-modal-dismiss"><div class="cBtn gray Hv">閉じる</div></a>
+								</div>
+							</div>
+						</div>
+						<!-- 入室条件ポップアップ -->
+
+						<!-- メンバー条件ポップアップ -->
+						<a class="popup-modal" href="#gcConditionModal"></a>
+						<div id="gcConditionModal" class="mfp-hide white-popup-block">
+							<button title="Close (Esc)" type="button" class="mfp-close"></button>
+							<div class="Cnt">
+								<div class="info"></div>
+								<div class="Footer">
+								<a href="#cancel" class="popup-modal-dismiss"><div class="cBtn gray Hv">閉じる</div></a>
+								</div>
+							</div>
+						</div>
+						<!-- メンバー条件ポップアップ -->
+
+						<!-- グループ概要ポップアップ -->
+						<a class="popup-modal" href="#gcGaiyouModal"></a>
+						<div id="gcGaiyouModal" class="mfp-hide white-popup-block">
+							<button title="Close (Esc)" type="button" class="mfp-close"></button>
+							<div class="Cnt">
+								<div class="info">
+									<h3>グループ概要</h3>
+									<textarea name="detail" style="height: 300px;"></textarea>
+									<div class="txt"></div>
+								</div>
+								<div class="Footer">
+								<a href="#detail_submit"><div class="cBtn red Hv" style="margin-bottom: 4%;">保存する</div></a>
+								<a href="#cancel" class="popup-modal-dismiss"><div class="cBtn gray Hv">閉じる</div></a>
+								</div>
+							</div>
+						</div>
+						<!-- グループ概要ポップアップ -->
+
+						<!-- グループMEMOポップアップ -->
+						<a class="popup-modal" href="#gcMemoModal"></a>
+						<div id="gcMemoModal" class="mfp-hide white-popup-block">
+							<button title="Close (Esc)" type="button" class="mfp-close"></button>
+							<div class="Cnt">
+								<div class="info">
+									<h3>グループMEMO</h3>
+									<textarea name="memo"></textarea>
+								</div>
+								<div class="Footer">
+								<a href="#memo_submit"><div class="cBtn red Hv" style="margin-bottom: 4%;">保存する</div></a>
+								<a href="#cancel" class="popup-modal-dismiss"><div class="cBtn gray Hv">閉じる</div></a>
+								<!--<p class="ta-c leave-button" style="margin-top: 20px;"><a class="popup-modal" href="#gcExitModal" style="color: #525252; text-decoration: underline">自主退室する</a></p>-->
+								</div>
+							</div>
+						</div>
+						<!-- グループMEMOポップアップ -->	
+
+						<!-- 退室ポップアップ -->
+						<a class="popup-modal" href="#gcExitModal"></a>
+						<div id="gcExitModal" class="mfp-hide white-popup-block">
+							<button title="Close (Esc)" type="button" class="mfp-close"></button>
+							<div class="Cnt">
+								<div class="info">
+									<h3>グループチャット退室確認</h3>
+									<p class="ta-c">このチャットグループから本当に退室しますか？</p>
+								</div>
+								<div class="Footer">
+								<a href="#leave_submit"><div class="cBtn red Hv" style="margin-bottom: 4%;">退室する</div></a>
+								<a href="#cancel" class="popup-modal-dismiss"><div class="cBtn gray Hv">キャンセル</div></a>
+								</div>
+							</div>
+						</div>
+						<!-- 退室ポップアップ -->
+            
+                        <!-- シークレットモードポップアップ -->
+                        <a class="popup-modal" href="#aboutSecretModal"></a>
+						<div id="aboutSecretModal" class="mfp-hide white-popup-block">
+							<button title="Close (Esc)" type="button" class="mfp-close"></button>
+							<div class="Cnt">
+								<h3>シークレットモードとは？</h3>
+								<p>外部のユーザーからこのグループに参加している事を隠すことができます。<br>ニックネームが「シークレット」と表示されます。</p>
+                                <p>※グループのチャットページではニックネームは表示されます。<br>※参加中のグループごとの設定となります。</p>
+                                <div class="Footer">
+                                    <a href="#secret_submit" id="toggleSecretBtn" data-secret="0">
+                                        <div class="cBtn blue Hv" style="margin-bottom: 4%;">
+                                                                                            ニックネームを「シークレット」にする
+                                                                                    </div>
+                                    </a>
+                                    <a href="#cancel" class="popup-modal-dismiss"><div class="cBtn gray Hv">キャンセル</div></a>
+                                </div>
+                            </div>
+						</div>
+                        <!-- シークレットモードポップアップ -->
+                
+
+						<!-- メンバー定員マックスポップアップ -->
+						<a class="popup-modal" href="#gcLimitModal"></a>
+						<div id="gcLimitModal" class="mfp-hide white-popup-block">
+							<button title="Close (Esc)" type="button" class="mfp-close"></button>
+							<div class="Cnt">
+								<div class="info">
+									<h3>メンバー定員の上限に達しています</h3>
+									<p class="ta-c">このグループは定員人数の上限人数に達しています。<br>
+									このメンバーの入室させたい場合は、<br>他のメンバーを退室させる必要があります。</p>
+								</div>
+								<div class="Footer">
+								<a href="#cancel" class="popup-modal-dismiss"><div class="cBtn gray Hv">閉じる</div></a>
+								</div>
+							</div>
+						</div>
+						<!-- メンバー定員マックス -->
+			
+			
+			
+		</div>
+
+		<div class="content">
+		</div>
+
+	</div>
+	<div class="chatBlock fixedBottom">
+		<form>
+			<div class="imgBtn">
+				<label>
+					<span class="filelabel" title="ファイルを選択">
+						<img src="common/img/chat/image.svg" alt=""/>
+					</span>
+					<input type="file" name="datafile" id="filesend" accept=".jpg,.gif,.png,image/gif,image/jpeg,image/png">
+				</label>	
+			</div>
+			<div class="txtArea">
+				<textarea placeholder="メッセージを入力" name="message"></textarea>
+			</div>
+			<div class="sdBtn">
+				<button type="button" class="submit send" maxlength="2000"><img src="common/img/chat/send.svg" alt=""/></button>	
+			</div>
+		</form>
+	</div>	
+	
+
+	
+    <button type="button" class="drawer-toggle drawer-hamburger spView"><!-- ポップアップ用サイドメニュー -->
+		<span class="sr-only">メニュー</span>
+		<span class="drawer-hamburger-icon"></span>
+    </button>
+
+    <div class="drawer-nav spView">
+		<div class="rightMenuList">
+			<a href="#do_gcMemberModal"><div class="opBtn Hv">参加者一覧</div></a>
+			<a href="#do_gcDetailModal"><div class="opBtn Hv">入室条件</div></a>
+			<a href="#do_gcGaiyouModal"><div class="opBtn Hv">グループ概要</div></a>
+			<a href="#do_gcConditionModal"><div class="opBtn Hv">メンバー条件</div></a>
+			<a href="#do_gcMemoModal"><div class="opBtn Hv">グループMEMO</div></a>
+		</div>
+    </div><!-- ポップアップ用サイドメニュー -->
+		
+</div><!-- Main -->
+
+
+
+
+<div id="Side" class="chatListSide gcList pcView"><!-- Side -->
+	<h2 class="chatListTitle">参加中グループチャットリスト</h2>
+	<div class="chatListContainer">
+		<div class="content">
+
+			<ul class="chat-members"></ul>
+
+		</div>
+	</div>
+</div><!-- Side -->
+
+</div>
+<!-- Contents -->
+
+
+<!-- グループチャットリストポップアップ -->
+<div id="gcListModal" class="mfp-hide white-popup-block">
+	<button title="Close (Esc)" type="button" class="mfp-close"></button>
+	<div class="Cnt">
+		<h3>参加中グループチャット一覧</h3>
+		<div class="gcListScroll">
+			<div class="scrollArea">
+				<ul class="chat-members"></ul>
+			</div>
+		</div>
+		<div class="Footer">
+			<a href="#cancel" class="popup-modal-dismiss"><div class="cancelBtn Hv">閉じる</div></a>
+		</div>
+	</div>
+</div>
+<!-- グループチャットリストポップアップ -->
+
+
+</div>
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="common/js/luminous.min.js"></script>
+<script type="text/javascript" src="common/js/spMenu.js"></script>
+<script src="common/js/jquery.magnific-popup.js"></script>
+<script src="common/js/modalScript.js"></script>
+<script src="common/js/script.js"></script>	
+<script src="common/js/toast/toaster-box.js"></script>	
+<script src="common/js/groupchat.js?1769997015"></script>	
+<script>
+	var chat = new MenEstheGroupChat()
+	chat.load_rooms(0);
+</script>
+<script src="common/js/lozad.js"></script>
+<script>
+	const observer = lozad();
+	observer.observe();
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/iScroll/5.1.3/iscroll.min.js"></script>
+<script src="common/js/drawer.min.js"></script>
+<script>
+$(document).ready(function() {
+	$('.drawer').drawer({
+		iscroll: {
+			mouseWheel: false
+		}
+	});
+});
+</script>
+<script>
+$(document).ready(function(){
+     adjust();
+
+     $(window).resize(function(){
+          adjust();
+     })
+　　　function adjust(){
+          var h = $(window).height();
+          var h1= $('.inline').outerHeight(true);
+          var h2= $('.gChatFixedBtns').outerHeight(true);
+          var h4= $('.chatBlock').outerHeight(true);
+          $('.chatContainer').css("height",h-h1-h2-h4);
+     }
+});
+</script>
+<script>
+$(document).ready(function(){
+     adjust();
+
+     $(window).resize(function(){
+          adjust();
+     })
+	function adjust(){
+          var h = $(window).height();
+          var h1= $('.inline').outerHeight(true);
+          var h2= $('.gChatFixedBtns').outerHeight(true);
+          var h3= $('.chatTo').outerHeight(true);
+          var h4= $('.chatBlock').outerHeight(true);
+          $('.chatContainer .content').css("height",h-h1-h2-h3-h4);
+     }
+});
+</script>
+<script src="common/js/common.js.php"></script>
+</body>
+</html>

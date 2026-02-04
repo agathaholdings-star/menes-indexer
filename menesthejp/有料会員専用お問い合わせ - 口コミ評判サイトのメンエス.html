@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ja" dir="ltr">
+<head>
+<meta charset="UTF-8" />
+<!--[if lt IE 9]><meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1" /><![endif]-->
+<meta name="viewport" content="width=device-width,user-scalable=no" />
+<meta name="robots" content="ALL" />
+<title>有料会員専用お問い合わせ - 口コミ評判サイトのメンエス</title>
+<meta name="description" content="メンエスへのお問い合わせはこちらのページよりお願いいたします。">
+<link rel="shortcut icon" href="/common/img/favicon.ico">
+<link rel="apple-touch-icon" href="/common/img/home-icon.png" />
+<link rel="stylesheet" href="/common/css/basic.css" type="text/css" media="all">
+<link rel="stylesheet" href="/common/css/lp.css" type="text/css" media="all">
+<link rel="stylesheet" type="text/css" href="css/mailform.css" />
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-127662327-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-127662327-1');
+</script>
+<style>
+	.inputCancel { display:none; }
+</style>
+</head>
+<body>
+
+
+<header>
+<div class="LP-Cnt">
+<div class="logo HvOc"><a href="/"><img src="/common/img/logo.png" width="100%" alt="メンエス"/></a></div>
+</div>
+</header>
+
+<!-- Contents -->
+<div id="Contents">
+
+
+<form action="php/mailform.php" method="post" id="mail_form">
+    
+<h1>有料会員様専用お問い合わせ</h1>
+
+<dl>
+			<p>キャリアメールアドレスは利用できませんのでご注意ください。<br>
+@docomo.ne.jp、@ezweb.ne.jp、@au.com、@i.softbank.jp、@softbank.ne.jp、@uqmobile.jp、@ymobile.ne.jp、@rakuten.jp、@icloud.com、@me.com</p>
+			<dt>マイページに表示されているニックネーム</dt>
+			<dd class="required"><input type="text" id="name_1" name="name_1" value="" /></dd>
+			
+			<dt>メールアドレス</dt>
+			<dd class="required"><input type="email" id="mail_address" name="mail_address" value="" /></dd>
+			
+			<dt>メールアドレス(確認用)</dt>
+			<dd class="required"><input type="email" id="mail_address_confirm" name="mail_address_confirm" value="" /></dd>
+            
+            <dt>お問い合わせ種別</dt>
+			<dd class="required">
+				<ul>
+					<li><label class="type_label"><input type="radio" class="kind" name="kind[]" value="プラン変更について" />プラン変更について</label></li>
+                    <li><label class="type_label"><input type="radio" class="kind" name="kind[]" value="解約について" />解約について</label></li>
+                    <li><label class="type_label"><input type="radio" class="kind" name="kind[]" value="不具合について" />不具合について</label></li>
+                    <li><label class="type_label"><input type="radio" class="kind" name="kind[]" value="その他" />その他</label></li>
+				</ul>
+			</dd>
+			
+			<dt class="inputDefault">お問い合わせ詳細</dt>
+			<dd class="inputDefault required"><textarea id="mail_contents" name="mail_contents" cols="40" rows="5"></textarea></dd>
+	
+			<dt class="inputCancel">当サイトの良かった点や感想</dt>
+			<dd class="inputCancel required"><textarea id="mail_goodpoint" name="mail_goodpoint" cols="40" rows="5"></textarea></dd>
+			
+			<dt class="inputCancel">改善して欲しかった点</dt>
+			<dd class="inputCancel"><textarea id="mail_badpoint" name="mail_badpoint" cols="40" rows="5"></textarea></dd>
+	
+			<dt class="inputCancel">無料で閲覧可能なコンテンツや企画を作るとしたら、どのような情報が欲しいでしょうか？</dt>
+			<dd class="inputCancel"><textarea id="mail_newplan" name="mail_newplan" cols="40" rows="5"></textarea></dd>
+			
+
+		</dl>
+		
+		<p id="form_submit"><input type="button" id="form_submit_button" value="送信する" /></p>
+	</form>
+
+</div>
+<!-- Contents -->
+
+
+<footer>
+<div class="Cnt"><!-- Cnt -->
+<p style="text-align: center;">Copyright &copy; <script type="text/javascript">var iNavInt_curYear = new Date().getUTCFullYear(); document.write(iNavInt_curYear);</script> <a href="/" style="color: #fff;">メンエス</a> All Rights Reserved.</p>
+</div><!-- /Cnt -->
+</footer>
+
+
+<script src="/common/js/jquery-2.1.1.js"></script>
+<script src="/common/js/jquery.magnific-popup.js"></script>
+<script src="/common/js/script.js"></script>
+<script tye="javascript/text">
+$(document).ready(function() {
+    $('#openmodal').magnificPopup({
+        items: {
+            type: 'inline',
+            src: '#spMENU',
+            closeBtnInside: true      
+        },
+        alignTop: true,
+    });
+       $(document).on('click', '.popup-modal-dismiss', function (e) {
+          e.preventDefault();
+          $.magnificPopup.close();
+        });
+});
+</script>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
+<script src="js/mailform-js.php"></script>
+
+
+<!-- フリガナ自動入力ライブラリここから -->
+<script src="js/jquery.autoKana.js"></script>
+<script>
+	(function( $ ) {
+    $.fn.autoKana( '#name_1', '#read_1', {
+      katakana: false
+    });
+    $.fn.autoKana( '#name_2', '#read_2', {
+      katakana: false
+    });
+	})( jQuery );
+</script>
+<!-- フリガナ自動入力ライブラリここまで -->
+
+
+<!-- 住所自動入力ライブラリここから -->
+<script src="js/ajaxzip3.js"></script>
+<!-- 住所自動入力ライブラリここまで -->
+
+
+<!-- ご希望の日時選択ライブラリここから -->
+<script src="js/jquery.datetimepicker.js"></script>
+<script>
+	(function( $ ) {
+		$( 'input#schedule' ).datetimepicker({
+			lang: 'ja'
+		});
+	})( jQuery );
+</script>
+<!-- ご希望の日時選択ライブラリここまで -->
+<script>
+	showInput();
+	$('[name="kind[]"]').on('change', showInput);
+	function showInput(){
+		if($('[name="kind[]"]:checked').val() == '解約について'){
+			$('.inputDefault').hide();
+			$('.inputCancel').show();
+		}else{
+			$('.inputDefault').show();
+			$('.inputCancel').hide();
+		}
+	}
+</script>
+</body>
+</html>

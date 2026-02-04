@@ -1,0 +1,2593 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<!--[if lt IE 9]><meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1" /><![endif]-->
+<meta name="viewport" content="width=device-width,user-scalable=no" />
+<meta name="robots" content="noindex,nofollow" />
+<title>お気に入りリスト共有者 - 口コミ評判サイトのメンエス</title>
+<meta name="description" content="メンエスのお気に入りリスト共有者ページです。">
+
+<link rel="shortcut icon" href="common/img/favicon.ico" type="image/vnd.microsoft.icon">
+<link rel="apple-touch-icon" href="common/img/home-icon.png" />
+
+<link rel="stylesheet" href="common/css/basic.css?1769996977" type="text/css" media="all">
+<link rel="stylesheet" href="common/css/sharelist.css?1769996977" type="text/css" media="all">
+<link rel="stylesheet" href="common/css/magnific-popup.css?1769996977">
+<link rel="stylesheet" href="common/js/toast/toaster-box.css">
+<style>
+.lum-gallery-button { display:none!important; }
+.chatToast { border-radius: 5px; background:#606060; color:#fff; }
+.chatToast span { display:block; text-align:center; width:100%; }
+</style>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-127662327-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-127662327-1');
+</script>
+</head>
+
+<body>
+
+<!-- header -->
+<header>
+	
+<div class="pcView"><!-- PC -->
+<nav>
+<div class="cnt">
+<div class="logo HvOc"><a href="/"><img src="/common/img/logo-anniv.png" width="240" height="61" alt="メンエス"/></a></div>
+<ul>
+<li><a href="/list-kuchikomi-comment.php">みんなの注目口コミ</a></li>
+<li><a href="/list-newtherapist.php">新人セラピスト一覧</a></li>
+<li><a href="/list-column.php">コラム一覧</a></li>
+<li><a href="/list-report.php">体験レポート一覧</a></li>
+<li><a href="/search.php">サロン・セラピスト検索</a></li>
+</ul>
+
+<div class="limitDate">JIN00さんの閲覧日数: 
+		<span>無期限</span>
+	</div>
+
+</div>
+</nav>
+</div>
+
+<div class="secondLine">
+<div class="cnt">
+<ul class="secondNav">
+
+<li class="bh"><a href="/list-accident.php"><span>BHリスト</span></a></li>
+
+<li class="newBush"><a href="/list-newly.php"><span>新着口コミ一覧</span></a></li>
+
+		
+<li class="favList"><a href="favorite-list.php"><span>お気に入りリスト</span></a></li>
+
+<li class="shareList"><a href="favorite-share-list.php"><span>お気に入りリスト共有者</span></a></li>
+	
+
+<li class="board"><a href="list-board.php"><span>掲示板</span></a></li>
+
+<li class="board"><a href="vip-list-board.php"><span>【VIP限定】掲示板</span></a></li>
+
+<li class="chat"><a href="chat.php"><span>チャット</span><div class="new">NEW</div></a></li>
+	
+	
+<li class="chat"><a href="list-groupchat.php"><span>グループチャット</span></a></li>
+	
+<li class="chat"><a href="groupchat.php"><span>参加中のグループチャット</span></a></li>
+
+<li class="mypage"><a href="/mypage.php"><span>MYページ</span></a></li>
+<li class="logout"><a href="/logout.php"><span>ログアウト</span></a></li>
+</ul>
+</div>
+</div>
+
+</div><!-- /PC -->
+
+<div class="spView"><!-- SP -->
+	<div class="inline">
+		<div class="Logo"><a href="/"><img src="/common/img/logo-anniv.png" width="170" height="49" alt="メンエス"/></a></div>
+				<div class="loginName">JIN00さん</div>
+				<a id="menuBtn" class="menuBtn" href="#">MENU<span class="newInfo"><img src="common/img/icon-new-info.svg" alt=""/></span></a>
+		<a href="/search.php" class="salonSearchBtn">検索</a>
+	</div>
+</div><!-- /SP -->
+</header>
+<!-- /header -->
+<div id="curtain" class="curtain spView"></div>
+<nav id="menu" class="menu spView"><!-- sp menu -->
+	<aside>
+		<ul>
+
+			<a class="long" href="/"><li class="btn"><div class="icon home"></div>TOP</li></a>
+						<a class="long" href="/mypage.php"><li class="btn"><div class="icon mypage"></div>MYページ</li></a>
+									<a class="long" href="/kuchikomi.php"><li class="btn"><div class="icon bush"></div>口コミを書く</li></a>
+						<a class="long" href="list-kuchikomi-comment.php"><li class="favList"><div class="icon comm"></div><span>みんなの注目口コミ</span><div class="icoNew"></div></li></a>
+			<a class="long" href="/area-list.php"><li class="btn"><div class="icon area"></div>エリア検索</li></a>
+			<a class="long" href="/search.php"><li class="btn"><div class="icon therapist"></div>サロン検索・セラピスト検索</li></a>
+			<a href="/list-newtherapist.php"><li class="btn"><div class="icon newtherapist"></div>新人セラピスト一覧</li></a>
+			<a class="flR" href="/list-report.php"><li class="btn"><div class="icon exp"></div>体験レポート一覧</li></a>
+			
+						<a class="both" href="favorite-list.php"><li class="shareList"><div class="icon fav"></div><span>自分のお気に入りリスト</span><div class="iconBoth"></div></li></a>
+			<a class="both flR" href="favorite-share-list.php"><li class="favList"><div class="icon share"></div><span>お気に入りリスト共有者</span><div class="iconBoth"></div></li></a>
+						
+						<a class="both" href="chat.php"><li class="payingBtn"><div class="icon chat"></div><span>個人チャット</span><div class="new">NEW</div></span><div class="iconBoth"></div></li></a>
+									<a class="both flR" href="/list-accident.php"><li class="payingBtn"><div class="icon bh"></div><span>BHリスト</span><div class="iconEX"></div></li></a>
+			
+						<a class="paying" href="list-groupchat.php"><li class="payingBtn"><div class="icon chat"></div><span>グループチャット</span></li></a>
+									<a class="paying flR" href="groupchat.php"><li class="payingBtn"><div class="icon chat"></div><span>参加中のグループチャット</span></li></a>
+			
+						<a class="paying" href="list-board.php"><li class="payingBtn"><div class="icon board"></div><span>掲示板</span></li></a>
+									<a class="paying flR" href="vip-list-board.php"><li class="payingBtn"><div class="icon vipboard"></div><span>【VIP限定】掲示板</span></li></a>
+			
+						<a class="paying" href="/list-newly.php"><li class="newBush"><div class="icon newbush"></div><span>新着口コミ一覧</span></li></a>
+									<a class="paying flR" href="/paying-contact/" target="_blank"><li class="payingBtn"><div class="icon mail"></div><span>有料会員専用お問い合わせ</span></li></a>
+						<a href="/rule.php"><li>利用規約</li></a>
+			<a class="flR" href="/membership-agreement.php"><li>会員規約</li></a>
+			<a href="/faq.php"><li class="btn"><div class="icon faq"></div>よくある質問</li></a>
+			<a class="flR" href="/contact/"><li class="btn"><div class="icon cntct"></div>お問い合わせ</li></a>
+			
+						<a class="long" href="/logout.php"><li class="btn"><div class="icon login"></div>ログアウト</li></a>
+					</ul>
+
+	</aside>
+</nav><!-- /sp menu -->
+
+
+
+<!-- 閲覧日数ポップアップ -->
+<div id="limitDayModal" class="mfp-hide white-popup-block">
+<button title="Close (Esc)" type="button" class="mfp-close"></button>
+<div class="Cnt">
+<h2>閲覧日数とは</h2>
+<p>閲覧日数とは、「口コミを閲覧できる残日数」を意味します。<br>
+閲覧日数は口コミを書いて頂くと運営側で口コミの質によって日数を付与しております。<br>
+1つの口コミで7日～25日付与しており、文字数が少ない場合には上記よりも少なくなる可能性もあります。<br>
+よりリアルな質の高い口コミ投稿をお待ちしております。
+</p>
+<div class="Footer">
+<a href="kuchikomi.php"><div class="kuchikomiBtn Hv">口コミ投稿する</div></a>
+<a href="mypage.php"><div class="mypageBtn Hv">Myページへ</div></a>
+<!--<a href="#cancel" class="popup-modal-dismiss"><div class="cancelBtn Hv">閉じる</div></a>-->
+</div>
+</div>
+</div>
+<!-- 閲覧日数ポップアップ -->
+
+
+
+<!-- BHリストポップアップ -->
+<div id="payingMemberBHModal" class="mfp-hide white-popup-block">
+<button title="Close (Esc)" type="button" class="mfp-close"></button>
+<div class="Cnt">
+<figure><img src="common/img/icon-limited.png" width="60" height="82" alt="メンエス有料会員メニュー"/></figure>
+<figure class="plan ex"><img src="common/img/paying/label-localx.png" width="200" height="57" alt=""/></figure>
+<h3>BHリストとは</h3>
+<p>過激な体験内容が記載された口コミのみを表示するメンエスユーザー必見のリストです。</p>
+<p>エリアで検索出来るため、今すぐ行きたい場合や次回訪問時のセラピスト選びに大活躍するコンテンツとなります。</p>
+<div class="Footer">
+<a href="/paying-contact"><div class="cBtn blue mgb-4 Hv">プラン変更のお問い合わせ</div></a>
+<a href="about-thankbadge.php#03"><div class="cBtn blue mgb-4 Hv">EX会員になるには</div></a>
+<!--<a href="#cancel" class="popup-modal-dismiss"><div class="cBtn gray Hv">閉じる</div></a>-->
+</div>
+</div>
+</div>
+<!-- BHリストポップアップ -->
+
+
+
+<!-- 新着口コミ一覧ポップアップ -->
+<div id="payingMemberNEWModal" class="mfp-hide white-popup-block">
+<button title="Close (Esc)" type="button" class="mfp-close"></button>
+<div class="Cnt">
+<figure><img src="common/img/icon-limited.png" width="60" height="82" alt="メンエス有料会員メニュー"/></figure>
+<figure class="plan"><img src="common/img/paying/label-eco2.png" width="200" height="57" alt=""/></figure>
+<p class="txt-c">こちらは有料会員限定のメニューです。</p>
+<h3>新着口コミとは</h3>
+<p>膨大な口コミの中からエリアやサロン名を絞り込み、新着順に自分好みのセラピストを探すことが可能です。</p>
+<div class="Footer">
+<a href="/paying-contact"><div class="cBtn blue mgb-4 Hv">プラン変更のお問い合わせ</div></a>
+<!--<a href="#cancel" class="popup-modal-dismiss"><div class="cBtn gray Hv">閉じる</div></a>-->
+</div>
+</div>
+</div>
+<!-- 新着口コミ一覧ポップアップ -->
+
+
+<!-- お気に入りリストポップアップ -->
+<div id="payingMemberFAVModal" class="mfp-hide white-popup-block">
+<button title="Close (Esc)" type="button" class="mfp-close"></button>
+<div class="Cnt">
+<!--<figure><img src="common/img/icon-limited.png" width="60" height="82" alt="メンエス有料会員メニュー"/></figure>
+<figure class="plan"><img src="common/img/paying/label-all.png" width="200" height="57" alt=""/></figure>-->
+<p class="txt-c">こちらは会員限定のメニューです。</p>
+<h3>お気に入りリストとは</h3>
+<p>自分だけの備忘録として、お気に入りに追加したセラピストを一覧表示し、「体験有無」とコメントを残すことが可能です。また、このリストは気の合うユーザーと共有することも可能です。</p>
+<div class="Footer">
+<a href="before-view.php"><div class="cBtn blue mgb-4 Hv">口コミを書いて会員登録</div></a>
+	<a href="paying-member.php"><div class="cBtn blue mgb-4 Hv">有料会員の詳細を見る</div></a>
+<!--<a href="#cancel" class="popup-modal-dismiss"><div class="cBtn gray Hv">閉じる</div></a>-->
+</div>
+</div>
+</div>
+<!-- お気に入りリストポップアップ -->
+
+
+<!-- 掲示板ポップアップ -->
+<div id="payingMemberBOARDModal" class="mfp-hide white-popup-block">
+<button title="Close (Esc)" type="button" class="mfp-close"></button>
+<div class="Cnt">
+<figure><img src="common/img/icon-limited.png" width="60" height="82" alt="メンエス有料会員メニュー"/></figure>
+<figure class="plan"><img src="common/img/paying/label-all2.png" width="260" height="57" alt=""/></figure>
+<p class="txt-c">こちらは有料会員限定のメニューです。</p>
+<h3>掲示板とは</h3>
+<p>Yahoo!知恵袋のような形の機能で、おすすめのお店はもちろん、新人についての情報、セラピストの容姿、施術内容などなど、自分が質問したいように聞くことが可能です。</p>
+<div class="Footer">
+	<a href="paying-member.php"><div class="cBtn blue mgb-4 Hv">有料会員の詳細を見る</div></a>
+<!--<a href="#cancel" class="popup-modal-dismiss"><div class="cBtn gray Hv">閉じる</div></a>-->
+</div>
+</div>
+</div>
+<!-- 掲示板ポップアップ -->
+
+
+<!-- VIP掲示板ポップアップ -->
+<div id="payingMemberVIPBOARDModal" class="mfp-hide white-popup-block">
+<button title="Close (Esc)" type="button" class="mfp-close"></button>
+<div class="Cnt">
+<figure><img src="common/img/icon-limited.png" width="60" height="82" alt="メンエス有料会員メニュー"/></figure>
+<figure class="plan"><img src="common/img/paying/label-pre2.png" width="200" height="57" alt=""/></figure>
+<p class="txt-c">こちらは有料会員限定のメニューです。</p>
+<h3>【VIP限定】掲示板とは</h3>
+<p>VIP会員のみが使用できる、非常に貴重な情報が集まる掲示板です。</p>
+<div class="Footer">
+<a href="/paying-contact"><div class="cBtn blue mgb-4 Hv">プラン変更のお問い合わせ</div></a>
+<!--<a href="#cancel" class="popup-modal-dismiss"><div class="cBtn gray Hv">閉じる</div></a>-->
+</div>
+</div>
+</div>
+<!-- VIP掲示板ポップアップ -->
+
+
+<!-- チャットポップアップ -->
+<div id="payingMemberDMModal" class="mfp-hide white-popup-block">
+<button title="Close (Esc)" type="button" class="mfp-close"></button>
+<div class="Cnt">
+<figure><img src="common/img/icon-limited.png" width="60" height="82" alt="メンエス有料会員メニュー"/></figure>
+<figure class="plan"><img src="common/img/paying/label-all2.png" width="200" height="57" alt=""/></figure>
+<p class="txt-c">こちらは有料会員限定のメニューです。</p>
+<h3>チャットとは</h3>
+<p>有料会員同士でDMを送り合い、情報交換できる機能です。</p>
+<div class="Footer">
+	<a href="paying-member.php"><div class="cBtn blue mgb-4 Hv">有料会員の詳細を見る</div></a>
+<!--<a href="#cancel" class="popup-modal-dismiss"><div class="cBtn gray Hv">閉じる</div></a>-->
+</div>
+</div>
+</div>
+<!-- チャットポップアップ -->
+
+
+<!-- お問い合わせポップアップ -->
+<div id="payingMemberCONTACTModal" class="mfp-hide white-popup-block">
+<button title="Close (Esc)" type="button" class="mfp-close"></button>
+<div class="Cnt">
+<figure><img src="common/img/icon-limited.png" width="60" height="82" alt="メンエス有料会員メニュー"/></figure>
+<figure class="plan"><img src="common/img/paying/label-all2.png" width="200" height="57" alt=""/></figure>
+<p class="txt-c">こちらは有料会員限定のメニューです。</p>
+<div class="Footer">
+	<a href="paying-member.php"><div class="cBtn blue mgb-4 Hv">有料会員の詳細を見る</div></a>
+<!--<a href="#cancel" class="popup-modal-dismiss"><div class="cBtn gray Hv">閉じる</div></a>-->
+</div>
+</div>
+</div>
+<!-- お問い合わせポップアップ -->
+
+
+<!-- お問い合わせポップアップ -->
+<div id="payingMemberPROFModal" class="mfp-hide white-popup-block">
+<button title="Close (Esc)" type="button" class="mfp-close"></button>
+<div class="Cnt">
+<figure><img src="common/img/icon-limited.png" width="60" height="82" alt="メンエス有料会員メニュー"/></figure>
+<figure class="plan"><img src="common/img/paying/label-all.png" width="200" height="57" alt=""/></figure>
+<p class="txt-c">こちらは有料会員限定のメニューです。</p>
+<h3>他のユーザーのプロフィールについて</h3>
+<p><span class="y-bold">このユーザーの口コミが信頼できるものか判断できるページとなります。</span>ステマ口コミに騙されないために、このユーザーが過去にどのような口コミをしているのか？口コミの評価は？会員の信頼度を表す称号を確認することができます。</p>
+<div class="Footer">
+	<a href="paying-member.php"><div class="cBtn blue mgb-4 Hv">有料会員の詳細を見る</div></a>
+<!--<a href="#cancel" class="popup-modal-dismiss"><div class="cBtn gray Hv">閉じる</div></a>-->
+</div>
+</div>
+</div>
+<!-- お問い合わせポップアップ -->
+
+<!-- 感謝バッジポップアップ -->
+<div id="thankBadgeModal" class="mfp-hide white-popup-block">
+	<button title="Close (Esc)" type="button" class="mfp-close"></button>
+	<div class="Cnt">	
+		<h3>感謝バッジとは</h3>
+				<p>多くのユーザーに信頼されているアカウントのみ所持出来る称号です。</p>
+		<p>「感謝バッジ」とは、口コミがとても魅力的で自身が訪問した時にその通りだった！と参考になった口コミの投稿者や、日ごろお世話になっているユーザーへ感謝の意を込めて送る称号です。</p>
+		<p>「感謝バッジ」とは多くの情報が得られるメンエスサイト内でも、特に貴重な情報を提供した優良会員が得る事が出来る称号です。</p>
+		<p>※譲渡用の感謝バッジは毎月1日に有料会員の皆様には２個アカウントに付与されます。<br>※譲渡用感謝バッジの所持上限数は「2個」となっております。</p>
+	  			<div class="Footer">
+			<a href="about-thankbadge.php"><div class="cBtn blue mgb-4 Hv">詳しく見る</div></a>
+			<!--<a href="#cancel" class="popup-modal-dismiss"><div class="cBtn gray Hv">閉じる</div></a>-->
+		</div>
+  </div>
+</div>
+<!-- 感謝バッジポップアップ -->
+
+<!-- コメント禁止ポップアップ -->
+<div id="commentBanModal" class="mfp-hide white-popup-block">
+	<button title="Close (Esc)" type="button" class="mfp-close"></button>
+	<div class="Cnt">	
+		<p>お客様のアカウントは他ユーザーから通報が複数件ありましたので、一定期間評価ボタンの選択、コメントの書き込みができません。<br>誠に申し訳ございませんが、しばらく経ってから再度お試しください。</p>
+		<div class="Footer">
+			<!--<a href="#cancel" class="popup-modal-dismiss"><div class="cBtn gray Hv">閉じる</div></a>-->
+		</div>
+  </div>
+</div>
+<!-- コメント禁止ポップアップ -->
+
+<!-- 新機能感謝バッジポップアップ -->
+<a class="popup-modal" href="#tnkRlsModal"></a>
+<div id="tnkRlsModal" class="mfp-hide white-popup-block">
+	<button title="Close (Esc)" type="button" class="mfp-close"></button>
+	<div class="Cnt">
+		<h2>新たに【称号】機能が追加！</h2>
+		<h3>第1弾　感謝バッジ</h3>
+		<figure><img src="common/img/badge-thank.svg" alt=""/><span>50</span></figure>
+				<div class="txt">
+			<p>感謝バッジとは、多くの情報が掲載されているメンエスサイト内でも、<span class="red bold">特に貴重な情報を提供している会員が獲得できる</span><span class="y-bold red marker">特別な称号</span><span class="red bold">です。</span></p>
+			<p>今回から有料会員の皆様は、<span class="bold u-l">無料会員ともDMでのやり取りが可能</span>となります！</p>
+			<p>無料会員の中には月に10回以上お店に訪問し、100件以上口コミ投稿しているヘビーユーザーもいるため、これまで以上に<span class="red bold">「マークしていなかったHR情報」</span>などの<span class="u-l">ディープな情報が大量に集まります！</span></p>
+			<p>「口コミに質問したい」という事があったかと思います。感謝バッジを渡せばリアルに詳細を聞く事が可能です。</p>
+			<p>この機会に誰よりも早く<span class="bold">稀少な情報を入手</span>しましょう。</p>
+		</div>
+				
+		<div class="Footer">
+			<div class="afterCheck">
+				<input type="checkbox" id="thank_after_input" name="thank_after_input">
+				<label for="thank_after_input" class="checkCustom">今後表示しない</label>
+			</div>
+			<a href="/about-thankbadge.php"><div class="okBtn Hv">感謝バッジについて詳しく見る</div></a>
+			<a href="#modal_thank_cancel" class="popup-modal-dismiss"><div class="cancelBtn Hv">閉じる</div></a>
+		</div>
+	</div>
+</div>
+<!-- 新機能感謝バッジポップアップ -->
+
+<!-- Contents -->
+<div id="Contents">
+
+
+	
+<div id="Main"><!-- Main -->
+	
+	
+	<div class="shareCnt">
+		
+				
+
+					<div class="shareUser">
+				<div class="name">
+					<span class="txt">ゆうた30239</span><span class="unit">さんのお気に入りリスト</span><br>
+				</div>
+				<div class="narrow">
+					<label class="label--checkbox" for="memocheck_0">
+						<input type="checkbox" class="checkB" id="memocheck_0" name="memo" >
+						メモあり
+					</label>
+				</div>
+				<div class="backBtn spView"><a href="#Side">共有者<br>一覧</a></div>
+			</div>
+
+			
+			<div class="content">
+				
+									<a href="userpage.php?user_id=1671991359">
+					<div class="cBtn green Hv">この会員のマイページへ</div>
+					</a>
+													<ul class="favTherapist">
+												<li therapist_id="203275">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=203275" target="_blank">
+											<img src="contents/therapist/ea150a35fa7f6f048e80c0ea09937d84.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=203275" target="_blank">
+										<h3>速水 りあ (26)さん</h3>
+										<p class="sup">名古屋・名駅・納屋橋・栄・丸の内・高岳・泉・久屋大通<br><span>Marigold (マリーゴールド)</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>Dcup</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">入ってみたい</div></div>								<div class="favMemo">
+																</div>
+							</div>
+						</li>
+												<li therapist_id="269254">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=269254" target="_blank">
+											<img src="contents/therapist/d82a002cab4e662a0c626b3274f0e79e.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=269254" target="_blank">
+										<h3>りんりん (20)さん</h3>
+										<p class="sup">名古屋・名駅・納屋橋・栄・新栄町・千種・今池・丸の内・高岳・泉・久屋大通<br><span>ハニエル（HANIEL）</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd> 155cm カップ数： Dカップ</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">入ってみたい</div></div>								<div class="favMemo">
+																</div>
+							</div>
+						</li>
+												<li therapist_id="257726">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=257726" target="_blank">
+											<img src="contents/therapist/c78c92d31234b4473d673eee8ce295af.png" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=257726" target="_blank">
+										<h3>ちの (22)さん</h3>
+										<p class="sup">栄・新栄町・千種・今池<br><span>ロゼアナ 旧メルティ</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T147</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">入ってみたい</div></div>								<div class="favMemo">
+																</div>
+							</div>
+						</li>
+												<li therapist_id="131114">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=131114" target="_blank">
+											<img src="contents/therapist/e29e20fa256b401335f2ff36662b11f8.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=131114" target="_blank">
+										<h3>美乃 ののか (25)さん</h3>
+										<p class="sup">名古屋・名駅・納屋橋・栄・丸の内・高岳・泉・久屋大通<br><span>Marigold (マリーゴールド)</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd></dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">入ってみたい</div></div>								<div class="favMemo">
+								HR？								</div>
+							</div>
+						</li>
+												<li therapist_id="148363">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=148363" target="_blank">
+											<img src="contents/therapist/546d234c1cf36d57ada1c31cad4d6d80.png" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=148363" target="_blank">
+										<h3>いちか (22)さん</h3>
+										<p class="sup">丸の内・高岳・泉・久屋大通<br><span>チャンス 名古屋 旧フラワー</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T162/B(C)</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">入ってみたい</div></div>								<div class="favMemo">
+																</div>
+							</div>
+						</li>
+												<li therapist_id="270569">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=270569" target="_blank">
+											<img src="contents/therapist/9527dd3b944075fe97134bec8c6d22f8.png" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=270569" target="_blank">
+										<h3>まほ (21)さん</h3>
+										<p class="sup">名古屋・名駅・納屋橋・栄・新栄町・千種・今池・丸の内・高岳・泉・久屋大通<br><span>ハニエル（HANIEL）</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T168/B(D)</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">入ってみたい</div></div>								<div class="favMemo">
+																</div>
+							</div>
+						</li>
+												<li therapist_id="185758">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=185758" target="_blank">
+											<img src="contents/therapist/d0432e1a74b5c1a5298b302b64df6a48.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=185758" target="_blank">
+										<h3>まい (21)さん</h3>
+										<p class="sup">丸の内・高岳・泉・久屋大通<br><span>チャンス 名古屋 旧フラワー</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T.153 (F) </dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">入ってみたい</div></div>								<div class="favMemo">
+																</div>
+							</div>
+						</li>
+												<li therapist_id="176024">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=176024" target="_blank">
+											<img src="contents/therapist/891ea593e822c11a6fd2e86459f20af3.png" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=176024" target="_blank">
+										<h3>れあ (20代後半)さん</h3>
+										<p class="sup">丸の内・高岳・泉・久屋大通<br><span>チャンス 名古屋 旧フラワー</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T.159 (F) </dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">入ってみたい</div></div>								<div class="favMemo">
+																</div>
+							</div>
+						</li>
+												<li therapist_id="239849">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=239849" target="_blank">
+											<img src="contents/therapist/cce1b6e76913a6e542d43619fafd1971.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=239849" target="_blank">
+										<h3>もえ (23)さん</h3>
+										<p class="sup">名古屋・名駅・納屋橋<br><span>clema (クレマ) 旧プアゾン</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T153/B(F)</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">入ってみたい</div></div>								<div class="favMemo">
+																</div>
+							</div>
+						</li>
+												<li therapist_id="107641">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=107641" target="_blank">
+											<img src="contents/therapist/f41ace2b6c51e263d748f5945d57dc84.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=107641" target="_blank">
+										<h3>せいか (22)さん</h3>
+										<p class="sup">丸の内・高岳・泉・久屋大通<br><span>チャンス 名古屋 旧フラワー</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T158/B(E)</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">入ってみたい</div></div>								<div class="favMemo">
+																</div>
+							</div>
+						</li>
+												<li therapist_id="278697">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=278697" target="_blank">
+											<img src="contents/therapist/30ae41095ad7f6aeaabfca7bc1adc7f8.png" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=278697" target="_blank">
+										<h3>七条 ひびき (25)さん</h3>
+										<p class="sup">名古屋・名駅・納屋橋・栄・丸の内・高岳・泉・久屋大通<br><span>Marigold (マリーゴールド)</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd></dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">入ってみたい</div></div>								<div class="favMemo">
+																</div>
+							</div>
+						</li>
+												<li therapist_id="271021">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=271021" target="_blank">
+											<img src="contents/therapist/a25c95ba1ba7a24ed1f6254ae4ef4305.png" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=271021" target="_blank">
+										<h3>結城 ありな (24)さん</h3>
+										<p class="sup">名古屋・名駅・納屋橋・栄・丸の内・高岳・泉・久屋大通<br><span>Marigold (マリーゴールド)</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T152 Dcup</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">入ってみたい</div></div>								<div class="favMemo">
+																</div>
+							</div>
+						</li>
+												<li therapist_id="244650">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=244650" target="_blank">
+											<img src="contents/therapist/8db887493def185685b62348106049f6.png" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=244650" target="_blank">
+										<h3>にいな (27)さん</h3>
+										<p class="sup">丸の内・高岳・泉・久屋大通<br><span>チャンス 名古屋 旧フラワー</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T161 (F)</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">入ってみたい</div></div>								<div class="favMemo">
+																</div>
+							</div>
+						</li>
+												<li therapist_id="239256">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=239256" target="_blank">
+											<img src="contents/therapist/6c806873638960e49e0b291cacc61024.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=239256" target="_blank">
+										<h3>もな (23)さん</h3>
+										<p class="sup">栄<br><span>VENIRE (ヴェニーレ)</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T165/B(D)</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">入ってみたい</div></div>								<div class="favMemo">
+																</div>
+							</div>
+						</li>
+												<li therapist_id="141055">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=141055" target="_blank">
+											<img src="contents/therapist/d0f281acf5de956237c7c58e6fb4296f.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=141055" target="_blank">
+										<h3>まい (35)さん</h3>
+										<p class="sup">名古屋・名駅・納屋橋・丸の内・高岳・泉・久屋大通<br><span>タイガーアイ 旧タイガー</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T153/B(C)</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">入ってみたい</div></div>								<div class="favMemo">
+								HR？								</div>
+							</div>
+						</li>
+												<li therapist_id="197115">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=197115" target="_blank">
+											<img src="contents/therapist/2c2d7f9abc2bb1e3cc3260270bef4d9f.png" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=197115" target="_blank">
+										<h3>リオナ (24)さん</h3>
+										<p class="sup">名古屋・名駅・納屋橋・丸の内・高岳・泉・久屋大通<br><span>Diana (ディアナ) 名古屋</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>身長168cm(C)</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">入ってみたい</div></div>								<div class="favMemo">
+																</div>
+							</div>
+						</li>
+												<li therapist_id="199981">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=199981" target="_blank">
+											<img src="contents/therapist/c518ad332a2e6080e9ac0ebfed69a827.png" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=199981" target="_blank">
+										<h3>莉々花 (22)さん</h3>
+										<p class="sup">丸の内・高岳・泉・久屋大通<br><span>milk repos (ミルクルポ)</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T152</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">入ってみたい</div></div>								<div class="favMemo">
+																</div>
+							</div>
+						</li>
+												<li therapist_id="224397">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=224397" target="_blank">
+											<img src="contents/therapist/dcb5c925cfbfae2f05196956616b7741.png" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=224397" target="_blank">
+										<h3>小日向 あも (20)さん</h3>
+										<p class="sup">名古屋・名駅・納屋橋・栄・新栄町・千種・今池・金山・熱田・鶴舞・御器所・丸の内・高岳・泉・久屋大通<br><span>RESEXY (リゼクシー) 栄</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T.153 (E)</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">入ってみたい</div></div>								<div class="favMemo">
+																</div>
+							</div>
+						</li>
+												<li therapist_id="196218">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=196218" target="_blank">
+											<img src="contents/therapist/50521e5959aa605b76a486a2f066ae62.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=196218" target="_blank">
+										<h3>りな (25)さん</h3>
+										<p class="sup">尾張・一宮<br><span>キラキラSPA</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>156cm</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">入ってみたい</div></div>								<div class="favMemo">
+																</div>
+							</div>
+						</li>
+												<li therapist_id="245047">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=245047" target="_blank">
+											<img src="contents/therapist/b209c7ef7fdc2b1300506c46fedf457e.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=245047" target="_blank">
+										<h3>しおり (23)さん</h3>
+										<p class="sup">丸の内・高岳・泉・久屋大通<br><span>チャンス 名古屋 旧フラワー</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T165 (C)</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">入ってみたい</div></div>								<div class="favMemo">
+																</div>
+							</div>
+						</li>
+												<li therapist_id="233225">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=233225" target="_blank">
+											<img src="contents/therapist/9b1af1a006f0127cbb9b5a4ce6ddf050.png" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=233225" target="_blank">
+										<h3>すいさん</h3>
+										<p class="sup">名古屋・名駅・納屋橋<br><span>JELLY～nagoya・spa～</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T160/B(D)</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">体験した</div></div>								<div class="favMemo">
+								2度と入りたくない								</div>
+							</div>
+						</li>
+												<li therapist_id="212650">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=212650" target="_blank">
+											<img src="contents/therapist/0d15ba12358c3a2efff95776fec6c534.png" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=212650" target="_blank">
+										<h3>りん (22)さん</h3>
+										<p class="sup">名古屋・名駅・納屋橋・栄<br><span>ゴールド (GOLD) 名古屋</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T158/B83(C)/W53/H85</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">入ってみたい</div></div>								<div class="favMemo">
+																</div>
+							</div>
+						</li>
+												<li therapist_id="150564">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=150564" target="_blank">
+											<img src="contents/therapist/1e1741cfea64c92429a8b5686d73d999.png" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=150564" target="_blank">
+										<h3>むぎ (23)さん</h3>
+										<p class="sup">丸の内・高岳・泉・久屋大通<br><span>チャンス 名古屋 旧フラワー</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T.165 B.0(D) </dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">体験した</div></div>								<div class="favMemo">
+								すごく良い　SKR								</div>
+							</div>
+						</li>
+												<li therapist_id="165524">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=165524" target="_blank">
+											<img src="contents/therapist/7f3726b36743839a0ffef4834a02e801.png" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=165524" target="_blank">
+										<h3>えま (23)さん</h3>
+										<p class="sup">丸の内・高岳・泉・久屋大通<br><span>チャンス 名古屋 旧フラワー</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T151/B(E)</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">体験した</div></div>								<div class="favMemo">
+								SKR 普通								</div>
+							</div>
+						</li>
+												<li therapist_id="113945">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=113945" target="_blank">
+											<img src="contents/therapist/c6f70a7f952f594852dd77a725204330.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=113945" target="_blank">
+										<h3>りおん (20)さん</h3>
+										<p class="sup">金山・熱田<br><span>colors 金山 (カラーズ)</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T158/B86(D)/W53/H88</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">体験した</div></div>								<div class="favMemo">
+								良い子　SKR								</div>
+							</div>
+						</li>
+												<li therapist_id="237973">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=237973" target="_blank">
+											<img src="contents/therapist/7a81047fd34f41baa950c5bfe2c24f42.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=237973" target="_blank">
+										<h3>はに (23)さん</h3>
+										<p class="sup">名古屋・名駅・納屋橋・丸の内・高岳・泉・久屋大通<br><span>タイガーアイ 旧タイガー</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T.154cm  B.Ccup</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">体験した</div></div>								<div class="favMemo">
+								有名　最高　無課金HR								</div>
+							</div>
+						</li>
+												<li therapist_id="226078">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=226078" target="_blank">
+											<img src="contents/therapist/368288c2943752d61dbf3a7fdd767bbf.png" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=226078" target="_blank">
+										<h3>祈 みのり (28)さん</h3>
+										<p class="sup">名古屋・名駅・納屋橋・丸の内・高岳・泉・久屋大通<br><span>タイガーアイ 旧タイガー</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T.150cm  B.Dcup</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">体験した</div></div>								<div class="favMemo">
+								SKR 普通								</div>
+							</div>
+						</li>
+												<li therapist_id="169923">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=169923" target="_blank">
+											<img src="contents/therapist/78e1d9b5c36a234ed21abb67295113d4.png" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=169923" target="_blank">
+										<h3>ここあ (20)さん</h3>
+										<p class="sup">名古屋・名駅・納屋橋・丸の内・高岳・泉・久屋大通<br><span>タイガーアイ 旧タイガー</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T.158cm  B.Ccup</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">体験した</div></div>								<div class="favMemo">
+								SKR  普通								</div>
+							</div>
+						</li>
+												<li therapist_id="47591">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=47591" target="_blank">
+											<img src="contents/therapist/2d537a6ed68b4a7818e8ed6ee4721db6.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=47591" target="_blank">
+										<h3>さくら (28)さん</h3>
+										<p class="sup">名古屋・名駅・納屋橋・栄・新栄町・千種・今池・鶴舞・御器所・丸の内・高岳・泉・久屋大通<br><span>GOLDEN ROSE (ゴールデンローズ) </span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T153/B(F)</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">体験した</div></div>								<div class="favMemo">
+								SKR								</div>
+							</div>
+						</li>
+												<li therapist_id="264294">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=264294" target="_blank">
+											<img src="contents/therapist/a640d6577abeec4f49d0a7991dae9381.png" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=264294" target="_blank">
+										<h3>ゆき乃 (24)さん</h3>
+										<p class="sup">名古屋・名駅・納屋橋・栄<br><span>ゴールド (GOLD) 名古屋</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T160/B85(D)/W53/H86</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">体験した</div></div>								<div class="favMemo">
+								すごく良い　SKR								</div>
+							</div>
+						</li>
+												<li therapist_id="204450">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=204450" target="_blank">
+											<img src="contents/therapist/68c75c9f65e0446f59f2c8e6d46fb798.png" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=204450" target="_blank">
+										<h3>さらん (22)さん</h3>
+										<p class="sup">名古屋・名駅・納屋橋・丸の内・高岳・泉・久屋大通<br><span>タイガーアイ 旧タイガー</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T.162cm  B.Dcup</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">体験した</div></div>								<div class="favMemo">
+								HR情報あり　無課金								</div>
+							</div>
+						</li>
+												<li therapist_id="194404">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=194404" target="_blank">
+											<img src="contents/therapist/373f501aa9977433e44f85ec02555341.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=194404" target="_blank">
+										<h3>アリスさん</h3>
+										<p class="sup">名古屋・名駅・納屋橋<br><span>clema (クレマ) 旧プアゾン</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd></dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">体験した</div></div>								<div class="favMemo">
+								HR情報あり　SKR								</div>
+							</div>
+						</li>
+												<li therapist_id="133684">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=133684" target="_blank">
+											<img src="contents/therapist/e3223b35973b9de389d6172422fa8683.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=133684" target="_blank">
+										<h3>まひる (21)さん</h3>
+										<p class="sup">小牧・春日井<br><span>俺のメンズエステ！ 春日井</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd></dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">体験した</div></div>								<div class="favMemo">
+								HR情報あり→課金HR								</div>
+							</div>
+						</li>
+												<li therapist_id="251028">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=251028" target="_blank">
+											<img src="contents/therapist/40b13e96774eb5e4055d6fa322c8ca59.png" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=251028" target="_blank">
+										<h3>まなみ (23)さん</h3>
+										<p class="sup">金山・熱田<br><span>colors 金山 (カラーズ)</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T165 B83(C) W58 H88</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">体験した</div></div>								<div class="favMemo">
+								すごく良い								</div>
+							</div>
+						</li>
+												<li therapist_id="124380">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=124380" target="_blank">
+											<img src="contents/therapist/1478d7b13e8f9805c6967bd39f5a5163.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=124380" target="_blank">
+										<h3>清花 みあ (26)さん</h3>
+										<p class="sup">名古屋・名駅・納屋橋・栄・丸の内・高岳・泉・久屋大通<br><span>Marigold (マリーゴールド)</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd></dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">入ってみたい</div></div>								<div class="favMemo">
+																</div>
+							</div>
+						</li>
+												<li therapist_id="159130">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=159130" target="_blank">
+											<img src="contents/therapist/227181cb02d5487cb8171cfcbb0d9483.png" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=159130" target="_blank">
+										<h3>沢尻 あや (23)さん</h3>
+										<p class="sup">新栄町・千種・今池・金山・熱田・鶴舞・御器所・丸の内・高岳・泉・久屋大通<br><span>TORIHADA SPA (トリハダスパ)</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T156</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">入ってみたい</div></div>								<div class="favMemo">
+																</div>
+							</div>
+						</li>
+												<li therapist_id="83146">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=83146" target="_blank">
+											<img src="contents/therapist/0ef74c7f64129ce17bd5221d503e6e5b.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=83146" target="_blank">
+										<h3>りか (21)さん</h3>
+										<p class="sup">栄・新栄町・千種・今池・丸の内・高岳・泉・久屋大通<br><span>Sun Flower (サンフラワー) 愛知</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T154(B)</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">体験した</div></div>								<div class="favMemo">
+								SKR 良い　								</div>
+							</div>
+						</li>
+												<li therapist_id="148087">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=148087" target="_blank">
+											<img src="contents/therapist/9864c9c9811639ce5c4ba1d4c5bb0e41.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=148087" target="_blank">
+										<h3>ろぜ (24)さん</h3>
+										<p class="sup">名古屋・名駅・納屋橋・丸の内・高岳・泉・久屋大通<br><span>タイガーアイ 旧タイガー</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T160/B(D)</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">体験した</div></div>								<div class="favMemo">
+								SKR かなり良い 面白い								</div>
+							</div>
+						</li>
+												<li therapist_id="108881">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=108881" target="_blank">
+											<img src="contents/therapist/131367fbe4192f95ca1f6c7e3befbd09.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=108881" target="_blank">
+										<h3>松岡 めみ(23)さん</h3>
+										<p class="sup">名古屋・名駅・納屋橋・栄・新栄町・千種・今池・金山・熱田・鶴舞・御器所・丸の内・高岳・泉・久屋大通<br><span>RESEXY (リゼクシー) 栄</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T158</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">体験した</div></div>								<div class="favMemo">
+								SKR TMN 良い								</div>
+							</div>
+						</li>
+												<li therapist_id="214578">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=214578" target="_blank">
+											<img src="contents/therapist/82c4157a058f0ac66f219105b74125a2.png" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=214578" target="_blank">
+										<h3>KOKORO (23)さん</h3>
+										<p class="sup">名古屋・名駅・納屋橋<br><span>ラグジ名古屋</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T.154 B.85(D) </dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">入ってみたい</div></div>								<div class="favMemo">
+								HR情報あり								</div>
+							</div>
+						</li>
+												<li therapist_id="201902">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=201902" target="_blank">
+											<img src="contents/therapist/4aff5494ce2f846c2f21f18f7c76cb90.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=201902" target="_blank">
+										<h3>りょう (22)さん</h3>
+										<p class="sup">名古屋・名駅・納屋橋<br><span>clema (クレマ) 旧プアゾン</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>156cm Eカップ</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">入ってみたい</div></div>								<div class="favMemo">
+								HR情報あり								</div>
+							</div>
+						</li>
+												<li therapist_id="116070">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=116070" target="_blank">
+											<img src="contents/therapist/a7153e4d38950df6cd2bb1150a455631.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=116070" target="_blank">
+										<h3>東雲 かずは (26)さん</h3>
+										<p class="sup">新栄町・千種・今池・金山・熱田・鶴舞・御器所・丸の内・高岳・泉・久屋大通<br><span>TORIHADA SPA (トリハダスパ)</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T156</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">入ってみたい</div></div>								<div class="favMemo">
+								HR情報あり								</div>
+							</div>
+						</li>
+												<li therapist_id="189937">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=189937" target="_blank">
+											<img src="contents/therapist/d0676165f5daf0258749968563f18605.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=189937" target="_blank">
+										<h3>未来 (22)さん</h3>
+										<p class="sup">鶴舞・御器所<br><span>LETTICE (レティス)</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T.163cm</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">入ってみたい</div></div>								<div class="favMemo">
+								HR情報あり								</div>
+							</div>
+						</li>
+												<li therapist_id="153366">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=153366" target="_blank">
+											<img src="contents/therapist/2ccae015368f0194b08e87ba538fe222.png" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=153366" target="_blank">
+										<h3>浅香 ひな (21)さん</h3>
+										<p class="sup">名古屋・名駅・納屋橋・栄・新栄町・千種・今池・金山・熱田・鶴舞・御器所・丸の内・高岳・泉・久屋大通<br><span>RESEXY (リゼクシー) 栄</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T155</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">入ってみたい</div></div>								<div class="favMemo">
+								HR情報あり								</div>
+							</div>
+						</li>
+												<li therapist_id="226277">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=226277" target="_blank">
+											<img src="contents/therapist/8c81d2c4586ad067b01040c8e053973e.png" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=226277" target="_blank">
+										<h3>みく (24)さん</h3>
+										<p class="sup">名古屋・名駅・納屋橋<br><span>clema (クレマ) 旧プアゾン</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T165/B(D)</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">入ってみたい</div></div>								<div class="favMemo">
+								HR情報あり								</div>
+							</div>
+						</li>
+												<li therapist_id="105493">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=105493" target="_blank">
+											<img src="contents/therapist/7bacf163993b834f054ad0b5afc5f399.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=105493" target="_blank">
+										<h3>九尾 さな(20)さん</h3>
+										<p class="sup">名古屋・名駅・納屋橋・栄・新栄町・千種・今池・金山・熱田・鶴舞・御器所・丸の内・高岳・泉・久屋大通<br><span>RESEXY (リゼクシー) 栄</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T158</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">入ってみたい</div></div>								<div class="favMemo">
+								HR情報あり								</div>
+							</div>
+						</li>
+												<li therapist_id="116055">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=116055" target="_blank">
+											<img src="contents/therapist/9f6377104939e0a6a14f62524e9d4008.png" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=116055" target="_blank">
+										<h3>のあ (19)さん</h3>
+										<p class="sup">丸の内・高岳・泉・久屋大通<br><span>EXE エグゼ 名古屋</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T161/B(C)</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">入ってみたい</div></div>								<div class="favMemo">
+								HR情報あり								</div>
+							</div>
+						</li>
+												<li therapist_id="61286">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=61286" target="_blank">
+											<img src="contents/therapist/a0242d6aa3e3ac12752c53a010356a9d.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=61286" target="_blank">
+										<h3>西内 (30)さん</h3>
+										<p class="sup">名古屋・名駅・納屋橋・丸の内・高岳・泉・久屋大通<br><span>Birkin (バーキン)</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd></dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">入ってみたい</div></div>								<div class="favMemo">
+								HR情報あり								</div>
+							</div>
+						</li>
+												<li therapist_id="200101">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=200101" target="_blank">
+											<img src="contents/therapist/00424dbd160986369daa103104710f5a.png" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=200101" target="_blank">
+										<h3>あい (18)さん</h3>
+										<p class="sup">丸の内・高岳・泉・久屋大通<br><span>EXE エグゼ 名古屋</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T153/B(G)</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">入ってみたい</div></div>								<div class="favMemo">
+								HR情報あり								</div>
+							</div>
+						</li>
+												<li therapist_id="129637">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=129637" target="_blank">
+											<img src="contents/therapist/6f1466349b4d5200b714202d089964c8.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=129637" target="_blank">
+										<h3>める (22)さん</h3>
+										<p class="sup">栄<br><span>VENIRE (ヴェニーレ)</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd></dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">体験した</div></div>								<div class="favMemo">
+								SKR 普通								</div>
+							</div>
+						</li>
+												<li therapist_id="67811">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=67811" target="_blank">
+											<img src="contents/therapist/c91290eb308d26e0837ae578db7f9523.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=67811" target="_blank">
+										<h3>葉月 (25)さん</h3>
+										<p class="sup">丸の内・高岳・泉・久屋大通<br><span>Up to you (アップトゥーユー)</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T159/B85(D)  </dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">体験した</div></div>								<div class="favMemo">
+								SKR 普通　								</div>
+							</div>
+						</li>
+												<li therapist_id="128315">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=128315" target="_blank">
+											<img src="contents/therapist/37b04d08bd7e20c45bc32d5a9a2a8b66.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=128315" target="_blank">
+										<h3>梨華 (22)  さん</h3>
+										<p class="sup">丸の内・高岳・泉・久屋大通<br><span>Up to you (アップトゥーユー)</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T163 B85(D)  </dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">体験した</div></div>								<div class="favMemo">
+								SKRなし 普通　								</div>
+							</div>
+						</li>
+												<li therapist_id="24384">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=24384" target="_blank">
+											<img src="contents/therapist/92d18597962b89e45a11da10aea2cd23.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=24384" target="_blank">
+										<h3>柊花 (24)さん</h3>
+										<p class="sup">丸の内・高岳・泉・久屋大通<br><span>Up to you (アップトゥーユー)</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T157/B83(D)</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">体験した</div></div>								<div class="favMemo">
+								SKR 普通　								</div>
+							</div>
+						</li>
+												<li therapist_id="65238">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=65238" target="_blank">
+											<img src="contents/therapist/663a139a4913f50dda53e5e5590773aa.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=65238" target="_blank">
+										<h3>ヒナ (25)さん</h3>
+										<p class="sup">名古屋・名駅・納屋橋・栄・新栄町・千種・今池・丸の内・高岳・泉・久屋大通<br><span>esora (エソラ)</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T154</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">体験した</div></div>								<div class="favMemo">
+								SKR 普通　								</div>
+							</div>
+						</li>
+												<li therapist_id="195261">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=195261" target="_blank">
+											<img src="contents/therapist/30371ee301e6c7b2e6d34771f6046482.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=195261" target="_blank">
+										<h3>白木 (25)さん</h3>
+										<p class="sup">丸の内・高岳・泉・久屋大通<br><span>milk repos (ミルクルポ)</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T158</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">入ってみたい</div></div>								<div class="favMemo">
+																</div>
+							</div>
+						</li>
+												<li therapist_id="40639">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=40639" target="_blank">
+											<img src="contents/therapist/6e2eb567ecf2b9172d054f62bce3667c.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=40639" target="_blank">
+										<h3>七瀬 (25)さん</h3>
+										<p class="sup">丸の内・高岳・泉・久屋大通<br><span>milk repos (ミルクルポ)</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T160</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">入ってみたい</div></div>								<div class="favMemo">
+																</div>
+							</div>
+						</li>
+												<li therapist_id="142340">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=142340" target="_blank">
+											<img src="contents/therapist/5c474af596078f1e9a513c1770b2f8fd.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=142340" target="_blank">
+										<h3>翠 (25)さん</h3>
+										<p class="sup">丸の内・高岳・泉・久屋大通<br><span>milk repos (ミルクルポ)</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T168</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">入ってみたい</div></div>								<div class="favMemo">
+																</div>
+							</div>
+						</li>
+												<li therapist_id="151313">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=151313" target="_blank">
+											<img src="contents/therapist/e81d7aa475530b0327c3d5a5dea51978.png" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=151313" target="_blank">
+										<h3>美弥 (23)さん</h3>
+										<p class="sup">丸の内・高岳・泉・久屋大通<br><span>milk repos (ミルクルポ)</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T160</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">入ってみたい</div></div>								<div class="favMemo">
+																</div>
+							</div>
+						</li>
+												<li therapist_id="167028">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=167028" target="_blank">
+											<img src="contents/therapist/6a997ac279164c028d1f5054c1b7989b.png" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=167028" target="_blank">
+										<h3>風璃 (21)さん</h3>
+										<p class="sup">丸の内・高岳・泉・久屋大通<br><span>milk repos (ミルクルポ)</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T150</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">入ってみたい</div></div>								<div class="favMemo">
+																</div>
+							</div>
+						</li>
+												<li therapist_id="78101">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=78101" target="_blank">
+											<img src="contents/therapist/bff0cc69635cb2ed8f51d81969c2698b.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=78101" target="_blank">
+										<h3>吉田 (28)さん</h3>
+										<p class="sup">栄・丸の内・高岳・泉・久屋大通<br><span>GENTLEMAN FIT (ジェントルマンフィット)</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd></dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">体験した</div></div>								<div class="favMemo">
+								SKR 普通　喫煙								</div>
+							</div>
+						</li>
+												<li therapist_id="20125">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=20125" target="_blank">
+											<img src="contents/therapist/d0cc5430557afc4d7ebf36c037ba7670.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=20125" target="_blank">
+										<h3>ユイカ (28)さん</h3>
+										<p class="sup">名古屋・名駅・納屋橋・栄・新栄町・千種・今池・丸の内・高岳・泉・久屋大通<br><span>esora (エソラ)</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T155/B(F)</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">体験した</div></div>								<div class="favMemo">
+								SKR 良くない								</div>
+							</div>
+						</li>
+												<li therapist_id="81784">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=81784" target="_blank">
+											<img src="contents/therapist/fec65ba47a4102957498fad87af42754.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=81784" target="_blank">
+										<h3>結城 (28)さん</h3>
+										<p class="sup">名古屋・名駅・納屋橋・栄・新栄町・千種・今池・鶴舞・御器所・丸の内・高岳・泉・久屋大通<br><span>GOLDEN ROSE (ゴールデンローズ) </span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T165/B(E)</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">体験した</div></div>								<div class="favMemo">
+								SKRなし　普通								</div>
+							</div>
+						</li>
+												<li therapist_id="79095">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=79095" target="_blank">
+											<img src="contents/therapist/5b397b391dd2fd089a3d6cd9386e6c4e.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=79095" target="_blank">
+										<h3>橘 りな (27)さん</h3>
+										<p class="sup">新栄町・千種・今池・金山・熱田・鶴舞・御器所・丸の内・高岳・泉・久屋大通<br><span>TORIHADA SPA (トリハダスパ)</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T168</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">体験した</div></div>								<div class="favMemo">
+								SKRなし　良い								</div>
+							</div>
+						</li>
+												<li therapist_id="110348">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=110348" target="_blank">
+											<img src="contents/therapist/05aeb82936b3aeb3dbae786a32202be2.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=110348" target="_blank">
+										<h3>ナナ (25)さん</h3>
+										<p class="sup">金山・熱田<br><span>MELIA (メリア)</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T151</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">体験した</div></div>								<div class="favMemo">
+								SKR 良くない								</div>
+							</div>
+						</li>
+												<li therapist_id="219213">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=219213" target="_blank">
+											<img src="contents/therapist/d18d83454fe73ebf7b670a1ce1c8c06b.png" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=219213" target="_blank">
+										<h3>北川 すずな (25)さん</h3>
+										<p class="sup">横浜・関内・厚木・海老名・相模原・大船・戸塚<br><span>THE BLANC (ザブラン)</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd></dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">体験した</div></div>								<div class="favMemo">
+								SKR かなり良い								</div>
+							</div>
+						</li>
+												<li therapist_id="199746">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=199746" target="_blank">
+											<img src="contents/therapist/cfc51f7b0a084bb766cf41807bf05c3d.png" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=199746" target="_blank">
+										<h3>岸 なみ (26)さん</h3>
+										<p class="sup">横浜・関内・厚木・海老名・相模原・大船・戸塚<br><span>THE BLANC (ザブラン)</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd></dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">体験した</div></div>								<div class="favMemo">
+								SKR かなり良い								</div>
+							</div>
+						</li>
+												<li therapist_id="83516">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=83516" target="_blank">
+											<img src="contents/therapist/fbca0b3ac8b25bda6a8788377275b1a7.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=83516" target="_blank">
+										<h3>やよい (26)さん</h3>
+										<p class="sup">栄・新栄町・千種・今池・丸の内・高岳・泉・久屋大通<br><span>Sun Flower (サンフラワー) 愛知</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T153/B(E)</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">体験した</div></div>								<div class="favMemo">
+								SKR 普通								</div>
+							</div>
+						</li>
+												<li therapist_id="59257">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=59257" target="_blank">
+											<img src="contents/therapist/688e63f9004fc1a62dcfe0a5081a223f.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=59257" target="_blank">
+										<h3>のあ (26)さん</h3>
+										<p class="sup">西三河・豊田・岡崎・安城・三河安城・刈谷<br><span>Portion (ポーション)</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T158/B82(D)/W58/H83</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">体験した</div></div>								<div class="favMemo">
+								SKR 良い								</div>
+							</div>
+						</li>
+												<li therapist_id="70239">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=70239" target="_blank">
+											<img src="contents/therapist/0ec69a24f37e7b5c45b3ccee0ab83f0c.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=70239" target="_blank">
+										<h3>ゆず (21)さん</h3>
+										<p class="sup">西三河・豊田・岡崎・安城・三河安城・刈谷<br><span>Portion (ポーション)</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>Ｔ159/Ｂ78(B)/Ｗ58/Ｈ88</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">体験した</div></div>								<div class="favMemo">
+								HR かなり良い								</div>
+							</div>
+						</li>
+												<li therapist_id="62247">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=62247" target="_blank">
+											<img src="contents/therapist/0f214bd5bd302b0ba8ea2d702036078f.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=62247" target="_blank">
+										<h3>白石 れな (24)さん</h3>
+										<p class="sup">新栄町・千種・今池・金山・熱田・鶴舞・御器所・丸の内・高岳・泉・久屋大通<br><span>TORIHADA SPA (トリハダスパ)</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T164</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">体験した</div></div>								<div class="favMemo">
+								SKR 普通								</div>
+							</div>
+						</li>
+												<li therapist_id="11964">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=11964" target="_blank">
+											<img src="contents/therapist/dc3ba983600a4d3647c97a95c3e3bc15.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=11964" target="_blank">
+										<h3>ユリア (25)さん</h3>
+										<p class="sup">名古屋・名駅・納屋橋・栄・新栄町・千種・今池・丸の内・高岳・泉・久屋大通<br><span>esora (エソラ)</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T158</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">体験した</div></div>								<div class="favMemo">
+								SKR 普通								</div>
+							</div>
+						</li>
+												<li therapist_id="123800">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=123800" target="_blank">
+											<img src="contents/therapist/7923b6a7776df3537d99a079ab92a9f9.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=123800" target="_blank">
+										<h3>水原 ありさ(23)さん</h3>
+										<p class="sup">栄・新栄町・千種・今池<br><span>ギフテッド 旧アマテラス</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T152</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">体験した</div></div>								<div class="favMemo">
+								SKR 良い								</div>
+							</div>
+						</li>
+												<li therapist_id="188407">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=188407" target="_blank">
+											<img src="contents/therapist/c9902a8176b9e583d54ed3084b6e1df8.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=188407" target="_blank">
+										<h3>かさね (23)さん</h3>
+										<p class="sup">神田・日本橋・東京駅<br><span>神のエステ 東京・日本橋店</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T.170cm  B.85(D) W.57 H.89</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">体験した</div></div>								<div class="favMemo">
+								SKR 良い								</div>
+							</div>
+						</li>
+												<li therapist_id="107202">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=107202" target="_blank">
+											<img src="contents/therapist/99c184ec2a4ac5a19ef3866259d18666.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=107202" target="_blank">
+										<h3>めめ (22)さん</h3>
+										<p class="sup">名古屋・名駅・納屋橋<br><span>JELLY～nagoya・spa～</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T158/B(B)</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">体験した</div></div>								<div class="favMemo">
+								SKR かなり良い								</div>
+							</div>
+						</li>
+												<li therapist_id="26711">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=26711" target="_blank">
+											<img src="contents/therapist/e8ec3bf04aca0f44967ae34083fbdf22.png" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=26711" target="_blank">
+										<h3>中城 (26)さん</h3>
+										<p class="sup">栄・新栄町・千種・今池・丸の内・高岳・泉・久屋大通<br><span>Aromana (アロマーナ)</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T167</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">体験した</div></div>								<div class="favMemo">
+								SKR 良い								</div>
+							</div>
+						</li>
+												<li therapist_id="111322">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=111322" target="_blank">
+											<img src="contents/therapist/348325d69e76ea10451c86dba6c9a033.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=111322" target="_blank">
+										<h3>佐々木 (25)さん</h3>
+										<p class="sup">栄・新栄町・千種・今池・丸の内・高岳・泉・久屋大通<br><span>Aromana (アロマーナ)</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T164</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">体験した</div></div>								<div class="favMemo">
+								SKR 良い								</div>
+							</div>
+						</li>
+												<li therapist_id="103534">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=103534" target="_blank">
+											<img src="contents/therapist/4ab24514441d020a94108801784ebf32.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=103534" target="_blank">
+										<h3>りん (21)さん</h3>
+										<p class="sup">金山・熱田<br><span>colors 金山 (カラーズ)</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd></dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">体験した</div></div>								<div class="favMemo">
+								SKR 普通								</div>
+							</div>
+						</li>
+												<li therapist_id="104506">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=104506" target="_blank">
+											<img src="contents/therapist/e29294a59991d6fdecd9d27a024d7877.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=104506" target="_blank">
+										<h3>ひめか (24)さん</h3>
+										<p class="sup">金山・熱田<br><span>colors 金山 (カラーズ)</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T165/B87(E)/W57/H89</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">体験した</div></div>								<div class="favMemo">
+								SKR 普通								</div>
+							</div>
+						</li>
+												<li therapist_id="86546">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=86546" target="_blank">
+											<img src="contents/therapist/b00a9fd5643a847ae2fa1008a8cf8da1.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=86546" target="_blank">
+										<h3>白石 (26)さん</h3>
+										<p class="sup">名古屋・名駅・納屋橋・栄・新栄町・千種・今池<br><span>RICH AROMA (リッチアロマ)</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T152</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">入ってみたい</div></div>								<div class="favMemo">
+																</div>
+							</div>
+						</li>
+												<li therapist_id="113773">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=113773" target="_blank">
+											<img src="contents/therapist/eb4d2443336be416ce2103919b9a8d6e.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=113773" target="_blank">
+										<h3>あや (25)さん</h3>
+										<p class="sup">名古屋・名駅・納屋橋・栄・丸の内・高岳・泉・久屋大通<br><span>Galaxy-NAGOYA (ギャラクシーナゴヤ)</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>B88(C)/W60/H90</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">入ってみたい</div></div>								<div class="favMemo">
+																</div>
+							</div>
+						</li>
+												<li therapist_id="97179">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=97179" target="_blank">
+											<img src="contents/therapist/5f76a8c7fa5de800f0aef75a852681d7.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=97179" target="_blank">
+										<h3>るな (23)さん</h3>
+										<p class="sup">名古屋・名駅・納屋橋・新栄町・千種・今池・丸の内・高岳・泉・久屋大通<br><span>ルミライズ 旧オフホワイト</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd>T158/B(C)</dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">入ってみたい</div></div>								<div class="favMemo">
+																</div>
+							</div>
+						</li>
+												<li therapist_id="102453">
+							<div class="upper">
+								<div class="photo">
+									<figure>
+										<a href="/therapist.php?id=102453" target="_blank">
+											<img src="contents/therapist/3af7968bd114502af46688a3b20bcb22.jpg" width="100%" alt="">
+										</a>
+									</figure>
+								</div>
+								<div class="txt">
+									<a href="/therapist.php?id=102453" target="_blank">
+										<h3>りの (20)さん</h3>
+										<p class="sup">名古屋・名駅・納屋橋・新栄町・千種・今池・丸の内・高岳・泉・久屋大通<br><span>ルミライズ 旧オフホワイト</span></p>
+									</a>
+									<dl>
+										<dt>身長/3サイズ:</dt>
+										<dd></dd>
+									</dl>
+								</div>
+							</div>
+							<div class="lower">
+								<div class="experience"><div class="ans">入ってみたい</div></div>								<div class="favMemo">
+																</div>
+							</div>
+						</li>
+											</ul>
+								
+				
+			</div>
+				
+	</div>
+
+</div><!-- Main -->
+
+
+
+
+<div id="Side" class="shareListSide"><!-- Side -->
+	<h2 class="shareListTitle">共有者リスト</h2>
+	<div class="shareListContainer">
+		<div class="content">
+			<ul class="shareMember"></ul>
+												<li user_id="1671991359" class="active">
+                	<figure class="degree">
+						<img src="common/img/rank/01.png" width="134" height="116" alt="">
+					</figure>
+					        			<div class="name">
+													<span>有料会員</span>
+												ゆうた30239さん
+					</div>
+        		</li>
+												<li user_id="1709533703" class="">
+                	<figure class="degree">
+						<img src="common/img/rank/05.png" width="134" height="116" alt="">
+					</figure>
+										<div class="badge thank">
+						<figure><img src="common/img/bg-badge-thank.svg" alt=""></figure>	
+						<span class="num">12</span>
+					</div>
+					        			<div class="name">
+													<span>有料会員</span>
+												きむ140141さん
+					</div>
+        		</li>
+												<li user_id="1625712043" class="">
+                	<figure class="degree">
+						<img src="common/img/rank/free.png" width="134" height="116" alt="">
+					</figure>
+										<div class="badge thank">
+						<figure><img src="common/img/bg-badge-thank.svg" alt=""></figure>	
+						<span class="num">10</span>
+					</div>
+					        			<div class="name">
+												エステ大好きマンマンさん
+					</div>
+        		</li>
+												<li user_id="1599897444" class="">
+                	<figure class="degree">
+						<img src="common/img/rank/free.png" width="134" height="116" alt="">
+					</figure>
+										<div class="badge thank">
+						<figure><img src="common/img/bg-badge-thank.svg" alt=""></figure>	
+						<span class="num">1</span>
+					</div>
+					        			<div class="name">
+												きゃわさん
+					</div>
+        		</li>
+												<li user_id="1726222543" class="">
+                	<figure class="degree">
+						<img src="common/img/rank/free.png" width="134" height="116" alt="">
+					</figure>
+										<div class="badge thank">
+						<figure><img src="common/img/bg-badge-thank.svg" alt=""></figure>	
+						<span class="num">3</span>
+					</div>
+					        			<div class="name">
+												たなか。さん
+					</div>
+        		</li>
+												<li user_id="1595161507" class="">
+                	<figure class="degree">
+						<img src="common/img/rank/free.png" width="134" height="116" alt="">
+					</figure>
+										<div class="badge thank">
+						<figure><img src="common/img/bg-badge-thank.svg" alt=""></figure>	
+						<span class="num">4</span>
+					</div>
+					        			<div class="name">
+												ふきゅさん
+					</div>
+        		</li>
+												<li user_id="1658640288" class="">
+                	<figure class="degree">
+						<img src="common/img/rank/07.png" width="134" height="116" alt="">
+					</figure>
+										<div class="badge thank">
+						<figure><img src="common/img/bg-badge-thank.svg" alt=""></figure>	
+						<span class="num">5</span>
+					</div>
+					        			<div class="name">
+													<span>有料会員</span>
+												ホップステップジャンプさん
+					</div>
+        		</li>
+						</div>
+	</div>
+</div><!-- Side -->
+
+
+
+
+</div>
+<!-- Contents -->
+
+
+
+
+
+</div>
+<script type="text/javascript" src="common/js/jquery.min.js"></script>
+<script type="text/javascript" src="common/js/jquery-3.5.1.min.js"></script>
+<script type="text/javascript" src="common/js/spMenu.js"></script>
+<script src="common/js/jquery.magnific-popup.js"></script>
+<script src="common/js/modalScript.js"></script>
+<script src="common/js/script.js"></script>	
+<script src="common/js/smoothscroll.js"></script>	
+	
+<script src="common/js/lozad.js"></script>
+<script>
+	const observer = lozad();
+	observer.observe();
+</script>
+<script>
+	$('[name="memo"]').on('change', function(){
+		load();
+	});
+	$('li[user_id]').on('click', function(e){
+		e.preventDefault();
+		$('li[user_id]').removeClass('active');
+		$(this).addClass('active');
+		load();
+	});
+	function load(){
+		let memo = $('[name="memo"]').prop('checked') ? 1 : 0;
+		let user_id = $('li[user_id].active').attr('user_id');
+		location.href = 'favorite-share-list.php?user_id='+user_id+'&memo='+memo;
+	}
+</script>
+<script src="common/js/common.js.php"></script>
+</body>
+</html>

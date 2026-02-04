@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<!--[if lt IE 9]><meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1" /><![endif]-->
+<meta name="viewport" content="width=device-width,user-scalable=no" />
+<meta name="robots" content="noindex,nofollow" />
+<title>チャットページ - 口コミ評判サイトのメンエス</title>
+<meta name="description" content="メンエスのチャットページです。">
+
+<link rel="shortcut icon" href="common/img/favicon.ico" type="image/vnd.microsoft.icon">
+<link rel="apple-touch-icon" href="common/img/home-icon.png" />
+
+<link rel="stylesheet" href="common/css/basic.css?1769996988" type="text/css" media="all">
+<link rel="stylesheet" href="common/css/chat.css?1769996988" type="text/css" media="all">
+<link rel="stylesheet" href="common/css/magnific-popup.css?1769996988">
+<link rel="stylesheet" href="common/css/iziModal.css?1769996988">
+<link rel="stylesheet" href="common/css/luminous-basic.min.css" type="text/css">
+<link rel="stylesheet" href="common/js/toast//toaster-box.css">
+<style>
+.lum-gallery-button { display:none!important; }
+.chatToast { border-radius: 5px; background:#606060; color:#fff; }
+.chatToast span { display:block; text-align:center; width:100%; }
+</style>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-127662327-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-127662327-1');
+</script>
+</head>
+
+<body>
+
+<!-- header -->
+<header>
+	
+<div class="pcView"><!-- PC -->
+<nav>
+<div class="cnt">
+<div class="logo HvOc"><a href="/"><img src="/common/img/logo-anniv.png" width="240" height="61" alt="メンエス"/></a></div>
+<ul>
+<li><a href="/list-kuchikomi-comment.php">みんなの注目口コミ</a></li>
+<li><a href="/list-newtherapist.php">新人セラピスト一覧</a></li>
+<li><a href="/list-column.php">コラム一覧</a></li>
+<li><a href="/list-report.php">体験レポート一覧</a></li>
+<li><a href="/search.php">サロン・セラピスト検索</a></li>
+</ul>
+
+<div class="limitDate">JIN00さんの閲覧日数: 
+		<span>無期限</span>
+	</div>
+
+</div>
+</nav>
+</div>
+
+<div class="secondLine">
+<div class="cnt">
+<ul class="secondNav">
+
+<li class="bh"><a href="/list-accident.php"><span>BHリスト</span></a></li>
+
+<li class="newBush"><a href="/list-newly.php"><span>新着口コミ一覧</span></a></li>
+
+		
+<li class="favList"><a href="favorite-list.php"><span>お気に入りリスト</span></a></li>
+
+<li class="shareList"><a href="favorite-share-list.php"><span>お気に入りリスト共有者</span></a></li>
+	
+
+<li class="board"><a href="list-board.php"><span>掲示板</span></a></li>
+
+<li class="board"><a href="vip-list-board.php"><span>【VIP限定】掲示板</span></a></li>
+
+<li class="chat"><a href="chat.php"><span>チャット</span><div class="new">NEW</div></a></li>
+	
+	
+<li class="chat"><a href="list-groupchat.php"><span>グループチャット</span></a></li>
+	
+<li class="chat"><a href="groupchat.php"><span>参加中のグループチャット</span></a></li>
+
+<li class="mypage"><a href="/mypage.php"><span>MYページ</span></a></li>
+<li class="logout"><a href="/logout.php"><span>ログアウト</span></a></li>
+</ul>
+</div>
+</div>
+
+</div><!-- /PC -->
+
+<div class="spView"><!-- SP -->
+	<div class="inline">
+		<div class="Logo"><a href="/"><img src="/common/img/logo-anniv.png" width="170" height="49" alt="メンエス"/></a></div>
+				<div class="loginName">JIN00さん</div>
+				<a id="menuBtn" class="menuBtn" href="#">MENU<span class="newInfo"><img src="common/img/icon-new-info.svg" alt=""/></span></a>
+		<a href="/search.php" class="salonSearchBtn">検索</a>
+	</div>
+</div><!-- /SP -->
+</header>
+<!-- /header -->
+<div id="curtain" class="curtain spView"></div>
+<nav id="menu" class="menu spView"><!-- sp menu -->
+	<aside>
+		<ul>
+
+			<a class="long" href="/"><li class="btn"><div class="icon home"></div>TOP</li></a>
+						<a class="long" href="/mypage.php"><li class="btn"><div class="icon mypage"></div>MYページ</li></a>
+									<a class="long" href="/kuchikomi.php"><li class="btn"><div class="icon bush"></div>口コミを書く</li></a>
+						<a class="long" href="list-kuchikomi-comment.php"><li class="favList"><div class="icon comm"></div><span>みんなの注目口コミ</span><div class="icoNew"></div></li></a>
+			<a class="long" href="/area-list.php"><li class="btn"><div class="icon area"></div>エリア検索</li></a>
+			<a class="long" href="/search.php"><li class="btn"><div class="icon therapist"></div>サロン検索・セラピスト検索</li></a>
+			<a href="/list-newtherapist.php"><li class="btn"><div class="icon newtherapist"></div>新人セラピスト一覧</li></a>
+			<a class="flR" href="/list-report.php"><li class="btn"><div class="icon exp"></div>体験レポート一覧</li></a>
+			
+						<a class="both" href="favorite-list.php"><li class="shareList"><div class="icon fav"></div><span>自分のお気に入りリスト</span><div class="iconBoth"></div></li></a>
+			<a class="both flR" href="favorite-share-list.php"><li class="favList"><div class="icon share"></div><span>お気に入りリスト共有者</span><div class="iconBoth"></div></li></a>
+						
+						<a class="both" href="chat.php"><li class="payingBtn"><div class="icon chat"></div><span>個人チャット</span><div class="new">NEW</div></span><div class="iconBoth"></div></li></a>
+									<a class="both flR" href="/list-accident.php"><li class="payingBtn"><div class="icon bh"></div><span>BHリスト</span><div class="iconEX"></div></li></a>
+			
+						<a class="paying" href="list-groupchat.php"><li class="payingBtn"><div class="icon chat"></div><span>グループチャット</span></li></a>
+									<a class="paying flR" href="groupchat.php"><li class="payingBtn"><div class="icon chat"></div><span>参加中のグループチャット</span></li></a>
+			
+						<a class="paying" href="list-board.php"><li class="payingBtn"><div class="icon board"></div><span>掲示板</span></li></a>
+									<a class="paying flR" href="vip-list-board.php"><li class="payingBtn"><div class="icon vipboard"></div><span>【VIP限定】掲示板</span></li></a>
+			
+						<a class="paying" href="/list-newly.php"><li class="newBush"><div class="icon newbush"></div><span>新着口コミ一覧</span></li></a>
+									<a class="paying flR" href="/paying-contact/" target="_blank"><li class="payingBtn"><div class="icon mail"></div><span>有料会員専用お問い合わせ</span></li></a>
+						<a href="/rule.php"><li>利用規約</li></a>
+			<a class="flR" href="/membership-agreement.php"><li>会員規約</li></a>
+			<a href="/faq.php"><li class="btn"><div class="icon faq"></div>よくある質問</li></a>
+			<a class="flR" href="/contact/"><li class="btn"><div class="icon cntct"></div>お問い合わせ</li></a>
+			
+						<a class="long" href="/logout.php"><li class="btn"><div class="icon login"></div>ログアウト</li></a>
+					</ul>
+
+	</aside>
+</nav><!-- /sp menu -->
+
+
+
+<!-- 閲覧日数ポップアップ -->
+<div id="limitDayModal" class="mfp-hide white-popup-block">
+<button title="Close (Esc)" type="button" class="mfp-close"></button>
+<div class="Cnt">
+<h2>閲覧日数とは</h2>
+<p>閲覧日数とは、「口コミを閲覧できる残日数」を意味します。<br>
+閲覧日数は口コミを書いて頂くと運営側で口コミの質によって日数を付与しております。<br>
+1つの口コミで7日～25日付与しており、文字数が少ない場合には上記よりも少なくなる可能性もあります。<br>
+よりリアルな質の高い口コミ投稿をお待ちしております。
+</p>
+<div class="Footer">
+<a href="kuchikomi.php"><div class="kuchikomiBtn Hv">口コミ投稿する</div></a>
+<a href="mypage.php"><div class="mypageBtn Hv">Myページへ</div></a>
+<!--<a href="#cancel" class="popup-modal-dismiss"><div class="cancelBtn Hv">閉じる</div></a>-->
+</div>
+</div>
+</div>
+<!-- 閲覧日数ポップアップ -->
+
+
+
+<!-- BHリストポップアップ -->
+<div id="payingMemberBHModal" class="mfp-hide white-popup-block">
+<button title="Close (Esc)" type="button" class="mfp-close"></button>
+<div class="Cnt">
+<figure><img src="common/img/icon-limited.png" width="60" height="82" alt="メンエス有料会員メニュー"/></figure>
+<figure class="plan ex"><img src="common/img/paying/label-localx.png" width="200" height="57" alt=""/></figure>
+<h3>BHリストとは</h3>
+<p>過激な体験内容が記載された口コミのみを表示するメンエスユーザー必見のリストです。</p>
+<p>エリアで検索出来るため、今すぐ行きたい場合や次回訪問時のセラピスト選びに大活躍するコンテンツとなります。</p>
+<div class="Footer">
+<a href="/paying-contact"><div class="cBtn blue mgb-4 Hv">プラン変更のお問い合わせ</div></a>
+<a href="about-thankbadge.php#03"><div class="cBtn blue mgb-4 Hv">EX会員になるには</div></a>
+<!--<a href="#cancel" class="popup-modal-dismiss"><div class="cBtn gray Hv">閉じる</div></a>-->
+</div>
+</div>
+</div>
+<!-- BHリストポップアップ -->
+
+
+
+<!-- 新着口コミ一覧ポップアップ -->
+<div id="payingMemberNEWModal" class="mfp-hide white-popup-block">
+<button title="Close (Esc)" type="button" class="mfp-close"></button>
+<div class="Cnt">
+<figure><img src="common/img/icon-limited.png" width="60" height="82" alt="メンエス有料会員メニュー"/></figure>
+<figure class="plan"><img src="common/img/paying/label-eco2.png" width="200" height="57" alt=""/></figure>
+<p class="txt-c">こちらは有料会員限定のメニューです。</p>
+<h3>新着口コミとは</h3>
+<p>膨大な口コミの中からエリアやサロン名を絞り込み、新着順に自分好みのセラピストを探すことが可能です。</p>
+<div class="Footer">
+<a href="/paying-contact"><div class="cBtn blue mgb-4 Hv">プラン変更のお問い合わせ</div></a>
+<!--<a href="#cancel" class="popup-modal-dismiss"><div class="cBtn gray Hv">閉じる</div></a>-->
+</div>
+</div>
+</div>
+<!-- 新着口コミ一覧ポップアップ -->
+
+
+<!-- お気に入りリストポップアップ -->
+<div id="payingMemberFAVModal" class="mfp-hide white-popup-block">
+<button title="Close (Esc)" type="button" class="mfp-close"></button>
+<div class="Cnt">
+<!--<figure><img src="common/img/icon-limited.png" width="60" height="82" alt="メンエス有料会員メニュー"/></figure>
+<figure class="plan"><img src="common/img/paying/label-all.png" width="200" height="57" alt=""/></figure>-->
+<p class="txt-c">こちらは会員限定のメニューです。</p>
+<h3>お気に入りリストとは</h3>
+<p>自分だけの備忘録として、お気に入りに追加したセラピストを一覧表示し、「体験有無」とコメントを残すことが可能です。また、このリストは気の合うユーザーと共有することも可能です。</p>
+<div class="Footer">
+<a href="before-view.php"><div class="cBtn blue mgb-4 Hv">口コミを書いて会員登録</div></a>
+	<a href="paying-member.php"><div class="cBtn blue mgb-4 Hv">有料会員の詳細を見る</div></a>
+<!--<a href="#cancel" class="popup-modal-dismiss"><div class="cBtn gray Hv">閉じる</div></a>-->
+</div>
+</div>
+</div>
+<!-- お気に入りリストポップアップ -->
+
+
+<!-- 掲示板ポップアップ -->
+<div id="payingMemberBOARDModal" class="mfp-hide white-popup-block">
+<button title="Close (Esc)" type="button" class="mfp-close"></button>
+<div class="Cnt">
+<figure><img src="common/img/icon-limited.png" width="60" height="82" alt="メンエス有料会員メニュー"/></figure>
+<figure class="plan"><img src="common/img/paying/label-all2.png" width="260" height="57" alt=""/></figure>
+<p class="txt-c">こちらは有料会員限定のメニューです。</p>
+<h3>掲示板とは</h3>
+<p>Yahoo!知恵袋のような形の機能で、おすすめのお店はもちろん、新人についての情報、セラピストの容姿、施術内容などなど、自分が質問したいように聞くことが可能です。</p>
+<div class="Footer">
+	<a href="paying-member.php"><div class="cBtn blue mgb-4 Hv">有料会員の詳細を見る</div></a>
+<!--<a href="#cancel" class="popup-modal-dismiss"><div class="cBtn gray Hv">閉じる</div></a>-->
+</div>
+</div>
+</div>
+<!-- 掲示板ポップアップ -->
+
+
+<!-- VIP掲示板ポップアップ -->
+<div id="payingMemberVIPBOARDModal" class="mfp-hide white-popup-block">
+<button title="Close (Esc)" type="button" class="mfp-close"></button>
+<div class="Cnt">
+<figure><img src="common/img/icon-limited.png" width="60" height="82" alt="メンエス有料会員メニュー"/></figure>
+<figure class="plan"><img src="common/img/paying/label-pre2.png" width="200" height="57" alt=""/></figure>
+<p class="txt-c">こちらは有料会員限定のメニューです。</p>
+<h3>【VIP限定】掲示板とは</h3>
+<p>VIP会員のみが使用できる、非常に貴重な情報が集まる掲示板です。</p>
+<div class="Footer">
+<a href="/paying-contact"><div class="cBtn blue mgb-4 Hv">プラン変更のお問い合わせ</div></a>
+<!--<a href="#cancel" class="popup-modal-dismiss"><div class="cBtn gray Hv">閉じる</div></a>-->
+</div>
+</div>
+</div>
+<!-- VIP掲示板ポップアップ -->
+
+
+<!-- チャットポップアップ -->
+<div id="payingMemberDMModal" class="mfp-hide white-popup-block">
+<button title="Close (Esc)" type="button" class="mfp-close"></button>
+<div class="Cnt">
+<figure><img src="common/img/icon-limited.png" width="60" height="82" alt="メンエス有料会員メニュー"/></figure>
+<figure class="plan"><img src="common/img/paying/label-all2.png" width="200" height="57" alt=""/></figure>
+<p class="txt-c">こちらは有料会員限定のメニューです。</p>
+<h3>チャットとは</h3>
+<p>有料会員同士でDMを送り合い、情報交換できる機能です。</p>
+<div class="Footer">
+	<a href="paying-member.php"><div class="cBtn blue mgb-4 Hv">有料会員の詳細を見る</div></a>
+<!--<a href="#cancel" class="popup-modal-dismiss"><div class="cBtn gray Hv">閉じる</div></a>-->
+</div>
+</div>
+</div>
+<!-- チャットポップアップ -->
+
+
+<!-- お問い合わせポップアップ -->
+<div id="payingMemberCONTACTModal" class="mfp-hide white-popup-block">
+<button title="Close (Esc)" type="button" class="mfp-close"></button>
+<div class="Cnt">
+<figure><img src="common/img/icon-limited.png" width="60" height="82" alt="メンエス有料会員メニュー"/></figure>
+<figure class="plan"><img src="common/img/paying/label-all2.png" width="200" height="57" alt=""/></figure>
+<p class="txt-c">こちらは有料会員限定のメニューです。</p>
+<div class="Footer">
+	<a href="paying-member.php"><div class="cBtn blue mgb-4 Hv">有料会員の詳細を見る</div></a>
+<!--<a href="#cancel" class="popup-modal-dismiss"><div class="cBtn gray Hv">閉じる</div></a>-->
+</div>
+</div>
+</div>
+<!-- お問い合わせポップアップ -->
+
+
+<!-- お問い合わせポップアップ -->
+<div id="payingMemberPROFModal" class="mfp-hide white-popup-block">
+<button title="Close (Esc)" type="button" class="mfp-close"></button>
+<div class="Cnt">
+<figure><img src="common/img/icon-limited.png" width="60" height="82" alt="メンエス有料会員メニュー"/></figure>
+<figure class="plan"><img src="common/img/paying/label-all.png" width="200" height="57" alt=""/></figure>
+<p class="txt-c">こちらは有料会員限定のメニューです。</p>
+<h3>他のユーザーのプロフィールについて</h3>
+<p><span class="y-bold">このユーザーの口コミが信頼できるものか判断できるページとなります。</span>ステマ口コミに騙されないために、このユーザーが過去にどのような口コミをしているのか？口コミの評価は？会員の信頼度を表す称号を確認することができます。</p>
+<div class="Footer">
+	<a href="paying-member.php"><div class="cBtn blue mgb-4 Hv">有料会員の詳細を見る</div></a>
+<!--<a href="#cancel" class="popup-modal-dismiss"><div class="cBtn gray Hv">閉じる</div></a>-->
+</div>
+</div>
+</div>
+<!-- お問い合わせポップアップ -->
+
+<!-- 感謝バッジポップアップ -->
+<div id="thankBadgeModal" class="mfp-hide white-popup-block">
+	<button title="Close (Esc)" type="button" class="mfp-close"></button>
+	<div class="Cnt">	
+		<h3>感謝バッジとは</h3>
+				<p>多くのユーザーに信頼されているアカウントのみ所持出来る称号です。</p>
+		<p>「感謝バッジ」とは、口コミがとても魅力的で自身が訪問した時にその通りだった！と参考になった口コミの投稿者や、日ごろお世話になっているユーザーへ感謝の意を込めて送る称号です。</p>
+		<p>「感謝バッジ」とは多くの情報が得られるメンエスサイト内でも、特に貴重な情報を提供した優良会員が得る事が出来る称号です。</p>
+		<p>※譲渡用の感謝バッジは毎月1日に有料会員の皆様には２個アカウントに付与されます。<br>※譲渡用感謝バッジの所持上限数は「2個」となっております。</p>
+	  			<div class="Footer">
+			<a href="about-thankbadge.php"><div class="cBtn blue mgb-4 Hv">詳しく見る</div></a>
+			<!--<a href="#cancel" class="popup-modal-dismiss"><div class="cBtn gray Hv">閉じる</div></a>-->
+		</div>
+  </div>
+</div>
+<!-- 感謝バッジポップアップ -->
+
+<!-- コメント禁止ポップアップ -->
+<div id="commentBanModal" class="mfp-hide white-popup-block">
+	<button title="Close (Esc)" type="button" class="mfp-close"></button>
+	<div class="Cnt">	
+		<p>お客様のアカウントは他ユーザーから通報が複数件ありましたので、一定期間評価ボタンの選択、コメントの書き込みができません。<br>誠に申し訳ございませんが、しばらく経ってから再度お試しください。</p>
+		<div class="Footer">
+			<!--<a href="#cancel" class="popup-modal-dismiss"><div class="cBtn gray Hv">閉じる</div></a>-->
+		</div>
+  </div>
+</div>
+<!-- コメント禁止ポップアップ -->
+
+<!-- 新機能感謝バッジポップアップ -->
+<a class="popup-modal" href="#tnkRlsModal"></a>
+<div id="tnkRlsModal" class="mfp-hide white-popup-block">
+	<button title="Close (Esc)" type="button" class="mfp-close"></button>
+	<div class="Cnt">
+		<h2>新たに【称号】機能が追加！</h2>
+		<h3>第1弾　感謝バッジ</h3>
+		<figure><img src="common/img/badge-thank.svg" alt=""/><span>50</span></figure>
+				<div class="txt">
+			<p>感謝バッジとは、多くの情報が掲載されているメンエスサイト内でも、<span class="red bold">特に貴重な情報を提供している会員が獲得できる</span><span class="y-bold red marker">特別な称号</span><span class="red bold">です。</span></p>
+			<p>今回から有料会員の皆様は、<span class="bold u-l">無料会員ともDMでのやり取りが可能</span>となります！</p>
+			<p>無料会員の中には月に10回以上お店に訪問し、100件以上口コミ投稿しているヘビーユーザーもいるため、これまで以上に<span class="red bold">「マークしていなかったHR情報」</span>などの<span class="u-l">ディープな情報が大量に集まります！</span></p>
+			<p>「口コミに質問したい」という事があったかと思います。感謝バッジを渡せばリアルに詳細を聞く事が可能です。</p>
+			<p>この機会に誰よりも早く<span class="bold">稀少な情報を入手</span>しましょう。</p>
+		</div>
+				
+		<div class="Footer">
+			<div class="afterCheck">
+				<input type="checkbox" id="thank_after_input" name="thank_after_input">
+				<label for="thank_after_input" class="checkCustom">今後表示しない</label>
+			</div>
+			<a href="/about-thankbadge.php"><div class="okBtn Hv">感謝バッジについて詳しく見る</div></a>
+			<a href="#modal_thank_cancel" class="popup-modal-dismiss"><div class="cancelBtn Hv">閉じる</div></a>
+		</div>
+	</div>
+</div>
+<!-- 新機能感謝バッジポップアップ -->
+
+<!-- Contents -->
+<div id="Contents">
+
+
+	
+<div id="Main"><!-- Main -->
+	
+	
+	<div class="chatContainer">
+
+		<div class="chatTo">
+			<div class="name">
+				<span class="txt"></span><span class="unit">さんとのやりとり</span><br>
+				<button class="noStyle" style="font-size:12px;" data-iziModal-open=".iziModal">チャットの使い方はこちら</button>
+				<a href="#restNumModal" class="popup-modal restNum"></a>
+				<a href="#chatUsageModal" class="popup-modal" style="font-size: 12px; color:#000;text-decoration: underline;margin-left: 10px; ">利用注意点</a>
+			</div>
+
+			<div class="backBtn link"><a href="#userpage">相手<br>マイページへ</a></div>
+			<div class="backBtn spView"><a href="#Side">チャット<br>一覧</a></div>
+		</div>
+
+		<div class="content">
+		</div>
+		<a class="popup-modal" href="#spanEndModal" style="display:none;"><div class="spanEnd Hv">期間終了について</div></a>
+	</div>
+	
+	<div class="chatBlock">
+		<form>
+			<div class="imgBtn">
+				<label>
+					<span class="filelabel" title="ファイルを選択">
+						<img src="common/img/chat/image.svg" alt=""/>
+					</span>
+					<input type="file" name="datafile" id="filesend" accept=".jpg,.gif,.png,image/gif,image/jpeg,image/png">
+				</label>	
+			</div>
+			<div class="txtArea">
+				<textarea placeholder="メッセージを入力" name="message"></textarea>
+			</div>
+			<div class="sdBtn">
+				<button type="button" class="submit send" maxlength="2000"><img src="common/img/chat/send.svg" alt=""/></button>	
+			</div>
+		</form>
+	</div>
+
+	
+</div><!-- Main -->
+
+
+
+
+<div id="Side" class="chatListSide"><!-- Side -->
+<h2 class="chatListTitle">チャットリスト</h2>
+<div class="chatListContainer onlyChat">
+<div class="content chat">
+
+
+
+<div class="iziModal" data-izimodal-title="①" data-izimodal-subtitle="サロンページやセラピストページにある口コミから、「有料会員」のマークがついた気になるユーザーを探す、または掲示板ページから気になるユーザーのプロフィールページに移動します。">
+    <figure style="text-align:center;">
+        <img src="common/img/chat/howtoChat-01.png" width="100%" alt=""/>
+    </figure>
+</div>
+
+<div class="iziModal" data-izimodal-title="②" data-izimodal-subtitle="メッセージを送りたい相手のユーザーページに「メッセージを送る」ボタンがあるのでクリックします。">
+    <figure style="text-align:center;">
+        <img src="common/img/chat/howtoChat-02.png" width="100%" alt=""/>
+    </figure>
+</div>
+
+<div class="iziModal" data-izimodal-title="③" data-izimodal-subtitle="チャットページに先ほどのユーザーがコンタクト先として追加されるのでメッセージを送ってみましょう！ユーザー同士の貴重な情報交換などに有効に使ってください。">
+    <figure style="text-align:center;">
+        <img src="common/img/chat/howtoChat-03.png" width="100%" alt=""/>
+    </figure>
+</div>
+
+
+
+    
+    <ul class="chat-members"></ul>
+
+</div>
+</div>
+</div><!-- Side -->
+
+
+
+
+</div>
+<!-- Contents -->
+
+
+	
+<!-- 期間終了ポップアップ -->
+<div id="spanEndModal" class="mfp-hide white-popup-block">
+	<button title="Close (Esc)" type="button" class="mfp-close"></button>
+	<div class="Cnt">
+		<h3>この会員とはチャットの利用期間が終了しています</h3>
+		<p>最新の感謝バッジを送った会員とのみ、DMでのやり取りが可能となっております。</p>
+		<div class="Footer">
+			<a href="about-thankbadge.php"><div class="lpBtn Hv">感謝バッジについて</div></a>
+		</div>
+	</div>
+</div>
+<!-- 期間終了ポップアップ -->
+	
+<!-- 残数ポップアップ -->
+<div id="restNumModal" class="mfp-hide white-popup-block">
+	<button title="Close (Esc)" type="button" class="mfp-close"></button>
+	<div class="Cnt">
+		<h3>送受信数について</h3>
+						<div class="txt">
+					<p>無料会員から感謝バッジを送られると、送受信数の制限が無くなります。</p>
+					<p class="red">※有料会員は感謝バッジ譲渡の必要はありません。<br>※無料会員は最新の感謝バッジを送った会員とのみ、チャットでのやり取りが可能となっております。</p>
+				</div>
+			</div>
+</div>
+<!-- 残数ポップアップ -->
+
+<!-- 利用注意点Modal -->
+<div id="chatUsageModal" class="mfp-hide white-popup-block">
+	<button title="Close (Esc)" type="button" class="mfp-close"></button>
+	<div class="Cnt">
+		<h3>利用注意点</h3>
+		<p>当サイトでは、ユーザー同士が気持ちよく利用できる環境を提供するために、他のユーザーに対する攻撃的な発言や不適切な言動はお控えください。全てのユーザーが気持ちよく利用できるようご協力をお願いします。<br>禁止行為に該当すると判断された場合、当サイトは一時的または永久的なアカウント停止などの対応を取ることがあります。</p>
+	</div>
+</div>
+<!-- 利用注意点Modal -->
+
+
+
+
+</div>
+<script type="text/javascript" src="common/js/jquery.min.js"></script>
+<script type="text/javascript" src="common/js/jquery-3.5.1.min.js"></script>
+<script type="text/javascript" src="common/js/iziModal.js"></script>
+<script type="text/javascript">
+$(function(){
+	$(".iziModal").iziModal({
+		group: "group01",
+		loop: false,
+		headerColor: "#00B5C4"
+	});
+})</script>
+<script type="text/javascript" src="common/js/spMenu.js"></script>
+<script src="common/js/jquery.magnific-popup.js"></script>
+<script src="common/js/modalScript.js"></script>
+<script src="common/js/script.js"></script>	
+<script src="common/js/smoothscroll.js"></script>	
+<script src="common/js/luminous.min.js"></script>
+<script src="common/js/toast/toaster-box.js"></script>
+<script src="common/js/chat.js"></script>	
+<script>
+	var chat = new MenEstheChat()
+	chat.load_chat_members('.chat-members', 0);
+</script>
+<script src="common/js/lozad.js"></script>
+<script>
+	const observer = lozad();
+	observer.observe();
+</script>
+<script src="common/js/common.js.php"></script>
+</body>
+</html>
