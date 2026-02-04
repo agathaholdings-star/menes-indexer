@@ -18,7 +18,48 @@
 │   ├── UX_FLOW.txt            ← UXフロー
 │   ├── V0_PROMPTS.md          ← v0.app用プロンプト集
 │   └── AI_CONCIERGE_PLAN.md   ← 将来のAI機能計画
+├── frontend/              ← フロントエンド
+│   └── demo1/             ← v0.appで生成したNext.jsプロジェクト
 └── menesthejp/            ← 競合MEのHTML（分析用）
+```
+
+## フロントエンド構造（frontend/demo1）
+
+v0.appで生成したNext.js (App Router) プロジェクト。
+
+### ページ構成
+```
+app/
+├── page.tsx               ← トップページ
+├── area/[prefecture]/     ← エリア検索
+├── search/                ← セラピスト検索（メイン機能）
+├── therapist/[id]/        ← セラピスト詳細
+├── shop/[id]/             ← 店舗詳細
+├── type/[type]/           ← タイプ別一覧
+├── review/                ← 口コミ投稿
+├── mypage/                ← マイページ
+├── bbs/                   ← 掲示板
+├── pricing/               ← 料金プラン
+├── login/                 ← ログイン
+└── register/              ← 新規登録
+```
+
+### コンポーネント構成
+```
+components/
+├── home/          ← トップページ用（hero, type-grid, recommendations等）
+├── layout/        ← レイアウト（header, footer, sidebar）
+├── review/        ← 口コミ投稿ウィザード（step-type, step-body等）
+├── shared/        ← 共通（therapist-card, review-card）
+├── therapist/     ← セラピスト詳細（radar-chart, composition-chart等）
+└── ui/            ← ShadcnUIコンポーネント
+```
+
+### 起動コマンド
+```bash
+cd frontend/demo1
+pnpm install
+pnpm dev
 ```
 
 ## 技術スタック
