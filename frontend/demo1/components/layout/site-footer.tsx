@@ -77,17 +77,17 @@ export function SiteFooter() {
             <h3 className="mb-3 font-semibold">運営情報</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/about" className="text-muted-foreground hover:text-foreground">
-                  運営会社
+                <Link href="/legal/tokushoho" className="text-muted-foreground hover:text-foreground">
+                  特定商取引法に基づく表記
                 </Link>
               </li>
               <li>
-                <Link href="/terms" className="text-muted-foreground hover:text-foreground">
+                <Link href="/legal/terms" className="text-muted-foreground hover:text-foreground">
                   利用規約
                 </Link>
               </li>
               <li>
-                <Link href="/privacy" className="text-muted-foreground hover:text-foreground">
+                <Link href="/legal/privacy" className="text-muted-foreground hover:text-foreground">
                   プライバシーポリシー
                 </Link>
               </li>
