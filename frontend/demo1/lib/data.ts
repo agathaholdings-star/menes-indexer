@@ -4,8 +4,8 @@ export const therapistTypes = [
   { id: "seiso", label: "清楚なお姉さん系", icon: "Heart", description: "癒やし" },
   { id: "gal", label: "イマドキなギャル系", icon: "Zap", description: "ノリが良い" },
   { id: "model", label: "モデル・美女系", icon: "Crown", description: "高嶺の花" },
-  { id: "imouto", label: "親しみやすい妹系", icon: "Smile", description: "元気" },
-  { id: "yoen", label: "妖艶な愛人系", icon: "Flame", description: "しっとり" },
+  { id: "imouto", label: "元気なフレッシュ系", icon: "Smile", description: "明るい" },
+  { id: "yoen", label: "大人のお姉さん系", icon: "Flame", description: "落ち着いた雰囲気" },
 ] as const;
 
 export const bodyTypes = [
@@ -16,10 +16,10 @@ export const bodyTypes = [
 ] as const;
 
 export const serviceTypes = [
-  { id: "healthy", label: "健全", icon: "Leaf", description: "マッサージ重視" },
-  { id: "close", label: "イチャイチャ", icon: "Heart", description: "恋人距離感" },
-  { id: "exciting", label: "ドキドキ", icon: "Sparkles", description: "際どい施術あり" },
-  { id: "intense", label: "過激", icon: "Flame", description: "限界突破" },
+  { id: "healthy", label: "リラックス", icon: "Leaf", description: "マッサージ重視" },
+  { id: "close", label: "癒し系", icon: "Heart", description: "会話も楽しめる" },
+  { id: "exciting", label: "しっかり", icon: "Sparkles", description: "本格施術" },
+  { id: "intense", label: "プレミアム", icon: "Flame", description: "高評価" },
 ] as const;
 
 export const parameterLabels = [
@@ -30,8 +30,8 @@ export const parameterLabels = [
 ] as const;
 
 export const appealTags = {
-  looks: ["#もちもち肌", "#スレンダー", "#巨乳", "#美脚", "#黒髪", "#派手髪"],
-  personality: ["#アニメ好き", "#お酒好き", "#彼氏感", "#マッサージ上手", "#鼠蹊部OK"],
+  looks: ["#もちもち肌", "#スレンダー", "#スタイル抜群", "#美脚", "#黒髪", "#派手髪"],
+  personality: ["#アニメ好き", "#お酒好き", "#話し上手", "#マッサージ上手", "#丁寧"],
 } as const;
 
 export const areasData = {
@@ -302,7 +302,7 @@ export const mockTherapists: Therapist[] = [
     tags: ["#アイドル系", "#愛嬌抜群", "#癒し系", "#もちもち肌"],
     typeId: "idol",
     primaryType: "idol",
-    types: [{ type: "アイドル系", percentage: 70 }, { type: "妹系", percentage: 30 }],
+    types: [{ type: "アイドル系", percentage: 70 }, { type: "フレッシュ系", percentage: 30 }],
     bodyType: "normal",
     parameters: { conversation: 5, distance: 3, technique: 3, personality: 4 },
     reviewCount: 62,
@@ -323,10 +323,10 @@ export const mockTherapists: Therapist[] = [
     profile: { height: 168, bust: "88(E)", waist: 60, hip: 88, cup: "E" },
     comment: "大人の癒しをお届けします。非日常の時間を一緒に過ごしましょう。",
     schedule: { 月: "18:00-翌2:00", 火: "18:00-翌2:00", 水: "休", 木: "18:00-翌2:00", 金: "18:00-翌3:00", 土: "18:00-翌3:00", 日: "休" },
-    tags: ["#妖艶系", "#大人", "#テクニシャン", "#巨乳"],
+    tags: ["#大人系", "#大人", "#テクニシャン", "#巨乳"],
     typeId: "yoen",
     primaryType: "yoen",
-    types: [{ type: "妖艶系", percentage: 90 }, { type: "モデル系", percentage: 10 }],
+    types: [{ type: "大人系", percentage: 90 }, { type: "モデル系", percentage: 10 }],
     bodyType: "glamour",
     parameters: { conversation: 4, distance: 5, technique: 5, personality: 4 },
     reviewCount: 28,
@@ -345,12 +345,12 @@ export const mockTherapists: Therapist[] = [
       "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&h=500&fit=crop",
     ],
     profile: { height: 152, bust: "78(A)", waist: 52, hip: 80, cup: "A" },
-    comment: "甘えさせてください♪ 妹みたいに可愛がってもらえると嬉しいです！",
+    comment: "元気いっぱいに癒します♪ リラックスしてもらえると嬉しいです！",
     schedule: { 月: "休", 火: "14:00-22:00", 水: "14:00-22:00", 木: "14:00-22:00", 金: "休", 土: "10:00-18:00", 日: "10:00-18:00" },
-    tags: ["#妹系", "#甘え上手", "#ふわふわ", "#黒髪"],
+    tags: ["#フレッシュ系", "#甘え上手", "#ふわふわ", "#黒髪"],
     typeId: "imouto",
     primaryType: "imouto",
-    types: [{ type: "妹系", percentage: 85 }, { type: "アイドル系", percentage: 15 }],
+    types: [{ type: "フレッシュ系", percentage: 85 }, { type: "アイドル系", percentage: 15 }],
     bodyType: "slender",
     parameters: { conversation: 4, distance: 4, technique: 3, personality: 5 },
     reviewCount: 41,
@@ -462,7 +462,7 @@ export const mockReviews: Review[] = [
     bodyType: "glamour",
     serviceType: "intense",
     parameters: { conversation: 4, distance: 5, technique: 5, personality: 4 },
-    tags: ["#妖艶系", "#テクニシャン", "#大人"],
+    tags: ["#大人系", "#テクニシャン", "#大人"],
     q1FirstImpression: "色気がすごい。大人の魅力。",
     q2Service: "経験豊富なのがわかる。全てにおいて完璧でした。",
     q3Notes: "VIP価格だが、それだけの価値はある。",
