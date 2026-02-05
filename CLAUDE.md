@@ -9,12 +9,23 @@
 
 ## 本番環境
 
-| 項目 | 値 |
-|------|-----|
-| ドメイン | `menes-indexer.com` |
-| フロントエンド | Vercel |
-| データベース | Supabase |
-| スクレイピングBot | VPS (162.43.14.182) |
+| 項目 | サービス | 備考 |
+|------|----------|------|
+| ドメイン | Cloudflare | `menes-indexer.com` |
+| フロントエンド | Vercel | Next.js App Router |
+| データベース | Supabase | PostgreSQL, Auth, Storage |
+| スクレイピングBot | VPS (162.43.14.182) | Python |
+
+### 構成図
+```
+Cloudflare（ドメイン + CDN + DNS）
+      ↓
+Vercel（Next.js フロントエンド）
+      ↓
+Supabase（DB + Auth + Storage）
+      ↑
+VPS（スクレイピングBot → DB更新）
+```
 
 ## ディレクトリ構造
 
