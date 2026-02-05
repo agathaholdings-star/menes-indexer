@@ -139,11 +139,56 @@ Supabaseに格納済み（MEスクレイピングデータ）:
 1. `docs/SERVICE_OVERVIEW.md` - サービス全体像、会員体系、機能マトリクス
 2. `docs/V0_PROMPTS.md` - フロントエンド生成用プロンプト
 
+## デプロイフロー
+
+```
+1. v0.appでフロントエンドデザイン作成
+      ↓
+2. v0.appからVercelにデプロイ（自動）
+      ↓
+3. Cloudflareでドメイン取得（menes-indexer.com）
+      ↓
+4. VercelにカスタムドメインをVercelに登録 → DNS設定取得
+      ↓
+5. CloudflareでDNS設定（CNAME → Vercel）
+      ↓
+6. 本番公開
+```
+
+### ドメイン設定手順
+
+**Cloudflareでドメイン購入:**
+1. https://dash.cloudflare.com/ → Domain Registration → Register Domains
+2. `menes-indexer.com` を検索して購入
+
+**Vercelでカスタムドメイン追加:**
+1. Vercelダッシュボード → プロジェクト → Settings → Domains
+2. `menes-indexer.com` を追加
+3. DNS設定をメモ（例: `cname.vercel-dns.com`）
+
+**CloudflareでDNS設定:**
+1. Cloudflare → ドメイン → DNS
+2. CNAME追加: `@` → `cname.vercel-dns.com`（Proxy: OFF）
+
+## 未解決課題
+
+### 新規店舗URLの自動発見
+現状のデータはMEからスクレイピングしたもの。MEに依存しない新規店舗発見の仕組みが必要。
+
+**検討中のアプローチ:**
+- 他のメンエス系ポータルサイトのスクレイピング
+- Google検索 + Claude APIでフィルタリング
+- 求人サイト（リジョブ等）の監視
+
+詳細は Claude Code で議論中。
+
 ## コマンド例
 
 ```bash
-# Next.jsプロジェクト作成（まだ未実施）
-npx create-next-app@latest frontend --typescript --tailwind --eslint --app --src-dir
+# フロントエンド起動
+cd frontend/demo1
+pnpm install
+pnpm dev
 
 # Supabase CLI
 supabase init
