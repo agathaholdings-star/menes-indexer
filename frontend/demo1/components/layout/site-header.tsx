@@ -39,12 +39,15 @@ export function SiteHeader() {
   const [memberLevel, setMemberLevel] = useState<"free" | "standard" | "vip">("free");
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
 
+  const [monthlyReviewCount, setMonthlyReviewCount] = useState(1);
+
   const user = {
     name: "山田太郎",
     avatar: null,
     remainingDays: 3,
     unreadNotifications: 5,
     unreadMessages: 2,
+    monthlyReviewCount: monthlyReviewCount,
   };
 
   const getMemberBadge = () => {
@@ -197,6 +200,20 @@ export function SiteHeader() {
                           </p>
                         </div>
                       )}
+                      {memberLevel === "standard" && (
+                        <div className="mt-3 p-2 rounded-md bg-primary/10 text-sm">
+                          <div className="flex items-center justify-between mb-1">
+                            <p className="text-muted-foreground text-xs">今月の投稿</p>
+                            <span className="text-primary font-bold">{user.monthlyReviewCount}/3</span>
+                          </div>
+                          <div className="w-full bg-muted rounded-full h-1.5">
+                            <div
+                              className="bg-primary h-1.5 rounded-full transition-all"
+                              style={{ width: `${Math.min(100, (user.monthlyReviewCount / 3) * 100)}%` }}
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <DropdownMenuItem asChild>
@@ -312,6 +329,20 @@ export function SiteHeader() {
                         <p className="text-sm text-muted-foreground mt-2">
                           無料閲覧残り: <span className="text-primary font-bold">{user.remainingDays}日</span>
                         </p>
+                      )}
+                      {memberLevel === "standard" && (
+                        <div className="mt-2">
+                          <div className="flex items-center justify-between text-sm mb-1">
+                            <span className="text-muted-foreground">今月の投稿</span>
+                            <span className="text-primary font-bold">{user.monthlyReviewCount}/3</span>
+                          </div>
+                          <div className="w-full bg-muted rounded-full h-1.5">
+                            <div
+                              className="bg-primary h-1.5 rounded-full transition-all"
+                              style={{ width: `${Math.min(100, (user.monthlyReviewCount / 3) * 100)}%` }}
+                            />
+                          </div>
+                        </div>
                       )}
                     </div>
                   )}
@@ -449,6 +480,8 @@ export function SiteHeader() {
       <ReviewWizardModal
         open={isReviewModalOpen}
         onOpenChange={setIsReviewModalOpen}
+        memberType={isLoggedIn ? memberLevel : "free"}
+        monthlyReviewCount={user.monthlyReviewCount}
       />
     </>
   );

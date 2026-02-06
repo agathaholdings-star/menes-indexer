@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useState, useEffect } from "react";
-import { X, ChevronLeft, ChevronRight, Check, Sparkles, Crown, Star, Heart, Smile, Flame, Leaf, Search, MapPin } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Check, Sparkles, Crown, Star, Heart, Smile, Flame, Leaf, Search, MapPin, AlertCircle } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,15 +15,17 @@ import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { therapistTypes, bodyTypes, parameterLabels, appealTags, mockShops, mockTherapists, areas } from "@/lib/data";
+import { therapistTypes, bodyTypes, parameterLabels, mockShops, mockTherapists, areas } from "@/lib/data";
 
 interface ReviewWizardModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   preselectedTherapistId?: string;
+  memberType?: "free" | "standard" | "vip";
+  monthlyReviewCount?: number;
 }
 
-const TOTAL_STEPS = 8;
+const TOTAL_STEPS = 9;
 
 const typeIcons: Record<string, React.ElementType> = {
   idol: Sparkles,
@@ -34,18 +36,11 @@ const typeIcons: Record<string, React.ElementType> = {
   yoen: Flame,
 };
 
-// New service types: 土建, SKR, HR
-const serviceTypes = [
-  { id: "kenzen", label: "土建（健全）", icon: "leaf", description: "マッサージ重視" },
-  { id: "skr", label: "SKR", icon: "mushroom", description: "きのこ" },
-  { id: "hr", label: "HR", icon: "heart", description: "ハート" },
-];
-
 // Area list
 const areaList = ["東京", "福岡", "大阪", "名古屋"];
 const allAreas = areas.map(a => a.name);
 
-export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId }: ReviewWizardModalProps) {
+export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, memberType = "free", monthlyReviewCount = 0 }: ReviewWizardModalProps) {
   const [step, setStep] = useState(0);
   const [showAllAreas, setShowAllAreas] = useState(false);
   const [selectedArea, setSelectedArea] = useState<string | null>(null);
@@ -62,7 +57,6 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId }
     technique: 3,
     personality: 3,
   });
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [score, setScore] = useState(80);
   const [reviewText, setReviewText] = useState({
     q1: "",
@@ -70,6 +64,8 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId }
     q3: "",
   });
   const [isComplete, setIsComplete] = useState(false);
+  const [showMissingReport, setShowMissingReport] = useState(false);
+  const [missingTherapistName, setMissingTherapistName] = useState("");
 
   useEffect(() => {
     if (preselectedTherapistId) {
@@ -135,9 +131,14 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId }
     setTimeout(() => setStep(4), 300);
   };
 
+  const handleBodySelect = (bodyId: string) => {
+    setSelectedBody(bodyId);
+    setTimeout(() => setStep(5), 300);
+  };
+
   const handleServiceSelect = (serviceId: string) => {
     setSelectedService(serviceId);
-    setTimeout(() => setStep(5), 300);
+    setTimeout(() => setStep(6), 300);
   };
 
   const handleClose = () => {
@@ -152,43 +153,28 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId }
     setSelectedBody(null);
     setSelectedService(null);
     setRatings({ conversation: 3, distance: 3, technique: 3, personality: 3 });
-    setSelectedTags([]);
     setScore(80);
     setReviewText({ q1: "", q2: "", q3: "" });
     setIsComplete(false);
+    setShowMissingReport(false);
+    setMissingTherapistName("");
     onOpenChange(false);
-  };
-
-  const toggleTag = (tag: string) => {
-    setSelectedTags(prev =>
-      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
-    );
   };
 
   const canProceed = () => {
     switch (step) {
-      case 0:
-        return selectedArea !== null;
-      case 1:
-        return selectedShopId !== null;
-      case 2:
-        return selectedTherapistId !== null;
-      case 3:
-        return selectedType !== null;
-      case 4:
-        return selectedService !== null;
-      case 5:
-        return true; // Ratings are optional
-      case 6:
-        return true; // Score is optional
-      case 7:
-        return reviewText.q1.length >= 10 && reviewText.q2.length >= 20;
-      default:
-        return false;
+      case 0: return selectedArea !== null;
+      case 1: return selectedShopId !== null;
+      case 2: return selectedTherapistId !== null;
+      case 3: return selectedType !== null;
+      case 4: return selectedBody !== null;
+      case 5: return selectedService !== null;
+      case 6: return true; // Ratings are optional
+      case 7: return true; // Score always has default
+      case 8: return reviewText.q1.length >= 50 && reviewText.q2.length >= 100 && reviewText.q3.length >= 50;
+      default: return false;
     }
   };
-
-  const selectedTherapist = mockTherapists.find(t => t.id === selectedTherapistId);
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -219,7 +205,11 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId }
         {/* Step Content */}
         <div className="min-h-[400px] p-6">
           {isComplete ? (
-            <CompletionScreen onClose={handleClose} />
+            <CompletionScreen
+              onClose={handleClose}
+              memberType={memberType}
+              monthlyReviewCount={monthlyReviewCount}
+            />
           ) : (
             <>
               {step === 0 && (
@@ -247,24 +237,31 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId }
                   selectedTherapistId={selectedTherapistId}
                   onSelect={handleTherapistSelect}
                   filteredTherapists={filteredTherapists}
+                  showMissingReport={showMissingReport}
+                  setShowMissingReport={setShowMissingReport}
+                  missingTherapistName={missingTherapistName}
+                  setMissingTherapistName={setMissingTherapistName}
                 />
               )}
               {step === 3 && (
                 <StepType selectedType={selectedType} onSelect={handleTypeSelect} />
               )}
               {step === 4 && (
-                <StepService selectedService={selectedService} onSelect={handleServiceSelect} />
+                <StepBody selectedBody={selectedBody} onSelect={handleBodySelect} />
               )}
               {step === 5 && (
+                <StepService selectedService={selectedService} onSelect={handleServiceSelect} />
+              )}
+              {step === 6 && (
                 <StepRatings
                   ratings={ratings}
                   onChangeRating={(key, value) => setRatings(prev => ({ ...prev, [key]: value }))}
                 />
               )}
-              {step === 6 && (
+              {step === 7 && (
                 <StepScore score={score} onChangeScore={setScore} />
               )}
-              {step === 7 && (
+              {step === 8 && (
                 <StepText
                   reviewText={reviewText}
                   onChange={(key, value) => setReviewText(prev => ({ ...prev, [key]: value }))}
@@ -404,12 +401,6 @@ function StepShop({
             </span>
           </button>
         ))}
-        <button
-          type="button"
-          className="w-full text-left px-4 py-3 rounded-lg text-sm text-primary hover:bg-muted border border-dashed"
-        >
-          + 該当店舗がない場合は直接入力
-        </button>
       </div>
     </div>
   );
@@ -422,12 +413,20 @@ function StepTherapist({
   selectedTherapistId,
   onSelect,
   filteredTherapists,
+  showMissingReport,
+  setShowMissingReport,
+  missingTherapistName,
+  setMissingTherapistName,
 }: {
   therapistSearch: string;
   setTherapistSearch: (v: string) => void;
   selectedTherapistId: string | null;
   onSelect: (therapistId: string) => void;
   filteredTherapists: typeof mockTherapists;
+  showMissingReport: boolean;
+  setShowMissingReport: (v: boolean) => void;
+  missingTherapistName: string;
+  setMissingTherapistName: (v: string) => void;
 }) {
   return (
     <div>
@@ -444,7 +443,7 @@ function StepTherapist({
           className="pl-10"
         />
       </div>
-      
+
       <p className="text-xs text-muted-foreground mb-2">【50音順】</p>
       <div className="grid grid-cols-4 gap-2 max-h-64 overflow-y-auto">
         {filteredTherapists.map(t => (
@@ -478,11 +477,40 @@ function StepTherapist({
           </button>
         ))}
       </div>
-      
+
+      {/* Missing therapist report */}
       <div className="mt-4 pt-4 border-t">
-        <p className="text-xs text-muted-foreground mb-2">当サイトに登録されていないセラピストの場合</p>
-        <Input placeholder="セラピスト名を記入 ※「匿名」との入力はご遠慮ください" className="text-sm" />
-        <p className="text-xs text-orange-500 mt-1">※退店済み、匿名セラピストへの口コミ投稿には閲覧日数を付与しておりません。</p>
+        {!showMissingReport ? (
+          <button
+            type="button"
+            onClick={() => setShowMissingReport(true)}
+            className="w-full text-left px-4 py-3 rounded-lg text-sm text-primary hover:bg-muted border border-dashed flex items-center gap-2"
+          >
+            <AlertCircle className="h-4 w-4" />
+            この人がいない（運営に報告）
+          </button>
+        ) : (
+          <div className="p-4 rounded-lg border bg-muted/50 space-y-3">
+            <p className="text-sm font-medium">セラピストが見つからない場合</p>
+            <p className="text-xs text-muted-foreground">
+              セラピスト名をご記入ください。運営が確認後、正規ルートで追加します。追加後にお知らせします。
+            </p>
+            <Input
+              placeholder="セラピスト名"
+              value={missingTherapistName}
+              onChange={(e) => setMissingTherapistName(e.target.value)}
+              className="text-sm"
+            />
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={() => setShowMissingReport(false)} className="bg-transparent">
+                キャンセル
+              </Button>
+              <Button size="sm" disabled={!missingTherapistName.trim()}>
+                報告する
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -528,7 +556,42 @@ function StepType({
   );
 }
 
-// Step 4: Service Selection - 3 choices
+// Step 4: Body Type Selection
+function StepBody({
+  selectedBody,
+  onSelect,
+}: {
+  selectedBody: string | null;
+  onSelect: (body: string) => void;
+}) {
+  return (
+    <div>
+      <h3 className="text-base font-semibold mb-1">ボディタイプは？</h3>
+      <p className="text-sm text-muted-foreground mb-4">
+        最も近いものを1つ選んでください
+      </p>
+      <div className="grid grid-cols-2 gap-3">
+        {bodyTypes.map((bt) => (
+          <button
+            key={bt.id}
+            type="button"
+            onClick={() => onSelect(bt.id)}
+            className={cn(
+              "flex items-center justify-center gap-2 p-4 rounded-xl border-2 transition-all",
+              selectedBody === bt.id
+                ? "border-primary bg-primary/5 ring-2 ring-primary/20"
+                : "border-border hover:border-primary/50 hover:bg-muted/50"
+            )}
+          >
+            <span className="font-medium text-sm">{bt.label}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Step 5: Service Selection - 3 choices
 function StepService({
   selectedService,
   onSelect,
@@ -543,7 +606,7 @@ function StepService({
         最も近いものを1つ選んでください
       </p>
       <div className="grid grid-cols-1 gap-3">
-        {/* 土建（健全） */}
+        {/* 健全 */}
         <button
           type="button"
           onClick={() => onSelect("kenzen")}
@@ -558,7 +621,7 @@ function StepService({
             <Leaf className="h-6 w-6 text-green-600" />
           </div>
           <div className="text-left">
-            <span className="font-medium">土建（健全）</span>
+            <span className="font-medium">健全</span>
             <p className="text-xs text-muted-foreground">マッサージ重視</p>
           </div>
         </button>
@@ -607,7 +670,7 @@ function StepService({
   );
 }
 
-// Step 5: Ratings
+// Step 6: Ratings (optional)
 function StepRatings({
   ratings,
   onChangeRating,
@@ -619,7 +682,7 @@ function StepRatings({
     <div>
       <h3 className="text-base font-semibold mb-1">もう少し詳しく教えて</h3>
       <p className="text-sm text-muted-foreground mb-4">
-        各項目を1〜5で評価してください（任意）
+        各項目を1〜5で評価してください（任意・スキップ可）
       </p>
       <div className="space-y-6">
         {parameterLabels.map((item) => (
@@ -644,7 +707,7 @@ function StepRatings({
   );
 }
 
-// Step 6: Score
+// Step 7: Score
 function StepScore({
   score,
   onChangeScore,
@@ -656,7 +719,7 @@ function StepScore({
     <div>
       <h3 className="text-base font-semibold mb-1">点数をつけるとしたら？</h3>
       <p className="text-sm text-muted-foreground mb-6">
-        0〜100点で評価してください
+        0〜100点で評価してください（10点刻み）
       </p>
       <div className="text-center mb-6">
         <span className="text-6xl font-bold text-primary">{score}</span>
@@ -667,7 +730,7 @@ function StepScore({
         onValueChange={([value]) => onChangeScore(value)}
         min={0}
         max={100}
-        step={5}
+        step={10}
         className="w-full"
       />
       <div className="flex justify-between text-xs text-muted-foreground mt-2">
@@ -679,7 +742,7 @@ function StepScore({
   );
 }
 
-// Step 7: Text Review
+// Step 8: Text Review - 3 questions with character limits
 function StepText({
   reviewText,
   onChange,
@@ -692,7 +755,7 @@ function StepText({
       <h3 className="text-base font-semibold mb-1">最後に感想を教えて</h3>
       <div>
         <label htmlFor="q1" className="block text-sm font-medium mb-1">
-          第一印象
+          Q1. 第一印象は？（50〜100字）
         </label>
         <Textarea
           id="q1"
@@ -700,12 +763,18 @@ function StepText({
           value={reviewText.q1}
           onChange={(e) => onChange("q1", e.target.value)}
           rows={2}
+          maxLength={100}
         />
-        <p className="text-xs text-muted-foreground mt-1">{reviewText.q1.length}文字</p>
+        <p className={cn(
+          "text-xs mt-1",
+          reviewText.q1.length < 50 ? "text-muted-foreground" : reviewText.q1.length <= 100 ? "text-green-600" : "text-destructive"
+        )}>
+          {reviewText.q1.length}/100字（最低50字）
+        </p>
       </div>
       <div>
         <label htmlFor="q2" className="block text-sm font-medium mb-1">
-          施術・接客
+          Q2. サービス/施術の良かった点は？（100〜150字）
         </label>
         <Textarea
           id="q2"
@@ -713,12 +782,18 @@ function StepText({
           value={reviewText.q2}
           onChange={(e) => onChange("q2", e.target.value)}
           rows={3}
+          maxLength={150}
         />
-        <p className="text-xs text-muted-foreground mt-1">{reviewText.q2.length}文字</p>
+        <p className={cn(
+          "text-xs mt-1",
+          reviewText.q2.length < 100 ? "text-muted-foreground" : reviewText.q2.length <= 150 ? "text-green-600" : "text-destructive"
+        )}>
+          {reviewText.q2.length}/150字（最低100字）
+        </p>
       </div>
       <div>
         <label htmlFor="q3" className="block text-sm font-medium mb-1">
-          注意点（任意）
+          Q3. 気になった点・アドバイスは？（50〜100字）
         </label>
         <Textarea
           id="q3"
@@ -726,24 +801,75 @@ function StepText({
           value={reviewText.q3}
           onChange={(e) => onChange("q3", e.target.value)}
           rows={2}
+          maxLength={100}
         />
-        <p className="text-xs text-muted-foreground mt-1">{reviewText.q3.length}文字</p>
+        <p className={cn(
+          "text-xs mt-1",
+          reviewText.q3.length < 50 ? "text-muted-foreground" : reviewText.q3.length <= 100 ? "text-green-600" : "text-destructive"
+        )}>
+          {reviewText.q3.length}/100字（最低50字）
+        </p>
       </div>
     </div>
   );
 }
 
-// Completion Screen
-function CompletionScreen({ onClose }: { onClose: () => void }) {
+// Completion Screen - tier-specific messages
+function CompletionScreen({
+  onClose,
+  memberType,
+  monthlyReviewCount,
+}: {
+  onClose: () => void;
+  memberType: "free" | "standard" | "vip";
+  monthlyReviewCount: number;
+}) {
+  const newCount = monthlyReviewCount + 1;
+  const remaining = Math.max(0, 3 - newCount);
+
   return (
     <div className="text-center py-8">
       <div className="h-20 w-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
         <Check className="h-10 w-10 text-green-600" />
       </div>
       <h3 className="text-xl font-bold mb-2">投稿ありがとうございます！</h3>
-      <p className="text-muted-foreground mb-6">
-        口コミ閲覧日数が<span className="text-primary font-bold">3日</span>付与されました
-      </p>
+
+      {memberType === "free" && (
+        <p className="text-muted-foreground mb-6">
+          口コミ閲覧が<span className="text-primary font-bold">3日間</span>解放されました！
+        </p>
+      )}
+
+      {memberType === "standard" && (
+        <div className="mb-6">
+          <p className="text-muted-foreground mb-3">
+            今月の投稿: <span className="text-primary font-bold">{newCount}/3</span>本
+          </p>
+          {/* Progress bar */}
+          <div className="w-full max-w-xs mx-auto bg-muted rounded-full h-2 mb-2">
+            <div
+              className="bg-primary h-2 rounded-full transition-all"
+              style={{ width: `${Math.min(100, (newCount / 3) * 100)}%` }}
+            />
+          </div>
+          {remaining > 0 ? (
+            <p className="text-sm text-muted-foreground">
+              あと<span className="text-primary font-bold">{remaining}本</span>でVIP機能解放！
+            </p>
+          ) : (
+            <p className="text-sm text-primary font-bold">
+              VIP相当の全機能が解放されました！
+            </p>
+          )}
+        </div>
+      )}
+
+      {memberType === "vip" && (
+        <p className="text-muted-foreground mb-6">
+          いつもご利用ありがとうございます！
+        </p>
+      )}
+
       <div className="space-y-3">
         <Button onClick={onClose} className="w-full">
           閉じる

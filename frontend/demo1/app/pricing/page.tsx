@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Check, X, Crown, Sparkles, Eye, Bell, Ban, MessageSquare, Filter, Headphones } from "lucide-react";
+import { Check, X, Crown, Sparkles, Eye, Bell, Ban, MessageSquare, Filter, Search, BarChart3, PenSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,16 +13,17 @@ const plans = [
   {
     id: "free",
     name: "無料会員",
-    description: "口コミ投稿で閲覧可能",
+    description: "口コミ投稿で3日間アクセス",
     price: 0,
     priceNote: null,
     features: [
+      { label: "エリア・店舗検索", included: true },
+      { label: "セラピスト一覧", included: true },
       { label: "口コミ投稿", included: true },
-      { label: "口コミ閲覧（投稿後24時間限定）", included: true },
-      { label: "セラピスト検索", included: true },
+      { label: "投稿後3日間口コミ閲覧", included: true },
       { label: "お気に入り登録（5件まで）", included: true },
-      { label: "口コミ無制限閲覧", included: false },
-      { label: "広告非表示", included: false },
+      { label: "口コミ読み放題", included: false },
+      { label: "発見検索", included: false },
       { label: "SKR/HRフィルター", included: false },
     ],
     cta: "無料で始める",
@@ -32,17 +33,15 @@ const plans = [
   {
     id: "standard",
     name: "スタンダード会員",
-    description: "全ての口コミが読み放題",
+    description: "口コミ読み放題 + 投稿で機能解放",
     price: 4980,
-    priceNote: "投稿で翌月¥1,000割引 → 実質¥3,980〜",
+    priceNote: "投稿するほど使える機能が増える",
     features: [
-      { label: "口コミ投稿", included: true },
-      { label: "口コミ無制限閲覧", included: true },
-      { label: "セラピスト検索", included: true },
+      { label: "口コミ全文読み放題（MEと同等）", included: true },
       { label: "お気に入り登録（無制限）", included: true },
-      { label: "広告非表示", included: true },
-      { label: "新着口コミ通知", included: true },
-      { label: "SKR/HRフィルター（VIP限定）", included: false },
+      { label: "月1本投稿 → 発見検索が使える", included: true, highlight: true },
+      { label: "月2本投稿 → セラピスト分析 + 掲示板", included: true, highlight: true },
+      { label: "月3本投稿 → VIP相当の全機能解放", included: true, highlight: true },
     ],
     cta: "スタンダードに登録",
     popular: true,
@@ -51,15 +50,16 @@ const plans = [
   {
     id: "vip",
     name: "VIP会員",
-    description: "本当に知りたい情報にアクセス",
+    description: "投稿不要で全機能使い放題",
     price: 14980,
-    priceNote: "最上位プランの全機能を解放",
+    priceNote: "投稿なしで全機能を利用可能",
     features: [
       { label: "スタンダードの全機能", included: true },
-      { label: "SKR/HRフィルター", included: true, highlight: true },
-      { label: "サービスレベルで絞り込み", included: true, highlight: true },
-      { label: "VIP専用掲示板", included: true },
-      { label: "優先サポート", included: true },
+      { label: "SKR/HRフィルター・リスト", included: true, highlight: true },
+      { label: "全フィルター使い放題", included: true, highlight: true },
+      { label: "VIP専用掲示板", included: true, highlight: true },
+      { label: "セラピスト分析", included: true, highlight: true },
+      { label: "投稿不要", included: true },
     ],
     cta: "VIPに登録",
     popular: false,
@@ -67,18 +67,41 @@ const plans = [
   },
 ];
 
+const unlockStages = [
+  {
+    posts: "0本",
+    features: "口コミ全文読み放題",
+    description: "MEと同等の機能。同価格で乗り換えハードルゼロ。",
+  },
+  {
+    posts: "1本",
+    features: "+ 発見検索",
+    description: "タイプ x エリア x スコアで検索。MEにない独自機能。約90秒で投稿完了。",
+  },
+  {
+    posts: "2本",
+    features: "+ セラピスト分析 + 掲示板・DM",
+    description: "レーダーチャート等の詳細分析。コミュニティ機能も解放。",
+  },
+  {
+    posts: "3本",
+    features: "VIP相当の全機能",
+    description: "SKR/HRフィルター、全リスト、VIP掲示板まで全て解放。",
+  },
+];
+
 const faqs = [
   {
     question: "無料会員でも口コミは見れますか？",
-    answer: "はい、口コミを1件投稿すると24時間すべての口コミが閲覧可能になります。投稿を続けることで継続的に閲覧できます。",
+    answer: "はい、口コミを1件投稿すると3日間すべての口コミ本文とスコアが閲覧可能になります。投稿を続けることで継続的に閲覧できます。",
+  },
+  {
+    question: "スタンダード会員の投稿で解放される機能とは？",
+    answer: "料金は月額¥4,980で固定です。0本投稿でも口コミ読み放題（MEと同等）。月1本投稿で発見検索、月2本でセラピスト分析+掲示板、月3本でVIP相当の全機能が解放されます。毎月リセットされます。",
   },
   {
     question: "SKR/HRフィルターとは何ですか？",
-    answer: "VIP会員限定の機能で、サービスレベル（SKR/HR）でセラピストを絞り込むことができます。本当に知りたい情報にアクセスできます。",
-  },
-  {
-    question: "スタンダード会員の割引はどうやって適用されますか？",
-    answer: "月に1件以上口コミを投稿すると、翌月の月額から¥1,000割引されます。毎月投稿を続けることで実質¥3,980でご利用いただけます。",
+    answer: "サービスレベル（SKR/HR）でセラピストを絞り込める機能です。Standard会員は月3本投稿、またはVIP会員で利用可能です。",
   },
   {
     question: "解約はいつでもできますか？",
@@ -86,7 +109,11 @@ const faqs = [
   },
   {
     question: "支払い方法は何がありますか？",
-    answer: "クレジットカード（VISA、Mastercard、JCB、AMEX）に対応しています。",
+    answer: "クレジットカード（VISA、Mastercard、JCB、AMEX、Diners）に対応しています。",
+  },
+  {
+    question: "投稿による機能解放は毎月リセットされますか？",
+    answer: "はい、毎月1日にリセットされます。ただし料金は固定（¥4,980）のまま変わりません。投稿数に応じて使える機能が増える仕組みです。",
   },
 ];
 
@@ -102,18 +129,18 @@ export default function PricingPage() {
             あなたに合ったプランを選ぼう
           </h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            無料会員でも口コミ投稿で閲覧可能。もっと便利に使いたい方は有料プランがおすすめです。
+            無料会員でも口コミ投稿で3日間閲覧可能。スタンダード会員は投稿するほど使える機能が増えます。
           </p>
         </div>
 
         {/* 3カラムのプラン表示 */}
         <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto mb-16 items-start">
           {plans.map((plan) => (
-            <Card 
-              key={plan.id} 
+            <Card
+              key={plan.id}
               className={`relative ${
-                plan.popular 
-                  ? "border-primary shadow-xl md:scale-105 md:-my-4 z-10" 
+                plan.popular
+                  ? "border-primary shadow-xl md:scale-105 md:-my-4 z-10"
                   : plan.tier === "vip"
                   ? "border-amber-400/50 bg-gradient-to-b from-amber-50/50 to-background"
                   : ""
@@ -164,10 +191,10 @@ export default function PricingPage() {
                         <X className="h-5 w-5 text-muted-foreground/50 flex-shrink-0" />
                       )}
                       <span className={
-                        feature.included 
-                          ? feature.highlight 
-                            ? "text-amber-700 font-medium" 
-                            : "" 
+                        feature.included
+                          ? feature.highlight
+                            ? "text-amber-700 font-medium"
+                            : ""
                           : "text-muted-foreground/70"
                       }>
                         {feature.label}
@@ -175,12 +202,12 @@ export default function PricingPage() {
                     </li>
                   ))}
                 </ul>
-                <Button 
+                <Button
                   className={`w-full ${
-                    plan.tier === "vip" 
-                      ? "bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white border-0" 
-                      : plan.popular 
-                      ? "" 
+                    plan.tier === "vip"
+                      ? "bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white border-0"
+                      : plan.popular
+                      ? ""
                       : ""
                   }`}
                   variant={plan.popular ? "default" : plan.tier === "vip" ? "default" : "outline"}
@@ -192,30 +219,61 @@ export default function PricingPage() {
           ))}
         </div>
 
+        {/* Standard会員の投稿で段階的に機能が解放される説明 */}
+        <div className="max-w-3xl mx-auto mb-16">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold mb-2">スタンダード会員の投稿で機能解放</h2>
+            <p className="text-muted-foreground">
+              料金は¥4,980固定。投稿するほど使える機能が増えます。毎月リセット。
+            </p>
+          </div>
+          <div className="space-y-4">
+            {unlockStages.map((stage, index) => (
+              <div
+                key={index}
+                className={`flex items-start gap-4 p-4 rounded-lg border ${
+                  index === 3 ? "border-amber-400/50 bg-amber-50/50" : ""
+                }`}
+              >
+                <div className={`flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold ${
+                  index === 3
+                    ? "bg-gradient-to-r from-amber-500 to-yellow-500 text-white"
+                    : "bg-primary/10 text-primary"
+                }`}>
+                  {stage.posts.replace("本", "")}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-sm text-muted-foreground">月{stage.posts}投稿</span>
+                    <span className="font-medium">{stage.features}</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">{stage.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* 特典セクション */}
         <div className="max-w-4xl mx-auto mb-16">
-          <h2 className="text-2xl font-bold text-center mb-8">有料会員の特典</h2>
+          <h2 className="text-2xl font-bold text-center mb-8">主要機能</h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { icon: Eye, title: "口コミ読み放題", description: "すべての口コミを無制限で閲覧", forVip: false },
-              { icon: Ban, title: "広告非表示", description: "快適なブラウジング体験", forVip: false },
-              { icon: Bell, title: "新着通知", description: "お気に入りの更新をお知らせ", forVip: false },
-              { icon: Filter, title: "SKR/HRフィルター", description: "サービスレベルで絞り込み", forVip: true },
+              { icon: Eye, title: "口コミ読み放題", description: "すべての口コミを無制限で閲覧", note: "Standard(0本)〜" },
+              { icon: Search, title: "発見検索", description: "タイプxエリアxスコアで探索", note: "Standard(1本)〜" },
+              { icon: BarChart3, title: "セラピスト分析", description: "レーダーチャートで詳細分析", note: "Standard(2本)〜" },
+              { icon: Filter, title: "SKR/HRフィルター", description: "サービスレベルで絞り込み", note: "Standard(3本)〜 or VIP" },
             ].map((benefit, index) => (
-              <Card key={index} className={benefit.forVip ? "border-amber-400/50" : ""}>
+              <Card key={index}>
                 <CardContent className="p-6 text-center">
-                  <div className={`h-12 w-12 rounded-full flex items-center justify-center mx-auto mb-4 ${
-                    benefit.forVip ? "bg-amber-100" : "bg-primary/10"
-                  }`}>
-                    <benefit.icon className={`h-6 w-6 ${benefit.forVip ? "text-amber-600" : "text-primary"}`} />
+                  <div className="h-12 w-12 rounded-full flex items-center justify-center mx-auto mb-4 bg-primary/10">
+                    <benefit.icon className="h-6 w-6 text-primary" />
                   </div>
                   <h3 className="font-bold mb-2">{benefit.title}</h3>
-                  <p className="text-sm text-muted-foreground">{benefit.description}</p>
-                  {benefit.forVip && (
-                    <Badge variant="outline" className="mt-2 text-amber-600 border-amber-400">
-                      VIP限定
-                    </Badge>
-                  )}
+                  <p className="text-sm text-muted-foreground mb-2">{benefit.description}</p>
+                  <Badge variant="outline" className="text-xs">
+                    {benefit.note}
+                  </Badge>
                 </CardContent>
               </Card>
             ))}
@@ -239,7 +297,7 @@ export default function PricingPage() {
         <div className="text-center mt-16 p-8 bg-gradient-to-r from-primary/10 to-primary/5 rounded-2xl max-w-2xl mx-auto">
           <h2 className="text-2xl font-bold mb-4">まずは無料で始めよう</h2>
           <p className="text-muted-foreground mb-6">
-            口コミを投稿するだけで24時間すべての口コミが閲覧可能。気に入ったら有料プランへ。
+            口コミを投稿するだけで3日間すべての口コミが閲覧可能。気に入ったら有料プランへ。
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link href="/register">

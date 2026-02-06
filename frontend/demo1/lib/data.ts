@@ -16,10 +16,9 @@ export const bodyTypes = [
 ] as const;
 
 export const serviceTypes = [
-  { id: "healthy", label: "リラックス", icon: "Leaf", description: "マッサージ重視" },
-  { id: "close", label: "癒し系", icon: "Heart", description: "会話も楽しめる" },
-  { id: "exciting", label: "しっかり", icon: "Sparkles", description: "本格施術" },
-  { id: "intense", label: "プレミアム", icon: "Flame", description: "高評価" },
+  { id: "kenzen", label: "健全", icon: "Leaf", description: "マッサージ重視" },
+  { id: "skr", label: "SKR", icon: "Sparkles", description: "きのこ" },
+  { id: "hr", label: "HR", icon: "Flame", description: "ハート" },
 ] as const;
 
 export const parameterLabels = [
@@ -152,10 +151,158 @@ export interface User {
   name: string;
   memberType: "free" | "standard" | "vip";
   viewingExpiry?: string;
-  monthlyPostCount: number;
+  monthlyReviewCount: number;
+  monthlyReviewResetAt?: string;
+  totalReviewCount: number;
   registeredAt: string;
   favorites: string[];
 }
+
+// 有効ティア型定義
+export type EffectiveTier = "free" | "free_active" | "standard_0" | "standard_1" | "standard_2" | "vip";
+
+// 機能解放ロジック
+export function getEffectiveTier(user: User): EffectiveTier {
+  if (user.memberType === "vip") {
+    return "vip";
+  }
+
+  if (user.memberType === "standard") {
+    const count = user.monthlyReviewCount;
+    if (count >= 3) return "vip"; // VIP相当
+    if (count >= 2) return "standard_2"; // 分析+掲示板
+    if (count >= 1) return "standard_1"; // 発見検索
+    return "standard_0"; // 読み放題のみ
+  }
+
+  // 無料会員
+  if (user.viewingExpiry && new Date(user.viewingExpiry) > new Date()) {
+    return "free_active"; // 3日間アクセス中
+  }
+  return "free";
+}
+
+// ティアごとの機能マトリクス
+export const tierPermissions: Record<EffectiveTier, {
+  label: string;
+  color: string;
+  canViewReviewBody: boolean;
+  canViewScores: boolean;
+  canUseDiscoverySearch: boolean;
+  canUseTherapistAnalysis: boolean;
+  canUseBBS: boolean;
+  canUseDM: boolean;
+  canUseSKRFilter: boolean;
+  canUseHRFilter: boolean;
+  canUseSKRList: boolean;
+  canUseHRList: boolean;
+  canUseAllFilters: boolean;
+  canUseVIPBBS: boolean;
+  favoriteLimit: number;
+}> = {
+  free: {
+    label: "無料会員",
+    color: "bg-muted text-muted-foreground",
+    canViewReviewBody: false,
+    canViewScores: false,
+    canUseDiscoverySearch: false,
+    canUseTherapistAnalysis: false,
+    canUseBBS: false,
+    canUseDM: false,
+    canUseSKRFilter: false,
+    canUseHRFilter: false,
+    canUseSKRList: false,
+    canUseHRList: false,
+    canUseAllFilters: false,
+    canUseVIPBBS: false,
+    favoriteLimit: 5,
+  },
+  free_active: {
+    label: "無料会員（閲覧中）",
+    color: "bg-green-100 text-green-800",
+    canViewReviewBody: true,
+    canViewScores: true,
+    canUseDiscoverySearch: false,
+    canUseTherapistAnalysis: false,
+    canUseBBS: false,
+    canUseDM: false,
+    canUseSKRFilter: false,
+    canUseHRFilter: false,
+    canUseSKRList: false,
+    canUseHRList: false,
+    canUseAllFilters: false,
+    canUseVIPBBS: false,
+    favoriteLimit: 5,
+  },
+  standard_0: {
+    label: "スタンダード会員",
+    color: "bg-primary text-primary-foreground",
+    canViewReviewBody: true,
+    canViewScores: true,
+    canUseDiscoverySearch: false,
+    canUseTherapistAnalysis: false,
+    canUseBBS: false,
+    canUseDM: false,
+    canUseSKRFilter: false,
+    canUseHRFilter: false,
+    canUseSKRList: false,
+    canUseHRList: false,
+    canUseAllFilters: false,
+    canUseVIPBBS: false,
+    favoriteLimit: 999,
+  },
+  standard_1: {
+    label: "スタンダード会員",
+    color: "bg-primary text-primary-foreground",
+    canViewReviewBody: true,
+    canViewScores: true,
+    canUseDiscoverySearch: true,
+    canUseTherapistAnalysis: false,
+    canUseBBS: false,
+    canUseDM: false,
+    canUseSKRFilter: false,
+    canUseHRFilter: false,
+    canUseSKRList: false,
+    canUseHRList: false,
+    canUseAllFilters: false,
+    canUseVIPBBS: false,
+    favoriteLimit: 999,
+  },
+  standard_2: {
+    label: "スタンダード会員",
+    color: "bg-primary text-primary-foreground",
+    canViewReviewBody: true,
+    canViewScores: true,
+    canUseDiscoverySearch: true,
+    canUseTherapistAnalysis: true,
+    canUseBBS: true,
+    canUseDM: true,
+    canUseSKRFilter: false,
+    canUseHRFilter: false,
+    canUseSKRList: false,
+    canUseHRList: false,
+    canUseAllFilters: false,
+    canUseVIPBBS: false,
+    favoriteLimit: 999,
+  },
+  vip: {
+    label: "VIP会員",
+    color: "bg-gradient-to-r from-amber-500 to-amber-400 text-white",
+    canViewReviewBody: true,
+    canViewScores: true,
+    canUseDiscoverySearch: true,
+    canUseTherapistAnalysis: true,
+    canUseBBS: true,
+    canUseDM: true,
+    canUseSKRFilter: true,
+    canUseHRFilter: true,
+    canUseSKRList: true,
+    canUseHRList: true,
+    canUseAllFilters: true,
+    canUseVIPBBS: true,
+    favoriteLimit: 999,
+  },
+};
 
 // モックデータ
 export const mockShops: Shop[] = [
@@ -392,7 +539,7 @@ export const mockReviews: Review[] = [
     score: 90,
     typeId: "gal",
     bodyType: "glamour",
-    serviceType: "exciting",
+    serviceType: "skr",
     parameters: { conversation: 5, distance: 4, technique: 4, personality: 5 },
     tags: ["#ギャル系", "#グラマー", "#会話上手"],
     q1FirstImpression: "写真より可愛くてびっくり！明るい笑顔で出迎えてくれました。",
@@ -409,7 +556,7 @@ export const mockReviews: Review[] = [
     score: 85,
     typeId: "gal",
     bodyType: "glamour",
-    serviceType: "close",
+    serviceType: "kenzen",
     parameters: { conversation: 5, distance: 4, technique: 3, personality: 5 },
     tags: ["#ギャル系", "#会話上手", "#彼氏感"],
     q1FirstImpression: "元気で明るい子。写真通りでした。",
@@ -426,7 +573,7 @@ export const mockReviews: Review[] = [
     score: 95,
     typeId: "seiso",
     bodyType: "slender",
-    serviceType: "healthy",
+    serviceType: "kenzen",
     parameters: { conversation: 4, distance: 3, technique: 5, personality: 3 },
     tags: ["#清楚系", "#技術派", "#モデル級"],
     q1FirstImpression: "上品で美しい方。緊張しました。",
@@ -443,7 +590,7 @@ export const mockReviews: Review[] = [
     score: 88,
     typeId: "idol",
     bodyType: "normal",
-    serviceType: "close",
+    serviceType: "kenzen",
     parameters: { conversation: 5, distance: 4, technique: 3, personality: 4 },
     tags: ["#アイドル系", "#愛嬌抜群", "#癒し系"],
     q1FirstImpression: "可愛すぎる！アイドルみたい。",
@@ -460,7 +607,7 @@ export const mockReviews: Review[] = [
     score: 96,
     typeId: "yoen",
     bodyType: "glamour",
-    serviceType: "intense",
+    serviceType: "hr",
     parameters: { conversation: 4, distance: 5, technique: 5, personality: 4 },
     tags: ["#大人系", "#テクニシャン", "#大人"],
     q1FirstImpression: "色気がすごい。大人の魅力。",

@@ -29,6 +29,8 @@ import {
   Search,
   Filter,
   ExternalLink,
+  BarChart3,
+  PenSquare,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,49 +44,10 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
-import { therapists, reviews } from "@/lib/data";
+import { therapists, reviews, type EffectiveTier, getEffectiveTier, tierPermissions } from "@/lib/data";
 
 type MemberLevel = "free" | "standard" | "vip";
 type Section = "dashboard" | "reviews" | "favorites" | "lists" | "messages" | "bbs" | "skr" | "notifications" | "settings";
-
-const memberInfo = {
-  free: {
-    label: "無料会員",
-    color: "bg-muted text-muted-foreground",
-    canViewAllReviews: false,
-    canUseSKRFilter: false,
-    canShareLists: false,
-    canUseMessages: false,
-    canUseBBS: false,
-    canUseVIPBBS: false,
-    canCreateGroup: false,
-    favoriteLimit: 5,
-  },
-  standard: {
-    label: "スタンダード会員",
-    color: "bg-primary text-primary-foreground",
-    canViewAllReviews: true,
-    canUseSKRFilter: false,
-    canShareLists: true,
-    canUseMessages: true,
-    canUseBBS: true,
-    canUseVIPBBS: false,
-    canCreateGroup: false,
-    favoriteLimit: 999,
-  },
-  vip: {
-    label: "VIP会員",
-    color: "bg-gradient-to-r from-amber-500 to-amber-400 text-white",
-    canViewAllReviews: true,
-    canUseSKRFilter: true,
-    canShareLists: true,
-    canUseMessages: true,
-    canUseBBS: true,
-    canUseVIPBBS: true,
-    canCreateGroup: true,
-    favoriteLimit: 999,
-  },
-};
 
 const sidebarItems = [
   { id: "dashboard", label: "ダッシュボード", icon: LayoutDashboard },
@@ -104,11 +67,6 @@ const mockConversations = [
   { id: "1", name: "田中さん", lastMessage: "了解です！ありがとうございます", time: "10:30", unread: 2, avatar: "T" },
   { id: "2", name: "佐藤さん", lastMessage: "その店舗良かったですよ", time: "昨日", unread: 0, avatar: "S" },
   { id: "3", name: "山田さん", lastMessage: "今度行ってみます", time: "3日前", unread: 0, avatar: "Y" },
-];
-
-const mockGroups = [
-  { id: "1", name: "渋谷エリア情報交換", members: 128, lastMessage: "新店舗情報共有します", time: "12:00" },
-  { id: "2", name: "ギャル系ファンクラブ", members: 89, lastMessage: "おすすめありますか？", time: "昨日" },
 ];
 
 const mockPublicLists = [
@@ -132,19 +90,32 @@ const mockSKRReviews = [
 export default function MyPage() {
   const [activeSection, setActiveSection] = useState<Section>("dashboard");
   const [memberLevel, setMemberLevel] = useState<MemberLevel>("standard");
+  const [monthlyReviewCount, setMonthlyReviewCount] = useState(1);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedConversation, setSelectedConversation] = useState<string | null>("1");
   const [messageInput, setMessageInput] = useState("");
   const [bbsTab, setBbsTab] = useState("general");
   const [listPublic, setListPublic] = useState(false);
 
-  const info = memberInfo[memberLevel];
+  // getEffectiveTier でティアを計算
+  const mockUser = {
+    id: "user1",
+    email: "test@example.com",
+    name: "テストユーザー",
+    memberType: memberLevel,
+    monthlyReviewCount: monthlyReviewCount,
+    totalReviewCount: 12,
+    registeredAt: "2024-01-01",
+    favorites: [],
+  };
+  const effectiveTier = getEffectiveTier(mockUser);
+  const permissions = tierPermissions[effectiveTier];
 
   const user = {
     nickname: "テストユーザー",
     email: "test@example.com",
     memberSince: "2024年1月",
-    reviewCount: 3,
+    reviewCount: 12,
     favoriteCount: 5,
   };
 
@@ -168,6 +139,64 @@ export default function MyPage() {
     </div>
   );
 
+  // 投稿数プログレスバー（Standard会員用）
+  const ReviewProgressBar = () => {
+    if (memberLevel !== "standard") return null;
+    const remaining = Math.max(0, 3 - monthlyReviewCount);
+    const progressPercent = Math.min(100, (monthlyReviewCount / 3) * 100);
+
+    const currentUnlock = monthlyReviewCount >= 3
+      ? "VIP相当の全機能"
+      : monthlyReviewCount >= 2
+      ? "セラピスト分析 + 掲示板"
+      : monthlyReviewCount >= 1
+      ? "発見検索"
+      : "口コミ読み放題";
+
+    const nextUnlock = monthlyReviewCount >= 3
+      ? null
+      : monthlyReviewCount >= 2
+      ? "VIP相当の全機能"
+      : monthlyReviewCount >= 1
+      ? "セラピスト分析 + 掲示板"
+      : "発見検索";
+
+    return (
+      <Card className="border-primary/20 bg-primary/5">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <PenSquare className="h-5 w-5 text-primary" />
+              <h3 className="font-bold">今月の投稿数</h3>
+            </div>
+            <span className="text-2xl font-bold text-primary">{monthlyReviewCount}/3</span>
+          </div>
+          <div className="w-full bg-muted rounded-full h-3 mb-3">
+            <div
+              className="bg-primary h-3 rounded-full transition-all"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">
+              現在: <span className="font-medium text-foreground">{currentUnlock}</span>
+            </span>
+            {nextUnlock && remaining > 0 && (
+              <span className="text-primary font-medium">
+                あと{remaining}本 → {nextUnlock}
+              </span>
+            )}
+            {monthlyReviewCount >= 3 && (
+              <Badge className="bg-gradient-to-r from-amber-500 to-yellow-500 border-0 text-white">
+                全機能解放中
+              </Badge>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
   const renderSection = () => {
     switch (activeSection) {
       case "dashboard":
@@ -185,7 +214,7 @@ export default function MyPage() {
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <h1 className="text-2xl font-bold">{user.nickname}</h1>
-                      <Badge className={info.color}>{info.label}</Badge>
+                      <Badge className={permissions.color}>{permissions.label}</Badge>
                     </div>
                     <p className="text-sm text-muted-foreground mb-2">{user.email}</p>
                     <p className="text-xs text-muted-foreground">{user.memberSince}から利用中</p>
@@ -195,19 +224,24 @@ export default function MyPage() {
                 <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t">
                   <div className="text-center">
                     <p className="text-2xl font-bold text-primary">{user.reviewCount}</p>
-                    <p className="text-sm text-muted-foreground">投稿した口コミ</p>
+                    <p className="text-sm text-muted-foreground">累計投稿</p>
                   </div>
                   <div className="text-center">
                     <p className="text-2xl font-bold text-primary">{user.favoriteCount}</p>
                     <p className="text-sm text-muted-foreground">お気に入り</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-2xl font-bold text-primary">{info.canViewAllReviews ? "無制限" : "12"}</p>
-                    <p className="text-sm text-muted-foreground">閲覧可能口コミ</p>
+                    <p className="text-2xl font-bold text-primary">
+                      {permissions.canViewReviewBody ? "無制限" : "投稿で解放"}
+                    </p>
+                    <p className="text-sm text-muted-foreground">口コミ閲覧</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
+
+            {/* 投稿数プログレスバー（Standard会員のみ） */}
+            <ReviewProgressBar />
 
             {/* Member Benefits */}
             <Card>
@@ -219,21 +253,39 @@ export default function MyPage() {
               </CardHeader>
               <CardContent>
                 <div className="grid sm:grid-cols-2 gap-4">
-                  <div className={`p-4 rounded-lg border ${info.canViewAllReviews ? "bg-primary/5 border-primary/20" : "bg-muted/50"}`}>
+                  <div className={`p-4 rounded-lg border ${permissions.canViewReviewBody ? "bg-primary/5 border-primary/20" : "bg-muted/50"}`}>
                     <div className="flex items-center gap-3">
-                      {info.canViewAllReviews ? <Eye className="h-5 w-5 text-primary" /> : <Lock className="h-5 w-5 text-muted-foreground" />}
+                      {permissions.canViewReviewBody ? <Eye className="h-5 w-5 text-primary" /> : <Lock className="h-5 w-5 text-muted-foreground" />}
                       <div>
                         <p className="font-medium">口コミ閲覧</p>
-                        <p className="text-sm text-muted-foreground">{info.canViewAllReviews ? "全ての口コミが閲覧可能" : "投稿ごとに3件まで閲覧可能"}</p>
+                        <p className="text-sm text-muted-foreground">{permissions.canViewReviewBody ? "全文閲覧可能" : "投稿で3日間解放"}</p>
                       </div>
                     </div>
                   </div>
-                  <div className={`p-4 rounded-lg border ${info.canUseSKRFilter ? "bg-amber-50 border-amber-200" : "bg-muted/50"}`}>
+                  <div className={`p-4 rounded-lg border ${permissions.canUseDiscoverySearch ? "bg-primary/5 border-primary/20" : "bg-muted/50"}`}>
                     <div className="flex items-center gap-3">
-                      {info.canUseSKRFilter ? <Crown className="h-5 w-5 text-amber-500" /> : <Lock className="h-5 w-5 text-muted-foreground" />}
+                      {permissions.canUseDiscoverySearch ? <Search className="h-5 w-5 text-primary" /> : <Lock className="h-5 w-5 text-muted-foreground" />}
+                      <div>
+                        <p className="font-medium">発見検索</p>
+                        <p className="text-sm text-muted-foreground">{permissions.canUseDiscoverySearch ? "タイプxエリアxスコアで検索" : memberLevel === "standard" ? "月1本投稿で解放" : "Standard以上"}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className={`p-4 rounded-lg border ${permissions.canUseTherapistAnalysis ? "bg-primary/5 border-primary/20" : "bg-muted/50"}`}>
+                    <div className="flex items-center gap-3">
+                      {permissions.canUseTherapistAnalysis ? <BarChart3 className="h-5 w-5 text-primary" /> : <Lock className="h-5 w-5 text-muted-foreground" />}
+                      <div>
+                        <p className="font-medium">セラピスト分析</p>
+                        <p className="text-sm text-muted-foreground">{permissions.canUseTherapistAnalysis ? "レーダーチャート等" : memberLevel === "standard" ? "月2本投稿で解放" : "Standard以上"}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className={`p-4 rounded-lg border ${permissions.canUseSKRFilter ? "bg-amber-50 border-amber-200" : "bg-muted/50"}`}>
+                    <div className="flex items-center gap-3">
+                      {permissions.canUseSKRFilter ? <Crown className="h-5 w-5 text-amber-500" /> : <Lock className="h-5 w-5 text-muted-foreground" />}
                       <div>
                         <p className="font-medium">SKR/HRフィルター</p>
-                        <p className="text-sm text-muted-foreground">{info.canUseSKRFilter ? "サービスレベルで絞り込み可能" : "VIP会員限定機能"}</p>
+                        <p className="text-sm text-muted-foreground">{permissions.canUseSKRFilter ? "サービスレベルで絞り込み可能" : memberLevel === "standard" ? "月3本投稿で解放" : "Standard(3本) or VIP"}</p>
                       </div>
                     </div>
                   </div>
@@ -252,7 +304,7 @@ export default function MyPage() {
                       </div>
                       <div>
                         <h3 className="font-bold">{memberLevel === "free" ? "スタンダード会員になる" : "VIP会員にアップグレード"}</h3>
-                        <p className="text-sm text-muted-foreground">{memberLevel === "free" ? "月額¥4,980で全ての口コミが読み放題" : "月額¥14,980でSKR/HRフィルターが使用可能"}</p>
+                        <p className="text-sm text-muted-foreground">{memberLevel === "free" ? "月額¥4,980で口コミ読み放題 + 投稿で機能解放" : "月額¥14,980で投稿不要の全機能使い放題"}</p>
                       </div>
                     </div>
                     <Link href="/pricing">
@@ -286,9 +338,9 @@ export default function MyPage() {
                             <Link href={`/therapist/${review.therapistId}`} className="font-medium hover:text-primary">
                               {review.therapistName}
                             </Link>
-                            <Badge className="bg-primary text-primary-foreground">{review.rating}点</Badge>
+                            <Badge className="bg-primary text-primary-foreground">{review.score}点</Badge>
                           </div>
-                          <p className="text-sm text-muted-foreground">{review.shopName} / {review.date}</p>
+                          <p className="text-sm text-muted-foreground">{review.shopName} / {review.createdAt}</p>
                           <div className="flex flex-wrap gap-2 mt-2">
                             {review.tags?.map((tag, i) => (
                               <Badge key={i} variant="outline" className="text-xs">{tag}</Badge>
@@ -297,11 +349,11 @@ export default function MyPage() {
                           <div className="mt-3 space-y-2 text-sm">
                             <div>
                               <span className="text-muted-foreground">第一印象: </span>
-                              {review.firstImpression}
+                              {review.q1FirstImpression}
                             </div>
                             <div>
                               <span className="text-muted-foreground">施術・接客: </span>
-                              {review.comment}
+                              {review.q2Service}
                             </div>
                           </div>
                         </div>
@@ -329,21 +381,9 @@ export default function MyPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-lg">お気に入りセラピスト</CardTitle>
-              <div className="flex items-center gap-2">
-                {!info.canShareLists && <Lock className="h-4 w-4 text-muted-foreground" />}
-                <Badge variant="outline">{favoriteTherapists.length} / {info.favoriteLimit === 999 ? "無制限" : info.favoriteLimit}</Badge>
-              </div>
+              <Badge variant="outline">{favoriteTherapists.length} / {permissions.favoriteLimit === 999 ? "無制限" : permissions.favoriteLimit}</Badge>
             </CardHeader>
             <CardContent>
-              {info.canShareLists && (
-                <div className="flex items-center justify-between p-4 mb-4 bg-muted/50 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <Globe className="h-4 w-4 text-muted-foreground" />
-                    <Label htmlFor="public-list">リストを公開する</Label>
-                  </div>
-                  <Switch id="public-list" checked={listPublic} onCheckedChange={setListPublic} />
-                </div>
-              )}
               <div className="grid sm:grid-cols-2 gap-4">
                 {favoriteTherapists.map((therapist) => (
                   <div key={therapist.id} className="flex items-center gap-4 p-3 border rounded-lg hover:bg-muted/50 transition-colors">
@@ -369,12 +409,11 @@ export default function MyPage() {
         );
 
       case "lists":
-        if (!info.canShareLists) {
-          return <LockScreen title="リスト共有機能" description="他のユーザーのお気に入りリストを閲覧したり、自分のリストを公開できます。" upgradeText="スタンダード会員になる" targetLevel="standard" />;
+        if (!permissions.canUseDM) {
+          return <LockScreen title="リスト共有機能" description="他のユーザーのお気に入りリストを閲覧したり、自分のリストを公開できます。スタンダード会員（月2本投稿）以上で利用可能です。" upgradeText="スタンダード会員になる" targetLevel="standard" />;
         }
         return (
           <div className="space-y-6">
-            {/* My List Settings */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">自分のリスト設定</CardTitle>
@@ -402,7 +441,6 @@ export default function MyPage() {
               </CardContent>
             </Card>
 
-            {/* Public Lists */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-lg">公開リスト一覧</CardTitle>
@@ -438,8 +476,8 @@ export default function MyPage() {
         );
 
       case "messages":
-        if (!info.canUseMessages) {
-          return <LockScreen title="メッセージ機能" description="他のユーザーとDMやグループチャットでコミュニケーションができます。" upgradeText="スタンダード会員になる" targetLevel="standard" />;
+        if (!permissions.canUseDM) {
+          return <LockScreen title="メッセージ機能" description="他のユーザーとDMやグループチャットでコミュニケーションができます。スタンダード会員（月2本投稿）以上で利用可能です。" upgradeText="スタンダード会員になる" targetLevel="standard" />;
         }
         return (
           <Card className="h-[600px] flex flex-col">
@@ -452,7 +490,6 @@ export default function MyPage() {
               </Tabs>
             </CardHeader>
             <div className="flex flex-1 overflow-hidden">
-              {/* Conversation List */}
               <div className="w-1/3 border-r overflow-y-auto">
                 {mockConversations.map((conv) => (
                   <div
@@ -478,8 +515,6 @@ export default function MyPage() {
                   </div>
                 ))}
               </div>
-
-              {/* Chat Area */}
               <div className="flex-1 flex flex-col">
                 {selectedConversation ? (
                   <>
@@ -487,7 +522,6 @@ export default function MyPage() {
                       <h4 className="font-medium">{mockConversations.find(c => c.id === selectedConversation)?.name}</h4>
                     </div>
                     <div className="flex-1 p-4 overflow-y-auto space-y-4">
-                      {/* Sample messages */}
                       <div className="flex justify-start">
                         <div className="max-w-[70%] p-3 rounded-lg bg-muted">
                           <p className="text-sm">こんにちは！渋谷でおすすめの店舗ありますか？</p>
@@ -530,8 +564,8 @@ export default function MyPage() {
         );
 
       case "bbs":
-        if (!info.canUseBBS) {
-          return <LockScreen title="掲示板機能" description="他のユーザーと情報交換ができる掲示板を利用できます。" upgradeText="スタンダード会員になる" targetLevel="standard" />;
+        if (!permissions.canUseBBS) {
+          return <LockScreen title="掲示板機能" description="他のユーザーと情報交換ができる掲示板を利用できます。スタンダード会員（月2本投稿）以上で利用可能です。" upgradeText="スタンダード会員になる" targetLevel="standard" />;
         }
         return (
           <Card>
@@ -553,8 +587,8 @@ export default function MyPage() {
               </Tabs>
             </CardHeader>
             <CardContent>
-              {bbsTab === "vip" && !info.canUseVIPBBS ? (
-                <LockScreen title="VIP限定掲示板" description="VIP会員専用の掲示板です。より深い情報交換ができます。" upgradeText="VIP会員になる" targetLevel="vip" />
+              {bbsTab === "vip" && !permissions.canUseVIPBBS ? (
+                <LockScreen title="VIP限定掲示板" description="VIP会員専用の掲示板です。より深い情報交換ができます。スタンダード会員は月3本投稿、またはVIP会員で利用可能です。" upgradeText="VIP会員になる" targetLevel="vip" />
               ) : (
                 <>
                   <div className="flex gap-2 mb-4 flex-wrap">
@@ -590,12 +624,11 @@ export default function MyPage() {
         );
 
       case "skr":
-        if (!info.canUseSKRFilter) {
+        if (!permissions.canUseSKRFilter) {
           return (
             <Card>
               <CardContent className="p-0">
                 <div className="relative">
-                  {/* Blurred preview */}
                   <div className="blur-sm pointer-events-none p-6 space-y-4">
                     {mockSKRReviews.map((review) => (
                       <div key={review.id} className="flex gap-4 p-4 border rounded-lg">
@@ -608,17 +641,20 @@ export default function MyPage() {
                       </div>
                     ))}
                   </div>
-                  {/* Lock overlay */}
                   <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
                     <div className="text-center">
                       <div className="w-20 h-20 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-6">
                         <Flame className="h-10 w-10 text-amber-500" />
                       </div>
                       <h3 className="text-xl font-bold mb-2">SKR/HRリスト</h3>
-                      <p className="text-muted-foreground mb-6 max-w-md">VIP会員限定のサービスレベル別口コミリストです。</p>
+                      <p className="text-muted-foreground mb-6 max-w-md">
+                        {memberLevel === "standard"
+                          ? "月3本投稿でVIP相当の機能が解放されます。またはVIP会員で即利用可能です。"
+                          : "VIP会員限定のサービスレベル別口コミリストです。"}
+                      </p>
                       <Link href="/pricing">
                         <Button className="bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-600 hover:to-amber-500">
-                          VIP会員になる
+                          {memberLevel === "standard" ? "VIPにアップグレード" : "VIP会員になる"}
                           <ChevronRight className="h-4 w-4 ml-1" />
                         </Button>
                       </Link>
@@ -695,11 +731,11 @@ export default function MyPage() {
             <CardContent>
               <div className="space-y-3">
                 {[
-                  { title: "新着口コミがあります", description: "お気に入りのセラピストに新しい口コミが投稿されました", time: "1時間前", read: false, type: "review" },
-                  { title: "DMが届きました", description: "田中さんからメッセージが届いています", time: "3時間前", read: false, type: "message" },
-                  { title: "口コミが承認されました", description: "投稿した口コミが承認され、公開されました", time: "1日前", read: true, type: "review" },
-                  { title: "フォロー中のリストが更新", description: "「渋谷ギャル系TOP10」に新しいセラピストが追加されました", time: "2日前", read: true, type: "list" },
-                  { title: "プレミアム会員キャンペーン", description: "期間限定で初月50%OFFキャンペーン実施中", time: "3日前", read: true, type: "system" },
+                  { title: "新着口コミがあります", description: "お気に入りのセラピストに新しい口コミが投稿されました", time: "1時間前", read: false },
+                  { title: "DMが届きました", description: "田中さんからメッセージが届いています", time: "3時間前", read: false },
+                  { title: "口コミが承認されました", description: "投稿した口コミが承認され、公開されました", time: "1日前", read: true },
+                  { title: "フォロー中のリストが更新", description: "「渋谷ギャル系TOP10」に新しいセラピストが追加されました", time: "2日前", read: true },
+                  { title: "今月の投稿数リセット", description: "毎月1日に投稿数がリセットされました", time: "3日前", read: true },
                 ].map((notification, index) => (
                   <div key={index} className={`p-4 border rounded-lg ${!notification.read ? "bg-primary/5 border-primary/20" : ""}`}>
                     <div className="flex items-start gap-3">
@@ -772,7 +808,7 @@ export default function MyPage() {
                 <div className="flex items-center justify-between p-4 border rounded-lg">
                   <div>
                     <p className="font-medium">現在のプラン</p>
-                    <Badge className={info.color}>{info.label}</Badge>
+                    <Badge className={permissions.color}>{permissions.label}</Badge>
                   </div>
                   <Link href="/pricing">
                     <Button variant="outline" className="bg-transparent">プランを変更</Button>
@@ -824,19 +860,42 @@ export default function MyPage() {
       <SiteHeader />
 
       <main className="container mx-auto px-4 py-6">
-        {/* Debug: Member Level Switcher */}
+        {/* Debug: Member Level & Post Count Switcher */}
         <Card className="mb-6 border-dashed border-2 border-primary/30 bg-primary/5">
           <CardContent className="p-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div>
-                <p className="text-sm font-medium text-primary mb-1">デバッグ: 会員レベル切替</p>
-                <p className="text-xs text-muted-foreground">各会員レベルでの表示を確認できます</p>
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm font-medium text-primary mb-1">デバッグ: 会員レベル切替</p>
+                  <p className="text-xs text-muted-foreground">各会員レベルでの表示を確認できます</p>
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" variant={memberLevel === "free" ? "default" : "outline"} onClick={() => setMemberLevel("free")} className={memberLevel === "free" ? "" : "bg-transparent"}>無料</Button>
+                  <Button size="sm" variant={memberLevel === "standard" ? "default" : "outline"} onClick={() => setMemberLevel("standard")} className={memberLevel === "standard" ? "" : "bg-transparent"}>スタンダード</Button>
+                  <Button size="sm" variant={memberLevel === "vip" ? "default" : "outline"} onClick={() => setMemberLevel("vip")} className={memberLevel === "vip" ? "bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-600 hover:to-amber-500" : "bg-transparent"}>VIP</Button>
+                </div>
               </div>
-              <div className="flex gap-2">
-                <Button size="sm" variant={memberLevel === "free" ? "default" : "outline"} onClick={() => setMemberLevel("free")} className={memberLevel === "free" ? "" : "bg-transparent"}>無料</Button>
-                <Button size="sm" variant={memberLevel === "standard" ? "default" : "outline"} onClick={() => setMemberLevel("standard")} className={memberLevel === "standard" ? "" : "bg-transparent"}>スタンダード</Button>
-                <Button size="sm" variant={memberLevel === "vip" ? "default" : "outline"} onClick={() => setMemberLevel("vip")} className={memberLevel === "vip" ? "bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-600 hover:to-amber-500" : "bg-transparent"}>VIP</Button>
-              </div>
+              {memberLevel === "standard" && (
+                <div className="flex items-center gap-4 pt-2 border-t border-primary/20">
+                  <p className="text-xs text-muted-foreground">今月の投稿数:</p>
+                  <div className="flex gap-2">
+                    {[0, 1, 2, 3].map(n => (
+                      <Button
+                        key={n}
+                        size="sm"
+                        variant={monthlyReviewCount === n ? "default" : "outline"}
+                        onClick={() => setMonthlyReviewCount(n)}
+                        className={monthlyReviewCount === n ? "" : "bg-transparent"}
+                      >
+                        {n}本
+                      </Button>
+                    ))}
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    → 有効ティア: <Badge variant="outline" className="text-xs">{effectiveTier}</Badge>
+                  </span>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -847,36 +906,36 @@ export default function MyPage() {
             <Card className="sticky top-6">
               <CardContent className="p-2">
                 <nav className="space-y-1">
-{sidebarItems.map((item) => {
-  const Icon = item.icon;
-  const isLocked =
-  (item.id === "lists" && !info.canShareLists) ||
-  (item.id === "messages" && !info.canUseMessages) ||
-  (item.id === "bbs" && !info.canUseBBS) ||
-  (item.id === "skr" && !info.canUseSKRFilter);
-  
-  if ("isLink" in item && item.isLink) {
-    return (
-      <Link
-        key={item.id}
-        href={"href" in item ? item.href : "/"}
-        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors hover:bg-muted"
-      >
-        <Icon className="h-5 w-5" />
-        <span className="text-sm font-medium">{item.label}</span>
-        <ExternalLink className="h-3 w-3 ml-auto text-muted-foreground" />
-      </Link>
-    );
-  }
-  
-  return (
-  <button
-  key={item.id}
-  onClick={() => setActiveSection(item.id as Section)}
-  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${
-  activeSection === item.id
-  ? "bg-primary text-primary-foreground"
-  : "hover:bg-muted"
+                  {sidebarItems.map((item) => {
+                    const Icon = item.icon;
+                    const isLocked =
+                      (item.id === "lists" && !permissions.canUseDM) ||
+                      (item.id === "messages" && !permissions.canUseDM) ||
+                      (item.id === "bbs" && !permissions.canUseBBS) ||
+                      (item.id === "skr" && !permissions.canUseSKRFilter);
+
+                    if ("isLink" in item && item.isLink) {
+                      return (
+                        <Link
+                          key={item.id}
+                          href={"href" in item ? item.href : "/"}
+                          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors hover:bg-muted"
+                        >
+                          <Icon className="h-5 w-5" />
+                          <span className="text-sm font-medium">{item.label}</span>
+                          <ExternalLink className="h-3 w-3 ml-auto text-muted-foreground" />
+                        </Link>
+                      );
+                    }
+
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => setActiveSection(item.id as Section)}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${
+                          activeSection === item.id
+                            ? "bg-primary text-primary-foreground"
+                            : "hover:bg-muted"
                         }`}
                       >
                         <Icon className="h-5 w-5" />
@@ -908,38 +967,38 @@ export default function MyPage() {
                     <X className="h-5 w-5" />
                   </Button>
                 </div>
-<nav className="space-y-1">
-{sidebarItems.map((item) => {
-  const Icon = item.icon;
-  const isLocked =
-  (item.id === "lists" && !info.canShareLists) ||
-  (item.id === "messages" && !info.canUseMessages) ||
-  (item.id === "bbs" && !info.canUseBBS) ||
-  (item.id === "skr" && !info.canUseSKRFilter);
-  
-  if ("isLink" in item && item.isLink) {
-    return (
-      <Link
-        key={item.id}
-        href={"href" in item ? item.href : "/"}
-        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors hover:bg-muted"
-        onClick={() => setSidebarOpen(false)}
-      >
-        <Icon className="h-5 w-5" />
-        <span className="text-sm font-medium">{item.label}</span>
-        <ExternalLink className="h-3 w-3 ml-auto text-muted-foreground" />
-      </Link>
-    );
-  }
-  
-  return (
-  <button
-  key={item.id}
-  onClick={() => {
-  setActiveSection(item.id as Section);
-  setSidebarOpen(false);
-  }}
-  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${
+                <nav className="space-y-1">
+                  {sidebarItems.map((item) => {
+                    const Icon = item.icon;
+                    const isLocked =
+                      (item.id === "lists" && !permissions.canUseDM) ||
+                      (item.id === "messages" && !permissions.canUseDM) ||
+                      (item.id === "bbs" && !permissions.canUseBBS) ||
+                      (item.id === "skr" && !permissions.canUseSKRFilter);
+
+                    if ("isLink" in item && item.isLink) {
+                      return (
+                        <Link
+                          key={item.id}
+                          href={"href" in item ? item.href : "/"}
+                          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors hover:bg-muted"
+                          onClick={() => setSidebarOpen(false)}
+                        >
+                          <Icon className="h-5 w-5" />
+                          <span className="text-sm font-medium">{item.label}</span>
+                          <ExternalLink className="h-3 w-3 ml-auto text-muted-foreground" />
+                        </Link>
+                      );
+                    }
+
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => {
+                          setActiveSection(item.id as Section);
+                          setSidebarOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${
                           activeSection === item.id
                             ? "bg-primary text-primary-foreground"
                             : "hover:bg-muted"
