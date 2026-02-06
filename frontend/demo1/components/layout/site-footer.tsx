@@ -101,7 +101,9 @@ export function SiteFooter() {
         </div>
 
         <div className="mt-8 border-t pt-8 text-center text-sm text-muted-foreground">
-          <p>&copy; 2024 メンエスインデクサ. All rights reserved.</p>
+          <p>SHIMATOMO ITALY S.R.L.S.</p>
+          <p>VIA DEL LAURO 9 20121 MILANO MI ITALY</p>
+          <p className="mt-4">&copy; 2024 メンエスインデクサ. All rights reserved.</p>
         </div>
       </div>
     </footer>

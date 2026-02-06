@@ -114,6 +114,7 @@ export default function TermsPage() {
             <li>本規約の解釈にあたっては、日本法を準拠法とします。</li>
             <li>当サービスに関して紛争が生じた場合には、東京地方裁判所を第一審の専属的合意管轄とします。</li>
           </ol>
+          <p>Terms and Conditions are followed by the laws of Italy.</p>
 
           <p className="text-sm text-muted-foreground mt-8">
             制定日: 2024年1月1日<br />
