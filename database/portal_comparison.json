@@ -1,0 +1,652 @@
+{
+  "queries": [
+    "恵比寿 メンズエステ",
+    "新宿 メンズエステ",
+    "池袋 メンズエステ",
+    "福岡 メンズエステ",
+    "秋田 メンズエステ",
+    "名古屋 メンズエステ",
+    "大阪 メンズエステ"
+  ],
+  "rankings": [
+    {
+      "domain": "www.esthe-ranking.jp",
+      "count": 18,
+      "best_rank": 1,
+      "queries": [
+        "恵比寿 メンズエステ",
+        "秋田 メンズエステ",
+        "福岡 メンズエステ",
+        "池袋 メンズエステ",
+        "名古屋 メンズエステ",
+        "新宿 メンズエステ",
+        "大阪 メンズエステ"
+      ],
+      "urls": [
+        "https://www.esthe-ranking.jp/shinjuku/shop-detail/a8b05036-4768-4ef6-bff5-3cd2faab15c3/",
+        "https://www.esthe-ranking.jp/nagoya/nagoya-station/ippan/",
+        "https://www.esthe-ranking.jp/hakata/ippan/",
+        "https://www.esthe-ranking.jp/ebisu/shop-detail/a2bf9a66-55d6-4ddb-a9e8-95b1e4f36e9d/",
+        "https://www.esthe-ranking.jp/hakata/yakuin-station/all/",
+        "https://www.esthe-ranking.jp/showa/ippan/",
+        "https://www.esthe-ranking.jp/nagoya/shop-detail/a9544a63-9c0a-41fe-8ea7-bf2f2bd038aa/",
+        "https://www.esthe-ranking.jp/ikebukuro/",
+        "https://www.esthe-ranking.jp/osakakita/ippan/",
+        "https://www.esthe-ranking.jp/shinjuku/shop-detail/099655ee-aa0e-475b-b68c-2e5554d4137d/",
+        "https://www.esthe-ranking.jp/akita/akita-city/ippan/",
+        "https://www.esthe-ranking.jp/ebisu/",
+        "https://www.esthe-ranking.jp/akita/",
+        "https://www.esthe-ranking.jp/news/2bad3f0c-0f2c-4966-b145-fdee4f7c693c/",
+        "https://www.esthe-ranking.jp/shinjuku/ippan/",
+        "https://www.esthe-ranking.jp/akita/ippan/",
+        "https://www.esthe-ranking.jp/akita/shop-detail/7220ed74-64d7-4d4e-bcf8-3f12389a5097/",
+        "https://www.esthe-ranking.jp/ikebukuro/ippan/"
+      ]
+    },
+    {
+      "domain": "beauty.hotpepper.jp",
+      "count": 10,
+      "best_rank": 8,
+      "queries": [
+        "恵比寿 メンズエステ",
+        "秋田 メンズエステ",
+        "福岡 メンズエステ",
+        "池袋 メンズエステ",
+        "名古屋 メンズエステ",
+        "新宿 メンズエステ",
+        "大阪 メンズエステ"
+      ],
+      "urls": [
+        "https://beauty.hotpepper.jp/genre/kgkw181/pre27/",
+        "https://beauty.hotpepper.jp/genre/kgkw181/stc0070010/",
+        "https://beauty.hotpepper.jp/genre/kgkw179/pre23/city23100001/",
+        "https://beauty.hotpepper.jp/keyword/%E3%83%A1%E3%83%B3%E3%82%BA%E3%82%A8%E3%82%B9%E3%83%86%E3%80%80%E3%83%AA%E3%83%B3%E3%83%91%E3%80%80%E6%B1%A0%E8%A2%8B/",
+        "https://beauty.hotpepper.jp/keyword/%E3%83%9E%E3%83%83%E3%82%B5%E3%83%BC%E3%82%B8%E3%80%80%E3%83%A1%E3%83%B3%E3%82%BA%E3%80%80%E7%A7%8B%E7%94%B0/",
+        "https://beauty.hotpepper.jp/genre/kgkw179/pre13/city10400000/",
+        "https://beauty.hotpepper.jp/genre/kgkw181/pre05/",
+        "https://beauty.hotpepper.jp/esthe/svcSG/macGA/grcGR06_spdL224/",
+        "https://beauty.hotpepper.jp/genre/kgkw181/pre23/city23100001/",
+        "https://beauty.hotpepper.jp/genre/kgkw181/stc0090082/"
+      ]
+    },
+    {
+      "domain": "menesth.jp",
+      "count": 6,
+      "best_rank": 11,
+      "queries": [
+        "秋田 メンズエステ",
+        "名古屋 メンズエステ",
+        "池袋 メンズエステ",
+        "福岡 メンズエステ",
+        "新宿 メンズエステ",
+        "大阪 メンズエステ"
+      ],
+      "urls": [
+        "https://menesth.jp/15/area90/",
+        "https://menesth.jp/8/area30/",
+        "https://menesth.jp/25/ranking/",
+        "https://menesth.jp/40/area175/",
+        "https://menesth.jp/3/area9/",
+        "https://menesth.jp/8/area28/"
+      ]
+    },
+    {
+      "domain": "esthe-ranking.com",
+      "count": 5,
+      "best_rank": 2,
+      "queries": [
+        "恵比寿 メンズエステ",
+        "新宿 メンズエステ",
+        "大阪 メンズエステ",
+        "福岡 メンズエステ"
+      ],
+      "urls": [
+        "https://esthe-ranking.com/search.php?pref=%E6%9D%B1%E4%BA%AC%E9%83%BD&area=%E6%81%B5%E6%AF%94%E5%AF%BF%E3%83%BB%E4%B8%AD%E7%9B%AE%E9%BB%92%E3%83%BB%E4%BB%A3%E5%AE%98%E5%B1%B1",
+        "https://esthe-ranking.com/",
+        "https://esthe-ranking.com/search.php?pref=%E6%9D%B1%E4%BA%AC%E9%83%BD&area=%E6%96%B0%E5%AE%BF",
+        "https://esthe-ranking.com/search.php?pref=%E6%9D%B1%E4%BA%AC%E9%83%BD&area=%E6%81%B5%E6%AF%94%E5%AF%BF%E3%83%BB%E4%B8%AD%E7%9B%AE%E9%BB%92%E3%83%BB%E4%BB%A3%E5%AE%98%E5%B1%B1&sub=%E6%81%B5%E6%AF%94%E5%AF%BF"
+      ]
+    },
+    {
+      "domain": "eslove.jp",
+      "count": 5,
+      "best_rank": 6,
+      "queries": [
+        "恵比寿 メンズエステ",
+        "名古屋 メンズエステ",
+        "池袋 メンズエステ",
+        "福岡 メンズエステ",
+        "大阪 メンズエステ"
+      ],
+      "urls": [
+        "https://eslove.jp/kansai/osaka/",
+        "https://eslove.jp/chubu/aichi/shoplist/area6667/",
+        "https://eslove.jp/kanto/tokyo/shoplist/area6522/ranking/",
+        "https://eslove.jp/kyushu/fukuoka/shoplist/ranking/",
+        "https://eslove.jp/kanto/tokyo/shoplist/area6529-1/"
+      ]
+    },
+    {
+      "domain": "estama.jp",
+      "count": 4,
+      "best_rank": 1,
+      "queries": [
+        "恵比寿 メンズエステ",
+        "新宿 メンズエステ",
+        "秋田 メンズエステ",
+        "福岡 メンズエステ"
+      ],
+      "urls": [
+        "https://estama.jp/kanto/shoplist/1301/",
+        "https://estama.jp/kyushu/fukuoka/",
+        "https://estama.jp/kanto/shoplist/1317/",
+        "https://estama.jp/hokkaido/shoplist/501/"
+      ]
+    },
+    {
+      "domain": "go-mensesthe.net",
+      "count": 4,
+      "best_rank": 6,
+      "queries": [
+        "恵比寿 メンズエステ",
+        "池袋 メンズエステ",
+        "新宿 メンズエステ"
+      ],
+      "urls": [
+        "https://go-mensesthe.net/category/ikebukuro/%E6%B1%A0%E8%A2%8B%E6%9D%B1%E5%8F%A3/",
+        "https://go-mensesthe.net/category/shinjuku/",
+        "https://go-mensesthe.net/category/shibuya/%E6%81%B5%E6%AF%94%E5%AF%BF/",
+        "https://go-mensesthe.net/category/ikebukuro/%E6%B1%A0%E8%A2%8B%E8%A5%BF%E5%8F%A3/"
+      ]
+    },
+    {
+      "domain": "mens-est.jp",
+      "count": 3,
+      "best_rank": 1,
+      "queries": [
+        "名古屋 メンズエステ",
+        "秋田 メンズエステ",
+        "福岡 メンズエステ"
+      ],
+      "urls": [
+        "https://mens-est.jp/aichi/a-09508/",
+        "https://mens-est.jp/fukuoka/",
+        "https://mens-est.jp/akita/a-00458/"
+      ]
+    },
+    {
+      "domain": "www.kking.jp",
+      "count": 3,
+      "best_rank": 3,
+      "queries": [
+        "名古屋 メンズエステ",
+        "大阪 メンズエステ",
+        "福岡 メンズエステ"
+      ],
+      "urls": [
+        "https://www.kking.jp/ippan/chubu/",
+        "https://www.kking.jp/ippan/area/osaka-area/",
+        "https://www.kking.jp/ippan/kyushu/"
+      ]
+    },
+    {
+      "domain": "ecire.sakura.ne.jp",
+      "count": 3,
+      "best_rank": 19,
+      "queries": [
+        "恵比寿 メンズエステ",
+        "新宿 メンズエステ",
+        "秋田 メンズエステ"
+      ],
+      "urls": [
+        "https://ecire.sakura.ne.jp/category/tokyo/shinjuku/",
+        "https://ecire.sakura.ne.jp/category/akita/",
+        "https://ecire.sakura.ne.jp/category/tokyo/ebisu/"
+      ]
+    },
+    {
+      "domain": "mens-mg.com",
+      "count": 2,
+      "best_rank": 6,
+      "queries": [
+        "恵比寿 メンズエステ",
+        "新宿 メンズエステ"
+      ],
+      "urls": [
+        "https://mens-mg.com/shop.php?id=04656",
+        "https://mens-mg.com/shop.php?id=10111"
+      ]
+    },
+    {
+      "domain": "tokyo.aroma-tsushin.com",
+      "count": 2,
+      "best_rank": 8,
+      "queries": [
+        "恵比寿 メンズエステ",
+        "新宿 メンズエステ"
+      ],
+      "urls": [
+        "https://tokyo.aroma-tsushin.com/list/?id2=12&id3=1",
+        "https://tokyo.aroma-tsushin.com/list/?id2=5&id3=1"
+      ]
+    },
+    {
+      "domain": "mens-pastime.com",
+      "count": 2,
+      "best_rank": 9,
+      "queries": [
+        "池袋 メンズエステ"
+      ],
+      "urls": [
+        "https://mens-pastime.com/schedule.html",
+        "https://mens-pastime.com/"
+      ]
+    },
+    {
+      "domain": "hotaru-osaka.com",
+      "count": 2,
+      "best_rank": 9,
+      "queries": [
+        "大阪 メンズエステ"
+      ],
+      "urls": [
+        "https://hotaru-osaka.com/"
+      ]
+    },
+    {
+      "domain": "www.ms-guide.jp",
+      "count": 2,
+      "best_rank": 10,
+      "queries": [
+        "恵比寿 メンズエステ",
+        "池袋 メンズエステ"
+      ],
+      "urls": [
+        "https://www.ms-guide.jp/shop/detail.php?id=mens-este-ebisu",
+        "https://www.ms-guide.jp/shop/detail.php?id=tokyo-mens-esthe-ikebukuro"
+      ]
+    },
+    {
+      "domain": "tokyo.refle.info",
+      "count": 2,
+      "best_rank": 10,
+      "queries": [
+        "池袋 メンズエステ",
+        "新宿 メンズエステ"
+      ],
+      "urls": [
+        "https://tokyo.refle.info/S0002/",
+        "https://tokyo.refle.info/S0003/"
+      ]
+    },
+    {
+      "domain": "x.com",
+      "count": 2,
+      "best_rank": 10,
+      "queries": [
+        "大阪 メンズエステ",
+        "秋田 メンズエステ"
+      ],
+      "urls": [
+        "https://x.com/search?q=%23%E3%83%A1%E3%83%B3%E3%82%BA%E3%82%A8%E3%82%B9%E3%83%86%E7%A7%8B%E7%94%B0",
+        "https://x.com/search?src=hashtag_click&q=%23%E3%83%A1%E3%83%B3%E3%82%BA%E3%82%A8%E3%82%B9%E3%83%86%E5%A4%A7%E9%98%AA"
+      ]
+    },
+    {
+      "domain": "www.fues.jp",
+      "count": 2,
+      "best_rank": 14,
+      "queries": [
+        "池袋 メンズエステ",
+        "秋田 メンズエステ"
+      ],
+      "urls": [
+        "https://www.fues.jp/hokkaido/23312476.html",
+        "https://www.fues.jp/ikebukuro.html"
+      ]
+    },
+    {
+      "domain": "www.esthe-aile.com",
+      "count": 2,
+      "best_rank": 20,
+      "queries": [
+        "新宿 メンズエステ",
+        "名古屋 メンズエステ"
+      ],
+      "urls": [
+        "https://www.esthe-aile.com/mens/salon/shinjuku/",
+        "https://www.esthe-aile.com/mens/salon/nagoya/"
+      ]
+    },
+    {
+      "domain": "osaka.refle.info",
+      "count": 1,
+      "best_rank": 1,
+      "queries": [
+        "大阪 メンズエステ"
+      ],
+      "urls": [
+        "https://osaka.refle.info/"
+      ]
+    },
+    {
+      "domain": "cachette-ikebukuro.com",
+      "count": 1,
+      "best_rank": 5,
+      "queries": [
+        "池袋 メンズエステ"
+      ],
+      "urls": [
+        "https://cachette-ikebukuro.com/"
+      ]
+    },
+    {
+      "domain": "elegance-akita.com",
+      "count": 1,
+      "best_rank": 5,
+      "queries": [
+        "秋田 メンズエステ"
+      ],
+      "urls": [
+        "https://elegance-akita.com/flow"
+      ]
+    },
+    {
+      "domain": "rose-gentleman.com",
+      "count": 1,
+      "best_rank": 5,
+      "queries": [
+        "大阪 メンズエステ"
+      ],
+      "urls": [
+        "https://rose-gentleman.com/schedule.php"
+      ]
+    },
+    {
+      "domain": "mens-shinjuku.com",
+      "count": 1,
+      "best_rank": 6,
+      "queries": [
+        "新宿 メンズエステ"
+      ],
+      "urls": [
+        "https://mens-shinjuku.com/"
+      ]
+    },
+    {
+      "domain": "es-ban.com",
+      "count": 1,
+      "best_rank": 6,
+      "queries": [
+        "秋田 メンズエステ"
+      ],
+      "urls": [
+        "https://es-ban.com/p/3702/a/6564/shoplist/"
+      ]
+    },
+    {
+      "domain": "mens-esute.jp",
+      "count": 1,
+      "best_rank": 7,
+      "queries": [
+        "恵比寿 メンズエステ"
+      ],
+      "urls": [
+        "https://mens-esute.jp/"
+      ]
+    },
+    {
+      "domain": "total-beauty-salon.net",
+      "count": 1,
+      "best_rank": 7,
+      "queries": [
+        "新宿 メンズエステ"
+      ],
+      "urls": [
+        "https://total-beauty-salon.net/rate.html"
+      ]
+    },
+    {
+      "domain": "galaxy-nagoya.com",
+      "count": 1,
+      "best_rank": 7,
+      "queries": [
+        "名古屋 メンズエステ"
+      ],
+      "urls": [
+        "https://galaxy-nagoya.com/system/"
+      ]
+    },
+    {
+      "domain": "grandluxe-osaka.com",
+      "count": 1,
+      "best_rank": 7,
+      "queries": [
+        "大阪 メンズエステ"
+      ],
+      "urls": [
+        "https://grandluxe-osaka.com/"
+      ]
+    },
+    {
+      "domain": "aroma-eternal.net",
+      "count": 1,
+      "best_rank": 8,
+      "queries": [
+        "池袋 メンズエステ"
+      ],
+      "urls": [
+        "https://aroma-eternal.net/"
+      ]
+    },
+    {
+      "domain": "premium-hakata.com",
+      "count": 1,
+      "best_rank": 8,
+      "queries": [
+        "福岡 メンズエステ"
+      ],
+      "urls": [
+        "http://premium-hakata.com/"
+      ]
+    },
+    {
+      "domain": "aroma-miely.com",
+      "count": 1,
+      "best_rank": 9,
+      "queries": [
+        "恵比寿 メンズエステ"
+      ],
+      "urls": [
+        "https://aroma-miely.com/"
+      ]
+    },
+    {
+      "domain": "3rd.men-este.net",
+      "count": 1,
+      "best_rank": 9,
+      "queries": [
+        "名古屋 メンズエステ"
+      ],
+      "urls": [
+        "https://3rd.men-este.net/"
+      ]
+    },
+    {
+      "domain": "ranking-mensesthe.jp",
+      "count": 1,
+      "best_rank": 10,
+      "queries": [
+        "福岡 メンズエステ"
+      ],
+      "urls": [
+        "https://ranking-mensesthe.jp/40/area175/ranking/"
+      ]
+    },
+    {
+      "domain": "dannavi.jp",
+      "count": 1,
+      "best_rank": 10,
+      "queries": [
+        "大阪 メンズエステ"
+      ],
+      "urls": [
+        "https://dannavi.jp/"
+      ]
+    },
+    {
+      "domain": "ebisu-ranmaru.com",
+      "count": 1,
+      "best_rank": 11,
+      "queries": [
+        "恵比寿 メンズエステ"
+      ],
+      "urls": [
+        "https://ebisu-ranmaru.com/"
+      ]
+    },
+    {
+      "domain": "gold-nagoya.net",
+      "count": 1,
+      "best_rank": 11,
+      "queries": [
+        "名古屋 メンズエステ"
+      ],
+      "urls": [
+        "https://gold-nagoya.net/"
+      ]
+    },
+    {
+      "domain": "wife-line.com",
+      "count": 1,
+      "best_rank": 11,
+      "queries": [
+        "大阪 メンズエステ"
+      ],
+      "urls": [
+        "https://wife-line.com/index.html"
+      ]
+    },
+    {
+      "domain": "www.dandy-house.co.jp",
+      "count": 1,
+      "best_rank": 12,
+      "queries": [
+        "福岡 メンズエステ"
+      ],
+      "urls": [
+        "https://www.dandy-house.co.jp/salon/kyushu/details/tenjin.html"
+      ]
+    },
+    {
+      "domain": "inti-nagoya.com",
+      "count": 1,
+      "best_rank": 12,
+      "queries": [
+        "名古屋 メンズエステ"
+      ],
+      "urls": [
+        "https://inti-nagoya.com/schedule"
+      ]
+    },
+    {
+      "domain": "organicspa.jp",
+      "count": 1,
+      "best_rank": 13,
+      "queries": [
+        "恵比寿 メンズエステ"
+      ],
+      "urls": [
+        "https://organicspa.jp/"
+      ]
+    },
+    {
+      "domain": "minimodel.jp",
+      "count": 1,
+      "best_rank": 13,
+      "queries": [
+        "秋田 メンズエステ"
+      ],
+      "urls": [
+        "https://minimodel.jp/list/4/3/c1/15"
+      ]
+    },
+    {
+      "domain": "koakumaspa-tokyo.site",
+      "count": 1,
+      "best_rank": 14,
+      "queries": [
+        "新宿 メンズエステ"
+      ],
+      "urls": [
+        "https://koakumaspa-tokyo.site/"
+      ]
+    },
+    {
+      "domain": "www.mystar-fukuoka.jp",
+      "count": 1,
+      "best_rank": 14,
+      "queries": [
+        "福岡 メンズエステ"
+      ],
+      "urls": [
+        "https://www.mystar-fukuoka.jp/"
+      ]
+    },
+    {
+      "domain": "eightyone81.net",
+      "count": 1,
+      "best_rank": 14,
+      "queries": [
+        "名古屋 メンズエステ"
+      ],
+      "urls": [
+        "https://eightyone81.net/"
+      ]
+    },
+    {
+      "domain": "rise-aroma.com",
+      "count": 1,
+      "best_rank": 15,
+      "queries": [
+        "新宿 メンズエステ"
+      ],
+      "urls": [
+        "https://rise-aroma.com/"
+      ]
+    },
+    {
+      "domain": "www.otonaspa-tokyo.com",
+      "count": 1,
+      "best_rank": 16,
+      "queries": [
+        "恵比寿 メンズエステ"
+      ],
+      "urls": [
+        "https://www.otonaspa-tokyo.com/"
+      ]
+    },
+    {
+      "domain": "menesthe-sp.com",
+      "count": 1,
+      "best_rank": 16,
+      "queries": [
+        "池袋 メンズエステ"
+      ],
+      "urls": [
+        "https://menesthe-sp.com/schedule/"
+      ]
+    },
+    {
+      "domain": "bakusai.com",
+      "count": 1,
+      "best_rank": 16,
+      "queries": [
+        "秋田 メンズエステ"
+      ],
+      "urls": [
+        "https://bakusai.com/thr_tl/acode=14/ctgid=136/bid=2141/"
+      ]
+    }
+  ]
+}

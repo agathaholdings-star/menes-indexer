@@ -1,2 +1,4 @@
 area_id,area_name,area_slug,prefecture_id,salon_count,source_url
-1,"恵比寿",ebisu,13,73,https://www.esthe-ranking.jp/ebisu/
+1,恵比寿,ebisu,13,73,https://www.esthe-ranking.jp/ebisu/
+2,博多,hakata,40,171,https://www.esthe-ranking.jp/hakata/
+3,秋田,akita,5,9,https://www.esthe-ranking.jp/akita/

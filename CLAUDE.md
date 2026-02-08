@@ -1,17 +1,62 @@
 # メンエスインデクサ プロジェクトガイド
 
-## 現在のステータス (2026-02-02 更新)
+## 現在のステータス (2026-02-08 更新)
 
 - **設計フェーズ完了**: サービス概要、システム設計、UXフロー、v0用プロンプトを作成済み。
+- **フロントエンド公開済み**: v0.appからVercelにデプロイ → https://menes-indexer.com/
 - **成果物**:
     - `docs/SERVICE_OVERVIEW.md`: サービス概要・ビジネスモデル
     - `docs/SYSTEM_DESIGN.md`: システム構成・DBスキーマ
     - `docs/UX_FLOW.txt`: ユーザー体験フロー
     - `docs/V0_PROMPTS.md`: フロントエンド生成用プロンプト
 - **次のステップ**:
-    1. フロントエンド実装（v0.app活用）
-    2. Next.jsプロジェクトのセットアップ
+    1. Vercel MCP OAuth認証（再起動時にブラウザで認証）
+    2. Supabase MCP OAuth認証（同上）
     3. Supabaseプロジェクトの作成とDBマイグレーション
+
+## 開発フロー方針（確定）
+
+**ローカル完結 → 本番デプロイ**
+
+すべてローカル環境で構築・テスト・完成させてから本番に反映する。
+
+```
+1. Supabase Local (Docker) でDB構築・マイグレーション
+2. Next.js ローカル dev で フロントエンド開発
+3. ローカルでE2Eテスト完了
+4. 問題なければ supabase db push で本番Supabase反映
+5. Vercelにデプロイ
+```
+
+- DBスキーマ: ローカルSupabaseで検証 → 確定後に本番push
+- スクレイピング: ローカルDBにデータ投入 → 検証後に本番同期
+- フロント: localhost:3000 + ローカルSupabaseで完全動作確認
+- 本番環境には検証済みのものだけを反映する
+
+## MCP設定 (2026-02-08 設定済み)
+
+### userスコープ（全プロジェクト共通）
+| MCP | 用途 | 状態 |
+|-----|------|------|
+| Playwright | ブラウザ自動操作・スクレイピング | 接続済み |
+| Chrome DevTools | デバッグ・パフォーマンス分析 | 接続済み |
+| Figma | デザイン→コード変換 | 要OAuth認証 |
+
+### localスコープ（このプロジェクト専用）
+| MCP | 用途 | 状態 |
+|-----|------|------|
+| Supabase | DB管理・マイグレーション | 要OAuth認証 |
+| Vercel | デプロイ管理・ログ分析 | 要OAuth認証（次回起動時） |
+| DataForSEO | SERP分析・SV取得 | 接続済み |
+| Cloudflare | DNS・CDN管理 | 要認証設定 |
+| Stripe | 課金・サブスク管理 | 接続済み（本番キー） |
+| Sentry | エラー監視 | 要OAuth認証（初回） |
+| Resend | メール送信（会員登録確認・通知等） | 接続済み |
+
+### 未導入（将来検討）
+- **Ahrefs**: SEO本格化時（公開後、被リンク分析が必要になったら）月$129〜
+- **Upstash (Redis)**: キャッシュ・レートリミット必要時
+- **Google Search Console**: SEOモニタリング本格化時
 
 ## プロジェクト概要
 
@@ -19,6 +64,39 @@
 競合サイト「ME」を超える「発見」体験を提供するプラットフォーム。
 
 **コアコンセプト**: 「"確認"で終わるサイトから、"発見"が始まるサイトへ」
+
+## ローカル開発環境（Supabase Local）
+
+| 項目 | URL / 値 |
+|------|----------|
+| Supabase Studio | http://127.0.0.1:54323 |
+| Project URL (API) | http://127.0.0.1:54321 |
+| DB接続 | `postgresql://postgres:postgres@127.0.0.1:54322/postgres` |
+| Publishable Key | `sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH` |
+| Secret Key | `sb_secret_N7UND0UgjKTVK-Uodkm0Hg_xSvEMPvz` |
+| Mailpit | http://127.0.0.1:54324 |
+| Docker | Docker Desktop 4.35.0（macOS Ventura対応版） |
+
+### 起動コマンド
+```bash
+# Docker Desktop起動 → supabase start
+open -a Docker
+supabase start     # 初回はimage pull含む
+supabase db reset  # マイグレーション+シード再実行
+supabase stop      # 停止
+```
+
+### DBテーブル状態（2026-02-08）
+| テーブル | 件数 | 状態 |
+|---------|------|------|
+| prefectures | 47 | シード済み |
+| areas | 821 | シード済み（スラッグ重複解決済み） |
+| shops | 0 | スクレイピング待ち |
+| shop_areas | 0 | shops依存 |
+| therapists | 0 | スクレイピング待ち |
+| reviews | 0 | サービス開始後 |
+| profiles | 0 | サービス開始後 |
+| user_rewards | 0 | サービス開始後 |
 
 ## 本番環境
 
@@ -45,6 +123,17 @@ VPS（スクレイピングBot → DB更新）
 ```
 /menethe-indexer/
 ├── CLAUDE.md              ← このファイル
+├── supabase/              ← Supabase Local設定
+│   ├── config.toml            ← Supabase設定
+│   ├── migrations/            ← DBマイグレーション
+│   │   └── 20260208000001_create_schema.sql  ← 全8テーブル定義
+│   ├── seed.sql               ← シードデータ（47都道府県+821エリア）
+│   └── seed_areas.sql         ← エリアシードSQL（seed.sqlに結合済み）
+├── database/              ← データ・スクリプト
+│   ├── esthe-ranking/         ← エリアマスタ・サロン数データ
+│   ├── seed_areas.py          ← CSV→SQLシード生成スクリプト
+│   ├── extract_kana_from_title.py ← サロン名カナ抽出
+│   └── therapist-scraper/     ← セラピストスクレイパー
 ├── docs/                  ← ドキュメント
 │   ├── SERVICE_OVERVIEW.md    ← サービス概要書（最重要）
 │   ├── SYSTEM_DESIGN.md       ← システム設計・DBスキーマ

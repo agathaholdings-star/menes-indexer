@@ -1,0 +1,855 @@
+prefecture_id,prefecture,seo_keyword,search_volume,our_slug,data_source_url,source_type,resolution,parent_group,nearby_areas
+1,北海道,北海道 メンズエステ,590,sapporo,/sapporo/,parent,unique,北海道・札幌（すすき,旭川|千歳|函館|北見|釧路
+1,北海道,旭川 メンズエステ,9900,asahikawa,/sapporo/asahikawa-city/all/,city,unique,北海道・札幌（すすき,北海道|千歳|函館|北見|釧路
+1,北海道,千歳 メンズエステ,2400,chitose,/sapporo/chitose-city/all/,city,unique,北海道・札幌（すすき,北海道|旭川|函館|北見|釧路
+1,北海道,函館 メンズエステ,4400,hakodate,/sapporo/hakodate-city/all/,city,unique,北海道・札幌（すすき,北海道|旭川|千歳|北見|釧路
+1,北海道,北見 メンズエステ,2400,kitami,/sapporo/kitami-city/all/,city,unique,北海道・札幌（すすき,北海道|旭川|千歳|函館|釧路
+1,北海道,釧路 メンズエステ,2900,kushiro,/sapporo/kushiro-city/all/,city,unique,北海道・札幌（すすき,北海道|旭川|千歳|函館|北見
+1,北海道,室蘭 メンズエステ,1000,muroran,/sapporo/muroran-city/all/,city,unique,北海道・札幌（すすき,北海道|旭川|千歳|函館|北見
+1,北海道,帯広 メンズエステ,5400,obihiro,/sapporo/obihiro-city/all/,city,unique,北海道・札幌（すすき,北海道|旭川|千歳|函館|北見
+1,北海道,札幌 メンズエステ,27100,sapporo,/sapporo/sapporo-city/all/,city,unique,北海道・札幌（すすき,北海道|旭川|千歳|函館|北見
+1,北海道,苫小牧 メンズエステ,2400,tomakomai,/sapporo/tomakomai-city/all/,city,unique,北海道・札幌（すすき,北海道|旭川|千歳|函館|北見
+2,青森県,青森 メンズエステ,3600,aomori,/aomori/,parent_absorbed,absorbed: /aomori/aomori-city/all/,青森・弘前,五所川原|八戸|弘前|十和田
+2,青森県,五所川原 メンズエステ,90,goshogawara,/aomori/goshogawara-city/all/,city,unique,青森・弘前,青森|八戸|弘前|十和田
+2,青森県,八戸 メンズエステ,4400,hachinohe,/aomori/hachinohe-city/all/,city,unique,青森・弘前,青森|五所川原|弘前|十和田
+2,青森県,弘前 メンズエステ,590,hirosaki,/aomori/hirosaki-city/all/,city,unique,青森・弘前,青森|五所川原|八戸|十和田
+2,青森県,十和田 メンズエステ,90,towada,/aomori/towada-city/all/,city,unique,青森・弘前,青森|五所川原|八戸|弘前
+3,岩手県,岩手 メンズエステ,1600,iwate,/iwate/,parent,unique,岩手・盛岡,一関|北上|盛岡
+3,岩手県,一関 メンズエステ,390,ichinoseki,/iwate/ichinoseki-city/all/,city,unique,岩手・盛岡,岩手|北上|盛岡
+3,岩手県,北上 メンズエステ,1900,kitakami,/iwate/kitakami-city/all/,city,unique,岩手・盛岡,岩手|一関|盛岡
+3,岩手県,盛岡 メンズエステ,8100,morioka,/iwate/morioka-city/all/,city,unique,岩手・盛岡,岩手|一関|北上
+4,宮城県,宮城 メンズエステ,720,sendai,/sendai/,parent,unique,宮城・仙台,石巻|名取|大崎|仙台|登米
+4,宮城県,石巻 メンズエステ,880,ishinomaki,/sendai/ishinomaki-city/all/,city,unique,宮城・仙台,宮城|名取|大崎|仙台|登米
+4,宮城県,名取 メンズエステ,210,natori,/sendai/natori-city/all/,city,unique,宮城・仙台,宮城|石巻|大崎|仙台|登米
+4,宮城県,大崎 メンズエステ,480,osaki,/sendai/osaki-city/all/,city_cross_pref,cross_prefecture,宮城・仙台,宮城|石巻|名取|仙台|登米
+4,宮城県,仙台 メンズエステ,18100,sendai,/sendai/sendai-city/all/,city,unique,宮城・仙台,宮城|石巻|名取|大崎|登米
+4,宮城県,登米 メンズエステ,0,tome,/sendai/tome-city/all/,city,unique,宮城・仙台,宮城|石巻|名取|大崎|仙台
+5,秋田県,秋田 メンズエステ,5400,akita,/akita/,parent_absorbed,absorbed: /akita/akita-city/all/,秋田,
+6,山形県,山形 メンズエステ,2900,yamagata,/yamagata/,parent_absorbed,absorbed: /yamagata/yamagata-city/all/,山形・米沢,
+7,福島県,福島 メンズエステ,2400,fukushima,/fukushima/,parent_cross_pref,"cross_prefecture, absorbed: /fukushima/fukushima-city/all/",福島・郡山,会津若松|いわき|郡山|白河
+7,福島県,会津若松 メンズエステ,720,aizuwakamatsu,/fukushima/aizuwakamatsu-city/all/,city,unique,福島・郡山,福島|いわき|郡山|白河
+7,福島県,いわき メンズエステ,2900,iwaki,/fukushima/iwaki-city/all/,city,unique,福島・郡山,福島|会津若松|郡山|白河
+7,福島県,郡山 メンズエステ,6600,koriyama,/fukushima/koriyama-city/all/,city,unique,福島・郡山,福島|会津若松|いわき|白河
+7,福島県,白河 メンズエステ,590,shirakawa,/fukushima/shirakawa-city/all/,city,unique,福島・郡山,福島|会津若松|いわき|郡山
+8,茨城県,茨城央北 メンズエステ,0,ibaraki,/ibaraki/,parent,unique,茨城央北（水戸・神栖）,日立|ひたちなか|神栖|鹿嶋|水戸
+8,茨城県,日立 メンズエステ,1300,hitachi,/ibaraki/hitachi-city/all/,city,unique,茨城央北（水戸・神栖）,茨城央北|ひたちなか|神栖|鹿嶋|水戸
+8,茨城県,ひたちなか メンズエステ,480,hitachinaka,/ibaraki/hitachinaka-city/all/,city,unique,茨城央北（水戸・神栖）,茨城央北|日立|神栖|鹿嶋|水戸
+8,茨城県,神栖 メンズエステ,3600,kamisu,/ibaraki/kamisu-city/all/,city,unique,茨城央北（水戸・神栖）,茨城央北|日立|ひたちなか|鹿嶋|水戸
+8,茨城県,鹿嶋 メンズエステ,110,kashima,/ibaraki/kashima-city/all/,city,unique,茨城央北（水戸・神栖）,茨城央北|日立|ひたちなか|神栖|水戸
+8,茨城県,水戸 メンズエステ,14800,mito,/ibaraki/mito-city/all/,city,unique,茨城央北（水戸・神栖）,茨城央北|日立|ひたちなか|神栖|鹿嶋
+8,茨城県,高萩 メンズエステ,0,takahagi,/ibaraki/takahagi-city/all/,city,unique,茨城央北（水戸・神栖）,茨城央北|日立|ひたちなか|神栖|鹿嶋
+8,茨城県,茨城西南 メンズエステ,0,tsukuba,/tsukuba/,parent,unique,茨城西南（つくば・土浦）,坂東|筑西|石岡|常総|古河
+8,茨城県,坂東 メンズエステ,70,bando,/tsukuba/bando-city/all/,city,unique,茨城西南（つくば・土浦）,茨城西南|筑西|石岡|常総|古河
+8,茨城県,筑西 メンズエステ,480,chikusei,/tsukuba/chikusei-city/all/,city,unique,茨城西南（つくば・土浦）,茨城西南|坂東|石岡|常総|古河
+8,茨城県,石岡 メンズエステ,210,ishioka,/tsukuba/ishioka-city/all/,city,unique,茨城西南（つくば・土浦）,茨城西南|坂東|筑西|常総|古河
+8,茨城県,常総 メンズエステ,0,joso,/tsukuba/joso-city/all/,city,unique,茨城西南（つくば・土浦）,茨城西南|坂東|筑西|石岡|古河
+8,茨城県,古河 メンズエステ,1300,koga,/tsukuba/koga-city/all/,city,unique,茨城西南（つくば・土浦）,茨城西南|坂東|筑西|石岡|常総
+8,茨城県,守谷 メンズエステ,2400,moriya,/tsukuba/moriya-city/all/,city,unique,茨城西南（つくば・土浦）,茨城西南|坂東|筑西|石岡|常総
+8,茨城県,龍ケ崎 メンズエステ,110,ryugasaki,/tsukuba/ryugasaki-city/all/,city,unique,茨城西南（つくば・土浦）,茨城西南|坂東|筑西|石岡|常総
+8,茨城県,取手 メンズエステ,1600,toride,/tsukuba/toride-city/all/,city,unique,茨城西南（つくば・土浦）,茨城西南|坂東|筑西|石岡|常総
+8,茨城県,土浦 メンズエステ,1900,tsuchiura,/tsukuba/tsuchiura-city/all/,city,unique,茨城西南（つくば・土浦）,茨城西南|坂東|筑西|石岡|常総
+8,茨城県,つくば メンズエステ,9900,tsukuba,/tsukuba/tsukuba-city/all/,city,unique,茨城西南（つくば・土浦）,茨城西南|坂東|筑西|石岡|常総
+8,茨城県,牛久 メンズエステ,880,ushiku,/tsukuba/ushiku-city/all/,city,unique,茨城西南（つくば・土浦）,茨城西南|坂東|筑西|石岡|常総
+9,栃木県,栃木 メンズエステ,1000,tochigi,/tochigi/,parent_absorbed,absorbed: /tochigi/tochigi-city/all/,栃木・宇都宮,足利|那須塩原|大田原|小山|佐野
+9,栃木県,足利 メンズエステ,590,ashikaga,/tochigi/ashikaga-city/all/,city,unique,栃木・宇都宮,栃木|那須塩原|大田原|小山|佐野
+9,栃木県,那須塩原 メンズエステ,1600,nasushiobara,/tochigi/nasushiobara-city/all/,city,unique,栃木・宇都宮,栃木|足利|大田原|小山|佐野
+9,栃木県,大田原 メンズエステ,210,otawara,/tochigi/otawara-city/all/,city,unique,栃木・宇都宮,栃木|足利|那須塩原|小山|佐野
+9,栃木県,小山 メンズエステ,6600,oyama,/tochigi/oyama-city/all/,city,unique,栃木・宇都宮,栃木|足利|那須塩原|大田原|佐野
+9,栃木県,佐野 メンズエステ,880,sano,/tochigi/sano-city/all/,city,unique,栃木・宇都宮,栃木|足利|那須塩原|大田原|小山
+9,栃木県,宇都宮 メンズエステ,18100,utsunomiya,/tochigi/utsunomiya-city/all/,city,unique,栃木・宇都宮,栃木|足利|那須塩原|大田原|小山
+10,群馬県,群馬 メンズエステ,6600,gunma,/gunma/,parent,unique,群馬・高崎,伊勢崎|桐生|前橋|太田|高崎
+10,群馬県,伊勢崎 メンズエステ,5400,isezaki,/gunma/isezaki-city/all/,city,unique,群馬・高崎,群馬|桐生|前橋|太田|高崎
+10,群馬県,桐生 メンズエステ,140,kiryu,/gunma/kiryu-city/all/,city,unique,群馬・高崎,群馬|伊勢崎|前橋|太田|高崎
+10,群馬県,前橋 メンズエステ,2900,maebashi,/gunma/maebashi-city/all/,city,unique,群馬・高崎,群馬|伊勢崎|桐生|太田|高崎
+10,群馬県,太田 メンズエステ,3600,ota,/gunma/ota-city/all/,city,unique,群馬・高崎,群馬|伊勢崎|桐生|前橋|高崎
+10,群馬県,高崎 メンズエステ,9900,takasaki,/gunma/takasaki-city/all/,city,unique,群馬・高崎,群馬|伊勢崎|桐生|前橋|太田
+10,群馬県,館林 メンズエステ,1900,tatebayashi,/gunma/tatebayashi-city/all/,city,unique,群馬・高崎,群馬|伊勢崎|桐生|前橋|太田
+11,埼玉県,上尾 メンズエステ,2900,ageo,/ageo/,parent_absorbed,absorbed: /ageo/ageo-station/all/,上尾・宮原,北上尾|鴻巣|宮原|桶川|吹上
+11,埼玉県,北上尾 メンズエステ,140,kitaageo,/ageo/kitaageo-station/all/,station,unique,上尾・宮原,上尾|鴻巣|宮原|桶川|吹上
+11,埼玉県,鴻巣 メンズエステ,1300,konosu,/ageo/konosu-station/all/,station,unique,上尾・宮原,上尾|北上尾|宮原|桶川|吹上
+11,埼玉県,宮原 メンズエステ,720,miyahara,/ageo/miyahara-station/all/,station,unique,上尾・宮原,上尾|北上尾|鴻巣|桶川|吹上
+11,埼玉県,桶川 メンズエステ,720,okegawa,/ageo/okegawa-station/all/,station,unique,上尾・宮原,上尾|北上尾|鴻巣|宮原|吹上
+11,埼玉県,吹上 メンズエステ,210,saitama-fukiage,/ageo/saitama-fukiage-station/all/,station_cross_pref,cross_prefecture,上尾・宮原,上尾|北上尾|鴻巣|宮原|桶川
+11,埼玉県,川越 メンズエステ,9900,kawagoe,/kawagoe/,parent_absorbed,absorbed: /kawagoe/kawagoe-city/all/,川越・東松山,東松山|坂戸|鶴ヶ島
+11,埼玉県,東松山 メンズエステ,1000,higashimatsuyama,/kawagoe/higashimatsuyama-city/all/,city,unique,川越・東松山,川越|坂戸|鶴ヶ島
+11,埼玉県,坂戸 メンズエステ,1900,sakado,/kawagoe/sakado-city/all/,city,unique,川越・東松山,川越|東松山|鶴ヶ島
+11,埼玉県,鶴ヶ島 メンズエステ,1600,tsurugashima,/kawagoe/tsurugashima-city/all/,city,unique,川越・東松山,川越|東松山|坂戸
+11,埼玉県,越谷 メンズエステ,5400,koshigaya,/koshigaya/,parent_absorbed,absorbed: /koshigaya/koshigaya-station/all/,越谷・春日部,蒲生|蓮田|春日部|加須|北越谷
+11,埼玉県,蒲生 メンズエステ,140,gamou,/koshigaya/gamou-station/all/,station,unique,越谷・春日部,越谷|蓮田|春日部|加須|北越谷
+11,埼玉県,蓮田 メンズエステ,1000,hasuda,/koshigaya/hasuda-city/all/,city,unique,越谷・春日部,越谷|蒲生|春日部|加須|北越谷
+11,埼玉県,春日部 メンズエステ,4400,kasukabe,/koshigaya/kasukabe-station/all/,station,unique,越谷・春日部,越谷|蒲生|蓮田|加須|北越谷
+11,埼玉県,加須 メンズエステ,140,kazo,/koshigaya/kazo-city/all/,city,unique,越谷・春日部,越谷|蒲生|蓮田|春日部|北越谷
+11,埼玉県,北越谷 メンズエステ,170,kitakoshigaya,/koshigaya/kitakoshigaya-station/all/,station,unique,越谷・春日部,越谷|蒲生|蓮田|春日部|加須
+11,埼玉県,久喜 メンズエステ,5400,kuki,/koshigaya/kuki-city/all/,city,unique,越谷・春日部,越谷|蒲生|蓮田|春日部|加須
+11,埼玉県,幸手 メンズエステ,110,satte,/koshigaya/satte-city/all/,city,unique,越谷・春日部,越谷|蒲生|蓮田|春日部|加須
+11,埼玉県,せんげん台 メンズエステ,390,sengendai,/koshigaya/sengendai-station/all/,station,unique,越谷・春日部,越谷|蒲生|蓮田|春日部|加須
+11,埼玉県,新越谷 メンズエステ,1300,shinkoshigaya,/koshigaya/shinkoshigaya-station/all/,station,unique,越谷・春日部,越谷|蒲生|蓮田|春日部|加須
+11,埼玉県,吉川 メンズエステ,90,yoshikawa,/koshigaya/yoshikawa-city/all/,city,unique,越谷・春日部,越谷|蒲生|蓮田|春日部|加須
+11,埼玉県,熊谷 メンズエステ,5400,kumagaya,/kumagaya/,parent_absorbed,absorbed: /kumagaya/kumagaya-city/all/,熊谷・行田,深谷|本庄
+11,埼玉県,深谷 メンズエステ,320,fukaya,/kumagaya/fukaya-city/all/,city,unique,熊谷・行田,熊谷|本庄
+11,埼玉県,本庄 メンズエステ,1300,honjo,/kumagaya/honjo-city/all/,city,unique,熊谷・行田,熊谷|深谷
+11,埼玉県,西川口 メンズエステ,3600,nishikawaguchi,/nishikawaguchi/,parent_absorbed,absorbed: /nishikawaguchi/nishikawaguchi-station/all/,西川口・蕨,鳩ヶ谷|川口|戸田|蕨
+11,埼玉県,鳩ヶ谷 メンズエステ,320,hatogaya,/nishikawaguchi/hatogaya-station/all/,station,unique,西川口・蕨,西川口|川口|戸田|蕨
+11,埼玉県,川口 メンズエステ,3600,kawaguchi,/nishikawaguchi/kawaguchi-station/all/,station,unique,西川口・蕨,西川口|鳩ヶ谷|戸田|蕨
+11,埼玉県,戸田 メンズエステ,1600,toda,/nishikawaguchi/toda-city/all/,city_cross_pref,cross_prefecture,西川口・蕨,西川口|鳩ヶ谷|川口|蕨
+11,埼玉県,蕨 メンズエステ,2900,warabi,/nishikawaguchi/warabi-station/all/,station,unique,西川口・蕨,西川口|鳩ヶ谷|川口|戸田
+11,埼玉県,大宮 メンズエステ,22200,omiya,/omiya/,parent_cross_pref,"cross_prefecture, absorbed: /omiya/omiya-station/all/",大宮・さいたま,東大宮|日進|さいたま新都心|土呂
+11,埼玉県,東大宮 メンズエステ,880,higashiomiya,/omiya/higashiomiya-station/all/,station,unique,大宮・さいたま,大宮|日進|さいたま新都心|土呂
+11,埼玉県,日進 メンズエステ,390,nisshin,/omiya/nisshin-station/all/,station_cross_pref,cross_prefecture,大宮・さいたま,大宮|東大宮|さいたま新都心|土呂
+11,埼玉県,さいたま新都心 メンズエステ,170,saitamashintoshin,/omiya/saitamashintoshin-station/all/,station,unique,大宮・さいたま,大宮|東大宮|日進|土呂
+11,埼玉県,土呂 メンズエステ,90,toro,/omiya/toro-station/all/,station,unique,大宮・さいたま,大宮|東大宮|日進|さいたま新都心
+11,埼玉県,志木 メンズエステ,2900,shiki,/shiki/,parent_absorbed,absorbed: /shiki/shiki-station/all/,志木・みずほ台,朝霞|朝霞台|ふじみ野|上福岡|みずほ台
+11,埼玉県,朝霞 メンズエステ,880,asaka,/shiki/asaka-station/all/,station,unique,志木・みずほ台,志木|朝霞台|ふじみ野|上福岡|みずほ台
+11,埼玉県,朝霞台 メンズエステ,1900,asakadai,/shiki/asakadai-station/all/,station,unique,志木・みずほ台,志木|朝霞|ふじみ野|上福岡|みずほ台
+11,埼玉県,ふじみ野 メンズエステ,720,fujimino,/shiki/fujimino-station/all/,station,unique,志木・みずほ台,志木|朝霞|朝霞台|上福岡|みずほ台
+11,埼玉県,上福岡 メンズエステ,1600,kamifukuoka,/shiki/kamifukuoka-station/all/,station,unique,志木・みずほ台,志木|朝霞|朝霞台|ふじみ野|みずほ台
+11,埼玉県,みずほ台 メンズエステ,2900,mizuhodai,/shiki/mizuhodai-station/all/,station,unique,志木・みずほ台,志木|朝霞|朝霞台|ふじみ野|上福岡
+11,埼玉県,新座 メンズエステ,390,niiza,/shiki/niiza-station/all/,station,unique,志木・みずほ台,志木|朝霞|朝霞台|ふじみ野|上福岡
+11,埼玉県,鶴瀬 メンズエステ,170,tsuruse,/shiki/tsuruse-station/all/,station,unique,志木・みずほ台,志木|朝霞|朝霞台|ふじみ野|上福岡
+11,埼玉県,和光市 メンズエステ,1000,wakoshi,/shiki/wakoshi-station/all/,station,unique,志木・みずほ台,志木|朝霞|朝霞台|ふじみ野|上福岡
+11,埼玉県,草加 メンズエステ,2900,souka,/souka/,parent_absorbed,absorbed: /souka/souka-station/all/,草加・谷塚,三郷|新田|八潮|谷塚
+11,埼玉県,三郷 メンズエステ,720,misato,/souka/misato-city/all/,city,unique,草加・谷塚,草加|新田|八潮|谷塚
+11,埼玉県,新田 メンズエステ,110,shinden,/souka/shinden-station/all/,station,unique,草加・谷塚,草加|三郷|八潮|谷塚
+11,埼玉県,八潮 メンズエステ,590,yashio,/souka/yashio-city/all/,city,unique,草加・谷塚,草加|三郷|新田|谷塚
+11,埼玉県,谷塚 メンズエステ,590,yatsuka,/souka/yatsuka-station/all/,station,unique,草加・谷塚,草加|三郷|新田|八潮
+11,埼玉県,所沢 メンズエステ,9900,tokorozawa,/tokorozawa/,parent_absorbed,absorbed: /tokorozawa/tokorozawa-station/all/,所沢・入間,飯能|東所沢|入間|小手指|西所沢
+11,埼玉県,飯能 メンズエステ,590,hanno,/tokorozawa/hanno-city/all/,city,unique,所沢・入間,所沢|東所沢|入間|小手指|西所沢
+11,埼玉県,東所沢 メンズエステ,90,higashitokorozawa,/tokorozawa/higashitokorozawa-station/all/,station,unique,所沢・入間,所沢|飯能|入間|小手指|西所沢
+11,埼玉県,入間 メンズエステ,590,iruma,/tokorozawa/iruma-city/all/,city,unique,所沢・入間,所沢|飯能|東所沢|小手指|西所沢
+11,埼玉県,小手指 メンズエステ,590,kotesashi,/tokorozawa/kotesashi-station/all/,station,unique,所沢・入間,所沢|飯能|東所沢|入間|西所沢
+11,埼玉県,西所沢 メンズエステ,170,nishitokorozawa,/tokorozawa/nishitokorozawa-station/all/,station,unique,所沢・入間,所沢|飯能|東所沢|入間|小手指
+11,埼玉県,狭山 メンズエステ,480,sayama,/tokorozawa/sayama-city/all/,city,unique,所沢・入間,所沢|飯能|東所沢|入間|小手指
+11,埼玉県,狭山ヶ丘 メンズエステ,90,sayamagaoka,/tokorozawa/sayamagaoka-station/all/,station,unique,所沢・入間,所沢|飯能|東所沢|入間|小手指
+11,埼玉県,新所沢 メンズエステ,590,shintokorozawa,/tokorozawa/shintokorozawa-station/all/,station,unique,所沢・入間,所沢|飯能|東所沢|入間|小手指
+11,埼玉県,浦和 メンズエステ,6600,urawa,/urawa/,parent_absorbed,absorbed: /urawa/urawa-station/all/,浦和・武蔵浦和,東川口|東浦和|北浦和|北与野|南浦和
+11,埼玉県,東川口 メンズエステ,1300,higashikawaguchi,/urawa/higashikawaguchi-station/all/,station,unique,浦和・武蔵浦和,浦和|東浦和|北浦和|北与野|南浦和
+11,埼玉県,東浦和 メンズエステ,260,higashiurawa,/urawa/higashiurawa-station/all/,station,unique,浦和・武蔵浦和,浦和|東川口|北浦和|北与野|南浦和
+11,埼玉県,北浦和 メンズエステ,1300,kitaurawa,/urawa/kitaurawa-station/all/,station,unique,浦和・武蔵浦和,浦和|東川口|東浦和|北与野|南浦和
+11,埼玉県,北与野 メンズエステ,170,kitayono,/urawa/kitayono-station/all/,station,unique,浦和・武蔵浦和,浦和|東川口|東浦和|北浦和|南浦和
+11,埼玉県,南浦和 メンズエステ,3600,minamiurawa,/urawa/minamiurawa-station/all/,station,unique,浦和・武蔵浦和,浦和|東川口|東浦和|北浦和|北与野
+11,埼玉県,武蔵浦和 メンズエステ,1600,musashiurawa,/urawa/musashiurawa-station/all/,station,unique,浦和・武蔵浦和,浦和|東川口|東浦和|北浦和|北与野
+11,埼玉県,与野 メンズエステ,480,yono,/urawa/yono-station/all/,station,unique,浦和・武蔵浦和,浦和|東川口|東浦和|北浦和|北与野
+12,千葉県,千葉 メンズエステ,14800,chiba,/chiba/,parent_absorbed,absorbed: /chiba/chiba-station/all/,千葉,千葉中央|東千葉|本千葉|稲毛|幕張
+12,千葉県,千葉中央 メンズエステ,590,chibachuo,/chiba/chibachuo-station/all/,station,unique,千葉,千葉|東千葉|本千葉|稲毛|幕張
+12,千葉県,東千葉 メンズエステ,30,higashichiba,/chiba/higashichiba-station/all/,station,unique,千葉,千葉|千葉中央|本千葉|稲毛|幕張
+12,千葉県,本千葉 メンズエステ,90,honchiba,/chiba/honchiba-station/all/,station,unique,千葉,千葉|千葉中央|東千葉|稲毛|幕張
+12,千葉県,稲毛 メンズエステ,1300,inage,/chiba/inage-station/all/,station,unique,千葉,千葉|千葉中央|東千葉|本千葉|幕張
+12,千葉県,幕張 メンズエステ,880,makuhari,/chiba/makuhari-station/all/,station,unique,千葉,千葉|千葉中央|東千葉|本千葉|稲毛
+12,千葉県,西千葉 メンズエステ,210,nishichiba,/chiba/nishichiba-station/all/,station,unique,千葉,千葉|千葉中央|東千葉|本千葉|稲毛
+12,千葉県,大森台 メンズエステ,0,omoridai,/chiba/omoridai-station/all/,station,unique,千葉,千葉|千葉中央|東千葉|本千葉|稲毛
+12,千葉県,検見川 メンズエステ,210,shinkemigawa,/chiba/shinkemigawa-station/all/,station,unique,千葉,千葉|千葉中央|東千葉|本千葉|稲毛
+12,千葉県,蘇我 メンズエステ,1000,soga,/chiba/soga-station/all/,station,unique,千葉,千葉|千葉中央|東千葉|本千葉|稲毛
+12,千葉県,都賀 メンズエステ,260,tsuga,/chiba/tsuga-station/all/,station,unique,千葉,千葉|千葉中央|東千葉|本千葉|稲毛
+12,千葉県,船橋 メンズエステ,18100,funabashi,/funabashi/,parent_absorbed,absorbed: /funabashi/funabashi-station/all/,船橋・西船橋,原木中山|西船橋|新船橋
+12,千葉県,原木中山 メンズエステ,50,barakinakayama,/funabashi/barakinakayama-station/all/,station,unique,船橋・西船橋,船橋|西船橋|新船橋
+12,千葉県,西船橋 メンズエステ,5400,nishifunabashi,/funabashi/nishifunabashi-station/all/,station,unique,船橋・西船橋,船橋|原木中山|新船橋
+12,千葉県,新船橋 メンズエステ,40,shinfunabashi,/funabashi/shinfunabashi-station/all/,station,unique,船橋・西船橋,船橋|原木中山|西船橋
+12,千葉県,市原 メンズエステ,1900,ichihara,/ichihara/,parent_absorbed,absorbed: /ichihara/ichihara-city/all/,市原・木更津・房総,君津|木更津|茂原|袖ヶ浦
+12,千葉県,君津 メンズエステ,590,kimitsu,/ichihara/kimitsu-city/all/,city,unique,市原・木更津・房総,市原|木更津|茂原|袖ヶ浦
+12,千葉県,木更津 メンズエステ,5400,kisarazu,/ichihara/kisarazu-city/all/,city,unique,市原・木更津・房総,市原|君津|茂原|袖ヶ浦
+12,千葉県,茂原 メンズエステ,1600,mobara,/ichihara/mobara-city/all/,city,unique,市原・木更津・房総,市原|君津|木更津|袖ヶ浦
+12,千葉県,袖ヶ浦 メンズエステ,260,sodegaura,/ichihara/sodegaura-city/all/,city,unique,市原・木更津・房総,市原|君津|木更津|茂原
+12,千葉県,市川 メンズエステ,1000,ichikawa,/ichikawa/,parent_absorbed,absorbed: /ichikawa/ichikawa-station/all/,市川・本八幡,本八幡
+12,千葉県,本八幡 メンズエステ,3600,motoyawata,/ichikawa/motoyawata-station/all/,station,unique,市川・本八幡,市川
+12,千葉県,柏 メンズエステ,9900,kashiwa,/kashiwa/,parent_absorbed,absorbed: /kashiwa/kashiwa-station/all/,柏・我孫子,我孫子|印西|南柏|天王台
+12,千葉県,我孫子 メンズエステ,1300,abiko,/kashiwa/abiko-station/all/,station,unique,柏・我孫子,柏|印西|南柏|天王台
+12,千葉県,印西 メンズエステ,110,inzai,/kashiwa/inzai-city/all/,city,unique,柏・我孫子,柏|我孫子|南柏|天王台
+12,千葉県,南柏 メンズエステ,880,minamikashiwa,/kashiwa/minamikashiwa-station/all/,station,unique,柏・我孫子,柏|我孫子|印西|天王台
+12,千葉県,天王台 メンズエステ,480,tennodai,/kashiwa/tennodai-station/all/,station,unique,柏・我孫子,柏|我孫子|印西|南柏
+12,千葉県,松戸 メンズエステ,8100,matsudo,/matsudo/,parent_absorbed,absorbed: /matsudo/matsudo-station/all/,松戸・八柱,五香|東松戸|鎌ケ谷|北小金|北松戸
+12,千葉県,五香 メンズエステ,170,goko,/matsudo/goko-station/all/,station,unique,松戸・八柱,松戸|東松戸|鎌ケ谷|北小金|北松戸
+12,千葉県,東松戸 メンズエステ,260,higashimatsudo,/matsudo/higashimatsudo-station/all/,station,unique,松戸・八柱,松戸|五香|鎌ケ谷|北小金|北松戸
+12,千葉県,鎌ケ谷 メンズエステ,90,kamagaya,/matsudo/kamagaya-city/all/,city,unique,松戸・八柱,松戸|五香|東松戸|北小金|北松戸
+12,千葉県,北小金 メンズエステ,210,kitakogane,/matsudo/kitakogane-station/all/,station,unique,松戸・八柱,松戸|五香|東松戸|鎌ケ谷|北松戸
+12,千葉県,北松戸 メンズエステ,210,kitamatsudo,/matsudo/kitamatsudo-station/all/,station,unique,松戸・八柱,松戸|五香|東松戸|鎌ケ谷|北小金
+12,千葉県,流山 メンズエステ,1300,nagareyama,/matsudo/nagareyama-city/all/,city,unique,松戸・八柱,松戸|五香|東松戸|鎌ケ谷|北小金
+12,千葉県,野田 メンズエステ,260,noda,/matsudo/noda-city/all/,city_cross_pref,cross_prefecture,松戸・八柱,松戸|五香|東松戸|鎌ケ谷|北小金
+12,千葉県,新松戸 メンズエステ,1900,shinmatsudo,/matsudo/shinmatsudo-station/all/,station,unique,松戸・八柱,松戸|五香|東松戸|鎌ケ谷|北小金
+12,千葉県,八柱 メンズエステ,1600,yabashira,/matsudo/yabashira-station/all/,station,unique,松戸・八柱,松戸|五香|東松戸|鎌ケ谷|北小金
+12,千葉県,成田 メンズエステ,6600,narita,/narita/,parent_absorbed,absorbed: /narita/narita-city/all/,成田・富里,旭|香取|東金|富里
+12,千葉県,旭 メンズエステ,40,asahi,/narita/asahi-city/all/,city,unique,成田・富里,成田|香取|東金|富里
+12,千葉県,香取 メンズエステ,0,katori,/narita/katori-city/all/,city,unique,成田・富里,成田|旭|東金|富里
+12,千葉県,東金 メンズエステ,1000,togane,/narita/togane-city/all/,city,unique,成田・富里,成田|旭|香取|富里
+12,千葉県,富里 メンズエステ,110,tomisato,/narita/tomisato-city/all/,city,unique,成田・富里,成田|旭|香取|東金
+12,千葉県,津田沼 メンズエステ,3600,tsudanuma,/tsudanuma/,parent_absorbed,absorbed: /tsudanuma/tsudanuma-station/all/,津田沼・習志野,北習志野|実籾|高根公団
+12,千葉県,北習志野 メンズエステ,210,kitanarashino,/tsudanuma/kitanarashino-station/all/,station,unique,津田沼・習志野,津田沼|実籾|高根公団
+12,千葉県,実籾 メンズエステ,140,mimomi,/tsudanuma/mimomi-station/all/,station,unique,津田沼・習志野,津田沼|北習志野|高根公団
+12,千葉県,高根公団 メンズエステ,40,takanekodan,/tsudanuma/takanekodan-station/all/,station,unique,津田沼・習志野,津田沼|北習志野|実籾
+12,千葉県,浦安 メンズエステ,3600,urayasu,/urayasu/,parent_absorbed,absorbed: /urayasu/urayasu-station/all/,浦安・行徳,行徳|南行徳|妙典
+12,千葉県,行徳 メンズエステ,1900,gyotoku,/urayasu/gyotoku-station/all/,station,unique,浦安・行徳,浦安|南行徳|妙典
+12,千葉県,南行徳 メンズエステ,390,minamigyotoku,/urayasu/minamigyotoku-station/all/,station,unique,浦安・行徳,浦安|行徳|妙典
+12,千葉県,妙典 メンズエステ,210,myoden,/urayasu/myoden-station/all/,station,unique,浦安・行徳,浦安|行徳|南行徳
+12,千葉県,八千代 メンズエステ,720,yachiyo,/yachiyo/,parent_absorbed,absorbed: /yachiyo/yachiyo-city/all/,八千代・四街道・佐倉,佐倉|四街道
+12,千葉県,佐倉 メンズエステ,320,sakura,/yachiyo/sakura-city/all/,city,unique,八千代・四街道・佐倉,八千代|四街道
+12,千葉県,四街道 メンズエステ,1000,yotsukaido,/yachiyo/yotsukaido-city/all/,city,unique,八千代・四街道・佐倉,八千代|佐倉
+13,東京都,赤羽 メンズエステ,12100,akabane,/akabane/,parent_absorbed,absorbed: /akabane/akabane-station/all/,赤羽・王子・板橋,蓮根|十条|板橋|板橋本町|上中里
+13,東京都,蓮根 メンズエステ,70,hasune,/akabane/hasune-station/all/,station,unique,赤羽・王子・板橋,赤羽|十条|板橋|板橋本町|上中里
+13,東京都,十条 メンズエステ,210,higashijujo,/akabane/higashijujo-station/all/,station,unique,赤羽・王子・板橋,赤羽|蓮根|板橋|板橋本町|上中里
+13,東京都,板橋 メンズエステ,1600,itabashi,/akabane/itabashi-station/all/,station,unique,赤羽・王子・板橋,赤羽|蓮根|十条|板橋本町|上中里
+13,東京都,板橋本町 メンズエステ,140,itabashihoncho,/akabane/itabashihoncho-station/all/,station,unique,赤羽・王子・板橋,赤羽|蓮根|十条|板橋|上中里
+13,東京都,上中里 メンズエステ,30,kaminakazato,/akabane/kaminakazato-station/all/,station,unique,赤羽・王子・板橋,赤羽|蓮根|十条|板橋|板橋本町
+13,東京都,王子 メンズエステ,1900,oji,/akabane/oji-station/all/,station,unique,赤羽・王子・板橋,赤羽|蓮根|十条|板橋|板橋本町
+13,東京都,下板橋 メンズエステ,70,shimoitabashi,/akabane/shimoitabashi-station/all/,station,unique,赤羽・王子・板橋,赤羽|蓮根|十条|板橋|板橋本町
+13,東京都,新板橋 メンズエステ,40,shinitabashi,/akabane/shinitabashi-station/all/,station,unique,赤羽・王子・板橋,赤羽|蓮根|十条|板橋|板橋本町
+13,東京都,高島平 メンズエステ,140,takashimadaira,/akabane/takashimadaira-station/all/,station,unique,赤羽・王子・板橋,赤羽|蓮根|十条|板橋|板橋本町
+13,東京都,浮間舟渡 メンズエステ,70,ukimafunado,/akabane/ukimafunado-station/all/,station,unique,赤羽・王子・板橋,赤羽|蓮根|十条|板橋|板橋本町
+13,東京都,赤坂 メンズエステ,4400,akasaka,/akasaka/,parent_cross_pref,"cross_prefecture, absorbed: /akasaka/akasaka-station/all/",赤坂,溜池山王
+13,東京都,溜池山王 メンズエステ,90,tameikesanno,/akasaka/tameikesanno-station/all/,station,unique,赤坂,赤坂
+13,東京都,秋葉原 メンズエステ,18100,akihabara,/akihabara/,parent_absorbed,absorbed: /akihabara/akihabara-station/all/,秋葉原,浅草橋
+13,東京都,浅草橋 メンズエステ,1000,asakusabashi,/akihabara/asakusabashi-station/all/,station,unique,秋葉原,秋葉原
+13,東京都,調布 メンズエステ,6600,chofu,/chofu/,parent_absorbed,absorbed: /chofu/chofu-station/all/,調布・千歳烏山,千歳烏山|仙川|つつじヶ丘
+13,東京都,千歳烏山 メンズエステ,2400,chitosekarasuyama,/chofu/chitosekarasuyama-station/all/,station,unique,調布・千歳烏山,調布|仙川|つつじヶ丘
+13,東京都,仙川 メンズエステ,390,senkawa,/chofu/senkawa-station/all/,station,unique,調布・千歳烏山,調布|千歳烏山|つつじヶ丘
+13,東京都,つつじヶ丘 メンズエステ,320,tsutsujigaoka,/chofu/tsutsujigaoka-station/all/,station,unique,調布・千歳烏山,調布|千歳烏山|仙川
+13,東京都,恵比寿 メンズエステ,27100,ebisu,/ebisu/,parent_absorbed,absorbed: /ebisu/ebisu-station/all/,恵比寿・中目黒・代官山,代官山|広尾|中目黒
+13,東京都,代官山 メンズエステ,260,daikanyama,/ebisu/daikanyama-station/all/,station,unique,恵比寿・中目黒・代官山,恵比寿|広尾|中目黒
+13,東京都,広尾 メンズエステ,260,hiroo,/ebisu/hiroo-station/all/,station,unique,恵比寿・中目黒・代官山,恵比寿|代官山|中目黒
+13,東京都,中目黒 メンズエステ,5400,nakameguro,/ebisu/nakameguro-station/all/,station,unique,恵比寿・中目黒・代官山,恵比寿|代官山|広尾
+13,東京都,府中 メンズエステ,5400,fuchu,/fuchu/,parent_absorbed,absorbed: /fuchu/fuchu-station/all/,府中・聖蹟桜ヶ丘,分倍河原|永山|聖蹟桜ヶ丘|多摩センター
+13,東京都,分倍河原 メンズエステ,170,bubaigawara,/fuchu/bubaigawara-station/all/,station,unique,府中・聖蹟桜ヶ丘,府中|永山|聖蹟桜ヶ丘|多摩センター
+13,東京都,永山 メンズエステ,260,nagayama,/fuchu/nagayama-station/all/,station,unique,府中・聖蹟桜ヶ丘,府中|分倍河原|聖蹟桜ヶ丘|多摩センター
+13,東京都,聖蹟桜ヶ丘 メンズエステ,720,seisekisakuragaoka,/fuchu/seisekisakuragaoka-station/all/,station,unique,府中・聖蹟桜ヶ丘,府中|分倍河原|永山|多摩センター
+13,東京都,多摩センター メンズエステ,1000,tamacenter,/fuchu/tamacenter-station/all/,station,unique,府中・聖蹟桜ヶ丘,府中|分倍河原|永山|聖蹟桜ヶ丘
+13,東京都,銀座 メンズエステ,8100,ginza,/ginza/,parent_absorbed,absorbed: /ginza/ginza-station/all/,銀座,新富町|豊洲|月島
+13,東京都,新富町 メンズエステ,1000,shintomicho,/ginza/shintomicho-station/all/,station,unique,銀座,銀座|豊洲|月島
+13,東京都,豊洲 メンズエステ,480,toyosu,/ginza/toyosu-station/all/,station,unique,銀座,銀座|新富町|月島
+13,東京都,月島 メンズエステ,480,tsukishima,/ginza/tsukishima-station/all/,station,unique,銀座,銀座|新富町|豊洲
+13,東京都,五反田 メンズエステ,14800,gotanda,/gotanda/,parent,unique,五反田,旗の台|大崎
+13,東京都,旗の台 メンズエステ,260,hatanodai,/gotanda/hatanodai-station/all/,station,unique,五反田,五反田|大崎
+13,東京都,大崎 メンズエステ,480,osaki,/gotanda/osaki-station/all/,station_cross_pref,cross_prefecture,五反田,五反田|旗の台
+13,東京都,八王子 メンズエステ,9900,hachioji,/hachioji/,parent_absorbed,absorbed: /hachioji/hachioji-station/all/,八王子・日野,日野|西八王子|豊田
+13,東京都,日野 メンズエステ,210,hino,/hachioji/hino-city/all/,city,unique,八王子・日野,八王子|西八王子|豊田
+13,東京都,西八王子 メンズエステ,260,nishihachioji,/hachioji/nishihachioji-station/all/,station,unique,八王子・日野,八王子|日野|豊田
+13,東京都,豊田 メンズエステ,2400,toyoda,/hachioji/toyoda-station/all/,station_cross_pref,cross_prefecture,八王子・日野,八王子|日野|西八王子
+13,東京都,拝島 メンズエステ,320,haijima,/haijima/,parent_absorbed,absorbed: /haijima/haijima-station/all/,拝島・福生,昭島|福生|羽村|東青梅|河辺
+13,東京都,昭島 メンズエステ,480,akishima,/haijima/akishima-station/all/,station,unique,拝島・福生,拝島|福生|羽村|東青梅|河辺
+13,東京都,福生 メンズエステ,1900,fussa,/haijima/fussa-station/all/,station,unique,拝島・福生,拝島|昭島|羽村|東青梅|河辺
+13,東京都,羽村 メンズエステ,170,hamura,/haijima/hamura-station/all/,station,unique,拝島・福生,拝島|昭島|福生|東青梅|河辺
+13,東京都,東青梅 メンズエステ,210,higashioume,/haijima/higashioume-station/all/,station,unique,拝島・福生,拝島|昭島|福生|羽村|河辺
+13,東京都,河辺 メンズエステ,390,kabe,/haijima/kabe-station/all/,station,unique,拝島・福生,拝島|昭島|福生|羽村|東青梅
+13,東京都,小作 メンズエステ,110,ozaku,/haijima/ozaku-station/all/,station,unique,拝島・福生,拝島|昭島|福生|羽村|東青梅
+13,東京都,京王線 メンズエステ,210,hatsudai,/hatsudai/,parent,unique,京王線・初台・笹塚,代田橋|幡ヶ谷|初台|明大前|桜上水
+13,東京都,代田橋 メンズエステ,140,daitabashi,/hatsudai/daitabashi-station/all/,station,unique,京王線・初台・笹塚,京王線|幡ヶ谷|初台|明大前|桜上水
+13,東京都,幡ヶ谷 メンズエステ,1300,hatagaya,/hatsudai/hatagaya-station/all/,station,unique,京王線・初台・笹塚,京王線|代田橋|初台|明大前|桜上水
+13,東京都,初台 メンズエステ,590,hatsudai,/hatsudai/hatsudai-station/all/,station,unique,京王線・初台・笹塚,京王線|代田橋|幡ヶ谷|明大前|桜上水
+13,東京都,明大前 メンズエステ,2400,meidaimae,/hatsudai/meidaimae-station/all/,station,unique,京王線・初台・笹塚,京王線|代田橋|幡ヶ谷|初台|桜上水
+13,東京都,桜上水 メンズエステ,140,sakurajosui,/hatsudai/sakurajosui-station/all/,station,unique,京王線・初台・笹塚,京王線|代田橋|幡ヶ谷|初台|明大前
+13,東京都,笹塚 メンズエステ,4400,sasazuka,/hatsudai/sasazuka-station/all/,station,unique,京王線・初台・笹塚,京王線|代田橋|幡ヶ谷|初台|明大前
+13,東京都,下高井戸 メンズエステ,720,shimotakaido,/hatsudai/shimotakaido-station/all/,station,unique,京王線・初台・笹塚,京王線|代田橋|幡ヶ谷|初台|明大前
+13,東京都,四ツ谷 メンズエステ,590,iidabashi,/iidabashi/,parent_absorbed,absorbed: /iidabashi/yotsuya-station/all/,四ツ谷・飯田橋・市ヶ谷,曙橋|市ヶ谷|飯田橋|神楽坂|麹町
+13,東京都,曙橋 メンズエステ,140,akebonobashi,/iidabashi/akebonobashi-station/all/,station,unique,四ツ谷・飯田橋・市ヶ谷,四ツ谷|市ヶ谷|飯田橋|神楽坂|麹町
+13,東京都,市ヶ谷 メンズエステ,720,ichigaya,/iidabashi/ichigaya-station/all/,station,unique,四ツ谷・飯田橋・市ヶ谷,四ツ谷|曙橋|飯田橋|神楽坂|麹町
+13,東京都,飯田橋 メンズエステ,1600,iidabashi,/iidabashi/iidabashi-station/all/,station,unique,四ツ谷・飯田橋・市ヶ谷,四ツ谷|曙橋|市ヶ谷|神楽坂|麹町
+13,東京都,神楽坂 メンズエステ,2400,kagurazaka,/iidabashi/kagurazaka-station/all/,station,unique,四ツ谷・飯田橋・市ヶ谷,四ツ谷|曙橋|市ヶ谷|飯田橋|麹町
+13,東京都,麹町 メンズエステ,140,kojimachi,/iidabashi/kojimachi-station/all/,station,unique,四ツ谷・飯田橋・市ヶ谷,四ツ谷|曙橋|市ヶ谷|飯田橋|神楽坂
+13,東京都,九段下 メンズエステ,480,kudanshita,/iidabashi/kudanshita-station/all/,station,unique,四ツ谷・飯田橋・市ヶ谷,四ツ谷|曙橋|市ヶ谷|飯田橋|神楽坂
+13,東京都,牛込柳町 メンズエステ,40,ushigomeyanagicho,/iidabashi/ushigomeyanagicho-station/all/,station,unique,四ツ谷・飯田橋・市ヶ谷,四ツ谷|曙橋|市ヶ谷|飯田橋|神楽坂
+13,東京都,四谷三丁目 メンズエステ,390,yotsuyasanchome,/iidabashi/yotsuyasanchome-station/all/,station,unique,四ツ谷・飯田橋・市ヶ谷,四ツ谷|曙橋|市ヶ谷|飯田橋|神楽坂
+13,東京都,池袋 メンズエステ,27100,ikebukuro,/ikebukuro/,parent,unique,池袋,要町|小竹向原|目白|千川|椎名町
+13,東京都,要町 メンズエステ,390,kanamecho,/ikebukuro/kanamecho-station/all/,station,unique,池袋,池袋|小竹向原|目白|千川|椎名町
+13,東京都,小竹向原 メンズエステ,210,kotakemukaihara,/ikebukuro/kotakemukaihara-station/all/,station,unique,池袋,池袋|要町|目白|千川|椎名町
+13,東京都,目白 メンズエステ,260,mejiro,/ikebukuro/mejiro-station/all/,station,unique,池袋,池袋|要町|小竹向原|千川|椎名町
+13,東京都,千川 メンズエステ,260,senkawa,/ikebukuro/senkawa-station/all/,station,unique,池袋,池袋|要町|小竹向原|目白|椎名町
+13,東京都,椎名町 メンズエステ,50,shiinamachi,/ikebukuro/shiinamachi-station/all/,station,unique,池袋,池袋|要町|小竹向原|目白|千川
+13,東京都,自由が丘 メンズエステ,4400,jiyugaoka,/jiyugaoka/,parent_absorbed,absorbed: /jiyugaoka/jiyugaoka-station/all/,自由が丘・学芸大学,田園調布|学芸大学|奥沢|等々力|都立大学
+13,東京都,田園調布 メンズエステ,110,denenchofu,/jiyugaoka/denenchofu-station/all/,station,unique,自由が丘・学芸大学,自由が丘|学芸大学|奥沢|等々力|都立大学
+13,東京都,学芸大学 メンズエステ,2400,gakugeidaigaku,/jiyugaoka/gakugeidaigaku-station/all/,station,unique,自由が丘・学芸大学,自由が丘|田園調布|奥沢|等々力|都立大学
+13,東京都,奥沢 メンズエステ,50,okusawa,/jiyugaoka/okusawa-station/all/,station,unique,自由が丘・学芸大学,自由が丘|田園調布|学芸大学|等々力|都立大学
+13,東京都,等々力 メンズエステ,170,todoroki,/jiyugaoka/todoroki-station/all/,station,unique,自由が丘・学芸大学,自由が丘|田園調布|学芸大学|奥沢|都立大学
+13,東京都,都立大学 メンズエステ,480,toritsudaigaku,/jiyugaoka/toritsudaigaku-station/all/,station,unique,自由が丘・学芸大学,自由が丘|田園調布|学芸大学|奥沢|等々力
+13,東京都,祐天寺 メンズエステ,320,yutenji,/jiyugaoka/yutenji-station/all/,station,unique,自由が丘・学芸大学,自由が丘|田園調布|学芸大学|奥沢|等々力
+13,東京都,蒲田 メンズエステ,9900,kamata,/kamata/,parent,unique,蒲田,青物横丁|大井町|大森|大森海岸
+13,東京都,青物横丁 メンズエステ,90,aomonoyokocho,/kamata/aomonoyokocho-station/all/,station,unique,蒲田,蒲田|大井町|大森|大森海岸
+13,東京都,大井町 メンズエステ,6600,oimachi,/kamata/oimachi-station/all/,station,unique,蒲田,蒲田|青物横丁|大森|大森海岸
+13,東京都,大森 メンズエステ,4400,omori,/kamata/omori-station/all/,station_cross_pref,cross_prefecture,蒲田,蒲田|青物横丁|大井町|大森海岸
+13,東京都,大森海岸 メンズエステ,50,omorikaigan,/kamata/omorikaigan-station/all/,station,unique,蒲田,蒲田|青物横丁|大井町|大森
+13,東京都,北千住 メンズエステ,12100,kameari,/kameari/,parent_absorbed,absorbed: /kameari/kitasenju-station/all/,北千住・亀有,青砥|綾瀬|五反野|堀切菖蒲園|亀有
+13,東京都,青砥 メンズエステ,480,aoto,/kameari/aoto-station/all/,station,unique,北千住・亀有,北千住|綾瀬|五反野|堀切菖蒲園|亀有
+13,東京都,綾瀬 メンズエステ,1900,ayase,/kameari/ayase-station/all/,station,unique,北千住・亀有,北千住|青砥|五反野|堀切菖蒲園|亀有
+13,東京都,五反野 メンズエステ,140,gotanno,/kameari/gotanno-station/all/,station,unique,北千住・亀有,北千住|青砥|綾瀬|堀切菖蒲園|亀有
+13,東京都,堀切菖蒲園 メンズエステ,90,horikirishobuen,/kameari/horikirishobuen-station/all/,station,unique,北千住・亀有,北千住|青砥|綾瀬|五反野|亀有
+13,東京都,亀有 メンズエステ,2900,kameari,/kameari/kameari-station/all/,station,unique,北千住・亀有,北千住|青砥|綾瀬|五反野|堀切菖蒲園
+13,東京都,金町 メンズエステ,1000,kanamachi,/kameari/kanamachi-station/all/,station,unique,北千住・亀有,北千住|青砥|綾瀬|五反野|堀切菖蒲園
+13,東京都,北綾瀬 メンズエステ,210,kitaayase,/kameari/kitaayase-station/all/,station,unique,北千住・亀有,北千住|青砥|綾瀬|五反野|堀切菖蒲園
+13,東京都,南千住 メンズエステ,210,minamisenju,/kameari/minamisenju-station/all/,station,unique,北千住・亀有,北千住|青砥|綾瀬|五反野|堀切菖蒲園
+13,東京都,西新井 メンズエステ,1600,nishiarai,/kameari/nishiarai-station/all/,station,unique,北千住・亀有,北千住|青砥|綾瀬|五反野|堀切菖蒲園
+13,東京都,竹ノ塚 メンズエステ,1300,takenozuka,/kameari/takenozuka-station/all/,station,unique,北千住・亀有,北千住|青砥|綾瀬|五反野|堀切菖蒲園
+13,東京都,亀戸 メンズエステ,2900,kameido,/kameido/,parent_absorbed,absorbed: /kameido/kameido-station/all/,亀戸・小岩,平井|小岩|西大島|大島|新小岩
+13,東京都,平井 メンズエステ,720,hirai,/kameido/hirai-station/all/,station,unique,亀戸・小岩,亀戸|小岩|西大島|大島|新小岩
+13,東京都,小岩 メンズエステ,1600,koiwa,/kameido/koiwa-station/all/,station,unique,亀戸・小岩,亀戸|平井|西大島|大島|新小岩
+13,東京都,西大島 メンズエステ,170,nishiojima,/kameido/nishiojima-station/all/,station,unique,亀戸・小岩,亀戸|平井|小岩|大島|新小岩
+13,東京都,大島 メンズエステ,210,ojima,/kameido/ojima-station/all/,station,unique,亀戸・小岩,亀戸|平井|小岩|西大島|新小岩
+13,東京都,新小岩 メンズエステ,2900,shinkoiwa,/kameido/shinkoiwa-station/all/,station,unique,亀戸・小岩,亀戸|平井|小岩|西大島|大島
+13,東京都,神田 メンズエステ,5400,kanda,/kanda/,parent,unique,神田,神保町|小川町
+13,東京都,神保町 メンズエステ,880,jinbocho,/kanda/jinbocho-station/all/,station,unique,神田,神田|小川町
+13,東京都,小川町 メンズエステ,90,ogawacho,/kanda/ogawacho-station/all/,station,unique,神田,神田|神保町
+13,東京都,葛西 メンズエステ,5400,kasai,/kasai/,parent_absorbed,absorbed: /kasai/kasai-station/all/,葛西・西葛西,船堀|瑞江|西葛西|篠崎
+13,東京都,船堀 メンズエステ,210,funabori,/kasai/funabori-station/all/,station,unique,葛西・西葛西,葛西|瑞江|西葛西|篠崎
+13,東京都,瑞江 メンズエステ,210,mizue,/kasai/mizue-station/all/,station,unique,葛西・西葛西,葛西|船堀|西葛西|篠崎
+13,東京都,西葛西 メンズエステ,2400,nishikasai,/kasai/nishikasai-station/all/,station,unique,葛西・西葛西,葛西|船堀|瑞江|篠崎
+13,東京都,篠崎 メンズエステ,210,shinozaki,/kasai/shinozaki-station/all/,station,unique,葛西・西葛西,葛西|船堀|瑞江|西葛西
+13,東京都,吉祥寺 メンズエステ,8100,kichijoji,/kichijoji/,parent_absorbed,absorbed: /kichijoji/kichijoji-station/all/,吉祥寺・三鷹,東小金井|三鷹|武蔵小金井|武蔵境
+13,東京都,東小金井 メンズエステ,210,higashikoganei,/kichijoji/higashikoganei-station/all/,station,unique,吉祥寺・三鷹,吉祥寺|三鷹|武蔵小金井|武蔵境
+13,東京都,三鷹 メンズエステ,2900,mitaka,/kichijoji/mitaka-station/all/,station,unique,吉祥寺・三鷹,吉祥寺|東小金井|武蔵小金井|武蔵境
+13,東京都,武蔵小金井 メンズエステ,2400,musashikoganei,/kichijoji/musashikoganei-station/all/,station,unique,吉祥寺・三鷹,吉祥寺|東小金井|三鷹|武蔵境
+13,東京都,武蔵境 メンズエステ,480,musashisakai,/kichijoji/musashisakai-station/all/,station,unique,吉祥寺・三鷹,吉祥寺|東小金井|三鷹|武蔵小金井
+13,東京都,錦糸町 メンズエステ,14800,kinshicho,/kinshicho/,parent_absorbed,absorbed: /kinshicho/kinshicho-station/all/,錦糸町・押上・両国,本所吾妻橋|森下|押上|両国
+13,東京都,本所吾妻橋 メンズエステ,70,honjoazumabashi,/kinshicho/honjoazumabashi-station/all/,station,unique,錦糸町・押上・両国,錦糸町|森下|押上|両国
+13,東京都,森下 メンズエステ,210,morishita,/kinshicho/morishita-station/all/,station,unique,錦糸町・押上・両国,錦糸町|本所吾妻橋|押上|両国
+13,東京都,押上 メンズエステ,880,oshiage,/kinshicho/oshiage-station/all/,station,unique,錦糸町・押上・両国,錦糸町|本所吾妻橋|森下|両国
+13,東京都,両国 メンズエステ,1000,ryogoku,/kinshicho/ryogoku-station/all/,station,unique,錦糸町・押上・両国,錦糸町|本所吾妻橋|森下|押上
+13,東京都,国分寺 メンズエステ,5400,kokubunji,/kokubunji/,parent_absorbed,absorbed: /kokubunji/kokubunji-station/all/,国分寺・国立,国立|西国分寺
+13,東京都,国立 メンズエステ,210,kunitachi,/kokubunji/kunitachi-station/all/,station,unique,国分寺・国立,国分寺|西国分寺
+13,東京都,西国分寺 メンズエステ,140,nishikokubunji,/kokubunji/nishikokubunji-station/all/,station,unique,国分寺・国立,国分寺|国立
+13,東京都,久米川 メンズエステ,2400,kumegawa,/kumegawa/,parent_absorbed,absorbed: /kumegawa/kumegawa-station/all/,久米川・秋津,秋津|花小金井|東村山|一橋学園
+13,東京都,秋津 メンズエステ,1000,akitsu,/kumegawa/akitsu-station/all/,station,unique,久米川・秋津,久米川|花小金井|東村山|一橋学園
+13,東京都,花小金井 メンズエステ,480,hanakoganei,/kumegawa/hanakoganei-station/all/,station,unique,久米川・秋津,久米川|秋津|東村山|一橋学園
+13,東京都,東村山 メンズエステ,720,higashimurayama,/kumegawa/higashimurayama-station/all/,station,unique,久米川・秋津,久米川|秋津|花小金井|一橋学園
+13,東京都,一橋学園 メンズエステ,40,hitotsubashigakuen,/kumegawa/hitotsubashigakuen-station/all/,station,unique,久米川・秋津,久米川|秋津|花小金井|東村山
+13,東京都,町田 メンズエステ,14800,machida,/machida/,parent_absorbed,absorbed: /machida/machida-station/all/,町田・鶴川,鶴川
+13,東京都,鶴川 メンズエステ,210,tsurukawa,/machida/tsurukawa-station/all/,station,unique,町田・鶴川,町田
+13,東京都,目黒 メンズエステ,3600,meguro,/meguro/,parent_absorbed,absorbed: /meguro/meguro-station/all/,目黒・武蔵小山,不動前|武蔵小山|西小山
+13,東京都,不動前 メンズエステ,210,fudomae,/meguro/fudomae-station/all/,station,unique,目黒・武蔵小山,目黒|武蔵小山|西小山
+13,東京都,武蔵小山 メンズエステ,1000,musashikoyama,/meguro/musashikoyama-station/all/,station,unique,目黒・武蔵小山,目黒|不動前|西小山
+13,東京都,西小山 メンズエステ,90,nishikoyama,/meguro/nishikoyama-station/all/,station,unique,目黒・武蔵小山,目黒|不動前|武蔵小山
+13,東京都,門前仲町 メンズエステ,4400,monnaka,/monnaka/,parent_absorbed,absorbed: /monnaka/monzennakacho-station/all/,門前仲町・東陽町,木場|東陽町
+13,東京都,木場 メンズエステ,590,kiba,/monnaka/kiba-station/all/,station,unique,門前仲町・東陽町,門前仲町|東陽町
+13,東京都,東陽町 メンズエステ,720,toyocho,/monnaka/toyocho-station/all/,station,unique,門前仲町・東陽町,門前仲町|木場
+13,東京都,中野 メンズエステ,8100,nakano,/nakano/,parent_absorbed,absorbed: /nakano/nakano-station/all/,中野・高円寺,東高円寺|東中野|方南町|高円寺|中野坂上
+13,東京都,東高円寺 メンズエステ,70,higashikoenji,/nakano/higashikoenji-station/all/,station,unique,中野・高円寺,中野|東中野|方南町|高円寺|中野坂上
+13,東京都,東中野 メンズエステ,590,higashinakano,/nakano/higashinakano-station/all/,station,unique,中野・高円寺,中野|東高円寺|方南町|高円寺|中野坂上
+13,東京都,方南町 メンズエステ,320,honancho,/nakano/honancho-station/all/,station,unique,中野・高円寺,中野|東高円寺|東中野|高円寺|中野坂上
+13,東京都,高円寺 メンズエステ,3600,koenji,/nakano/koenji-station/all/,station,unique,中野・高円寺,中野|東高円寺|東中野|方南町|中野坂上
+13,東京都,中野坂上 メンズエステ,590,nakanosakaue,/nakano/nakanosakaue-station/all/,station,unique,中野・高円寺,中野|東高円寺|東中野|方南町|高円寺
+13,東京都,中野新橋 メンズエステ,110,nakanoshinbashi,/nakano/nakanoshinbashi-station/all/,station,unique,中野・高円寺,中野|東高円寺|東中野|方南町|高円寺
+13,東京都,新高円寺 メンズエステ,260,shinkoenji,/nakano/shinkoenji-station/all/,station,unique,中野・高円寺,中野|東高円寺|東中野|方南町|高円寺
+13,東京都,西武池袋線 メンズエステ,30,nerima,/nerima/,parent,unique,西武池袋線・練馬・江古田,江古田|中村橋|練馬|大泉学園|桜台
+13,東京都,江古田 メンズエステ,320,ekoda,/nerima/ekoda-station/all/,station,unique,西武池袋線・練馬・江古田,西武池袋線|中村橋|練馬|大泉学園|桜台
+13,東京都,中村橋 メンズエステ,140,nakamurabashi,/nerima/nakamurabashi-station/all/,station,unique,西武池袋線・練馬・江古田,西武池袋線|江古田|練馬|大泉学園|桜台
+13,東京都,練馬 メンズエステ,8100,nerima,/nerima/nerima-station/all/,station,unique,西武池袋線・練馬・江古田,西武池袋線|江古田|中村橋|大泉学園|桜台
+13,東京都,大泉学園 メンズエステ,2400,oizumigakuen,/nerima/oizumigakuen-station/all/,station,unique,西武池袋線・練馬・江古田,西武池袋線|江古田|中村橋|練馬|桜台
+13,東京都,桜台 メンズエステ,110,sakuradai,/nerima/sakuradai-station/all/,station,unique,西武池袋線・練馬・江古田,西武池袋線|江古田|中村橋|練馬|大泉学園
+13,東京都,石神井公園 メンズエステ,720,shakujiikoen,/nerima/shakujiikoen-station/all/,station,unique,西武池袋線・練馬・江古田,西武池袋線|江古田|中村橋|練馬|大泉学園
+13,東京都,日本橋 メンズエステ,12100,nihonbashi,/nihonbashi/,parent_cross_pref,"cross_prefecture, absorbed: /nihonbashi/nihonbashi-station/all/",日本橋・茅場町,馬喰町|茅場町|小伝馬町|水天宮前
+13,東京都,馬喰町 メンズエステ,590,bakurocho,/nihonbashi/bakurocho-station/all/,station,unique,日本橋・茅場町,日本橋|茅場町|小伝馬町|水天宮前
+13,東京都,茅場町 メンズエステ,1300,kayabacho,/nihonbashi/kayabacho-station/all/,station,unique,日本橋・茅場町,日本橋|馬喰町|小伝馬町|水天宮前
+13,東京都,小伝馬町 メンズエステ,210,kodenmacho,/nihonbashi/kodenmacho-station/all/,station,unique,日本橋・茅場町,日本橋|馬喰町|茅場町|水天宮前
+13,東京都,水天宮前 メンズエステ,140,suitengumae,/nihonbashi/suitengumae-station/all/,station,unique,日本橋・茅場町,日本橋|馬喰町|茅場町|小伝馬町
+13,東京都,鶯谷 メンズエステ,2400,nippori,/nippori/,parent_absorbed,absorbed: /nippori/uguisudani-station/all/,鶯谷・日暮里,入谷|町屋|三ノ輪|日暮里
+13,東京都,入谷 メンズエステ,170,iriya,/nippori/iriya-station/all/,station,unique,鶯谷・日暮里,鶯谷|町屋|三ノ輪|日暮里
+13,東京都,町屋 メンズエステ,320,machiya,/nippori/machiya-station/all/,station,unique,鶯谷・日暮里,鶯谷|入谷|三ノ輪|日暮里
+13,東京都,三ノ輪 メンズエステ,260,minowa,/nippori/minowa-station/all/,station,unique,鶯谷・日暮里,鶯谷|入谷|町屋|日暮里
+13,東京都,日暮里 メンズエステ,5400,nippori,/nippori/nippori-station/all/,station,unique,鶯谷・日暮里,鶯谷|入谷|町屋|三ノ輪
+13,東京都,西東京 メンズエステ,260,nishitokyo,/nishitokyo/,parent,unique,西東京・東久留米・清瀬,ひばりヶ丘|東久留米|保谷|清瀬|田無
+13,東京都,ひばりヶ丘 メンズエステ,1600,hibarigaoka,/nishitokyo/hibarigaoka-station/all/,station,unique,西東京・東久留米・清瀬,西東京|東久留米|保谷|清瀬|田無
+13,東京都,東久留米 メンズエステ,720,higashikurume,/nishitokyo/higashikurume-station/all/,station,unique,西東京・東久留米・清瀬,西東京|ひばりヶ丘|保谷|清瀬|田無
+13,東京都,保谷 メンズエステ,720,houya,/nishitokyo/houya-station/all/,station,unique,西東京・東久留米・清瀬,西東京|ひばりヶ丘|東久留米|清瀬|田無
+13,東京都,清瀬 メンズエステ,1300,kiyose,/nishitokyo/kiyose-station/all/,station,unique,西東京・東久留米・清瀬,西東京|ひばりヶ丘|東久留米|保谷|田無
+13,東京都,田無 メンズエステ,1900,tanashi,/nishitokyo/tanashi-station/all/,station,unique,西東京・東久留米・清瀬,西東京|ひばりヶ丘|東久留米|保谷|清瀬
+13,東京都,荻窪 メンズエステ,6600,ogikubo,/ogikubo/,parent_absorbed,absorbed: /ogikubo/ogikubo-station/all/,荻窪・阿佐ヶ谷,阿佐ヶ谷|西荻窪
+13,東京都,阿佐ヶ谷 メンズエステ,1000,asagaya,/ogikubo/asagaya-station/all/,station,unique,荻窪・阿佐ヶ谷,荻窪|西荻窪
+13,東京都,西荻窪 メンズエステ,1300,nishiogikubo,/ogikubo/nishiogikubo-station/all/,station,unique,荻窪・阿佐ヶ谷,荻窪|阿佐ヶ谷
+13,東京都,大久保 メンズエステ,1600,okubo,/okubo/,parent,unique,大久保・高田馬場,新大久保|高田馬場
+13,東京都,新大久保 メンズエステ,1300,okubo,/okubo/okubo-station/all/,station,unique,大久保・高田馬場,大久保|高田馬場
+13,東京都,高田馬場 メンズエステ,3600,takadanobaba,/okubo/takadanobaba-station/all/,station,unique,大久保・高田馬場,大久保|新大久保
+13,東京都,東武東上線 メンズエステ,0,ooyama,/ooyama/,parent,unique,東武東上線・大山・下赤塚,上板橋|中板橋|成増|大山|下赤塚
+13,東京都,上板橋 メンズエステ,320,kamiitabashi,/ooyama/kamiitabashi-station/all/,station,unique,東武東上線・大山・下赤塚,東武東上線|中板橋|成増|大山|下赤塚
+13,東京都,中板橋 メンズエステ,210,nakaitabashi,/ooyama/nakaitabashi-station/all/,station,unique,東武東上線・大山・下赤塚,東武東上線|上板橋|成増|大山|下赤塚
+13,東京都,成増 メンズエステ,3600,narimasu,/ooyama/narimasu-station/all/,station,unique,東武東上線・大山・下赤塚,東武東上線|上板橋|中板橋|大山|下赤塚
+13,東京都,大山 メンズエステ,1000,ooyama,/ooyama/ooyama-station/all/,station,unique,東武東上線・大山・下赤塚,東武東上線|上板橋|中板橋|成増|下赤塚
+13,東京都,下赤塚 メンズエステ,390,shimoakatsuka,/ooyama/shimoakatsuka-station/all/,station,unique,東武東上線・大山・下赤塚,東武東上線|上板橋|中板橋|成増|大山
+13,東京都,東武練馬 メンズエステ,320,tobunerima,/ooyama/tobunerima-station/all/,station,unique,東武東上線・大山・下赤塚,東武東上線|上板橋|中板橋|成増|大山
+13,東京都,ときわ台 メンズエステ,260,tokiwadai,/ooyama/tokiwadai-station/all/,station,unique,東武東上線・大山・下赤塚,東武東上線|上板橋|中板橋|成増|大山
+13,東京都,大塚 メンズエステ,4400,otsuka,/otsuka/,parent_absorbed,absorbed: /otsuka/otsuka-station/all/,大塚・巣鴨・駒込,駒込|新大塚|巣鴨
+13,東京都,駒込 メンズエステ,880,komagome,/otsuka/komagome-station/all/,station,unique,大塚・巣鴨・駒込,大塚|新大塚|巣鴨
+13,東京都,新大塚 メンズエステ,50,shinotsuka,/otsuka/shinotsuka-station/all/,station,unique,大塚・巣鴨・駒込,大塚|駒込|巣鴨
+13,東京都,巣鴨 メンズエステ,4400,sugamo,/otsuka/sugamo-station/all/,station,unique,大塚・巣鴨・駒込,大塚|駒込|新大塚
+13,東京都,六本木 メンズエステ,5400,roppongi,/roppongi/,parent_absorbed,absorbed: /roppongi/roppongi-station/all/,六本木・麻布十番,赤羽橋|麻布十番|乃木坂
+13,東京都,赤羽橋 メンズエステ,50,akabanebashi,/roppongi/akabanebashi-station/all/,station,unique,六本木・麻布十番,六本木|麻布十番|乃木坂
+13,東京都,麻布十番 メンズエステ,5400,azabujuban,/roppongi/azabujuban-station/all/,station,unique,六本木・麻布十番,六本木|赤羽橋|乃木坂
+13,東京都,乃木坂 メンズエステ,140,nogizaka,/roppongi/nogizaka-station/all/,station,unique,六本木・麻布十番,六本木|赤羽橋|麻布十番
+13,東京都,三軒茶屋 メンズエステ,6600,sangenjaya,/sangenjaya/,parent,unique,三軒茶屋,桜新町|池尻大橋|駒沢大学|用賀
+13,東京都,桜新町 メンズエステ,480,Sakurashimmachi,/sangenjaya/Sakurashimmachi-station/all/,station,unique,三軒茶屋,三軒茶屋|池尻大橋|駒沢大学|用賀
+13,東京都,池尻大橋 メンズエステ,590,ikejiri,/sangenjaya/ikejiri-station/all/,station,unique,三軒茶屋,三軒茶屋|桜新町|駒沢大学|用賀
+13,東京都,駒沢大学 メンズエステ,260,komazawadaigaku,/sangenjaya/komazawadaigaku-station/all/,station,unique,三軒茶屋,三軒茶屋|桜新町|池尻大橋|用賀
+13,東京都,用賀 メンズエステ,1000,yoga,/sangenjaya/yoga-station/all/,station,unique,三軒茶屋,三軒茶屋|桜新町|池尻大橋|駒沢大学
+13,東京都,西武新宿線 メンズエステ,70,shakujii,/shakujii/,parent,unique,西武新宿線・上石神井,上井草|上石神井|武蔵関|鷺ノ宮
+13,東京都,上井草 メンズエステ,70,kamiigusa,/shakujii/kamiigusa-station/all/,station,unique,西武新宿線・上石神井,西武新宿線|上石神井|武蔵関|鷺ノ宮
+13,東京都,上石神井 メンズエステ,1000,kamishakujii,/shakujii/kamishakujii-station/all/,station,unique,西武新宿線・上石神井,西武新宿線|上井草|武蔵関|鷺ノ宮
+13,東京都,武蔵関 メンズエステ,210,musashiseki,/shakujii/musashiseki-station/all/,station,unique,西武新宿線・上石神井,西武新宿線|上井草|上石神井|鷺ノ宮
+13,東京都,鷺ノ宮 メンズエステ,110,saginomiya,/shakujii/saginomiya-station/all/,station,unique,西武新宿線・上石神井,西武新宿線|上井草|上石神井|武蔵関
+13,東京都,渋谷 メンズエステ,9900,shibuya,/shibuya/,parent_absorbed,absorbed: /shibuya/shibuya-station/all/,渋谷・代々木・原宿,原宿|北参道|神泉|代々木
+13,東京都,原宿 メンズエステ,320,harajuku,/shibuya/harajuku-station/all/,station,unique,渋谷・代々木・原宿,渋谷|北参道|神泉|代々木
+13,東京都,北参道 メンズエステ,140,kitasando,/shibuya/kitasando-station/all/,station,unique,渋谷・代々木・原宿,渋谷|原宿|神泉|代々木
+13,東京都,神泉 メンズエステ,110,shinsen,/shibuya/shinsen-station/all/,station,unique,渋谷・代々木・原宿,渋谷|原宿|北参道|代々木
+13,東京都,代々木 メンズエステ,2400,yoyogi,/shibuya/yoyogi-station/all/,station,unique,渋谷・代々木・原宿,渋谷|原宿|北参道|神泉
+13,東京都,小田急線沿線 メンズエステ,10,shimokitazawa,/shimokitazawa/,parent,unique,小田急線沿線・下北沢,千歳船橋|喜多見|経堂|下北沢|新代田
+13,東京都,千歳船橋 メンズエステ,260,chitosefunabashi,/shimokitazawa/chitosefunabashi-station/all/,station,unique,小田急線沿線・下北沢,小田急線沿線|喜多見|経堂|下北沢|新代田
+13,東京都,喜多見 メンズエステ,210,kitami,/shimokitazawa/kitami-station/all/,station,unique,小田急線沿線・下北沢,小田急線沿線|千歳船橋|経堂|下北沢|新代田
+13,東京都,経堂 メンズエステ,1000,kyodo,/shimokitazawa/kyodo-station/all/,station,unique,小田急線沿線・下北沢,小田急線沿線|千歳船橋|喜多見|下北沢|新代田
+13,東京都,下北沢 メンズエステ,3600,shimokitazawa,/shimokitazawa/shimokitazawa-station/all/,station,unique,小田急線沿線・下北沢,小田急線沿線|千歳船橋|喜多見|経堂|新代田
+13,東京都,新代田 メンズエステ,30,shindaita,/shimokitazawa/shindaita-station/all/,station,unique,小田急線沿線・下北沢,小田急線沿線|千歳船橋|喜多見|経堂|下北沢
+13,東京都,祖師ヶ谷大蔵 メンズエステ,260,soshigayaokura,/shimokitazawa/soshigayaokura-station/all/,station,unique,小田急線沿線・下北沢,小田急線沿線|千歳船橋|喜多見|経堂|下北沢
+13,東京都,代々木上原 メンズエステ,1300,yoyogiuehara,/shimokitazawa/yoyogiuehara-station/all/,station,unique,小田急線沿線・下北沢,小田急線沿線|千歳船橋|喜多見|経堂|下北沢
+13,東京都,品川 メンズエステ,4400,shinagawa,/shinagawa/,parent_absorbed,absorbed: /shinagawa/shinagawa-station/all/,品川・田町・浜松町,浜松町|泉岳寺|芝公園|白金高輪|田町
+13,東京都,浜松町 メンズエステ,1900,hamamatsucho,/shinagawa/hamamatsucho-station/all/,station,unique,品川・田町・浜松町,品川|泉岳寺|芝公園|白金高輪|田町
+13,東京都,泉岳寺 メンズエステ,110,sengakuji,/shinagawa/sengakuji-station/all/,station,unique,品川・田町・浜松町,品川|浜松町|芝公園|白金高輪|田町
+13,東京都,芝公園 メンズエステ,70,shibakoen,/shinagawa/shibakoen-station/all/,station,unique,品川・田町・浜松町,品川|浜松町|泉岳寺|白金高輪|田町
+13,東京都,白金高輪 メンズエステ,210,shirokanetakanawa,/shinagawa/shirokanetakanawa-station/all/,station,unique,品川・田町・浜松町,品川|浜松町|泉岳寺|芝公園|田町
+13,東京都,田町 メンズエステ,2400,tamachi,/shinagawa/tamachi-station/all/,station,unique,品川・田町・浜松町,品川|浜松町|泉岳寺|芝公園|白金高輪
+13,東京都,天王洲アイル メンズエステ,70,tennozuisle,/shinagawa/tennozuisle-station/all/,station,unique,品川・田町・浜松町,品川|浜松町|泉岳寺|芝公園|白金高輪
+13,東京都,新橋 メンズエステ,12100,shinbashi,/shinbashi/,parent,unique,新橋,御成門|内幸町
+13,東京都,御成門 メンズエステ,30,onarimon,/shinbashi/onarimon-station/all/,station,unique,新橋,新橋|内幸町
+13,東京都,内幸町 メンズエステ,30,toranomon,/shinbashi/toranomon-station/all/,station,unique,新橋,新橋|御成門
+13,東京都,新宿 メンズエステ,14800,shinjuku,/shinjuku/,parent,unique,新宿,西新宿五丁目|新宿御苑前
+13,東京都,西新宿五丁目 メンズエステ,390,nishishinjukugochome,/shinjuku/nishishinjukugochome-station/all/,station,unique,新宿,新宿|新宿御苑前
+13,東京都,新宿御苑前 メンズエステ,170,shinjukugyoen,/shinjuku/shinjukugyoen-station/all/,station,unique,新宿,新宿|西新宿五丁目
+13,東京都,水道橋 メンズエステ,880,suidobashi,/suidobashi/,parent_absorbed,absorbed: /suidobashi/suidobashi-station/all/,水道橋・御茶ノ水,後楽園
+13,東京都,後楽園 メンズエステ,260,korakuen,/suidobashi/korakuen-station/all/,station,unique,水道橋・御茶ノ水,水道橋
+13,東京都,立川 メンズエステ,18100,tachikawa,/tachikawa/,parent,unique,立川,
+13,東京都,八重洲 メンズエステ,170,tokyo,/tokyo/,parent,unique,東京・八重洲,八丁堀|京橋|東京
+13,東京都,八丁堀 メンズエステ,1000,hatchobori,/tokyo/hatchobori-station/all/,station,unique,東京・八重洲,八重洲|京橋|東京
+13,東京都,京橋 メンズエステ,6600,kyobashi,/tokyo/kyobashi-station/all/,station_cross_pref,cross_prefecture,東京・八重洲,八重洲|八丁堀|東京
+13,東京都,東京 メンズエステ,12100,tokyo,/tokyo/tokyo-station/all/,station,unique,東京・八重洲,八重洲|八丁堀|京橋
+13,東京都,上野 メンズエステ,9900,ueno,/ueno/,parent_absorbed,absorbed: /ueno/ueno-station/all/,上野・浅草・御徒町,浅草|稲荷町|御徒町
+13,東京都,浅草 メンズエステ,1600,asakusa,/ueno/asakusa-station/all/,station,unique,上野・浅草・御徒町,上野|稲荷町|御徒町
+13,東京都,稲荷町 メンズエステ,90,inaricho,/ueno/inaricho-station/all/,station,unique,上野・浅草・御徒町,上野|浅草|御徒町
+13,東京都,御徒町 メンズエステ,1900,okachimachi,/ueno/okachimachi-station/all/,station,unique,上野・浅草・御徒町,上野|浅草|稲荷町
+14,神奈川県,本厚木 メンズエステ,5400,atsugi,/atsugi/,parent_absorbed,absorbed: /atsugi/honatsugi-station/all/,本厚木・海老名,厚木|海老名|かしわ台|鶴巻温泉
+14,神奈川県,厚木 メンズエステ,4400,atsugi,/atsugi/atsugi-station/all/,station,unique,本厚木・海老名,本厚木|海老名|かしわ台|鶴巻温泉
+14,神奈川県,海老名 メンズエステ,2900,ebina,/atsugi/ebina-station/all/,station,unique,本厚木・海老名,本厚木|厚木|かしわ台|鶴巻温泉
+14,神奈川県,かしわ台 メンズエステ,30,kashiwadai,/atsugi/kashiwadai-station/all/,station,unique,本厚木・海老名,本厚木|厚木|海老名|鶴巻温泉
+14,神奈川県,鶴巻温泉 メンズエステ,140,tsurumakionsen,/atsugi/tsurumakionsen-station/all/,station,unique,本厚木・海老名,本厚木|厚木|海老名|かしわ台
+14,神奈川県,茅ヶ崎 メンズエステ,5400,chigasaki,/chigasaki/,parent_absorbed,absorbed: /chigasaki/chigasaki-station/all/,茅ヶ崎・平塚,平塚
+14,神奈川県,平塚 メンズエステ,4400,hiratsuka,/chigasaki/hiratsuka-station/all/,station,unique,茅ヶ崎・平塚,茅ヶ崎
+14,神奈川県,藤沢 メンズエステ,9900,fujisawa,/fujisawa/,parent_absorbed,absorbed: /fujisawa/fujisawa-station/all/,藤沢・湘南台,長後|湘南台|辻堂
+14,神奈川県,長後 メンズエステ,140,chogo,/fujisawa/chogo-station/all/,station,unique,藤沢・湘南台,藤沢|湘南台|辻堂
+14,神奈川県,湘南台 メンズエステ,4400,shonandai,/fujisawa/shonandai-station/all/,station,unique,藤沢・湘南台,藤沢|長後|辻堂
+14,神奈川県,辻堂 メンズエステ,2400,tsujido,/fujisawa/tsujido-station/all/,station,unique,藤沢・湘南台,藤沢|長後|湘南台
+14,神奈川県,川崎 メンズエステ,12100,kawasaki,/kawasaki/,parent_absorbed,absorbed: /kawasaki/kawasaki-station/all/,川崎・鶴見,鹿島田|鶴見|矢向
+14,神奈川県,鹿島田 メンズエステ,480,kashimada,/kawasaki/kashimada-station/all/,station,unique,川崎・鶴見,川崎|鶴見|矢向
+14,神奈川県,鶴見 メンズエステ,3600,tsurumi,/kawasaki/tsurumi-station/all/,station,unique,川崎・鶴見,川崎|鹿島田|矢向
+14,神奈川県,矢向 メンズエステ,170,yako,/kawasaki/yako-station/all/,station,unique,川崎・鶴見,川崎|鹿島田|鶴見
+14,神奈川県,溝 メンズエステ,0,mizonokuchi,/mizonokuchi/,parent,unique,溝,二子新地|二子玉川|溝の口|武蔵新城
+14,神奈川県,二子新地 メンズエステ,140,futakoshinchi,/mizonokuchi/futakoshinchi-station/all/,station,unique,溝,溝|二子玉川|溝の口|武蔵新城
+14,神奈川県,二子玉川 メンズエステ,3600,futakotamagawa,/mizonokuchi/futakotamagawa-station/all/,station,unique,溝,溝|二子新地|溝の口|武蔵新城
+14,神奈川県,溝の口 メンズエステ,9900,mizonokuchi,/mizonokuchi/mizonokuchi-station/all/,station,unique,溝,溝|二子新地|二子玉川|武蔵新城
+14,神奈川県,武蔵新城 メンズエステ,1300,musashishinjo,/mizonokuchi/musashishinjo-station/all/,station,unique,溝,溝|二子新地|二子玉川|溝の口
+14,神奈川県,武蔵小杉 メンズエステ,12100,musashikosugi,/musashikosugi/,parent_absorbed,absorbed: /musashikosugi/musashikosugi-station/all/,武蔵小杉・日吉,日吉|元住吉|綱島
+14,神奈川県,日吉 メンズエステ,2900,hiyoshi,/musashikosugi/hiyoshi-station/all/,station,unique,武蔵小杉・日吉,武蔵小杉|元住吉|綱島
+14,神奈川県,元住吉 メンズエステ,720,motosumiyoshi,/musashikosugi/motosumiyoshi-station/all/,station,unique,武蔵小杉・日吉,武蔵小杉|日吉|綱島
+14,神奈川県,綱島 メンズエステ,3600,tsunashima,/musashikosugi/tsunashima-station/all/,station,unique,武蔵小杉・日吉,武蔵小杉|日吉|元住吉
+14,神奈川県,登戸 メンズエステ,8100,noborito,/noborito/,parent_absorbed,absorbed: /noborito/noborito-station/all/,登戸・向ヶ丘遊園,稲田堤|向ヶ丘遊園|新百合ヶ丘|百合ヶ丘
+14,神奈川県,稲田堤 メンズエステ,1300,inadazutsumi,/noborito/inadazutsumi-station/all/,station,unique,登戸・向ヶ丘遊園,登戸|向ヶ丘遊園|新百合ヶ丘|百合ヶ丘
+14,神奈川県,向ヶ丘遊園 メンズエステ,880,mukogaokayuen,/noborito/mukogaokayuen-station/all/,station,unique,登戸・向ヶ丘遊園,登戸|稲田堤|新百合ヶ丘|百合ヶ丘
+14,神奈川県,新百合ヶ丘 メンズエステ,1000,shinyurigaoka,/noborito/shinyurigaoka-station/all/,station,unique,登戸・向ヶ丘遊園,登戸|稲田堤|向ヶ丘遊園|百合ヶ丘
+14,神奈川県,百合ヶ丘 メンズエステ,90,yurigaoka,/noborito/yurigaoka-station/all/,station,unique,登戸・向ヶ丘遊園,登戸|稲田堤|向ヶ丘遊園|新百合ヶ丘
+14,神奈川県,小田原 メンズエステ,5400,odawara,/odawara/,parent_absorbed,absorbed: /odawara/odawara-station/all/,小田原,秦野
+14,神奈川県,秦野 メンズエステ,720,hadano,/odawara/hadano-city/all/,city,unique,小田原,小田原
+14,神奈川県,大船 メンズエステ,1600,ofuna,/ofuna/,parent_absorbed,absorbed: /ofuna/ofuna-station/all/,大船・戸塚,東戸塚|上永谷|上大岡|港南台|追浜
+14,神奈川県,東戸塚 メンズエステ,480,higashitotsuka,/ofuna/higashitotsuka-station/all/,station,unique,大船・戸塚,大船|上永谷|上大岡|港南台|追浜
+14,神奈川県,上永谷 メンズエステ,70,kaminagaya,/ofuna/kaminagaya-station/all/,station,unique,大船・戸塚,大船|東戸塚|上大岡|港南台|追浜
+14,神奈川県,上大岡 メンズエステ,3600,kamiooka,/ofuna/kamiooka-station/all/,station,unique,大船・戸塚,大船|東戸塚|上永谷|港南台|追浜
+14,神奈川県,港南台 メンズエステ,140,konandai,/ofuna/konandai-station/all/,station,unique,大船・戸塚,大船|東戸塚|上永谷|上大岡|追浜
+14,神奈川県,追浜 メンズエステ,90,oppama,/ofuna/oppama-station/all/,station,unique,大船・戸塚,大船|東戸塚|上永谷|上大岡|港南台
+14,神奈川県,杉田 メンズエステ,110,sugita,/ofuna/sugita-station/all/,station,unique,大船・戸塚,大船|東戸塚|上永谷|上大岡|港南台
+14,神奈川県,戸塚 メンズエステ,4400,totsuka,/ofuna/totsuka-station/all/,station,unique,大船・戸塚,大船|東戸塚|上永谷|上大岡|港南台
+14,神奈川県,横須賀 メンズエステ,2400,yokosuka,/ofuna/yokosuka-city/all/,city,unique,大船・戸塚,大船|東戸塚|上永谷|上大岡|港南台
+14,神奈川県,逗子 メンズエステ,110,zushi,/ofuna/zushi-station/all/,station,unique,大船・戸塚,大船|東戸塚|上永谷|上大岡|港南台
+14,神奈川県,相模原 メンズエステ,6600,sagamihara,/sagamihara/,parent_absorbed,absorbed: /sagamihara/sagamihara-station/all/,相模原・橋本,淵野辺|橋本|矢部
+14,神奈川県,淵野辺 メンズエステ,590,fuchinobe,/sagamihara/fuchinobe-station/all/,station,unique,相模原・橋本,相模原|橋本|矢部
+14,神奈川県,橋本 メンズエステ,4400,hashimoto,/sagamihara/hashimoto-station/all/,station,unique,相模原・橋本,相模原|淵野辺|矢部
+14,神奈川県,矢部 メンズエステ,20,yabe,/sagamihara/yabe-station/all/,station,unique,相模原・橋本,相模原|淵野辺|橋本
+14,神奈川県,相模大野 メンズエステ,4400,sagamiono,/sagamiono/,parent_absorbed,absorbed: /sagamiono/sagamiono-station/all/,相模大野・小田急相模原,小田急相模原
+14,神奈川県,小田急相模原 メンズエステ,880,odakyusagamihara,/sagamiono/odakyusagamihara-station/all/,station,unique,相模大野・小田急相模原,相模大野
+14,神奈川県,鷺沼 メンズエステ,2400,saginuma,/saginuma/,parent_absorbed,absorbed: /saginuma/saginuma-station/all/,鷺沼・たまプラーザ・青葉台,青葉台|あざみ野|センター北|センター南|宮崎台
+14,神奈川県,青葉台 メンズエステ,4400,aobadai,/saginuma/aobadai-station/all/,station,unique,鷺沼・たまプラーザ・青葉台,鷺沼|あざみ野|センター北|センター南|宮崎台
+14,神奈川県,あざみ野 メンズエステ,1900,azamino,/saginuma/azamino-station/all/,station,unique,鷺沼・たまプラーザ・青葉台,鷺沼|青葉台|センター北|センター南|宮崎台
+14,神奈川県,センター北 メンズエステ,1600,centerkita,/saginuma/centerkita-station/all/,station,unique,鷺沼・たまプラーザ・青葉台,鷺沼|青葉台|あざみ野|センター南|宮崎台
+14,神奈川県,センター南 メンズエステ,1900,centerminami,/saginuma/centerminami-station/all/,station,unique,鷺沼・たまプラーザ・青葉台,鷺沼|青葉台|あざみ野|センター北|宮崎台
+14,神奈川県,宮崎台 メンズエステ,140,miyazakidai,/saginuma/miyazakidai-station/all/,station,unique,鷺沼・たまプラーザ・青葉台,鷺沼|青葉台|あざみ野|センター北|センター南
+14,神奈川県,長津田 メンズエステ,390,nagatsuta,/saginuma/nagatsuta-station/all/,station,unique,鷺沼・たまプラーザ・青葉台,鷺沼|青葉台|あざみ野|センター北|センター南
+14,神奈川県,たまプラーザ メンズエステ,1900,tamapuraza,/saginuma/tamapuraza-station/all/,station,unique,鷺沼・たまプラーザ・青葉台,鷺沼|青葉台|あざみ野|センター北|センター南
+14,神奈川県,新横浜 メンズエステ,9900,shinyokohama,/shinyokohama/,parent_absorbed,absorbed: /shinyokohama/shinyokohama-station/all/,新横浜・菊名,菊名|中山|大倉山
+14,神奈川県,菊名 メンズエステ,390,kikuna,/shinyokohama/kikuna-station/all/,station,unique,新横浜・菊名,新横浜|中山|大倉山
+14,神奈川県,中山 メンズエステ,1300,nakayama,/shinyokohama/nakayama-station/all/,station,unique,新横浜・菊名,新横浜|菊名|大倉山
+14,神奈川県,大倉山 メンズエステ,140,okurayama,/shinyokohama/okurayama-station/all/,station,unique,新横浜・菊名,新横浜|菊名|中山
+14,神奈川県,大和 メンズエステ,6600,yamato,/yamato/,parent_absorbed,absorbed: /yamato/yamato-station/all/,大和・南林間,中央林間|二俣川|南林間|さがみ野|相模大塚
+14,神奈川県,中央林間 メンズエステ,2900,chuorinkan,/yamato/chuorinkan-station/all/,station,unique,大和・南林間,大和|二俣川|南林間|さがみ野|相模大塚
+14,神奈川県,二俣川 メンズエステ,480,futamatagawa,/yamato/futamatagawa-station/all/,station,unique,大和・南林間,大和|中央林間|南林間|さがみ野|相模大塚
+14,神奈川県,南林間 メンズエステ,1600,minamirinkan,/yamato/minamirinkan-station/all/,station,unique,大和・南林間,大和|中央林間|二俣川|さがみ野|相模大塚
+14,神奈川県,さがみ野 メンズエステ,140,sagamino,/yamato/sagamino-station/all/,station,unique,大和・南林間,大和|中央林間|二俣川|南林間|相模大塚
+14,神奈川県,相模大塚 メンズエステ,40,sagamiotsuka,/yamato/sagamiotsuka-station/all/,station,unique,大和・南林間,大和|中央林間|二俣川|南林間|さがみ野
+14,神奈川県,鶴ヶ峰 メンズエステ,110,tsurugamine,/yamato/tsurugamine-station/all/,station,unique,大和・南林間,大和|中央林間|二俣川|南林間|さがみ野
+14,神奈川県,鶴間 メンズエステ,320,tsuruma,/yamato/tsuruma-station/all/,station,unique,大和・南林間,大和|中央林間|二俣川|南林間|さがみ野
+14,神奈川県,横浜 メンズエステ,18100,yokohama,/yokohama/,parent_absorbed,absorbed: /yokohama/yokohama-station/all/,横浜・関内,阪東橋|東神奈川|日ノ出町|伊勢佐木長者町|関内
+14,神奈川県,阪東橋 メンズエステ,140,bandobashi,/yokohama/bandobashi-station/all/,station,unique,横浜・関内,横浜|東神奈川|日ノ出町|伊勢佐木長者町|関内
+14,神奈川県,東神奈川 メンズエステ,2400,higashikanagawa,/yokohama/higashikanagawa-station/all/,station,unique,横浜・関内,横浜|阪東橋|日ノ出町|伊勢佐木長者町|関内
+14,神奈川県,日ノ出町 メンズエステ,90,hinodecho,/yokohama/hinodecho-station/all/,station,unique,横浜・関内,横浜|阪東橋|東神奈川|伊勢佐木長者町|関内
+14,神奈川県,伊勢佐木長者町 メンズエステ,210,isezakichojamachi,/yokohama/isezakichojamachi-station/all/,station,unique,横浜・関内,横浜|阪東橋|東神奈川|日ノ出町|関内
+14,神奈川県,関内 メンズエステ,5400,kannai,/yokohama/kannai-station/all/,station,unique,横浜・関内,横浜|阪東橋|東神奈川|日ノ出町|伊勢佐木長者町
+14,神奈川県,黄金町 メンズエステ,170,koganecho,/yokohama/koganecho-station/all/,station,unique,横浜・関内,横浜|阪東橋|東神奈川|日ノ出町|伊勢佐木長者町
+14,神奈川県,元町 メンズエステ,590,motomachichukagai,/yokohama/motomachichukagai-station/all/,station,unique,横浜・関内,横浜|阪東橋|東神奈川|日ノ出町|伊勢佐木長者町
+14,神奈川県,桜木町 メンズエステ,880,sakuragicho,/yokohama/sakuragicho-station/all/,station,unique,横浜・関内,横浜|阪東橋|東神奈川|日ノ出町|伊勢佐木長者町
+14,神奈川県,反町 メンズエステ,140,tanmachi,/yokohama/tanmachi-station/all/,station,unique,横浜・関内,横浜|阪東橋|東神奈川|日ノ出町|伊勢佐木長者町
+14,神奈川県,天王町 メンズエステ,210,tennocho,/yokohama/tennocho-station/all/,station,unique,横浜・関内,横浜|阪東橋|東神奈川|日ノ出町|伊勢佐木長者町
+15,新潟県,新潟 メンズエステ,9900,niigata,/niigata/,parent_absorbed,absorbed: /niigata/niigata-city/all/,新潟・長岡,上越|長岡
+15,新潟県,上越 メンズエステ,1300,jouetsu,/niigata/jouetsu-city/all/,city,unique,新潟・長岡,新潟|長岡
+15,新潟県,長岡 メンズエステ,2900,nagaoka,/niigata/nagaoka-city/all/,city,unique,新潟・長岡,新潟|上越
+16,富山県,富山 メンズエステ,12100,toyama,/toyama/,parent_absorbed,absorbed: /toyama/toyama-city/all/,富山・高岡,滑川|高岡|魚津
+16,富山県,滑川 メンズエステ,30,namerikawa,/toyama/namerikawa-city/all/,city,unique,富山・高岡,富山|高岡|魚津
+16,富山県,高岡 メンズエステ,1600,takaoka,/toyama/takaoka-city/all/,city,unique,富山・高岡,富山|滑川|魚津
+16,富山県,魚津 メンズエステ,140,uozu,/toyama/uozu-city/all/,city,unique,富山・高岡,富山|滑川|高岡
+17,石川県,石川 メンズエステ,1000,ishikawa,/ishikawa/,parent,unique,石川・金沢,金沢|小松|野々市
+17,石川県,金沢 メンズエステ,12100,kanazawa,/ishikawa/kanazawa-city/all/,city,unique,石川・金沢,石川|小松|野々市
+17,石川県,小松 メンズエステ,320,komatsu,/ishikawa/komatsu-city/all/,city,unique,石川・金沢,石川|金沢|野々市
+17,石川県,野々市 メンズエステ,170,nonoichi,/ishikawa/nonoichi-city/all/,city,unique,石川・金沢,石川|金沢|小松
+18,福井県,福井 メンズエステ,8100,fukui,/fukui/,parent_absorbed,absorbed: /fukui/fukui-city/all/,福井・片町,越前|鯖江|坂井
+18,福井県,越前 メンズエステ,0,echizen,/fukui/echizen-city/all/,city,unique,福井・片町,福井|鯖江|坂井
+18,福井県,鯖江 メンズエステ,260,sabae,/fukui/sabae-city/all/,city,unique,福井・片町,福井|越前|坂井
+18,福井県,坂井 メンズエステ,0,sakai,/fukui/sakai-city/all/,city,unique,福井・片町,福井|越前|鯖江
+19,山梨県,山梨 メンズエステ,3600,yamanashi,/yamanashi/,parent,unique,山梨・甲府,中央|笛吹|甲斐|甲府
+19,山梨県,中央 メンズエステ,0,chuo,/yamanashi/chuo-city/all/,city,unique,山梨・甲府,山梨|笛吹|甲斐|甲府
+19,山梨県,笛吹 メンズエステ,10,fuefuki,/yamanashi/fuefuki-city/all/,city,unique,山梨・甲府,山梨|中央|甲斐|甲府
+19,山梨県,甲斐 メンズエステ,0,kai,/yamanashi/kai-city/all/,city,unique,山梨・甲府,山梨|中央|笛吹|甲府
+19,山梨県,甲府 メンズエステ,1300,kofu,/yamanashi/kofu-city/all/,city,unique,山梨・甲府,山梨|中央|笛吹|甲斐
+20,長野県,長野 メンズエステ,3600,nagano,/nagano/,parent_absorbed,absorbed: /nagano/nagano-city/all/,長野・松本,伊那|松本|塩尻|東御|上田
+20,長野県,伊那 メンズエステ,140,ina,/nagano/ina-city/all/,city,unique,長野・松本,長野|松本|塩尻|東御|上田
+20,長野県,松本 メンズエステ,3600,matsumoto,/nagano/matsumoto-city/all/,city,unique,長野・松本,長野|伊那|塩尻|東御|上田
+20,長野県,塩尻 メンズエステ,320,shiojiri,/nagano/shiojiri-city/all/,city,unique,長野・松本,長野|伊那|松本|東御|上田
+20,長野県,東御 メンズエステ,10,tomi,/nagano/tomi-city/all/,city,unique,長野・松本,長野|伊那|松本|塩尻|上田
+20,長野県,上田 メンズエステ,1900,ueda,/nagano/ueda-city/all/,city,unique,長野・松本,長野|伊那|松本|塩尻|東御
+21,岐阜県,岐南 メンズエステ,720,gifu,/gifu/,parent,unique,岐阜・岐南・羽島,岐阜|羽島|各務原
+21,岐阜県,岐阜 メンズエステ,14800,gifu,/gifu/gifu-city/all/,city,unique,岐阜・岐南・羽島,岐南|羽島|各務原
+21,岐阜県,羽島 メンズエステ,590,hashima,/gifu/hashima-city/all/,city,unique,岐阜・岐南・羽島,岐南|岐阜|各務原
+21,岐阜県,各務原 メンズエステ,880,kakamigahara,/gifu/kakamigahara-city/all/,city,unique,岐阜・岐南・羽島,岐南|岐阜|羽島
+21,岐阜県,美濃 メンズエステ,10,mino,/mino/,parent,unique,美濃・多治見・飛騨,恵那|可児|美濃加茂|瑞浪|中津川
+21,岐阜県,恵那 メンズエステ,110,ena,/mino/ena-city/all/,city,unique,美濃・多治見・飛騨,美濃|可児|美濃加茂|瑞浪|中津川
+21,岐阜県,可児 メンズエステ,720,kani,/mino/kani-city/all/,city,unique,美濃・多治見・飛騨,美濃|恵那|美濃加茂|瑞浪|中津川
+21,岐阜県,美濃加茂 メンズエステ,260,minokamo,/mino/minokamo-city/all/,city,unique,美濃・多治見・飛騨,美濃|恵那|可児|瑞浪|中津川
+21,岐阜県,瑞浪 メンズエステ,110,mizunami,/mino/mizunami-city/all/,city,unique,美濃・多治見・飛騨,美濃|恵那|可児|美濃加茂|中津川
+21,岐阜県,中津川 メンズエステ,110,nakatsugawa,/mino/nakatsugawa-city/all/,city,unique,美濃・多治見・飛騨,美濃|恵那|可児|美濃加茂|瑞浪
+21,岐阜県,関 メンズエステ,90,seki,/mino/seki-city/all/,city,unique,美濃・多治見・飛騨,美濃|恵那|可児|美濃加茂|瑞浪
+21,岐阜県,多治見 メンズエステ,2900,tajimi,/mino/tajimi-city/all/,city,unique,美濃・多治見・飛騨,美濃|恵那|可児|美濃加茂|瑞浪
+21,岐阜県,土岐 メンズエステ,90,toki,/mino/toki-city/all/,city,unique,美濃・多治見・飛騨,美濃|恵那|可児|美濃加茂|瑞浪
+21,岐阜県,大垣 メンズエステ,3600,ogaki,/ogaki/,parent_absorbed,absorbed: /ogaki/ogaki-city/all/,大垣・瑞穂,瑞穂
+21,岐阜県,瑞穂 メンズエステ,90,mizuho,/ogaki/mizuho-city/all/,city,unique,大垣・瑞穂,大垣
+22,静岡県,浜松 メンズエステ,14800,hamamatsu,/hamamatsu/,parent_absorbed,absorbed: /hamamatsu/hamamatsu-city/all/,浜松・掛川,袋井|磐田|掛川|菊川|湖西
+22,静岡県,袋井 メンズエステ,480,fukuroi,/hamamatsu/fukuroi-city/all/,city,unique,浜松・掛川,浜松|磐田|掛川|菊川|湖西
+22,静岡県,磐田 メンズエステ,720,iwata,/hamamatsu/iwata-city/all/,city,unique,浜松・掛川,浜松|袋井|掛川|菊川|湖西
+22,静岡県,掛川 メンズエステ,1600,kakegawa,/hamamatsu/kakegawa-city/all/,city,unique,浜松・掛川,浜松|袋井|磐田|菊川|湖西
+22,静岡県,菊川 メンズエステ,110,kikugawa,/hamamatsu/kikugawa-city/all/,city,unique,浜松・掛川,浜松|袋井|磐田|掛川|湖西
+22,静岡県,湖西 メンズエステ,50,kosai,/hamamatsu/kosai-city/all/,city,unique,浜松・掛川,浜松|袋井|磐田|掛川|菊川
+22,静岡県,沼津 メンズエステ,5400,numazu,/numazu/,parent_absorbed,absorbed: /numazu/numazu-city/all/,沼津・富士,熱海|富士|伊豆の国|三島
+22,静岡県,熱海 メンズエステ,480,atami,/numazu/atami-city/all/,city,unique,沼津・富士,沼津|富士|伊豆の国|三島
+22,静岡県,富士 メンズエステ,1300,fuji,/numazu/fuji-city/all/,city,unique,沼津・富士,沼津|熱海|伊豆の国|三島
+22,静岡県,伊豆の国 メンズエステ,10,izunokuni,/numazu/izunokuni-city/all/,city,unique,沼津・富士,沼津|熱海|富士|三島
+22,静岡県,三島 メンズエステ,1900,mishima,/numazu/mishima-city/all/,city,unique,沼津・富士,沼津|熱海|富士|伊豆の国
+22,静岡県,中部 メンズエステ,50,shizuoka,/shizuoka/,parent,unique,静岡・中部,藤枝|島田|静岡|焼津
+22,静岡県,藤枝 メンズエステ,880,fujieda,/shizuoka/fujieda-city/all/,city,unique,静岡・中部,中部|島田|静岡|焼津
+22,静岡県,島田 メンズエステ,210,shimada,/shizuoka/shimada-city/all/,city,unique,静岡・中部,中部|藤枝|静岡|焼津
+22,静岡県,静岡 メンズエステ,9900,shizuoka,/shizuoka/shizuoka-city/all/,city,unique,静岡・中部,中部|藤枝|島田|焼津
+22,静岡県,焼津 メンズエステ,720,yaizu,/shizuoka/yaizu-city/all/,city,unique,静岡・中部,中部|藤枝|島田|静岡
+23,愛知県,知多 メンズエステ,110,chita,/chita/,parent_absorbed,absorbed: /chita/chita-city/all/,知多・大府・半田,半田|大府|東海|常滑
+23,愛知県,半田 メンズエステ,1900,handa,/chita/handa-city/all/,city,unique,知多・大府・半田,知多|大府|東海|常滑
+23,愛知県,大府 メンズエステ,720,obu,/chita/obu-city/all/,city,unique,知多・大府・半田,知多|半田|東海|常滑
+23,愛知県,東海 メンズエステ,140,tokai,/chita/tokai-city/all/,city,unique,知多・大府・半田,知多|半田|大府|常滑
+23,愛知県,常滑 メンズエステ,140,tokoname,/chita/tokoname-city/all/,city,unique,知多・大府・半田,知多|半田|大府|東海
+23,愛知県,堀田 メンズエステ,260,horita,/horita/,parent_absorbed,absorbed: /horita/horita-station/all/,堀田・新瑞橋,相生山|新瑞橋|神沢|瑞穂運動場東|瑞穂運動場西
+23,愛知県,相生山 メンズエステ,0,aioiyama,/horita/aioiyama-station/all/,station,unique,堀田・新瑞橋,堀田|新瑞橋|神沢|瑞穂運動場東|瑞穂運動場西
+23,愛知県,新瑞橋 メンズエステ,210,aratamabashi,/horita/aratamabashi-station/all/,station,unique,堀田・新瑞橋,堀田|相生山|神沢|瑞穂運動場東|瑞穂運動場西
+23,愛知県,神沢 メンズエステ,20,kamisawa,/horita/kamisawa-station/all/,station,unique,堀田・新瑞橋,堀田|相生山|新瑞橋|瑞穂運動場東|瑞穂運動場西
+23,愛知県,瑞穂運動場東 メンズエステ,0,mizuhoundojohigashi,/horita/mizuhoundojohigashi-station/all/,station,unique,堀田・新瑞橋,堀田|相生山|新瑞橋|神沢|瑞穂運動場西
+23,愛知県,瑞穂運動場西 メンズエステ,0,mizuhoundojonishi,/horita/mizuhoundojonishi-station/all/,station,unique,堀田・新瑞橋,堀田|相生山|新瑞橋|神沢|瑞穂運動場東
+23,愛知県,野並 メンズエステ,110,nonami,/horita/nonami-station/all/,station,unique,堀田・新瑞橋,堀田|相生山|新瑞橋|神沢|瑞穂運動場東
+23,愛知県,桜山 メンズエステ,50,sakurayama,/horita/sakurayama-station/all/,station,unique,堀田・新瑞橋,堀田|相生山|新瑞橋|神沢|瑞穂運動場東
+23,愛知県,徳重 メンズエステ,50,tokushige,/horita/tokushige-station/all/,station,unique,堀田・新瑞橋,堀田|相生山|新瑞橋|神沢|瑞穂運動場東
+23,愛知県,鶴里 メンズエステ,30,tsurusato,/horita/tsurusato-station/all/,station,unique,堀田・新瑞橋,堀田|相生山|新瑞橋|神沢|瑞穂運動場東
+23,愛知県,星ヶ丘 メンズエステ,140,hoshigaoka,/hoshigaoka/,parent_absorbed,absorbed: /hoshigaoka/hoshigaoka-station/all/,星ヶ丘・藤が丘,藤が丘|本郷|一社|上社
+23,愛知県,藤が丘 メンズエステ,1000,fujigaoka,/hoshigaoka/fujigaoka-station/all/,station,unique,星ヶ丘・藤が丘,星ヶ丘|本郷|一社|上社
+23,愛知県,本郷 メンズエステ,110,hongo,/hoshigaoka/hongo-station/all/,station,unique,星ヶ丘・藤が丘,星ヶ丘|藤が丘|一社|上社
+23,愛知県,一社 メンズエステ,140,issha,/hoshigaoka/issha-station/all/,station,unique,星ヶ丘・藤が丘,星ヶ丘|藤が丘|本郷|上社
+23,愛知県,上社 メンズエステ,90,kamiyashiro,/hoshigaoka/kamiyashiro-station/all/,station,unique,星ヶ丘・藤が丘,星ヶ丘|藤が丘|本郷|一社
+23,愛知県,金山 メンズエステ,4400,kanayama,/kanayama/,parent_absorbed,absorbed: /kanayama/kanayama-station/all/,金山・熱田,日比野|東別院|尾頭橋
+23,愛知県,日比野 メンズエステ,110,hibino,/kanayama/hibino-station/all/,station,unique,金山・熱田,金山|東別院|尾頭橋
+23,愛知県,東別院 メンズエステ,70,higashibetsuin,/kanayama/higashibetsuin-station/all/,station,unique,金山・熱田,金山|日比野|尾頭橋
+23,愛知県,尾頭橋 メンズエステ,90,otobashi,/kanayama/otobashi-station/all/,station,unique,金山・熱田,金山|日比野|東別院
+23,愛知県,笠寺 メンズエステ,50,kasadera,/kasadera/,parent_absorbed,absorbed: /kasadera/kasadera-station/all/,笠寺・柴田,有松|中京競馬場前|道徳|本星崎|鳴海
+23,愛知県,有松 メンズエステ,30,arimatsu,/kasadera/arimatsu-station/all/,station,unique,笠寺・柴田,笠寺|中京競馬場前|道徳|本星崎|鳴海
+23,愛知県,中京競馬場前 メンズエステ,0,chukyokeibajomae,/kasadera/chukyokeibajomae-station/all/,station,unique,笠寺・柴田,笠寺|有松|道徳|本星崎|鳴海
+23,愛知県,道徳 メンズエステ,10,dotoku,/kasadera/dotoku-station/all/,station,unique,笠寺・柴田,笠寺|有松|中京競馬場前|本星崎|鳴海
+23,愛知県,本星崎 メンズエステ,10,motohoshizaki,/kasadera/motohoshizaki-station/all/,station,unique,笠寺・柴田,笠寺|有松|中京競馬場前|道徳|鳴海
+23,愛知県,鳴海 メンズエステ,90,narumi,/kasadera/narumi-station/all/,station,unique,笠寺・柴田,笠寺|有松|中京競馬場前|道徳|本星崎
+23,愛知県,大高 メンズエステ,70,odaka,/kasadera/odaka-station/all/,station,unique,笠寺・柴田,笠寺|有松|中京競馬場前|道徳|本星崎
+23,愛知県,大江 メンズエステ,10,oe,/kasadera/oe-station/all/,station,unique,笠寺・柴田,笠寺|有松|中京競馬場前|道徳|本星崎
+23,愛知県,左京山 メンズエステ,0,sakyoyama,/kasadera/sakyoyama-station/all/,station,unique,笠寺・柴田,笠寺|有松|中京競馬場前|道徳|本星崎
+23,愛知県,柴田 メンズエステ,320,shibata,/kasadera/shibata-station/all/,station,unique,笠寺・柴田,笠寺|有松|中京競馬場前|道徳|本星崎
+23,愛知県,小牧 メンズエステ,1600,komaki,/komaki/,parent_absorbed,absorbed: /komaki/komaki-city/all/,小牧・春日井,犬山|春日井|長久手|日進|瀬戸
+23,愛知県,犬山 メンズエステ,720,inuyama,/komaki/inuyama-city/all/,city,unique,小牧・春日井,小牧|春日井|長久手|日進|瀬戸
+23,愛知県,春日井 メンズエステ,4400,kasugai,/komaki/kasugai-city/all/,city,unique,小牧・春日井,小牧|犬山|長久手|日進|瀬戸
+23,愛知県,長久手 メンズエステ,260,nagakute,/komaki/nagakute-city/all/,city,unique,小牧・春日井,小牧|犬山|春日井|日進|瀬戸
+23,愛知県,日進 メンズエステ,390,nisshin,/komaki/nisshin-city/all/,city_cross_pref,cross_prefecture,小牧・春日井,小牧|犬山|春日井|長久手|瀬戸
+23,愛知県,瀬戸 メンズエステ,590,seto,/komaki/seto-city/all/,city,unique,小牧・春日井,小牧|犬山|春日井|長久手|日進
+23,愛知県,豊明 メンズエステ,390,toyoake,/komaki/toyoake-city/all/,city,unique,小牧・春日井,小牧|犬山|春日井|長久手|日進
+23,愛知県,黒川 メンズエステ,210,kurokawa,/kurokawa/,parent_absorbed,absorbed: /kurokawa/kurokawa-station/all/,黒川・大曽根,茶屋ヶ坂|平安通|上飯田|大曽根|志賀本通
+23,愛知県,茶屋ヶ坂 メンズエステ,0,chayagasaka,/kurokawa/chayagasaka-station/all/,station,unique,黒川・大曽根,黒川|平安通|上飯田|大曽根|志賀本通
+23,愛知県,平安通 メンズエステ,20,heiandori,/kurokawa/heiandori-station/all/,station,unique,黒川・大曽根,黒川|茶屋ヶ坂|上飯田|大曽根|志賀本通
+23,愛知県,上飯田 メンズエステ,30,kamiida,/kurokawa/kamiida-station/all/,station,unique,黒川・大曽根,黒川|茶屋ヶ坂|平安通|大曽根|志賀本通
+23,愛知県,大曽根 メンズエステ,1600,ozone,/kurokawa/ozone-station/all/,station,unique,黒川・大曽根,黒川|茶屋ヶ坂|平安通|上飯田|志賀本通
+23,愛知県,志賀本通 メンズエステ,30,shigahondori,/kurokawa/shigahondori-station/all/,station,unique,黒川・大曽根,黒川|茶屋ヶ坂|平安通|上飯田|大曽根
+23,愛知県,守山 メンズエステ,480,moriyama,/moriyama/,parent_cross_pref,cross_prefecture,守山・小幡,印場|喜多山|小幡|大森|新守山
+23,愛知県,印場 メンズエステ,0,inba,/moriyama/inba-station/all/,station,unique,守山・小幡,守山|喜多山|小幡|大森|新守山
+23,愛知県,喜多山 メンズエステ,0,kitayama,/moriyama/kitayama-station/all/,station,unique,守山・小幡,守山|印場|小幡|大森|新守山
+23,愛知県,小幡 メンズエステ,140,obata,/moriyama/obata-station/all/,station,unique,守山・小幡,守山|印場|喜多山|大森|新守山
+23,愛知県,大森 メンズエステ,4400,omorikinjogakuinmae,/moriyama/omorikinjogakuinmae-station/all/,station_cross_pref,cross_prefecture,守山・小幡,守山|印場|喜多山|小幡|新守山
+23,愛知県,新守山 メンズエステ,70,shinmoriyama,/moriyama/shinmoriyama-station/all/,station,unique,守山・小幡,守山|印場|喜多山|小幡|大森
+23,愛知県,名古屋 メンズエステ,49500,nagoya,/nagoya/,parent_absorbed,"absorbed: /showa/, /nagoya/nagoya-station/all/",名古屋・名駅・納屋橋,八田|本陣|岩塚|亀島|国際センター
+23,愛知県,八田 メンズエステ,50,hatta,/nagoya/hatta-station/all/,station,unique,名古屋・名駅・納屋橋,名古屋|本陣|岩塚|亀島|国際センター
+23,愛知県,本陣 メンズエステ,40,honjin,/nagoya/honjin-station/all/,station,unique,名古屋・名駅・納屋橋,名古屋|八田|岩塚|亀島|国際センター
+23,愛知県,岩塚 メンズエステ,140,iwatsuka,/nagoya/iwatsuka-station/all/,station,unique,名古屋・名駅・納屋橋,名古屋|八田|本陣|亀島|国際センター
+23,愛知県,亀島 メンズエステ,70,kamejima,/nagoya/kamejima-station/all/,station,unique,名古屋・名駅・納屋橋,名古屋|八田|本陣|岩塚|国際センター
+23,愛知県,国際センター メンズエステ,50,kokusaicenter,/nagoya/kokusaicenter-station/all/,station,unique,名古屋・名駅・納屋橋,名古屋|八田|本陣|岩塚|亀島
+23,愛知県,中村公園 メンズエステ,140,nakamurakoen,/nagoya/nakamurakoen-station/all/,station,unique,名古屋・名駅・納屋橋,名古屋|八田|本陣|岩塚|亀島
+23,愛知県,栄生 メンズエステ,30,sako,/nagoya/sako-station/all/,station,unique,名古屋・名駅・納屋橋,名古屋|八田|本陣|岩塚|亀島
+23,愛知県,太閤通 メンズエステ,0,taikoudori,/nagoya/taikoudori-station/all/,station,unique,名古屋・名駅・納屋橋,名古屋|八田|本陣|岩塚|亀島
+23,愛知県,小田井 メンズエステ,50,otai,/otai/,parent_absorbed,absorbed: /otai/otai-station/all/,小田井・比良,味鋺|味美|比良|浄心|庄内通
+23,愛知県,味鋺 メンズエステ,0,ajima,/otai/ajima-station/all/,station,unique,小田井・比良,小田井|味美|比良|浄心|庄内通
+23,愛知県,味美 メンズエステ,30,ajiyoshi,/otai/ajiyoshi-station/all/,station,unique,小田井・比良,小田井|味鋺|比良|浄心|庄内通
+23,愛知県,比良 メンズエステ,10,hira,/otai/hira-station/all/,station,unique,小田井・比良,小田井|味鋺|味美|浄心|庄内通
+23,愛知県,浄心 メンズエステ,50,joshin,/otai/joshin-station/all/,station,unique,小田井・比良,小田井|味鋺|味美|比良|庄内通
+23,愛知県,庄内通 メンズエステ,40,shonaidori,/otai/shonaidori-station/all/,station,unique,小田井・比良,小田井|味鋺|味美|比良|浄心
+23,愛知県,尾張 メンズエステ,140,owari,/owari/,parent,unique,尾張・一宮,愛西|あま|一宮|稲沢|岩倉
+23,愛知県,愛西 メンズエステ,30,aisai,/owari/aisai-city/all/,city,unique,尾張・一宮,尾張|あま|一宮|稲沢|岩倉
+23,愛知県,あま メンズエステ,0,ama,/owari/ama-city/all/,city,unique,尾張・一宮,尾張|愛西|一宮|稲沢|岩倉
+23,愛知県,一宮 メンズエステ,9900,ichinomiya,/owari/ichinomiya-city/all/,city,unique,尾張・一宮,尾張|愛西|あま|稲沢|岩倉
+23,愛知県,稲沢 メンズエステ,320,inazawa,/owari/inazawa-city/all/,city,unique,尾張・一宮,尾張|愛西|あま|一宮|岩倉
+23,愛知県,岩倉 メンズエステ,1000,iwakura,/owari/iwakura-city/all/,city,unique,尾張・一宮,尾張|愛西|あま|一宮|稲沢
+23,愛知県,北名古屋 メンズエステ,590,kitanagoya,/owari/kitanagoya-city/all/,city,unique,尾張・一宮,尾張|愛西|あま|一宮|稲沢
+23,愛知県,清須 メンズエステ,50,kiyosu,/owari/kiyosu-city/all/,city,unique,尾張・一宮,尾張|愛西|あま|一宮|稲沢
+23,愛知県,江南 メンズエステ,390,kounan,/owari/kounan-city/all/,city,unique,尾張・一宮,尾張|愛西|あま|一宮|稲沢
+23,愛知県,尾張旭 メンズエステ,390,owariasahi,/owari/owariasahi-city/all/,city,unique,尾張・一宮,尾張|愛西|あま|一宮|稲沢
+23,愛知県,津島 メンズエステ,170,tsushima,/owari/tsushima-city/all/,city,unique,尾張・一宮,尾張|愛西|あま|一宮|稲沢
+23,愛知県,弥富 メンズエステ,140,yatomi,/owari/yatomi-city/all/,city,unique,尾張・一宮,尾張|愛西|あま|一宮|稲沢
+23,愛知県,栄 メンズエステ,5400,sakae,/sakae/,parent_absorbed,absorbed: /sakae/sakae-station/all/,栄,丸の内|矢場町
+23,愛知県,丸の内 メンズエステ,720,marunouchi,/sakae/marunouchi-station/all/,station,unique,栄,栄|矢場町
+23,愛知県,矢場町 メンズエステ,260,yabacho,/sakae/yabacho-station/all/,station,unique,栄,栄|丸の内
+23,愛知県,新栄町 メンズエステ,210,shinsakae,/shinsakae/,parent_absorbed,absorbed: /shinsakae/shinsakaemachi-station/all/,新栄町・千種・今池,千種|吹上|池下|今池|覚王山
+23,愛知県,千種 メンズエステ,480,chikusa,/shinsakae/chikusa-station/all/,station,unique,新栄町・千種・今池,新栄町|吹上|池下|今池|覚王山
+23,愛知県,吹上 メンズエステ,210,fukiage,/shinsakae/fukiage-station/all/,station_cross_pref,cross_prefecture,新栄町・千種・今池,新栄町|千種|池下|今池|覚王山
+23,愛知県,池下 メンズエステ,590,ikeshita,/shinsakae/ikeshita-station/all/,station,unique,新栄町・千種・今池,新栄町|千種|吹上|今池|覚王山
+23,愛知県,今池 メンズエステ,1600,imaike,/shinsakae/imaike-station/all/,station,unique,新栄町・千種・今池,新栄町|千種|吹上|池下|覚王山
+23,愛知県,覚王山 メンズエステ,40,kakuozan,/shinsakae/kakuozan-station/all/,station,unique,新栄町・千種・今池,新栄町|千種|吹上|池下|今池
+23,愛知県,高岳 メンズエステ,1000,takaoka,/shinsakae/takaoka-station/all/,station,unique,新栄町・千種・今池,新栄町|千種|吹上|池下|今池
+23,愛知県,荒畑 メンズエステ,0,arahata,/showa/arahata-station/all/,station,unique,名古屋・昭和区・天白区,御器所|原|平針|川名|塩釜口
+23,愛知県,御器所 メンズエステ,70,gokiso,/showa/gokiso-station/all/,station,unique,名古屋・昭和区・天白区,荒畑|原|平針|川名|塩釜口
+23,愛知県,原 メンズエステ,40,hara,/showa/hara-station/all/,station,unique,名古屋・昭和区・天白区,荒畑|御器所|平針|川名|塩釜口
+23,愛知県,平針 メンズエステ,320,hirabari,/showa/hirabari-station/all/,station,unique,名古屋・昭和区・天白区,荒畑|御器所|原|川名|塩釜口
+23,愛知県,川名 メンズエステ,0,kawana,/showa/kawana-station/all/,station,unique,名古屋・昭和区・天白区,荒畑|御器所|原|平針|塩釜口
+23,愛知県,塩釜口 メンズエステ,40,shiogamaguchi,/showa/shiogamaguchi-station/all/,station,unique,名古屋・昭和区・天白区,荒畑|御器所|原|平針|川名
+23,愛知県,植田 メンズエステ,50,ueda,/showa/ueda-station/all/,station,unique,名古屋・昭和区・天白区,荒畑|御器所|原|平針|川名
+23,愛知県,東海通 メンズエステ,70,tokaidori,/tokaidori/,parent_absorbed,absorbed: /tokaidori/tokaidori-station/all/,東海通・高畑,荒子川公園|港北|南荒子|港区役所|中島
+23,愛知県,荒子川公園 メンズエステ,10,arakogawakoen,/tokaidori/arakogawakoen-station/all/,station,unique,東海通・高畑,東海通|港北|南荒子|港区役所|中島
+23,愛知県,港北 メンズエステ,0,kohoku,/tokaidori/kohoku-station/all/,station,unique,東海通・高畑,東海通|荒子川公園|南荒子|港区役所|中島
+23,愛知県,南荒子 メンズエステ,0,minamiarako,/tokaidori/minamiarako-station/all/,station,unique,東海通・高畑,東海通|荒子川公園|港北|港区役所|中島
+23,愛知県,港区役所 メンズエステ,0,minatokuyakusho,/tokaidori/minatokuyakusho-station/all/,station,unique,東海通・高畑,東海通|荒子川公園|港北|南荒子|中島
+23,愛知県,中島 メンズエステ,10,nakajima,/tokaidori/nakajima-station/all/,station,unique,東海通・高畑,東海通|荒子川公園|港北|南荒子|港区役所
+23,愛知県,高畑 メンズエステ,480,takabata,/tokaidori/takabata-station/all/,station,unique,東海通・高畑,東海通|荒子川公園|港北|南荒子|港区役所
+23,愛知県,戸田 メンズエステ,1600,toda,/tokaidori/toda-station/all/,station_cross_pref,cross_prefecture,東海通・高畑,東海通|荒子川公園|港北|南荒子|港区役所
+23,愛知県,築地口 メンズエステ,30,tsukijiguchi,/tokaidori/tsukijiguchi-station/all/,station,unique,東海通・高畑,東海通|荒子川公園|港北|南荒子|港区役所
+23,愛知県,東三河 メンズエステ,110,toyohashi,/toyohashi/,parent,unique,東三河・豊橋・豊川,蒲郡|新城|田原|豊橋|豊川
+23,愛知県,蒲郡 メンズエステ,480,gamagori,/toyohashi/gamagori-city/all/,city,unique,東三河・豊橋・豊川,東三河|新城|田原|豊橋|豊川
+23,愛知県,新城 メンズエステ,40,shinshiro,/toyohashi/shinshiro-city/all/,city,unique,東三河・豊橋・豊川,東三河|蒲郡|田原|豊橋|豊川
+23,愛知県,田原 メンズエステ,20,tahara,/toyohashi/tahara-city/all/,city,unique,東三河・豊橋・豊川,東三河|蒲郡|新城|豊橋|豊川
+23,愛知県,豊橋 メンズエステ,8100,toyohashi,/toyohashi/toyohashi-city/all/,city,unique,東三河・豊橋・豊川,東三河|蒲郡|新城|田原|豊川
+23,愛知県,豊川 メンズエステ,720,toyokawa,/toyohashi/toyokawa-city/all/,city,unique,東三河・豊橋・豊川,東三河|蒲郡|新城|田原|豊橋
+23,愛知県,西三河 メンズエステ,480,toyota,/toyota/,parent,unique,西三河・豊田・岡崎,安城|知立|碧南|刈谷|みよし
+23,愛知県,安城 メンズエステ,3600,anjo,/toyota/anjo-city/all/,city,unique,西三河・豊田・岡崎,西三河|知立|碧南|刈谷|みよし
+23,愛知県,知立 メンズエステ,480,chiryu,/toyota/chiryu-city/all/,city,unique,西三河・豊田・岡崎,西三河|安城|碧南|刈谷|みよし
+23,愛知県,碧南 メンズエステ,70,hekinan,/toyota/hekinan-city/all/,city,unique,西三河・豊田・岡崎,西三河|安城|知立|刈谷|みよし
+23,愛知県,刈谷 メンズエステ,2900,kariya,/toyota/kariya-city/all/,city,unique,西三河・豊田・岡崎,西三河|安城|知立|碧南|みよし
+23,愛知県,みよし メンズエステ,170,miyoshi,/toyota/miyoshi-city/all/,city,unique,西三河・豊田・岡崎,西三河|安城|知立|碧南|刈谷
+23,愛知県,西尾 メンズエステ,390,nishio,/toyota/nishio-city/all/,city,unique,西三河・豊田・岡崎,西三河|安城|知立|碧南|刈谷
+23,愛知県,岡崎 メンズエステ,3600,okazaki,/toyota/okazaki-city/all/,city,unique,西三河・豊田・岡崎,西三河|安城|知立|碧南|刈谷
+23,愛知県,高浜 メンズエステ,110,takahama,/toyota/takahama-city/all/,city,unique,西三河・豊田・岡崎,西三河|安城|知立|碧南|刈谷
+23,愛知県,豊田 メンズエステ,2400,toyota,/toyota/toyota-city/all/,city_cross_pref,cross_prefecture,西三河・豊田・岡崎,西三河|安城|知立|碧南|刈谷
+23,愛知県,大須 メンズエステ,590,tsurumai,/tsurumai/,parent,unique,大須・鶴舞,上前津|大須観音|鶴舞
+23,愛知県,上前津 メンズエステ,260,kamimaezu,/tsurumai/kamimaezu-station/all/,station,unique,大須・鶴舞,大須|大須観音|鶴舞
+23,愛知県,大須観音 メンズエステ,50,osukannon,/tsurumai/osukannon-station/all/,station,unique,大須・鶴舞,大須|上前津|鶴舞
+23,愛知県,鶴舞 メンズエステ,390,tsurumai,/tsurumai/tsurumai-station/all/,station,unique,大須・鶴舞,大須|上前津|大須観音
+24,三重県,四日市 メンズエステ,6600,mie,/mie/,parent_absorbed,absorbed: /mie/yokkaichi-city/all/,四日市・鈴鹿,桑名|鈴鹿
+24,三重県,桑名 メンズエステ,1300,kuwana,/mie/kuwana-city/all/,city,unique,四日市・鈴鹿,四日市|鈴鹿
+24,三重県,鈴鹿 メンズエステ,1900,suzuka,/mie/suzuka-city/all/,city,unique,四日市・鈴鹿,四日市|桑名
+24,三重県,津 メンズエステ,1000,tsu,/tsu/,parent_absorbed,absorbed: /tsu/tsu-city/all/,津・松阪・南部,伊勢|松阪
+24,三重県,伊勢 メンズエステ,260,ise,/tsu/ise-city/all/,city,unique,津・松阪・南部,津|松阪
+24,三重県,松阪 メンズエステ,1900,matsusaka,/tsu/matsusaka-city/all/,city,unique,津・松阪・南部,津|伊勢
+25,滋賀県,滋賀 メンズエステ,5400,shiga,/shiga/,parent,unique,滋賀・大津,東近江|彦根|草津|米原|守山
+25,滋賀県,東近江 メンズエステ,50,higashioumi,/shiga/higashioumi-city/all/,city,unique,滋賀・大津,滋賀|彦根|草津|米原|守山
+25,滋賀県,彦根 メンズエステ,1600,hikone,/shiga/hikone-city/all/,city,unique,滋賀・大津,滋賀|東近江|草津|米原|守山
+25,滋賀県,草津 メンズエステ,1600,kusatsu,/shiga/kusatsu-city/all/,city,unique,滋賀・大津,滋賀|東近江|彦根|米原|守山
+25,滋賀県,米原 メンズエステ,390,maibara,/shiga/maibara-city/all/,city,unique,滋賀・大津,滋賀|東近江|彦根|草津|守山
+25,滋賀県,守山 メンズエステ,480,moriyama,/shiga/moriyama-city/all/,city_cross_pref,cross_prefecture,滋賀・大津,滋賀|東近江|彦根|草津|米原
+25,滋賀県,長浜 メンズエステ,1000,nagahama,/shiga/nagahama-city/all/,city,unique,滋賀・大津,滋賀|東近江|彦根|草津|米原
+25,滋賀県,大津 メンズエステ,880,otsu,/shiga/otsu-city/all/,city,unique,滋賀・大津,滋賀|東近江|彦根|草津|米原
+25,滋賀県,近江八幡 メンズエステ,480,oumihachiman,/shiga/oumihachiman-city/all/,city,unique,滋賀・大津,滋賀|東近江|彦根|草津|米原
+25,滋賀県,栗東 メンズエステ,390,ritto,/shiga/ritto-city/all/,city,unique,滋賀・大津,滋賀|東近江|彦根|草津|米原
+25,滋賀県,野洲 メンズエステ,70,yasu,/shiga/yasu-city/all/,city,unique,滋賀・大津,滋賀|東近江|彦根|草津|米原
+26,京都府,京都 メンズエステ,27100,kyoto,/kyoto/,parent_absorbed,absorbed: /kyoto/kyoto-station/all/,京都・祇園,祇園四条|五条|今出川|烏丸御池|京都河原町
+26,京都府,祇園四条 メンズエステ,30,gionshijo,/kyoto/gionshijo-station/all/,station,unique,京都・祇園,京都|五条|今出川|烏丸御池|京都河原町
+26,京都府,五条 メンズエステ,50,gojo,/kyoto/gojo-station/all/,station,unique,京都・祇園,京都|祇園四条|今出川|烏丸御池|京都河原町
+26,京都府,今出川 メンズエステ,20,imadegawa,/kyoto/imadegawa-station/all/,station,unique,京都・祇園,京都|祇園四条|五条|烏丸御池|京都河原町
+26,京都府,烏丸御池 メンズエステ,260,karasumaoike,/kyoto/karasumaoike-station/all/,station,unique,京都・祇園,京都|祇園四条|五条|今出川|京都河原町
+26,京都府,京都河原町 メンズエステ,70,kawaramachi,/kyoto/kawaramachi-station/all/,station,unique,京都・祇園,京都|祇園四条|五条|今出川|烏丸御池
+26,京都府,丸太町 メンズエステ,10,marutamachi,/kyoto/marutamachi-station/all/,station,unique,京都・祇園,京都|祇園四条|五条|今出川|烏丸御池
+26,京都府,椥辻 メンズエステ,0,nagitsuji,/kyoto/nagitsuji-station/all/,station,unique,京都・祇園,京都|祇園四条|五条|今出川|烏丸御池
+26,京都府,二条 メンズエステ,260,nijo,/kyoto/nijo-station/all/,station,unique,京都・祇園,京都|祇園四条|五条|今出川|烏丸御池
+26,京都府,西大路 メンズエステ,30,nishioji,/kyoto/nishioji-station/all/,station,unique,京都・祇園,京都|祇園四条|五条|今出川|烏丸御池
+26,京都府,大宮 メンズエステ,22200,omiya,/kyoto/omiya-station/all/,station_cross_pref,cross_prefecture,京都・祇園,京都|祇園四条|五条|今出川|烏丸御池
+26,京都府,西院 メンズエステ,320,saiin,/kyoto/saiin-station/all/,station,unique,京都・祇園,京都|祇園四条|五条|今出川|烏丸御池
+26,京都府,三条 メンズエステ,170,sanjo,/kyoto/sanjo-station/all/,station,unique,京都・祇園,京都|祇園四条|五条|今出川|烏丸御池
+26,京都府,七条 メンズエステ,10,shichijo,/kyoto/shichijo-station/all/,station,unique,京都・祇園,京都|祇園四条|五条|今出川|烏丸御池
+26,京都府,四条 メンズエステ,170,shijo,/kyoto/shijo-station/all/,station,unique,京都・祇園,京都|祇園四条|五条|今出川|烏丸御池
+26,京都府,東福寺 メンズエステ,0,tofukuji,/kyoto/tofukuji-station/all/,station,unique,京都・祇園,京都|祇園四条|五条|今出川|烏丸御池
+27,大阪府,江坂 メンズエステ,3600,esaka,/esaka/,parent_absorbed,absorbed: /esaka/esaka-station/all/,江坂・豊中,茨木|池田|高槻|豊中
+27,大阪府,茨木 メンズエステ,1900,ibaraki,/esaka/ibaraki-city/all/,city,unique,江坂・豊中,江坂|池田|高槻|豊中
+27,大阪府,池田 メンズエステ,90,ikeda,/esaka/ikeda-city/all/,city,unique,江坂・豊中,江坂|茨木|高槻|豊中
+27,大阪府,高槻 メンズエステ,5400,takatsuki,/esaka/takatsuki-city/all/,city,unique,江坂・豊中,江坂|茨木|池田|豊中
+27,大阪府,豊中 メンズエステ,720,toyonaka,/esaka/toyonaka-city/all/,city,unique,江坂・豊中,江坂|茨木|池田|高槻
+27,大阪府,東大阪 メンズエステ,720,higashiosaka,/higashiosaka/,parent,unique,東大阪・八尾,荒本|布施|近鉄八尾|高井田|八尾
+27,大阪府,荒本 メンズエステ,20,aramoto,/higashiosaka/aramoto-station/all/,station,unique,東大阪・八尾,東大阪|布施|近鉄八尾|高井田|八尾
+27,大阪府,布施 メンズエステ,3600,fuse,/higashiosaka/fuse-station/all/,station,unique,東大阪・八尾,東大阪|荒本|近鉄八尾|高井田|八尾
+27,大阪府,近鉄八尾 メンズエステ,40,kintetsuyao,/higashiosaka/kintetsuyao-station/all/,station,unique,東大阪・八尾,東大阪|荒本|布施|高井田|八尾
+27,大阪府,高井田 メンズエステ,30,takaida,/higashiosaka/takaida-station/all/,station,unique,東大阪・八尾,東大阪|荒本|布施|近鉄八尾|八尾
+27,大阪府,八尾 メンズエステ,720,yao,/higashiosaka/yao-station/all/,station,unique,東大阪・八尾,東大阪|荒本|布施|近鉄八尾|高井田
+27,大阪府,本町 メンズエステ,1600,honmachi,/honmachi/,parent_absorbed,absorbed: /honmachi/honmachi-station/all/,本町・堺筋本町,堺筋本町
+27,大阪府,堺筋本町 メンズエステ,8100,sakaisujihonmachi,/honmachi/sakaisujihonmachi-station/all/,station,unique,本町・堺筋本町,本町
+27,大阪府,十三 メンズエステ,3600,juso,/juso/,parent_absorbed,absorbed: /juso/juso-station/all/,十三・西淀川,三国
+27,大阪府,三国 メンズエステ,110,mikuni,/juso/mikuni-station/all/,station,unique,十三・西淀川,十三
+27,大阪府,京橋 メンズエステ,6600,kyobashi,/kyobashi/,parent_cross_pref,"cross_prefecture, absorbed: /kyobashi/kyobashi-station/all/",京橋・守口,土居|枚方|守口|守口市
+27,大阪府,土居 メンズエステ,0,doi,/kyobashi/doi-station/all/,station,unique,京橋・守口,京橋|枚方|守口|守口市
+27,大阪府,枚方 メンズエステ,1900,hirakata,/kyobashi/hirakata-city/all/,city,unique,京橋・守口,京橋|土居|守口|守口市
+27,大阪府,守口 メンズエステ,1600,moriguchi,/kyobashi/moriguchi-station/all/,station,unique,京橋・守口,京橋|土居|枚方|守口市
+27,大阪府,守口市 メンズエステ,480,moriguchishi,/kyobashi/moriguchishi-station/all/,station,unique,京橋・守口,京橋|土居|枚方|守口
+27,大阪府,西中島 メンズエステ,1000,nishinakajima,/nishinakajima/,parent,unique,西中島・新大阪,東三国|西中島南方|新大阪
+27,大阪府,東三国 メンズエステ,720,higashimikuni,/nishinakajima/higashimikuni-station/all/,station,unique,西中島・新大阪,西中島|西中島南方|新大阪
+27,大阪府,西中島南方 メンズエステ,590,nishinakajima,/nishinakajima/nishinakajima-station/all/,station,unique,西中島・新大阪,西中島|東三国|新大阪
+27,大阪府,新大阪 メンズエステ,9900,shinosaka,/nishinakajima/shinosaka-station/all/,station,unique,西中島・新大阪,西中島|東三国|西中島南方
+27,大阪府,大阪キタ メンズエステ,0,osakakita,/osakakita/,parent,unique,大阪キタ・梅田,福島|東梅田|西梅田|野田|梅田
+27,大阪府,福島 メンズエステ,2400,fukushima,/osakakita/fukushima-station/all/,station_cross_pref,cross_prefecture,大阪キタ・梅田,大阪キタ|東梅田|西梅田|野田|梅田
+27,大阪府,東梅田 メンズエステ,110,higashiumeda,/osakakita/higashiumeda-station/all/,station,unique,大阪キタ・梅田,大阪キタ|福島|西梅田|野田|梅田
+27,大阪府,西梅田 メンズエステ,70,nishiumeda,/osakakita/nishiumeda-station/all/,station,unique,大阪キタ・梅田,大阪キタ|福島|東梅田|野田|梅田
+27,大阪府,野田 メンズエステ,260,noda,/osakakita/noda-station/all/,station_cross_pref,cross_prefecture,大阪キタ・梅田,大阪キタ|福島|東梅田|西梅田|梅田
+27,大阪府,梅田 メンズエステ,14800,umeda,/osakakita/umeda-station/all/,station,unique,大阪キタ・梅田,大阪キタ|福島|東梅田|西梅田|野田
+27,大阪府,難波 メンズエステ,4400,osakaminami,/osakaminami/,parent_absorbed,absorbed: /osakaminami/nanba-station/all/,難波・日本橋,大国町|恵美須町|日本橋|桜川|新今宮
+27,大阪府,大国町 メンズエステ,320,daikokucho,/osakaminami/daikokucho-station/all/,station,unique,難波・日本橋,難波|恵美須町|日本橋|桜川|新今宮
+27,大阪府,恵美須町 メンズエステ,70,ebisucho,/osakaminami/ebisucho-station/all/,station,unique,難波・日本橋,難波|大国町|日本橋|桜川|新今宮
+27,大阪府,日本橋 メンズエステ,12100,nipponbashi,/osakaminami/nipponbashi-station/all/,station_cross_pref,cross_prefecture,難波・日本橋,難波|大国町|恵美須町|桜川|新今宮
+27,大阪府,桜川 メンズエステ,1600,sakuragawa,/osakaminami/sakuragawa-station/all/,station,unique,難波・日本橋,難波|大国町|恵美須町|日本橋|新今宮
+27,大阪府,新今宮 メンズエステ,70,shinimamiya,/osakaminami/shinimamiya-station/all/,station,unique,難波・日本橋,難波|大国町|恵美須町|日本橋|桜川
+27,大阪府,天下茶屋 メンズエステ,50,tengachaya,/osakaminami/tengachaya-station/all/,station,unique,難波・日本橋,難波|大国町|恵美須町|日本橋|桜川
+27,大阪府,堺 メンズエステ,5400,sakai,/sakai/,parent_absorbed,absorbed: /sakai/sakai-station/all/,堺・南大阪,御陵前|和泉|泉大津|泉佐野|岸和田
+27,大阪府,御陵前 メンズエステ,0,goryomae,/sakai/goryomae-station/all/,station,unique,堺・南大阪,堺|和泉|泉大津|泉佐野|岸和田
+27,大阪府,和泉 メンズエステ,210,izumi,/sakai/izumi-city/all/,city,unique,堺・南大阪,堺|御陵前|泉大津|泉佐野|岸和田
+27,大阪府,泉大津 メンズエステ,1300,izumiotsu,/sakai/izumiotsu-city/all/,city,unique,堺・南大阪,堺|御陵前|和泉|泉佐野|岸和田
+27,大阪府,泉佐野 メンズエステ,1900,izumisano,/sakai/izumisano-city/all/,city,unique,堺・南大阪,堺|御陵前|和泉|泉大津|岸和田
+27,大阪府,岸和田 メンズエステ,2400,kishiwada,/sakai/kishiwada-city/all/,city,unique,堺・南大阪,堺|御陵前|和泉|泉大津|泉佐野
+27,大阪府,なかもず メンズエステ,90,nakamozu,/sakai/nakamozu-station/all/,station,unique,堺・南大阪,堺|御陵前|和泉|泉大津|泉佐野
+27,大阪府,堺東 メンズエステ,9900,sakaihigashi,/sakai/sakaihigashi-station/all/,station,unique,堺・南大阪,堺|御陵前|和泉|泉大津|泉佐野
+27,大阪府,堺市 メンズエステ,1300,sakaishi,/sakai/sakaishi-station/all/,station,unique,堺・南大阪,堺|御陵前|和泉|泉大津|泉佐野
+27,大阪府,心斎橋 メンズエステ,1900,shinsaibashi,/shinsaibashi/,parent_absorbed,absorbed: /shinsaibashi/shinsaibashi-station/all/,心斎橋,長堀橋|西長堀
+27,大阪府,長堀橋 メンズエステ,480,nagahoribashi,/shinsaibashi/nagahoribashi-station/all/,station,unique,心斎橋,心斎橋|西長堀
+27,大阪府,西長堀 メンズエステ,50,nishinagahori,/shinsaibashi/nishinagahori-station/all/,station,unique,心斎橋,心斎橋|長堀橋
+27,大阪府,谷町九丁目 メンズエステ,720,tanikyu,/tanikyu/,parent_absorbed,absorbed: /tanikyu/tanikyu-station/all/,谷町九丁目,平野|喜連瓜破|玉造|谷町六丁目|天王寺
+27,大阪府,平野 メンズエステ,90,hirano,/tanikyu/hirano-station/all/,station,unique,谷町九丁目,谷町九丁目|喜連瓜破|玉造|谷町六丁目|天王寺
+27,大阪府,喜連瓜破 メンズエステ,20,kireuriwari,/tanikyu/kireuriwari-station/all/,station,unique,谷町九丁目,谷町九丁目|平野|玉造|谷町六丁目|天王寺
+27,大阪府,玉造 メンズエステ,40,tamatsukuri,/tanikyu/tamatsukuri-station/all/,station,unique,谷町九丁目,谷町九丁目|平野|喜連瓜破|谷町六丁目|天王寺
+27,大阪府,谷町六丁目 メンズエステ,90,taniroku,/tanikyu/taniroku-station/all/,station,unique,谷町九丁目,谷町九丁目|平野|喜連瓜破|玉造|天王寺
+27,大阪府,天王寺 メンズエステ,2400,tennoji,/tanikyu/tennoji-station/all/,station,unique,谷町九丁目,谷町九丁目|平野|喜連瓜破|玉造|谷町六丁目
+27,大阪府,東部市場前 メンズエステ,0,tobushijomae,/tanikyu/tobushijomae-station/all/,station,unique,谷町九丁目,谷町九丁目|平野|喜連瓜破|玉造|谷町六丁目
+27,大阪府,鶴橋 メンズエステ,320,tsuruhashi,/tanikyu/tsuruhashi-station/all/,station,unique,谷町九丁目,谷町九丁目|平野|喜連瓜破|玉造|谷町六丁目
+27,大阪府,天満 メンズエステ,880,tenma,/tenma/,parent_absorbed,absorbed: /tenma/tenma-station/all/,天満・南森町,南森町|中崎町|天満橋|天神橋筋六丁目
+27,大阪府,南森町 メンズエステ,1000,minamimorimachi,/tenma/minamimorimachi-station/all/,station,unique,天満・南森町,天満|中崎町|天満橋|天神橋筋六丁目
+27,大阪府,中崎町 メンズエステ,90,nakazakicho,/tenma/nakazakicho-station/all/,station,unique,天満・南森町,天満|南森町|天満橋|天神橋筋六丁目
+27,大阪府,天満橋 メンズエステ,260,tenmabashi,/tenma/tenmabashi-station/all/,station,unique,天満・南森町,天満|南森町|中崎町|天神橋筋六丁目
+27,大阪府,天神橋筋六丁目 メンズエステ,70,tenroku,/tenma/tenroku-station/all/,station,unique,天満・南森町,天満|南森町|中崎町|天満橋
+28,兵庫県,尼崎 メンズエステ,6600,amagasaki,/amagasaki/,parent_absorbed,absorbed: /amagasaki/amagasaki-city/all/,尼崎・西宮,芦屋|伊丹|西宮
+28,兵庫県,芦屋 メンズエステ,480,ashiya,/amagasaki/ashiya-city/all/,city,unique,尼崎・西宮,尼崎|伊丹|西宮
+28,兵庫県,伊丹 メンズエステ,720,itami,/amagasaki/itami-city/all/,city,unique,尼崎・西宮,尼崎|芦屋|西宮
+28,兵庫県,西宮 メンズエステ,2900,nishinomiya,/amagasaki/nishinomiya-city/all/,city,unique,尼崎・西宮,尼崎|芦屋|伊丹
+28,兵庫県,姫路 メンズエステ,18100,himeji,/himeji/,parent_absorbed,absorbed: /himeji/himeji-city/all/,姫路・明石,明石|加古川|高砂
+28,兵庫県,明石 メンズエステ,4400,akashi,/himeji/akashi-city/all/,city,unique,姫路・明石,姫路|加古川|高砂
+28,兵庫県,加古川 メンズエステ,2900,kakogawa,/himeji/kakogawa-city/all/,city,unique,姫路・明石,姫路|明石|高砂
+28,兵庫県,高砂 メンズエステ,480,takasago,/himeji/takasago-city/all/,city,unique,姫路・明石,姫路|明石|加古川
+28,兵庫県,神戸 メンズエステ,8100,kobe,/kobe/,parent_absorbed,absorbed: /kobe/kobe-station/all/,神戸・三宮,西元町|新長田|垂水
+28,兵庫県,西元町 メンズエステ,0,nishimotomachi,/kobe/nishimotomachi-station/all/,station,unique,神戸・三宮,神戸|新長田|垂水
+28,兵庫県,新長田 メンズエステ,70,shinnagata,/kobe/shinnagata-station/all/,station,unique,神戸・三宮,神戸|西元町|垂水
+28,兵庫県,垂水 メンズエステ,320,tarumi,/kobe/tarumi-station/all/,station,unique,神戸・三宮,神戸|西元町|新長田
+29,奈良県,奈良 メンズエステ,6600,nara,/nara/,parent_absorbed,absorbed: /nara/nara-city/all/,奈良・生駒,橿原|天理|大和郡山
+29,奈良県,橿原 メンズエステ,720,kashihara,/nara/kashihara-city/all/,city,unique,奈良・生駒,奈良|天理|大和郡山
+29,奈良県,天理 メンズエステ,50,tenri,/nara/tenri-city/all/,city,unique,奈良・生駒,奈良|橿原|大和郡山
+29,奈良県,大和郡山 メンズエステ,30,yamatokoriyama,/nara/yamatokoriyama-city/all/,city,unique,奈良・生駒,奈良|橿原|天理
+30,和歌山県,和歌山 メンズエステ,9900,wakayama,/wakayama/,parent_absorbed,absorbed: /wakayama/wakayama-city/all/,和歌山,
+31,鳥取県,鳥取 メンズエステ,1300,tottori,/tottori/,parent_absorbed,absorbed: /tottori/tottori-city/all/,鳥取・米子,米子
+31,鳥取県,米子 メンズエステ,2400,yonago,/tottori/yonago-city/all/,city,unique,鳥取・米子,鳥取
+32,島根県,島根 メンズエステ,720,shimane,/shimane/,parent,unique,島根・松江,出雲|松江
+32,島根県,出雲 メンズエステ,320,izumo,/shimane/izumo-city/all/,city,unique,島根・松江,島根|松江
+32,島根県,松江 メンズエステ,2400,matsue,/shimane/matsue-city/all/,city,unique,島根・松江,島根|出雲
+33,岡山県,岡山 メンズエステ,18100,okayama,/okayama/,parent_absorbed,absorbed: /okayama/okayama-city/all/,岡山・倉敷,倉敷
+33,岡山県,倉敷 メンズエステ,8100,kurashiki,/okayama/kurashiki-city/all/,city,unique,岡山・倉敷,岡山
+34,広島県,広島 メンズエステ,18100,hiroshima,/hiroshima/,parent_absorbed,absorbed: /hiroshima/hiroshima-city/all/,広島・福山,福山|東広島|呉|三原
+34,広島県,福山 メンズエステ,14800,fukuyama,/hiroshima/fukuyama-city/all/,city,unique,広島・福山,広島|東広島|呉|三原
+34,広島県,東広島 メンズエステ,1900,higashihiroshima,/hiroshima/higashihiroshima-city/all/,city,unique,広島・福山,広島|福山|呉|三原
+34,広島県,呉 メンズエステ,260,kure,/hiroshima/kure-city/all/,city,unique,広島・福山,広島|福山|東広島|三原
+34,広島県,三原 メンズエステ,140,mihara,/hiroshima/mihara-city/all/,city,unique,広島・福山,広島|福山|東広島|呉
+35,山口県,山口 メンズエステ,4400,yamaguchi,/yamaguchi/,parent_absorbed,absorbed: /yamaguchi/yamaguchi-city/all/,山口・下関,岩国|下関|周南|宇部
+35,山口県,岩国 メンズエステ,720,iwakuni,/yamaguchi/iwakuni-city/all/,city,unique,山口・下関,山口|下関|周南|宇部
+35,山口県,下関 メンズエステ,2400,shimonoseki,/yamaguchi/shimonoseki-city/all/,city,unique,山口・下関,山口|岩国|周南|宇部
+35,山口県,周南 メンズエステ,880,shunan,/yamaguchi/shunan-city/all/,city,unique,山口・下関,山口|岩国|下関|宇部
+35,山口県,宇部 メンズエステ,260,ube,/yamaguchi/ube-city/all/,city,unique,山口・下関,山口|岩国|下関|周南
+36,徳島県,徳島 メンズエステ,5400,tokushima,/tokushima/,parent,unique,徳島,
+37,香川県,香川 メンズエステ,3600,kagawa,/kagawa/,parent,unique,香川・高松,丸亀|高松
+37,香川県,丸亀 メンズエステ,1900,marugame,/kagawa/marugame-city/all/,city,unique,香川・高松,香川|高松
+37,香川県,高松 メンズエステ,9900,takamatsu,/kagawa/takamatsu-city/all/,city,unique,香川・高松,香川|丸亀
+38,愛媛県,愛媛 メンズエステ,1300,ehime,/ehime/,parent,unique,愛媛・松山,松山|新居浜|四国中央
+38,愛媛県,松山 メンズエステ,9900,matsuyama,/ehime/matsuyama-city/all/,city,unique,愛媛・松山,愛媛|新居浜|四国中央
+38,愛媛県,新居浜 メンズエステ,720,nihama,/ehime/nihama-city/all/,city,unique,愛媛・松山,愛媛|松山|四国中央
+38,愛媛県,四国中央 メンズエステ,210,shikokuchuo,/ehime/shikokuchuo-city/all/,city,unique,愛媛・松山,愛媛|松山|新居浜
+39,高知県,高知 メンズエステ,3600,kochi,/kochi/,parent_absorbed,absorbed: /kochi/kochi-city/all/,高知,
+40,福岡県,博多 メンズエステ,18100,hakata,/hakata/,parent_absorbed,absorbed: /hakata/hakata-station/all/,博多,赤坂|西鉄平尾|香椎|櫛田神社前|中洲川端
+40,福岡県,赤坂 メンズエステ,4400,akasaka,/hakata/akasaka-station/all/,station_cross_pref,cross_prefecture,博多,博多|西鉄平尾|香椎|櫛田神社前|中洲川端
+40,福岡県,西鉄平尾 メンズエステ,0,hirao,/hakata/hirao-station/all/,station,unique,博多,博多|赤坂|香椎|櫛田神社前|中洲川端
+40,福岡県,香椎 メンズエステ,1000,kashii,/hakata/kashii-station/all/,station,unique,博多,博多|赤坂|西鉄平尾|櫛田神社前|中洲川端
+40,福岡県,櫛田神社前 メンズエステ,0,kushidajinjamae,/hakata/kushidajinjamae-station/all/,station,unique,博多,博多|赤坂|西鉄平尾|香椎|中洲川端
+40,福岡県,中洲川端 メンズエステ,110,nakasu,/hakata/nakasu-station/all/,station,unique,博多,博多|赤坂|西鉄平尾|香椎|櫛田神社前
+40,福岡県,大橋 メンズエステ,390,ohashi,/hakata/ohashi-station/all/,station,unique,博多,博多|赤坂|西鉄平尾|香椎|櫛田神社前
+40,福岡県,大濠公園 メンズエステ,20,ohorikoen,/hakata/ohorikoen-station/all/,station,unique,博多,博多|赤坂|西鉄平尾|香椎|櫛田神社前
+40,福岡県,竹下 メンズエステ,20,takeshita,/hakata/takeshita-station/all/,station,unique,博多,博多|赤坂|西鉄平尾|香椎|櫛田神社前
+40,福岡県,天神 メンズエステ,1300,tenjin,/hakata/tenjin-station/all/,station,unique,博多,博多|赤坂|西鉄平尾|香椎|櫛田神社前
+40,福岡県,薬院 メンズエステ,480,yakuin,/hakata/yakuin-station/all/,station,unique,博多,博多|赤坂|西鉄平尾|香椎|櫛田神社前
+40,福岡県,吉塚 メンズエステ,70,yoshiduka,/hakata/yoshiduka-station/all/,station,unique,博多,博多|赤坂|西鉄平尾|香椎|櫛田神社前
+40,福岡県,北九州 メンズエステ,4400,kitakyushu,/kitakyushu/,parent,unique,北九州・小倉,平和通|飯塚|片野|香春口三萩野|小倉
+40,福岡県,平和通 メンズエステ,0,heiwadori,/kitakyushu/heiwadori-station/all/,station,unique,北九州・小倉,北九州|飯塚|片野|香春口三萩野|小倉
+40,福岡県,飯塚 メンズエステ,720,iizuka,/kitakyushu/iizuka-station/all/,station,unique,北九州・小倉,北九州|平和通|片野|香春口三萩野|小倉
+40,福岡県,片野 メンズエステ,50,katano,/kitakyushu/katano-station/all/,station,unique,北九州・小倉,北九州|平和通|飯塚|香春口三萩野|小倉
+40,福岡県,香春口三萩野 メンズエステ,0,kawaraguchimihagino,/kitakyushu/kawaraguchimihagino-station/all/,station,unique,北九州・小倉,北九州|平和通|飯塚|片野|小倉
+40,福岡県,小倉 メンズエステ,18100,kokura,/kitakyushu/kokura-station/all/,station,unique,北九州・小倉,北九州|平和通|飯塚|片野|香春口三萩野
+40,福岡県,黒崎 メンズエステ,2400,kurosaki,/kitakyushu/kurosaki-station/all/,station,unique,北九州・小倉,北九州|平和通|飯塚|片野|香春口三萩野
+40,福岡県,南小倉 メンズエステ,0,minamikokura,/kitakyushu/minamikokura-station/all/,station,unique,北九州・小倉,北九州|平和通|飯塚|片野|香春口三萩野
+40,福岡県,西小倉 メンズエステ,0,nishikokura,/kitakyushu/nishikokura-station/all/,station,unique,北九州・小倉,北九州|平和通|飯塚|片野|香春口三萩野
+40,福岡県,旦過 メンズエステ,0,tanga,/kitakyushu/tanga-station/all/,station,unique,北九州・小倉,北九州|平和通|飯塚|片野|香春口三萩野
+40,福岡県,久留米 メンズエステ,14800,kurume,/kurume/,parent_absorbed,absorbed: /kurume/kurume-city/all/,久留米・筑後,大牟田|八女
+40,福岡県,大牟田 メンズエステ,1600,omuta,/kurume/omuta-city/all/,city,unique,久留米・筑後,久留米|八女
+40,福岡県,八女 メンズエステ,210,yame,/kurume/yame-city/all/,city,unique,久留米・筑後,久留米|大牟田
+41,佐賀県,佐賀 メンズエステ,6600,saga,/saga/,parent_absorbed,absorbed: /saga/saga-city/all/,佐賀・小城,武雄|鳥栖
+41,佐賀県,武雄 メンズエステ,320,takeo,/saga/takeo-city/all/,city,unique,佐賀・小城,佐賀|鳥栖
+41,佐賀県,鳥栖 メンズエステ,1000,tosu,/saga/tosu-city/all/,city,unique,佐賀・小城,佐賀|武雄
+42,長崎県,長崎 メンズエステ,8100,nagasaki,/nagasaki/,parent_absorbed,absorbed: /nagasaki/nagasaki-city/all/,長崎・佐世保,佐世保
+42,長崎県,佐世保 メンズエステ,2900,sasebo,/nagasaki/sasebo-city/all/,city,unique,長崎・佐世保,長崎
+43,熊本県,熊本 メンズエステ,18100,kumamoto,/kumamoto/,parent_absorbed,absorbed: /kumamoto/kumamoto-city/all/,熊本・玉名,
+44,大分県,大分 メンズエステ,12100,oita,/oita/,parent_absorbed,absorbed: /oita/oita-city/all/,大分,中津
+44,大分県,中津 メンズエステ,720,nakatsu,/oita/nakatsu-city/all/,city,unique,大分,大分
+45,宮崎県,宮崎 メンズエステ,6600,miyazaki,/miyazaki/,parent_absorbed,absorbed: /miyazaki/miyazaki-city/all/,宮崎,都城
+45,宮崎県,都城 メンズエステ,2400,miyakonojo,/miyazaki/miyakonojo-city/all/,city,unique,宮崎,宮崎
+46,鹿児島県,鹿児島 メンズエステ,14800,kagoshima,/kagoshima/,parent_absorbed,absorbed: /kagoshima/kagoshima-city/all/,鹿児島・霧島,霧島
+46,鹿児島県,霧島 メンズエステ,1300,kirishima,/kagoshima/kirishima-city/all/,city,unique,鹿児島・霧島,鹿児島
+47,沖縄県,沖縄 メンズエステ,12100,okinawa,/okinawa/,parent_absorbed,absorbed: /okinawa/okinawa-city/all/,沖縄・那覇,那覇
+47,沖縄県,那覇 メンズエステ,6600,naha,/okinawa/naha-city/all/,city,unique,沖縄・那覇,沖縄

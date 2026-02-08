@@ -138,27 +138,52 @@ def extract_kana_with_llm(title, salon_name, client):
         max_tokens=50,
         messages=[{
             "role": "user",
-            "content": f"""メンズエステ店のtitleから店名を抽出し、日本語で返す。
+            "content": f"""メンズエステ店のtitleから店名を抽出し、日本語（カタカナ/漢字/ひらがな）で返せ。
 
 title: {title}
 参考: {salon_name}
 
-ルール（優先順）:
-1. 最重要: titleにカタカナの店名が既にあるなら、そのカタカナをそのまま使う（自分で再翻訳しない）
-   例: 「恵比寿ヴィッカプラス -Vicca+plus.-」→ ヴィッカプラス（titleのカナをそのまま採用）
-2. 英語しかない場合のみ → カタカナに変換する（DAHLIA→ダリア、CLUB→クラブ、SPA→スパ）
-3. 漢字・ひらがなの店名 → そのまま残す（天界のスパ→天界のスパ）
-4. エリア名（恵比寿等）と「メンズエステ」「トップページ」等の一般語は除外
-5. titleと参考が明らかに別の店 → ???
-6. 出力は店名のみ。英語を含めない。説明禁止
+【絶対ルール】出力にアルファベット(A-Z, a-z)を含めるな。必ず日本語のみ。
 
-店名:"""
+ルール:
+1. titleにカタカナの店名が既にあるなら、そのカタカナをそのまま使う（再翻訳するな）
+   例: 「恵比寿ヴィッカプラス -Vicca+plus.-」→ ヴィッカプラス
+   例: 「NEW+PLUS ～ニュープラス～」→ ニュープラス
+2. 英語のみの場合→カタカナに変換（Belle Lily→ベルリリー、LINDA SPA→リンダスパ、Shake Spa→シェイクスパ）
+3. 漢字・ひらがな → そのまま（天界のスパ→天界のスパ）
+4. 「SPA」「Spa」→「スパ」、「Tokyo」→「トーキョー」に必ず変換
+5. エリア名（恵比寿等）と「メンズエステ」等の一般語は除外
+6. titleと参考が明らかに別の店 → ???
+
+店名（日本語のみ）:"""
         }]
     )
     result = response.content[0].text.strip().split('\n')[0].strip()
     # 長文が返ってきた場合はエラー扱い
     if len(result) > 30:
         return '???'
+    # 英語が残っていたら再変換を試みる
+    if re.search(r'[A-Za-z]', result):
+        result = _force_japanese(result, client)
+    return result
+
+
+def _force_japanese(text, client):
+    """英語が含まれる出力をカタカナに強制変換"""
+    response = client.messages.create(
+        model="claude-haiku-4-5-20251001",
+        max_tokens=50,
+        messages=[{
+            "role": "user",
+            "content": f"""以下の店名を全てカタカナ/漢字/ひらがなに変換せよ。アルファベットは一切残すな。
+「{text}」
+例: LINDA SPA→リンダスパ、Belle Lily→ベルリリー、小悪魔Spa Tokyo→小悪魔スパトーキョー、TOKYOエステ→トーキョーエステ
+変換後:"""
+        }]
+    )
+    result = response.content[0].text.strip().split('\n')[0].strip()
+    if len(result) > 30:
+        return text
     return result
 
 
@@ -248,16 +273,16 @@ def main(use_llm=False, update_db=False, fetch_sv=False):
             final_kana = current_kana
 
         # 半角スペースを除去（検索結果で機能しない）
-        # ただしcurrent_kanaが中黒(・)で繋いでるなら、そちらの表記を尊重
+        # ただしcurrent_kanaが中黒(・)で繋いでるなら、中黒版を採用
         if final_kana:
-            normalized_extracted = final_kana.replace(' ', '').replace('　', '')
-            normalized_current = (current_kana or '').replace(' ', '').replace('　', '').replace('・', '')
-            if normalized_extracted == normalized_current:
-                # スペース/中黒の違いだけ → current_kanaの表記を維持
-                final_kana = current_kana
-            else:
-                # 実質的な変更あり → スペース除去した版を使う
-                final_kana = final_kana.replace(' ', '').replace('　', '')
+            # まずスペースを除去
+            final_kana = final_kana.replace(' ', '').replace('　', '')
+
+            # current_kanaに中黒(・)があり、中黒以外が同じなら、中黒版を採用（ザ・ハーフ等）
+            if current_kana and '・' in current_kana:
+                current_no_space = current_kana.replace(' ', '').replace('　', '')
+                if final_kana.replace('・', '') == current_no_space.replace('・', ''):
+                    final_kana = current_no_space  # スペース除去+中黒維持
 
         result = {
             'salon_id': sid,
@@ -361,40 +386,56 @@ def fetch_search_volumes(keywords):
     from requests.auth import HTTPBasicAuth
     auth = HTTPBasicAuth(login, password)
 
-    # 重複除去 & None除去
+    # 重複除去 & None除去 & 特殊文字クリーニング
     unique_kws = list(set(kw for kw in keywords if kw))
     print(f"\n🔍 DataForSEO: {len(unique_kws)}件のキーワードで検索ボリューム取得中...")
 
     sv_map = {}
+    batch_size = 20  # 小さいバッチで安定性向上
 
-    # APIは1リクエストあたり最大700キーワード、バッチで送る
-    batch_size = 50
     for i in range(0, len(unique_kws), batch_size):
         batch = unique_kws[i:i+batch_size]
+        # 特殊文字クリーニング
+        clean_batch = [kw.replace('♡', '').replace('!', '').replace('！', '').strip() for kw in batch]
+        clean_batch = [kw for kw in clean_batch if kw]
+        kw_mapping = dict(zip(clean_batch, batch))
+
         payload = [{
-            "keywords": batch,
+            "keywords": clean_batch,
             "location_code": 2392,  # Japan
             "language_code": "ja",
         }]
 
-        try:
-            url = "https://api.dataforseo.com/v3/keywords_data/google_ads/search_volume/live"
-            resp = requests.post(url, auth=auth, json=payload, timeout=60)
-            resp.raise_for_status()
-            data = resp.json()
+        # リトライ付き
+        for attempt in range(3):
+            try:
+                url = "https://api.dataforseo.com/v3/keywords_data/google_ads/search_volume/live"
+                resp = requests.post(url, auth=auth, json=payload, timeout=60)
+                resp.raise_for_status()
+                data = resp.json()
 
-            tasks = data.get('tasks', [])
-            for task in tasks:
-                result_items = task.get('result') or []
-                for item in result_items:
-                    kw = item.get('keyword', '')
-                    sv = item.get('search_volume')
-                    sv_map[kw] = sv if sv is not None else 0
-            print(f"  バッチ {i//batch_size + 1}: {len(batch)}件送信 → {len(result_items)}件取得")
-        except Exception as e:
-            print(f"  バッチ {i//batch_size + 1} エラー: {e}")
-            import traceback
-            traceback.print_exc()
+                count = 0
+                for task in data.get('tasks', []):
+                    for item in (task.get('result') or []):
+                        kw = item.get('keyword', '')
+                        sv = item.get('search_volume')
+                        original_kw = kw_mapping.get(kw, kw)
+                        sv_map[original_kw] = sv if sv is not None else 0
+                        sv_map[kw] = sv if sv is not None else 0
+                        count += 1
+
+                print(f"  バッチ {i//batch_size + 1}: {len(clean_batch)}件送信 → {count}件取得")
+                if count > 0:
+                    break
+                elif attempt < 2:
+                    print(f"    → 0件、リトライ ({attempt+2}/3)...")
+                    time.sleep(3)
+            except Exception as e:
+                print(f"  バッチ {i//batch_size + 1} エラー: {e}")
+                if attempt < 2:
+                    time.sleep(3)
+
+        time.sleep(1)  # バッチ間ディレイ
 
     # サマリー
     has_volume = sum(1 for v in sv_map.values() if v and v > 0)

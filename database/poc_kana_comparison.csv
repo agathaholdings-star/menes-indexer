@@ -1,7 +1,7 @@
 salon_id,salon_name,official_url,title,current_kana,extracted_kana,final_kana,search_volume,source,changed
-1,Vicca+plus.,https://viccaplus.net/,TOP｜メンズエステ 恵比寿ヴィッカプラス -Vicca+plus.-,ビッカプラス,ビッカプラス,ビッカプラス,10,llm,
+1,Vicca+plus.,https://viccaplus.net/,TOP｜メンズエステ 恵比寿ヴィッカプラス -Vicca+plus.-,ビッカプラス,ヴィッカプラス,ヴィッカプラス,1000,llm,YES
 2,メンズエステ恵比寿・中目黒,https://mens-este.com/,メンズエステ 恵比寿,メンズエステ恵比寿・中目黒,恵比寿,恵比寿,246000,llm,YES
-3,東京目黒 高級セレブ熟女 恵比寿・中目黒・代官山ルーム,http://celebjukujo-meguro.com/,大人の女性による、寛容力と包容力のある美蝶が戯れる、高級店でのサービスを✨ずば抜けた才覚をもつセラピストによる究極の施術を受けることができる、90分コースをぜひご堪能ください。｜東京目黒高級セレブ熟女,東京目黒 高級セレブ熟女,東京目黒 高級セレブ熟女,東京目黒 高級セレブ熟女,0,llm,
+3,東京目黒 高級セレブ熟女 恵比寿・中目黒・代官山ルーム,http://celebjukujo-meguro.com/,大人の女性による、寛容力と包容力のある美蝶が戯れる、高級店でのサービスを✨ずば抜けた才覚をもつセラピストによる究極の施術を受けることができる、90分コースをぜひご堪能ください。｜東京目黒高級セレブ熟女,東京目黒 高級セレブ熟女,東京目黒高級セレブ熟女,東京目黒高級セレブ熟女,0,llm,YES
 4,Belle E,https://bellee-spa.com/,恵比寿 メンズエステ｜Belle É 〜ベルエ〜,ベル,ベルエ,ベルエ,1000,regex:wave_dash,YES
 5,恵比寿・中目黒ミネルバ,https://minerva-ebisu.com/,恵比寿・中目黒 メンズエステ　ミネルバ,ミネルバ,ミネルバ,ミネルバ,27100,llm,
 6,ELTERAS（エルテラス）恵比寿,https://esthetic-salon-tokyo.com/,新宿・大久保・高田馬場・池袋・恵比寿 メンズエステ｜ELTERAS TOKYO - エルテラス -,エルテラス,エルテラス,エルテラス,320,regex:hyphen,
@@ -10,46 +10,46 @@ salon_id,salon_name,official_url,title,current_kana,extracted_kana,final_kana,se
 9,THE HALF（ザ・ハーフ）恵比寿・中目黒,https://thehalf-ebisu.com/,高級メンズエステTHE HALF(ザ ハーフ)恵比寿・中目黒店,ザ・ハーフ,ザ ハーフ,ザ・ハーフ,0,regex:halfwidth_paren,YES
 10,Aroma Blanca,https://www.aroma-blanca.com/,メンズエステ「AromaBlanca-アロマブランカ-」｜トップ,アロマブランカ,アロマブランカ,アロマブランカ,6600,regex:hyphen,
 11,AQUA（アクア）中目黒・恵比寿店,https://www.nakameguro-aqua.com/,中目黒・恵比寿・代官山のリラクゼーションサロン 「AQUAアクア」,アクア,アクア,アクア,246000,llm,
-12,Organic SPA,https://organicspa.jp/,恵比寿 メンズエステ『オーガニックスパ』ラグジュアリーサロン,オーガニックスパ,オーガニックスパ,オーガニックスパ,1300,regex:nijuu_kakko,
+12,Organic SPA,https://organicspa.jp/,"[ERROR] HTTPSConnectionPool(host='organicspa.jp', port=443): Read timed out.",オーガニックスパ,,オーガニックスパ,1300,fetch_failed,
 13,Aroma Miely,https://aroma-miely.com/,Aroma Miely（アロマミエリー）-メンズエステ恵比寿 中目黒,アロマミーリィ,アロマミエリー,アロマミエリー,4400,regex:fullwidth_paren,YES
 14,リンダスパ恵比寿・中目黒,https://linda-spa.com/,【LINDA SPA】中目黒 麻布十番 六本木 三軒茶屋メンズエステ,リンダスパ,リンダスパ,リンダスパ,14800,llm,
-15,SAUDADE TOKYO 恵比寿ルーム,https://saudade-tokyo.com/,サウダージ東京 メンズエステ｜恵比寿 / 麻布十番 / 笹塚,サウダージトーキョー,サウダージ東京,サウダージ東京,720,llm,YES
+15,SAUDADE TOKYO 恵比寿ルーム,https://saudade-tokyo.com/,サウダージ東京 メンズエステ｜恵比寿 / 麻布十番 / 笹塚,サウダージトーキョー,サウダージ,サウダージ,49500,llm,YES
 16,POSEIDON（ポセイドン）恵比寿・中目黒・広尾,https://aroma-poseidon.com/,恵比寿・自由が丘メンズエステ「Poseidon（ポセイドン）」 | トップページ,ポセイドン,ポセイドン,ポセイドン,40500,regex:fullwidth_paren,
 17,東京【アロマモア】恵比寿店,https://aromamore.tokyo/,新宿・東新宿・銀座のメンズエステ【アロマモア】完全個室・日本人セラピスト,アロマモア,アロマモア,アロマモア,33100,regex:square_bracket,
 18,Aroma Blossom（アロマブラッサム）中目黒・恵比寿店,https://aroma-blossom.com/,恵比寿 大人のリラクゼーションサロン「アロマブラッサム」中目黒・大崎・日暮里,アロマブラッサム,アロマブラッサム,アロマブラッサム,8100,regex:kakko,
-19,メンエスのお姉さん 恵比寿ルーム,https://menes-no-onesan.com/,"[ERROR] HTTPSConnectionPool(host='menes-no-onesan.com', port=443): Max retries exceeded with url: / (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0x114276270>, 'Connection to menes-no-onesan.com timed out. (connect timeout=10)'))",メンエスのお姉さん,,メンエスのお姉さん,0,fetch_failed,
-20,ANAICHI（あないち）恵比寿 ・中目黒店,https://www.anaichi-este.com/,三軒茶屋・中目黒・渋谷・恵比寿・銀座・麻布十番のメンズエステ【ANAICHI あないち】,アナイチ,アナイチ,アナイチ,1000,llm,
+19,メンエスのお姉さん 恵比寿ルーム,https://menes-no-onesan.com/,"[ERROR] HTTPSConnectionPool(host='menes-no-onesan.com', port=443): Max retries exceeded with url: / (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0x10a6c6f60>, 'Connection to menes-no-onesan.com timed out. (connect timeout=10)'))",メンエスのお姉さん,,メンエスのお姉さん,0,fetch_failed,
+20,ANAICHI（あないち）恵比寿 ・中目黒店,https://www.anaichi-este.com/,三軒茶屋・中目黒・渋谷・恵比寿・銀座・麻布十番のメンズエステ【ANAICHI あないち】,アナイチ,あないち,あないち,2400,llm,YES
 21,恵比寿 Carinna,https://carinna-ebisu.com/,恵比寿メンズエステ Carinna〜カリナ〜,Carinna,カリナ,カリナ,135000,regex:wave_dash,YES
 22,SPA Real（レアル）中目黒・恵比寿,https://spa-real.com/,渋谷/中目黒/恵比寿｜メンズエステSPA Real(レアル),レアル,レアル,レアル,49500,regex:halfwidth_paren,
 23,AromaEmerald～アロマエメラルド～,https://a-emerald.com/,メンズエステ赤坂アロマエメラルド,アロマエメラルド,アロマエメラルド,アロマエメラルド,3600,llm,
-24,LIORA（リオラ）恵比寿ルーム,https://liora2024.com/,"[ERROR] HTTPSConnectionPool(host='liora2024.com', port=443): Max retries exceeded with url: / (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0x11400a0c0>, 'Connection to liora2024.com timed out. (connect timeout=10)'))",リオラ,,リオラ,12100,fetch_failed,
+24,LIORA（リオラ）恵比寿ルーム,https://liora2024.com/,"[ERROR] HTTPSConnectionPool(host='liora2024.com', port=443): Max retries exceeded with url: / (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0x109a07e60>, 'Connection to liora2024.com timed out. (connect timeout=10)'))",リオラ,,リオラ,12100,fetch_failed,
 25,神のエステ,https://www.kamipannoesthe.com/,新宿メンズエステ　神のエステ,神のエステ,神のエステ,神のエステ,74000,llm,
 26,大人の隠れ家 恵比寿店,https://www.otonakakurega.com/,恵比寿・渋谷のメンズエステ | 大人の隠れ家,大人の隠れ家,大人の隠れ家,大人の隠れ家,2900,llm,
 27,NAOMI SPA（ナオミスパ）恵比寿店,https://www.naomi-spa.com/,恵比寿・渋谷 メンズエステ NAOMI SPA - ナオミスパ -,ナオミスパ,ナオミスパ,ナオミスパ,5400,regex:hyphen,
 28,NEW+PLUS（ニュープラス）恵比寿ルーム,https://new-plus.site/,秋葉原メンズエステ NEW+PLUS ～ニュープラス～ 秋葉原の最高級メンズエステ | Home - ホーム,ニュープラス,ニュープラス,ニュープラス,260,llm,
-29,MoMo Spa（モモスパ） 恵比寿・中目黒店,https://www.momospa.tokyo/,"[ERROR] HTTPSConnectionPool(host='www.momospa.tokyo', port=443): Max retries exceeded with url: / (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0x104dc0b00>, 'Connection to www.momospa.tokyo timed out. (connect timeout=10)'))",モモスパ,,モモスパ,2400,fetch_failed,
+29,MoMo Spa（モモスパ） 恵比寿・中目黒店,https://www.momospa.tokyo/,"[ERROR] HTTPSConnectionPool(host='www.momospa.tokyo', port=443): Max retries exceeded with url: / (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0x10564b7a0>, 'Connection to www.momospa.tokyo timed out. (connect timeout=10)'))",モモスパ,,モモスパ,2400,fetch_failed,
 30,アロマプリメーラ,https://www.aroma-primera.com/,AROMA PRIMERA（アロマ プリメーラ） | 恵比寿メンズエステ,アロマプリメーラ,アロマ プリメーラ,アロマプリメーラ,390,regex:fullwidth_paren,YES
-31,AROMANI（アロマーニ）恵比寿,https://aromani-official.com/,"[ERROR] HTTPSConnectionPool(host='aromani-official.com', port=443): Max retries exceeded with url: / (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0x104dc0290>, 'Connection to aromani-official.com timed out. (connect timeout=10)'))",アロマーニ,,アロマーニ,140,fetch_failed,
+31,AROMANI（アロマーニ）恵比寿,https://aromani-official.com/,"[ERROR] HTTPSConnectionPool(host='aromani-official.com', port=443): Max retries exceeded with url: / (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0x10564bc20>, 'Connection to aromani-official.com timed out. (connect timeout=10)'))",アロマーニ,,アロマーニ,140,fetch_failed,
 32,Gran Matom（グランマトム）恵比寿,https://matom.net/,新宿・恵比寿・麻布十番メンズエステ グランマトム【GRAN MATOM】,グランマトム,グランマトム,グランマトム,1600,llm,
 33,激安の殿堂！奥様ホーテ♡ 恵比寿・代官山ルーム,http://okusamahote.com/,"東京最大級のコスパランキング　NO,1｜激安の殿堂！奥様ホーテ♡",激安の殿堂！奥様ホーテ,激安の殿堂！奥様ホーテ,激安の殿堂！奥様ホーテ,0,llm,
 34,lunalatte（ルナラテ）恵比寿ルーム,https://lunalatte-esthe.com/,Lunalatte -ルナラテ-,ルナラテ,ルナラテ,ルナラテ,0,regex:hyphen,
 35,ブルーダイヤモンド 恵比寿ルーム,http://esthe-blue-diamond.com/,ブルーダイヤモンド,ブルーダイヤモンド,ブルーダイヤモンド,ブルーダイヤモンド,9900,llm,
-36,JDスパ～女子大生エステ～恵比寿・代官山,https://www.jd-spa.com/,JDスパ〜女子大生エステ〜,JDスパ～女子大生エステ～,JDスパ～女子大生エステ～,JDスパ～女子大生エステ～,0,llm,
+36,JDスパ～女子大生エステ～恵比寿・代官山,https://www.jd-spa.com/,JDスパ〜女子大生エステ〜,JDスパ～女子大生エステ～,ジェイディースパ,ジェイディースパ,0,llm,YES
 37,桜満開 リラクゼーション,http://sakuram.jpest.net/,桜満開｜恵比寿西口のリラクゼーションサロン,桜満開リラクゼーション,桜満開,桜満開,8100,llm,YES
-38,shake spa 中目黒ルーム,https://www.shakespa-omori.com/,大森メンズエステ Shake Spa,シェイクスパ,シェイク スパ,シェイクスパ,1600,llm,YES
-39,MARVEL 離れ,https://marvel-salon.jp/,驚きと笑顔と感動､そしてきっかけを提供致します。｜-MARVEL- Owre's Spa,マーベル,マーベル オーレズ スパ,マーベルオーレズスパ,0,llm,YES
+38,shake spa 中目黒ルーム,https://www.shakespa-omori.com/,大森メンズエステ Shake Spa,シェイクスパ,シェイクスパ,シェイクスパ,1600,llm,
+39,MARVEL 離れ,https://marvel-salon.jp/,驚きと笑顔と感動､そしてきっかけを提供致します。｜-MARVEL- Owre's Spa,マーベル,マーベル,マーベル,60500,llm,
 40,ダイヤモンドラヴィエ〜La vie et〜恵比寿ルーム,http://esthe-lavieet.tokyo/,高級メンズエステ｜ダイヤモンドラヴィエ La vie et,ダイヤモンドラヴィエ,ダイヤモンドラヴィエ,ダイヤモンドラヴィエ,0,llm,
 41,BELLA SPA（ベラスパ）恵比寿Room,https://bella-spa-esthe.com/,ベラスパ ~BELLA SPA~ 高級メンズエステ、ベラスパ(BELLA | Home - ホーム,ベラスパ,ベラスパ,ベラスパ,4400,llm,
 42,Hawaii Spa 恵比寿,http://menes-hawaii.com/,HawaiiSpa 恵比寿|恵比寿の泡洗体メンズエステ メインページ,ハワイスパ,ハワイスパ,ハワイスパ,50,llm,
 43,ホワイトティアラ,https://white-tiara.com/,恵比寿メンズエステ｜White Teara-ホワイトティアラ-,ホワイトティアラ,ホワイトティアラ,ホワイトティアラ,40,regex:hyphen,
-44,Tokyo connection,https://connection-tokyo.com/,東京 恵比寿 メンエス 『Tokyo Connection』,トーキョーコネクション,トウキョウコネクション,トウキョウコネクション,0,llm,YES
+44,Tokyo connection,https://connection-tokyo.com/,東京 恵比寿 メンエス 『Tokyo Connection』,トーキョーコネクション,トーキョーコネクション,トーキョーコネクション,0,llm,
 45,聖人のエステ,https://seijinnoesthe.com/,中目黒・武蔵小山 メンズエステ｜聖人のエステ,聖人のエステ,聖人のエステ,聖人のエステ,0,llm,
 46,東京セレブ美魔女倶楽部 恵比寿ルーム,http://celeb-bimajo.com/,港区で生活をする美しい、スタイル、美貌、そして内面も磨き上げたセレブな美女を厳選しています。｜東京セレブ美魔女倶楽部,東京セレブ美魔女倶楽部,東京セレブ美魔女倶楽部,東京セレブ美魔女倶楽部,0,llm,
 47,CLUBマリア 恵比寿ルーム,http://clubmaria-ginza.com/,あえて顔出しさせない、高貴なメンズエステ｜CLUBマリア 銀座店,CLUBマリア,クラブマリア,クラブマリア,0,llm,YES
 48,LIEN,https://www.lien-tokyo.com/,メンズエステ リアン 恵比寿 新宿 麻布十番 品川 赤坂,リエン,リアン,リアン,60500,llm,YES
 49,恵比寿コマダム倶楽部,http://ebis-komadame.net/,恵比寿のメンズエステ｜恵比寿コマダム倶楽部,コマダム倶楽部,コマダム倶楽部,コマダム倶楽部,1900,llm,
 50,ALL+PLUS 恵比寿ROOM,https://o-plus.site/,秋葉原メンズエステ NEW+PLUS ～ニュープラス～ 秋葉原の最高級メンズエステ | Home - ホーム,オールプラス,ニュープラス,ニュープラス,260,llm,YES
-51,MASERATI（マセラティ）恵比寿ルーム・中目黒ルーム,http://esthe-maserati-ginza.com/,施術のプロフェッショナルなセラピストと高級感のあるルームで高級施術を堪能｜マセラティ銀座　　　北新地梅田店/   銀座本店,マセラティ,マセラティ銀座,マセラティ銀座,50,llm,YES
+51,MASERATI（マセラティ）恵比寿ルーム・中目黒ルーム,http://esthe-maserati-ginza.com/,施術のプロフェッショナルなセラピストと高級感のあるルームで高級施術を堪能｜マセラティ銀座　　　北新地梅田店/   銀座本店,マセラティ,マセラティ,マセラティ,165000,llm,
 52,銀座セレブ 信子 恵比寿ルーム,http://ginza-nobuko.com/,【ザ　銀座の王道施術】　銀座ブランド　高級レディ　の 施術をご堪能ください｜銀座セレブ 信子　ルーム&出張可能,銀座セレブ信子,銀座セレブ 信子,銀座セレブ信子,140,llm,YES
 53,恵比寿フラワー,http://ebis-flower.com/,恵比寿に咲いてた！感動のエグゼクティブスペシャル！！メンズエステ｜高級メンズエステ　恵比寿フラワー,フラワー,フラワー,フラワー,40500,llm,
 54,AromaLys恵比寿,https://mens-esute.jp/,メンズエステ 恵比寿「AromaLys」【公式】,アロマリス,アロマリス,アロマリス,0,llm,
@@ -58,17 +58,17 @@ salon_id,salon_name,official_url,title,current_kana,extracted_kana,final_kana,se
 57,大人のやすらぎSPA 恵比寿,https://www.otonaspa-tokyo.com/,大人のやすらぎSPA|恵比寿・銀座完全個室リラクゼーションサロン,大人のやすらぎスパ,大人のやすらぎスパ,大人のやすらぎスパ,1000,llm,
 58,DAHLIA（ダリア）恵比寿ルーム,https://gotandadahlia.com/,【公式】五反田　メンズエステ　DAHLIA,ダリア,ダリア,ダリア,110000,llm,
 59,LUXEセレスティンアロマージュ 恵比寿,http://celesthine-aromage.tokyo/,高級メンズエステ｜セレスティンアロマージュ,リュクスセレスティンアロマージュ,セレスティンアロマージュ,セレスティンアロマージュ,0,llm,YES
-60,激安の殿堂！お姉さまホーテ♡ 恵比寿ルーム,http://onesamahote.tokyo/,激安のメンズエステ｜激安の殿堂！お姉さまホーテ♡,激安の殿堂！お姉さまホーテ,激安の殿堂！お姉さまホーテ♡,激安の殿堂！お姉さまホーテ♡,0,llm,YES
-61,AROMA エルメス,http://aromahermes.com/,最高峰のブランド　エルメス｜AROMA エルメス,アロマエルメス,アロマ エルメス,アロマエルメス,0,llm,YES
+60,激安の殿堂！お姉さまホーテ♡ 恵比寿ルーム,http://onesamahote.tokyo/,激安のメンズエステ｜激安の殿堂！お姉さまホーテ♡,激安の殿堂！お姉さまホーテ,お姉さまホーテ,お姉さまホーテ,140,llm,YES
+61,AROMA エルメス,http://aromahermes.com/,最高峰のブランド　エルメス｜AROMA エルメス,アロマエルメス,エルメス,エルメス,550000,llm,YES
 62,中目黒グレース～GRACE～,https://grace-meguro.com/,目黒メンズエステ GRACE-グレース- 都会の喧騒に現れた、大人の隠れ家 | Home - ホーム,中目黒グレース,グレース,グレース,74000,regex:hyphen,YES
 63,B-QINS（ビークインズ）中目黒店,http://bqins.jp/,三軒茶屋・自由が丘・中目黒メンズエステ B-Qins(ビークインズ),ビークインズ,ビークインズ,ビークインズ,880,regex:halfwidth_paren,
-64,小悪魔Spa Tokyo 恵比寿ルーム,https://mens-esthe-aroma.site/,新宿・五反田・蒲田高級メンズエステ 小悪魔Spa Tokyo,小悪魔スパ トーキョー,小悪魔スパ Tokyo,小悪魔スパTokyo,880,llm,YES
-65,TOKYOエステ,https://www.tokyoesthe.tokyo/,恵比寿中目黒メンズエステ TOKYOエステ,トウキョウエステ,トウキョウエステ,トウキョウエステ,0,llm,
-66,aroma vicca,https://aromavicca.net/,恵比寿メンズエステ アロマヴィッカ -aroma vicca-,アロマ ヴィッカ,アロマヴィッカ,アロマ ヴィッカ,880,llm,YES
+64,小悪魔Spa Tokyo 恵比寿ルーム,https://mens-esthe-aroma.site/,新宿・五反田・蒲田高級メンズエステ 小悪魔Spa Tokyo,小悪魔スパ トーキョー,小悪魔スパ トーキョー,小悪魔スパトーキョー,0,llm,
+65,TOKYOエステ,https://www.tokyoesthe.tokyo/,恵比寿中目黒メンズエステ TOKYOエステ,トウキョウエステ,トーキョーエステ,トーキョーエステ,0,llm,YES
+66,aroma vicca,https://aromavicca.net/,恵比寿メンズエステ アロマヴィッカ -aroma vicca-,アロマ ヴィッカ,アロマヴィッカ,アロマヴィッカ,880,llm,YES
 67,EMPRESS,https://empress-ebisu.net/,東京・恵比寿・中目黒　ニューハーフメンズエステ｜EMPRESS　(エンプレス),エンプレス,エンプレス,エンプレス,4400,regex:halfwidth_paren,
 68,emoSPA,https://t5h.info/emospa02,高級メンズエステ emospa エモスパはメンズエステの聖地として知られる恵比寿エリアの高級オイルマッサージ店です。,エモスパ,エモスパ,エモスパ,590,llm,
 69,恵比寿フェラーリ,http://ebis-ferrari.com/,高級で高価なラグジュアリーメンズエステ  ●容姿●接客●ハイセンス●癒し がすべてをそろえた  成功者が集う、ハイクオリティーメンズエステ｜高級メンズエステ　恵比寿Ferrari　【フェラーリ】,フェラーリ,フェラーリ,フェラーリ,165000,regex:square_bracket,
-70,MaroAri TAHHA（マロアリ・タッハ） 中目黒店,https://tahha.tokyo/,銀座・八丁堀・新富町メンズエステ|MaroAri TAHHA-マロアリ・タッハ-,マロアリ・タッハ,マロアリ・タッハ,マロアリ・タッハ,2400,regex:hyphen,
-71,Lino Ebisu,https://www.linoebisu.com/,Lino Ebisu | 「とっておきの癒し時間」恵比寿駅すぐの至高の癒し空間,リノエビス,リノ エビス,リノエビス,140,llm,YES
+70,MaroAri TAHHA（マロアリ・タッハ） 中目黒店,https://tahha.tokyo/,銀座・八丁堀・新富町メンズエステ|MaroAri TAHHA-マロアリ・タッハ-,マロアリ・タッハ,マロアリ・タッハ,マロアリ・タッハ,0,regex:hyphen,
+71,Lino Ebisu,https://www.linoebisu.com/,Lino Ebisu | 「とっておきの癒し時間」恵比寿駅すぐの至高の癒し空間,リノエビス,リノ,リノ,33100,llm,YES
 72,Candy Spa（キャンディースパ） 恵比寿,https://candy-s-candy.men-es.jp/,品川・上野のメンズエステサロン「Candy Spa (キャンディースパ)」｜アロママッサージリラクゼーション,キャンディースパ,キャンディースパ,キャンディースパ,70,regex:halfwidth_paren,
 73,&LS,https://andls-salon.com/,&LS -アンドルクス- | 恵比寿メンズエステ,&LS,アンドルクス,アンドルクス,170,regex:hyphen,YES

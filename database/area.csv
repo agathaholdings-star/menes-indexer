@@ -1,0 +1,5 @@
+area_id,area_name,area_slug,prefecture_id,salon_count,source_url
+1,"恵比寿",ebisu,13,74,https://www.esthe-ranking.jp/ebisu/
+2,"渋谷",shibuya,13,65,https://www.esthe-ranking.jp/shibuya/
+3,"新宿",shinjuku,13,120,https://www.esthe-ranking.jp/shinjuku/
+4,"博多",hakata,40,45,https://www.esthe-ranking.jp/hakata/
