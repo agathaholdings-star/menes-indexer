@@ -38,12 +38,12 @@ HEADERS = {
 }
 LLM_MODEL = "claude-haiku-4-5-20251001"
 
-# テスト対象: 恵比寿（東京都）
+# テスト対象: 博多（福岡県）
 TARGET_AREA = {
-    "area_id": 198,
-    "slug": "ebisu",
-    "prefecture_id": 13,
-    "data_source_url": "/ebisu/",
+    "area_id": 787,
+    "slug": "hakata",
+    "prefecture_id": 40,
+    "data_source_url": "/hakata/",
 }
 
 MAX_THERAPISTS_PER_SALON = 5  # テスト制限
@@ -380,6 +380,20 @@ def main():
 
         # 4. ルールベースフォールバック（エリア名除去等）
         display_name = normalize_display_name(raw_name)
+
+        # ルールベース後にまだ英語が残ってたらLLMで変換
+        if re.search(r'[A-Za-z]', display_name):
+            try:
+                llm_kana = extract_kana_with_llm(
+                    title or raw_name, raw_name, llm_client)
+                if llm_kana and llm_kana not in ('???', '該当なし'):
+                    salon['display_name'] = llm_kana
+                    stats['title_llm'] += 1
+                    print(f"    [rule→LLM] {raw_name} → {llm_kana}")
+                    continue
+            except Exception as e:
+                print(f"    [rule→LLM error] {raw_name}: {e}")
+
         salon['display_name'] = display_name
         stats['rule'] += 1
         print(f"    [rule] {raw_name} → {display_name}")
