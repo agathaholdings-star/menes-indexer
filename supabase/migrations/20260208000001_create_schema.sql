@@ -47,9 +47,9 @@ CREATE TABLE shops (
     id              int8 PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     source_id       uuid,                       -- 外部ID（esthe-ranking等）
     name            text NOT NULL,              -- 'Vicca+plus.'（生の店名）
-    name_kana       text,                       -- 'ヴィッカプラス'（SEO/検索用カナ）
+    display_name    text,                       -- 'エルテラス'（正規化済み店名、タイトル・検索用）
     slug            text UNIQUE,                -- 'vicca-plus'（URL用）
-    seo_title       text,                       -- '{name_kana} 口コミ | メンエスインデクサ'
+    seo_title       text,                       -- '{display_name} 口コミ | メンエスインデクサ'
     salon_overview  text,                       -- AI生成 400-600文字
     business_type   text,                       -- '店舗' / '出張' / '店舗＆出張'
     access          text,                       -- '恵比寿駅東口徒歩5分'
@@ -71,7 +71,7 @@ CREATE TABLE shops (
 );
 
 CREATE INDEX idx_shops_slug ON shops(slug);
-CREATE INDEX idx_shops_name_kana ON shops(name_kana);
+CREATE INDEX idx_shops_display_name ON shops(display_name);
 CREATE INDEX idx_shops_domain ON shops(domain);
 
 -- ============================================================
