@@ -97,6 +97,60 @@ export async function getShopBySlug(slug: string): Promise<Shop | null> {
 }
 
 // =============================================================================
+// Shop Area Info (for breadcrumbs)
+// =============================================================================
+
+export async function getShopAreaInfo(shopId: number): Promise<{
+  areaName: string;
+  areaSlug: string;
+  prefName: string;
+  prefSlug: string;
+} | null> {
+  let { data: shopArea } = await supabase
+    .from("shop_areas")
+    .select("area_id")
+    .eq("shop_id", shopId)
+    .eq("is_primary", true)
+    .limit(1)
+    .single();
+
+  if (!shopArea) {
+    // fallback: any area
+    const { data: anyArea } = await supabase
+      .from("shop_areas")
+      .select("area_id")
+      .eq("shop_id", shopId)
+      .limit(1)
+      .single();
+    if (!anyArea) return null;
+    shopArea = anyArea;
+  }
+
+  const { data: area } = await supabase
+    .from("areas")
+    .select("name, slug, prefecture_id")
+    .eq("id", shopArea.area_id)
+    .single();
+
+  if (!area) return null;
+
+  const { data: pref } = await supabase
+    .from("prefectures")
+    .select("name, slug")
+    .eq("id", area.prefecture_id)
+    .single();
+
+  if (!pref) return null;
+
+  return {
+    areaName: area.name,
+    areaSlug: area.slug,
+    prefName: pref.name,
+    prefSlug: pref.slug,
+  };
+}
+
+// =============================================================================
 // Therapists
 // =============================================================================
 

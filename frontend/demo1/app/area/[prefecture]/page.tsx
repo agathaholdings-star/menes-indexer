@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MapPin, ChevronRight, Store } from "lucide-react";
@@ -6,6 +7,20 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { Sidebar } from "@/components/layout/sidebar";
 import { getPrefectureBySlug, getAreasByPrefectureId } from "@/lib/supabase-data";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ prefecture: string }>;
+}): Promise<Metadata> {
+  const { prefecture } = await params;
+  const pref = await getPrefectureBySlug(prefecture);
+  if (!pref) return {};
+  return {
+    title: `${pref.name}のメンズエステ | メンエスインデクサ`,
+    description: `${pref.name}エリアのメンズエステ店舗・セラピスト情報を掲載。口コミやレーダーチャートで自分に合ったセラピストを見つけよう。`,
+  };
+}
 
 export default async function AreaPrefecturePage({
   params,

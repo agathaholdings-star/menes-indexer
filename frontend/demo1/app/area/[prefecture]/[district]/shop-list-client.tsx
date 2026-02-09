@@ -168,41 +168,55 @@ export function ShopListPageClient({
                               <div className="flex items-start justify-between">
                                 <div>
                                   <h3 className="font-bold text-lg">{shop.name}</h3>
-                                  <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                                    <MapPin className="h-3 w-3" />
-                                    <span>{shop.access}</span>
+                                  {shop.access && (
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                                      <MapPin className="h-3 w-3" />
+                                      <span>{shop.access}</span>
+                                    </div>
+                                  )}
+                                </div>
+                                {shop.averageScore > 0 && (
+                                  <div className="flex items-center gap-1 bg-primary/10 px-2 py-1 rounded">
+                                    <Star className="h-4 w-4 fill-primary text-primary" />
+                                    <span className="font-bold text-primary">{shop.averageScore}</span>
                                   </div>
-                                </div>
-                                <div className="flex items-center gap-1 bg-primary/10 px-2 py-1 rounded">
-                                  <Star className="h-4 w-4 fill-primary text-primary" />
-                                  <span className="font-bold text-primary">{shop.averageScore}</span>
-                                </div>
+                                )}
                               </div>
 
                               <div className="flex flex-wrap gap-4 mt-3 text-sm text-muted-foreground">
-                                <div className="flex items-center gap-1">
-                                  <Clock className="h-3 w-3" />
-                                  <span>{shop.hours}</span>
-                                </div>
-                                <div className="flex items-center gap-1">
-                                  <Users className="h-3 w-3" />
-                                  <span>{shop.therapistCount}人</span>
-                                </div>
-                                <div className="flex items-center gap-1">
-                                  <MessageSquare className="h-3 w-3" />
-                                  <span>{shop.reviewCount}件</span>
-                                </div>
+                                {shop.hours && (
+                                  <div className="flex items-center gap-1">
+                                    <Clock className="h-3 w-3" />
+                                    <span>{shop.hours}</span>
+                                  </div>
+                                )}
+                                {shop.therapistCount > 0 && (
+                                  <div className="flex items-center gap-1">
+                                    <Users className="h-3 w-3" />
+                                    <span>{shop.therapistCount}人</span>
+                                  </div>
+                                )}
+                                {shop.reviewCount > 0 && (
+                                  <div className="flex items-center gap-1">
+                                    <MessageSquare className="h-3 w-3" />
+                                    <span>{shop.reviewCount}件</span>
+                                  </div>
+                                )}
                               </div>
 
-                              <p className="text-sm mt-2">{shop.priceRange}</p>
+                              {shop.priceRange && (
+                                <p className="text-sm font-medium mt-2">{shop.priceRange}</p>
+                              )}
 
-                              <div className="flex flex-wrap gap-1 mt-2">
-                                {shop.genres.map(genre => (
-                                  <Badge key={genre} variant="secondary" className="text-xs">
-                                    {genre}
-                                  </Badge>
-                                ))}
-                              </div>
+                              {shop.genres.length > 0 && (
+                                <div className="flex flex-wrap gap-1 mt-2">
+                                  {shop.genres.map(genre => (
+                                    <Badge key={genre} variant="secondary" className="text-xs">
+                                      {genre}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
 
                               {/* Popular Therapists */}
                               {shopTherapists.length > 0 && (

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useState, useRef } from "react";
 import {
   Search,
   Menu,
@@ -38,6 +39,16 @@ export function SiteHeader() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [memberLevel, setMemberLevel] = useState<"free" | "standard" | "vip">("free");
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const router = useRouter();
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const q = searchQuery.trim();
+    if (q) {
+      router.push(`/search?q=${encodeURIComponent(q)}`);
+    }
+  };
 
   const [monthlyReviewCount, setMonthlyReviewCount] = useState(1);
 
@@ -99,16 +110,18 @@ export function SiteHeader() {
           </Link>
 
           {/* Search Bar - Desktop */}
-          <div className="hidden max-w-md flex-1 md:flex">
+          <form onSubmit={handleSearch} className="hidden max-w-md flex-1 md:flex">
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 type="search"
                 placeholder="店舗名・セラピスト名で検索"
                 className="w-full pl-10"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-          </div>
+          </form>
 
           {/* Navigation - Desktop */}
           <nav className="hidden items-center gap-1 lg:flex">
@@ -348,14 +361,16 @@ export function SiteHeader() {
                   )}
 
                   {/* Mobile Search */}
-                  <div className="relative">
+                  <form onSubmit={handleSearch} className="relative">
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       type="search"
                       placeholder="店舗名・セラピスト名で検索"
                       className="pl-10"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
                     />
-                  </div>
+                  </form>
 
                   {/* Mobile Navigation */}
                   <nav className="flex flex-col gap-1">

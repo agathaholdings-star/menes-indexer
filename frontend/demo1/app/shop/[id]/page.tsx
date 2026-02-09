@@ -1,11 +1,26 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ShopPageClient } from "./shop-page-client";
-import { getShopById, getShopBySlug, getTherapistsByShopId } from "@/lib/supabase-data";
+import { getShopById, getShopBySlug, getTherapistsByShopId, getShopAreaInfo } from "@/lib/supabase-data";
 import type { Shop as DbShop, Therapist as DbTherapist } from "@/types/database";
 import type { Shop, Therapist, Review } from "@/lib/data";
 
 interface ShopPageProps {
   params: Promise<{ id: string }>;
+}
+
+export async function generateMetadata({ params }: ShopPageProps): Promise<Metadata> {
+  const { id } = await params;
+  const isNumeric = /^\d+$/.test(id);
+  const dbShop = isNumeric ? await getShopById(Number(id)) : await getShopBySlug(id);
+  if (!dbShop) return {};
+  const name = dbShop.display_name || dbShop.name;
+  const areaInfo = await getShopAreaInfo(dbShop.id);
+  const areaText = areaInfo ? `${areaInfo.prefName}${areaInfo.areaName}` : "";
+  return {
+    title: dbShop.seo_title || `${name} | ${areaText}メンズエステ | メンエスインデクサ`,
+    description: `${name}の店舗情報・セラピスト一覧・口コミ。${areaText}${dbShop.access ? `（${dbShop.access}）` : ""}`,
+  };
 }
 
 // DBのShop → フロントのShop型
@@ -92,8 +107,22 @@ export default async function ShopPage({ params }: ShopPageProps) {
   );
   shop.therapistCount = therapists.length;
 
+  // エリア情報取得（パンくず用）
+  const areaInfo = await getShopAreaInfo(dbShop.id);
+
   // レビューは未実装のため空配列
   const shopReviews: Review[] = [];
 
-  return <ShopPageClient shop={shop} therapists={therapists} shopReviews={shopReviews} />;
+  return (
+    <ShopPageClient
+      shop={shop}
+      therapists={therapists}
+      shopReviews={shopReviews}
+      officialUrl={dbShop.official_url || null}
+      areaName={areaInfo?.areaName || ""}
+      areaSlug={areaInfo?.areaSlug || ""}
+      prefName={areaInfo?.prefName || ""}
+      prefSlug={areaInfo?.prefSlug || ""}
+    />
+  );
 }

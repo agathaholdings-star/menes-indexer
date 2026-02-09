@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import {
   Search,
@@ -97,6 +98,26 @@ function SearchContent() {
     }
     fetchAreas();
   }, []);
+
+  // 店舗検索結果（qパラメータがある場合）
+  const [shopResults, setShopResults] = useState<{ id: number; name: string; display_name: string | null; access: string | null; image_url: string | null; slug: string | null }[]>([]);
+  const [shopSearchLoading, setShopSearchLoading] = useState(false);
+
+  useEffect(() => {
+    if (!initialQuery) return;
+    setShopSearchLoading(true);
+    async function searchShops() {
+      const { data } = await supabase
+        .from("shops")
+        .select("id, name, display_name, access, image_url, slug")
+        .eq("is_active", true)
+        .or(`name.ilike.*${initialQuery}*,display_name.ilike.*${initialQuery}*`)
+        .limit(12);
+      setShopResults(data || []);
+      setShopSearchLoading(false);
+    }
+    searchShops();
+  }, [initialQuery]);
 
   // フィルター状態
   const [query, setQuery] = useState(initialQuery);
@@ -462,6 +483,49 @@ function SearchContent() {
               </CardContent>
             </Card>
           </div>
+
+          {/* 店舗検索結果 */}
+          {initialQuery && (
+            <div className="mb-6">
+              <h2 className="text-lg font-bold mb-3">
+                「{initialQuery}」の店舗検索結果
+                {!shopSearchLoading && <span className="text-sm font-normal text-muted-foreground ml-2">{shopResults.length}件</span>}
+              </h2>
+              {shopSearchLoading ? (
+                <div className="animate-pulse h-24 bg-muted rounded" />
+              ) : shopResults.length > 0 ? (
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {shopResults.map((shop) => (
+                    <Link key={shop.id} href={`/shop/${shop.slug || shop.id}`}>
+                      <Card className="hover:shadow-md transition-shadow">
+                        <CardContent className="p-3 flex gap-3">
+                          <div className="relative w-16 h-16 rounded overflow-hidden bg-muted shrink-0">
+                            <Image
+                              src={shop.image_url || "/placeholder.svg"}
+                              alt={shop.display_name || shop.name}
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="font-medium truncate">{shop.display_name || shop.name}</p>
+                            {shop.access && (
+                              <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                                <MapPin className="h-3 w-3 shrink-0" />
+                                <span className="truncate">{shop.access}</span>
+                              </p>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">該当する店舗が見つかりませんでした</p>
+              )}
+            </div>
+          )}
 
           <div className="flex gap-6">
             {/* メインコンテンツ */}

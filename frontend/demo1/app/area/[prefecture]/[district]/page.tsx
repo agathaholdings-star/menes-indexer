@@ -1,9 +1,25 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { therapistTypes, bodyTypes } from "@/lib/data";
 import { ShopListPageClient } from "./shop-list-client";
 import { getPrefectureBySlug, getAreaBySlug, getShopsByAreaSlug } from "@/lib/supabase-data";
 import type { Shop as DbShop } from "@/types/database";
 import type { Shop } from "@/lib/data";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ prefecture: string; district: string }>;
+}): Promise<Metadata> {
+  const { prefecture, district } = await params;
+  const pref = await getPrefectureBySlug(prefecture);
+  const area = await getAreaBySlug(district);
+  if (!pref || !area) return {};
+  return {
+    title: area.seo_title || `${area.name}のメンズエステ | ${pref.name} | メンエスインデクサ`,
+    description: area.seo_description || `${pref.name}${area.name}エリアのメンズエステ${area.salon_count || 0}店舗を掲載。料金・アクセス・口コミ情報で比較。`,
+  };
+}
 
 interface ShopListPageProps {
   params: Promise<{ prefecture: string; district: string }>;
