@@ -97,11 +97,21 @@ export default async function TherapistPage({ params }: TherapistPageProps) {
     therapistName: therapist.name,
     shopName: therapist.shopName,
     score: r.score || 0,
-    createdAt: new Date(r.created_at).toLocaleDateString("ja-JP"),
+    typeId: r.looks_type || "",
+    bodyType: r.body_type || "",
+    serviceType: r.service_level || "",
+    parameters: {
+      conversation: r.param_conversation || 3,
+      distance: r.param_distance || 3,
+      technique: r.param_technique || 3,
+      personality: r.param_personality || 3,
+    },
     tags: [r.looks_type, r.body_type].filter(Boolean),
     q1FirstImpression: r.comment_first_impression || "",
     q2Service: r.comment_service || "",
-    q3Advice: r.comment_advice || "",
+    q3Notes: r.comment_advice || "",
+    createdAt: new Date(r.created_at).toLocaleDateString("ja-JP"),
+    userId: r.user_id || "",
   }));
 
   return <TherapistPageClient therapist={therapist} reviews={reviews} />;

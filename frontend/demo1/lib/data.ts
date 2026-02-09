@@ -147,6 +147,7 @@ export interface Review {
   q3Notes: string;
   createdAt: string;
   userId: string;
+  userName?: string;
 }
 
 export interface User {

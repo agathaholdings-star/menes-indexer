@@ -16,8 +16,8 @@ import { CompositionChart } from "@/components/therapist/composition-chart";
 import { ReviewList } from "@/components/therapist/review-list";
 import { Recommendations } from "@/components/therapist/recommendations";
 import { ReviewWizardModal } from "@/components/review/review-wizard-modal";
-import { useAuth } from "@/lib/auth-context";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
+import { useTier } from "@/lib/hooks/use-tier";
 import type { Therapist, Review } from "@/lib/data";
 
 interface TherapistPageClientProps {
@@ -28,8 +28,8 @@ interface TherapistPageClientProps {
 export function TherapistPageClient({ therapist, reviews }: TherapistPageClientProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
-  const [isLocked] = useState(true);
-  const { user: authUser } = useAuth();
+  const { permissions, authUser, membershipType, monthlyReviewCount } = useTier();
+  const isLocked = !permissions.canViewReviewBody;
   const [isFavorited, setIsFavorited] = useState(false);
   const [favLoading, setFavLoading] = useState(false);
 
@@ -286,6 +286,8 @@ export function TherapistPageClient({ therapist, reviews }: TherapistPageClientP
         open={isReviewModalOpen}
         onOpenChange={setIsReviewModalOpen}
         preselectedTherapistId={therapist.id}
+        memberType={membershipType as "free" | "standard" | "vip"}
+        monthlyReviewCount={monthlyReviewCount}
       />
     </div>
   );

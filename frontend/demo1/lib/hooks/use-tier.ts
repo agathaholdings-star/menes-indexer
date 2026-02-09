@@ -9,6 +9,7 @@ export function useTier() {
   const { user: authUser } = useAuth();
   const [membershipType, setMembershipType] = useState<string>("free");
   const [monthlyReviewCount, setMonthlyReviewCount] = useState(0);
+  const [viewPermissionUntil, setViewPermissionUntil] = useState<string | undefined>();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -16,13 +17,14 @@ export function useTier() {
     const supabase = createSupabaseBrowser();
     supabase
       .from("profiles")
-      .select("membership_type, monthly_review_count")
+      .select("membership_type, monthly_review_count, view_permission_until")
       .eq("id", authUser.id)
       .single()
       .then(({ data }) => {
         if (data) {
           setMembershipType(data.membership_type || "free");
           setMonthlyReviewCount(data.monthly_review_count || 0);
+          setViewPermissionUntil(data.view_permission_until || undefined);
         }
         setLoading(false);
       });
@@ -34,6 +36,7 @@ export function useTier() {
     name: "",
     memberType: membershipType as "free" | "standard" | "vip",
     monthlyReviewCount,
+    viewingExpiry: viewPermissionUntil,
     totalReviewCount: 0,
     registeredAt: "",
     favorites: [],
@@ -42,5 +45,5 @@ export function useTier() {
   const effectiveTier: EffectiveTier = authUser ? getEffectiveTier(tierUser) : "free";
   const permissions = tierPermissions[effectiveTier];
 
-  return { effectiveTier, permissions, loading, authUser };
+  return { effectiveTier, permissions, loading, authUser, membershipType, monthlyReviewCount };
 }

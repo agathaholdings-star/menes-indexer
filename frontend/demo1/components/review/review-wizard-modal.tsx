@@ -216,6 +216,21 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
 
         if (error) {
           console.error("Review insert failed:", error);
+        } else {
+          // Review-to-Earn: プロフィール更新
+          const updates: Record<string, unknown> = {
+            monthly_review_count: monthlyReviewCount + 1,
+          };
+          // 無料会員: 3日間の閲覧権限を付与
+          if (memberType === "free") {
+            const until = new Date();
+            until.setDate(until.getDate() + 3);
+            updates.view_permission_until = until.toISOString();
+          }
+          await supabase
+            .from("profiles")
+            .update(updates)
+            .eq("id", authUser.id);
         }
       } catch (err) {
         console.error("Review submission error:", err);
