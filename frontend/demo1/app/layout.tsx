@@ -8,10 +8,33 @@ import './globals.css'
 const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://menes-indexer.com';
+
 export const metadata: Metadata = {
-  title: 'メンエスインデクサ | 次世代メンズエステ口コミ',
-  description: 'タイプで選ぶ次世代メンズエステ口コミプラットフォーム',
-  generator: 'v0.app',
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: 'メンエスインデクサ | 次世代メンズエステ口コミ',
+    template: '%s | メンエスインデクサ',
+  },
+  description: 'タイプで選ぶ次世代メンズエステ口コミプラットフォーム。エリア・タイプ・スタイルで理想のセラピストを発見。',
+  keywords: ['メンズエステ', '口コミ', 'メンエス', 'セラピスト', 'レビュー'],
+  openGraph: {
+    type: 'website',
+    locale: 'ja_JP',
+    siteName: 'メンエスインデクサ',
+    title: 'メンエスインデクサ | 次世代メンズエステ口コミ',
+    description: 'タイプで選ぶ次世代メンズエステ口コミプラットフォーム。エリア・タイプ・スタイルで理想のセラピストを発見。',
+    url: siteUrl,
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'メンエスインデクサ',
+    description: 'タイプで選ぶ次世代メンズエステ口コミプラットフォーム',
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
   icons: {
     icon: [
       {

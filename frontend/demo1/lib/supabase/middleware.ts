@@ -31,7 +31,7 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   // 未ログインで保護ページにアクセスした場合リダイレクト
-  const protectedPaths = ["/mypage"];
+  const protectedPaths = ["/mypage", "/admin"];
   const isProtected = protectedPaths.some((path) =>
     request.nextUrl.pathname.startsWith(path)
   );

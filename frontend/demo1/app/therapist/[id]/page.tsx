@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { TherapistPageClient } from "./therapist-page-client";
 import { supabase } from "@/lib/supabase";
@@ -5,6 +6,28 @@ import type { Therapist, Review } from "@/lib/data";
 
 interface TherapistPageProps {
   params: Promise<{ id: string }>;
+}
+
+export async function generateMetadata({ params }: TherapistPageProps): Promise<Metadata> {
+  const { id } = await params;
+  if (!/^\d+$/.test(id)) return {};
+  const { data } = await supabase
+    .from("therapists")
+    .select("name, age, shop_id")
+    .eq("id", Number(id))
+    .single();
+  if (!data) return {};
+  const { data: shop } = await supabase
+    .from("shops")
+    .select("display_name, name")
+    .eq("id", data.shop_id)
+    .single();
+  const shopName = shop?.display_name || shop?.name || "";
+  const desc = `${data.name}${data.age ? `（${data.age}歳）` : ""}${shopName ? ` | ${shopName}` : ""}の詳細・口コミ`;
+  return {
+    title: `${data.name} | ${shopName}`,
+    description: desc,
+  };
 }
 
 export default async function TherapistPage({ params }: TherapistPageProps) {
