@@ -15,17 +15,6 @@ const typeIcons: Record<string, React.ElementType> = {
   yoen: Flame,
 };
 
-// セラピスト数（DB投入後に実数に置き換え予定）
-const typeCounts: Record<string, number> = {
-  idol: 1250,
-  seiso: 980,
-  gal: 870,
-  model: 760,
-  imouto: 1100,
-  yoen: 640,
-};
-const getTherapistCount = (typeId: string) => typeCounts[typeId] || 0;
-
 export function TypeGrid() {
   return (
     <section className="mt-10">
@@ -42,12 +31,11 @@ export function TypeGrid() {
           </p>
         </div>
       </div>
-      
+
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
         {therapistTypes.map((type) => {
           const Icon = typeIcons[type.id] || Sparkles;
-          const count = getTherapistCount(type.id);
-          
+
           return (
             <Link key={type.id} href={`/search?type=${type.id}`}>
               <Card className="group h-full cursor-pointer border-2 border-transparent transition-all duration-300 hover:border-primary/30 hover:shadow-lg hover:-translate-y-1">
@@ -59,10 +47,7 @@ export function TypeGrid() {
                   <span className="mt-1 text-xs text-muted-foreground line-clamp-1">
                     {type.description}
                   </span>
-                  <span className="mt-3 text-xs font-medium text-primary">
-                    {count.toLocaleString()}人
-                  </span>
-                  <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="mt-3 flex items-center gap-1 text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
                     探す <ArrowRight className="h-3 w-3" />
                   </div>
                 </CardContent>

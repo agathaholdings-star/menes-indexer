@@ -42,7 +42,7 @@ import {
 } from "@/components/ui/dialog";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
-import { therapists, therapistTypes } from "@/lib/data";
+import { therapistTypes } from "@/lib/data";
 import { supabase } from "@/lib/supabase";
 
 type MemberLevel = "guest" | "free" | "freePosted" | "standard" | "vip";
@@ -51,6 +51,15 @@ interface PrefectureOption {
   id: string;
   name: string;
   districts: string[];
+}
+
+interface DBTherapist {
+  id: number;
+  name: string;
+  age: number | null;
+  image_url: string | null;
+  shop_name: string;
+  shop_access: string | null;
 }
 
 function SearchContent() {
@@ -119,9 +128,43 @@ function SearchContent() {
     searchShops();
   }, [initialQuery]);
 
+  // セラピスト検索結果（DBから取得）
+  const [dbTherapists, setDbTherapists] = useState<DBTherapist[]>([]);
+  const [therapistLoading, setTherapistLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchTherapists() {
+      setTherapistLoading(true);
+      const { data } = await supabase
+        .from("therapists")
+        .select("id, name, age, image_urls, shops(name, display_name, access)")
+        .eq("status", "active")
+        .order("created_at", { ascending: false })
+        .limit(100);
+      if (data) {
+        setDbTherapists(
+          data.map((t) => {
+            const imgs = t.image_urls as string[] | null;
+            const shop = t.shops as { name: string; display_name: string | null; access: string | null } | null;
+            return {
+              id: Number(t.id),
+              name: t.name.replace(/\s*\(.*\)$/, ""),
+              age: t.age,
+              image_url: imgs?.[0] || null,
+              shop_name: shop?.display_name || shop?.name || "",
+              shop_access: shop?.access || null,
+            };
+          })
+        );
+      }
+      setTherapistLoading(false);
+    }
+    fetchTherapists();
+  }, []);
+
   // フィルター状態
   const [query, setQuery] = useState(initialQuery);
-  const [sortBy, setSortBy] = useState("reviews");
+  const [sortBy, setSortBy] = useState("newest");
   const [selectedArea, setSelectedArea] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [shopName, setShopName] = useState("");
@@ -155,37 +198,13 @@ function SearchContent() {
   const currentArea = areas.find((a) => a.id === selectedArea);
 
   // フィルタリング
-  const filteredTherapists = therapists.filter((t) => {
+  const filteredTherapists = dbTherapists.filter((t) => {
     const matchesQuery =
       !query ||
       t.name.includes(query) ||
-      t.shopName.includes(query) ||
-      t.tags.some((tag) => tag.includes(query));
-    const matchesShop = !shopName || t.shopName.includes(shopName);
-    const matchesType =
-      selectedTypes.length === 0 || selectedTypes.includes(t.primaryType);
-    const matchesStyle =
-      selectedStyles.length === 0 || selectedStyles.includes(t.bodyType);
-    const matchesArea = !selectedArea || t.area.includes(currentArea?.name || "");
-    const matchesScore =
-      !scoreFilter ||
-      !canUseScoreFilter ||
-      t.averageScore >= parseInt(scoreFilter);
-    return matchesQuery && matchesShop && matchesType && matchesStyle && matchesArea && matchesScore;
-  });
-
-  // ソート
-  const sortedTherapists = [...filteredTherapists].sort((a, b) => {
-    switch (sortBy) {
-      case "rating":
-        return b.averageScore - a.averageScore;
-      case "reviews":
-        return b.reviewCount - a.reviewCount;
-      case "newest":
-        return 0;
-      default:
-        return b.reviewCount - a.reviewCount;
-    }
+      t.shop_name.includes(query);
+    const matchesShop = !shopName || t.shop_name.includes(shopName);
+    return matchesQuery && matchesShop;
   });
 
   const toggleType = (typeId: string) => {
@@ -216,10 +235,6 @@ function SearchContent() {
     setSkrFilter(false);
     setHrFilter(false);
   };
-
-  // モックのSKR/HRデータ（実際はDBから取得）
-  const hasSKR = (id: string) => ["1", "3", "5"].includes(id);
-  const hasHR = (id: string) => ["2", "4"].includes(id);
 
   return (
     <TooltipProvider>
@@ -308,9 +323,9 @@ function SearchContent() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="reviews">口コミ数順</SelectItem>
-                        <SelectItem value="rating">平均点順</SelectItem>
                         <SelectItem value="newest">新着順</SelectItem>
+                        <SelectItem value="rating">平均点順</SelectItem>
+                        <SelectItem value="reviews">口コミ数順</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -505,6 +520,7 @@ function SearchContent() {
                               alt={shop.display_name || shop.name}
                               fill
                               className="object-cover"
+                              unoptimized
                             />
                           </div>
                           <div className="min-w-0">
@@ -532,113 +548,75 @@ function SearchContent() {
             <div className="flex-1">
               <div className="mb-4 flex items-center justify-between">
                 <p className="text-sm text-muted-foreground">
-                  {sortedTherapists.length}件のセラピストが見つかりました
+                  {therapistLoading ? "読み込み中..." : `${filteredTherapists.length}件のセラピストが見つかりました`}
                 </p>
               </div>
 
               {/* セラピストグリッド */}
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {sortedTherapists.map((therapist) => (
-                  <Link key={therapist.id} href={`/therapist/${therapist.id}`}>
-                    <Card className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer h-full group">
-                      <div className="aspect-[3/4] relative bg-muted">
-                        <img
-                          src={therapist.images[0] || "/placeholder.svg"}
-                          alt={therapist.name}
-                          className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
-                        />
-                        {/* バッジ */}
-                        <div className="absolute top-2 left-2 flex flex-col gap-1">
-                          <Badge className="bg-primary/90 text-primary-foreground text-xs">
-                            {therapistTypes.find((t) => t.id === therapist.primaryType)?.label}
-                          </Badge>
-                        </div>
-                        {/* SKR/HRバッジ */}
-                        <div className="absolute top-2 right-2 flex flex-col gap-1">
-                          {canSeeSKRBadge && hasSKR(therapist.id) && (
-                            <Badge className="bg-orange-500 text-white gap-1">
-                              <Flame className="h-3 w-3" />
-                              SKR
-                            </Badge>
-                          )}
-                          {canSeeHRBadge && hasHR(therapist.id) && (
-                            <Badge className="bg-purple-600 text-white gap-1">
-                              <Gem className="h-3 w-3" />
-                              HR
-                            </Badge>
-                          )}
-                        </div>
-                        {/* スコア */}
-                        <div className="absolute bottom-2 right-2">
-                          <Badge variant="secondary" className="bg-background/90 text-foreground gap-1">
-                            <Star className="h-3 w-3 fill-primary text-primary" />
-                            {therapist.averageScore}点
-                          </Badge>
-                        </div>
-                      </div>
-                      <CardContent className="p-3">
-                        <div className="mb-1">
-                          <h3 className="font-bold text-sm">
-                            {therapist.name}
-                            <span className="font-normal text-muted-foreground ml-1">
-                              ({therapist.age})
-                            </span>
-                          </h3>
-                          <p className="text-xs text-muted-foreground">{therapist.shopName}</p>
-                        </div>
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground mb-2">
-                          <MapPin className="h-3 w-3" />
-                          <span>
-                            {therapist.area} {therapist.district}
-                          </span>
-                        </div>
-                        <div className="flex flex-wrap gap-1">
-                          {therapist.tags.slice(0, 2).map((tag) => (
-                            <Badge key={tag} variant="outline" className="text-xs py-0">
-                              {tag}
-                            </Badge>
-                          ))}
-                          <Badge variant="outline" className="text-xs py-0">
-                            {styleOptions.find((s) => s.id === therapist.bodyType)?.label}
-                          </Badge>
-                        </div>
-                        <div className="mt-2 text-xs text-muted-foreground">
-                          口コミ {therapist.reviewCount}件
-                        </div>
+              {therapistLoading ? (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {[...Array(8)].map((_, i) => (
+                    <Card key={i} className="overflow-hidden">
+                      <div className="aspect-[3/4] bg-muted animate-pulse" />
+                      <CardContent className="p-3 space-y-2">
+                        <div className="h-4 bg-muted animate-pulse rounded w-2/3" />
+                        <div className="h-3 bg-muted animate-pulse rounded w-1/2" />
                       </CardContent>
                     </Card>
-                  </Link>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {filteredTherapists.map((therapist) => (
+                    <Link key={therapist.id} href={`/therapist/${therapist.id}`}>
+                      <Card className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer h-full group">
+                        <div className="aspect-[3/4] relative bg-muted">
+                          {therapist.image_url ? (
+                            <Image
+                              src={therapist.image_url}
+                              alt={therapist.name}
+                              fill
+                              className="object-cover group-hover:scale-105 transition-transform duration-300"
+                              unoptimized
+                            />
+                          ) : (
+                            <div className="h-full w-full flex items-center justify-center text-3xl text-muted-foreground">
+                              {therapist.name[0]}
+                            </div>
+                          )}
+                        </div>
+                        <CardContent className="p-3">
+                          <div className="mb-1">
+                            <h3 className="font-bold text-sm">
+                              {therapist.name}
+                              {therapist.age && (
+                                <span className="font-normal text-muted-foreground ml-1">
+                                  ({therapist.age})
+                                </span>
+                              )}
+                            </h3>
+                            <p className="text-xs text-muted-foreground">{therapist.shop_name}</p>
+                          </div>
+                          {therapist.shop_access && (
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <MapPin className="h-3 w-3" />
+                              <span className="truncate">{therapist.shop_access}</span>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  ))}
+                </div>
+              )}
 
-              {sortedTherapists.length === 0 && (
+              {!therapistLoading && filteredTherapists.length === 0 && (
                 <div className="text-center py-12">
                   <p className="text-muted-foreground mb-4">
                     条件に一致するセラピストが見つかりませんでした
                   </p>
                   <Button variant="outline" onClick={clearFilters} className="bg-transparent">
                     条件をクリアして再検索
-                  </Button>
-                </div>
-              )}
-
-              {/* ページネーション */}
-              {sortedTherapists.length > 0 && (
-                <div className="flex justify-center gap-2 mt-8">
-                  <Button variant="outline" size="sm" disabled className="bg-transparent">
-                    前へ
-                  </Button>
-                  <Button variant="default" size="sm">
-                    1
-                  </Button>
-                  <Button variant="outline" size="sm" className="bg-transparent">
-                    2
-                  </Button>
-                  <Button variant="outline" size="sm" className="bg-transparent">
-                    3
-                  </Button>
-                  <Button variant="outline" size="sm" className="bg-transparent">
-                    次へ
                   </Button>
                 </div>
               )}
@@ -656,35 +634,28 @@ function SearchContent() {
                 <CardContent>
                   {canSeeRecommend ? (
                     <div className="space-y-4">
-                      {therapists.slice(0, 4).map((t) => (
+                      {dbTherapists.slice(0, 4).map((t) => (
                         <Link key={t.id} href={`/therapist/${t.id}`}>
                           <div className="flex gap-3 p-2 rounded-lg hover:bg-muted transition-colors">
-                            <img
-                              src={t.images[0] || "/placeholder.svg"}
-                              alt={t.name}
-                              className="w-16 h-20 object-cover rounded"
-                            />
+                            {t.image_url ? (
+                              <Image
+                                src={t.image_url}
+                                alt={t.name}
+                                width={64}
+                                height={80}
+                                className="w-16 h-20 object-cover rounded"
+                                unoptimized
+                              />
+                            ) : (
+                              <div className="w-16 h-20 bg-muted rounded flex items-center justify-center text-lg text-muted-foreground">
+                                {t.name[0]}
+                              </div>
+                            )}
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-1">
-                                <span className="font-medium text-sm truncate">{t.name}</span>
-                                {canSeeSKRBadge && hasSKR(t.id) && (
-                                  <Flame className="h-3 w-3 text-orange-500 shrink-0" />
-                                )}
-                                {canSeeHRBadge && hasHR(t.id) && (
-                                  <Gem className="h-3 w-3 text-purple-500 shrink-0" />
-                                )}
-                              </div>
+                              <span className="font-medium text-sm truncate block">{t.name}</span>
                               <p className="text-xs text-muted-foreground truncate">
-                                {t.shopName}
+                                {t.shop_name}
                               </p>
-                              <p className="text-xs text-primary mt-1">
-                                {therapistTypes.find((type) => type.id === t.primaryType)?.label}
-                                が好きなあなたに
-                              </p>
-                              <div className="flex items-center gap-1 mt-1">
-                                <Star className="h-3 w-3 fill-primary text-primary" />
-                                <span className="text-xs font-medium">{t.averageScore}点</span>
-                              </div>
                             </div>
                           </div>
                         </Link>

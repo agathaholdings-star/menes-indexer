@@ -1,17 +1,52 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Star, ChevronRight, TrendingUp } from "lucide-react";
+import { ChevronRight, TrendingUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { mockTherapists } from "@/lib/data";
+import { supabase } from "@/lib/supabase";
+
+interface PopularTherapist {
+  id: number;
+  name: string;
+  age: number | null;
+  image_url: string | null;
+  shop_name: string;
+}
 
 export function PopularTherapists() {
-  const popularTherapists = [...mockTherapists]
-    .sort((a, b) => b.averageScore - a.averageScore)
-    .slice(0, 8);
+  const [therapists, setTherapists] = useState<PopularTherapist[]>([]);
+
+  useEffect(() => {
+    async function fetchTherapists() {
+      const { data } = await supabase
+        .from("therapists")
+        .select("id, name, age, image_urls, shops(name, display_name)")
+        .eq("status", "active")
+        .order("created_at", { ascending: false })
+        .limit(8);
+      if (data) {
+        setTherapists(
+          data.map((t) => {
+            const imgs = t.image_urls as string[] | null;
+            const shop = t.shops as { name: string; display_name: string | null } | null;
+            return {
+              id: Number(t.id),
+              name: t.name.replace(/\s*\(.*\)$/, ""),
+              age: t.age,
+              image_url: imgs?.[0] || null,
+              shop_name: shop?.display_name || shop?.name || "",
+            };
+          })
+        );
+      }
+    }
+    fetchTherapists();
+  }, []);
+
+  if (therapists.length === 0) return null;
 
   return (
     <section className="mt-10">
@@ -20,7 +55,7 @@ export function PopularTherapists() {
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-lg">
               <TrendingUp className="h-5 w-5 text-primary" />
-              今週の人気セラピスト
+              新着セラピスト
             </CardTitle>
             <Link
               href="/ranking"
@@ -34,20 +69,27 @@ export function PopularTherapists() {
         <CardContent>
           <ScrollArea className="w-full whitespace-nowrap">
             <div className="flex gap-4 pb-4">
-              {popularTherapists.map((therapist, index) => (
+              {therapists.map((therapist, index) => (
                 <Link
                   key={therapist.id}
                   href={`/therapist/${therapist.id}`}
                   className="w-[160px] flex-shrink-0"
                 >
                   <Card className="group h-full transition-all hover:shadow-md border-muted/50 overflow-hidden">
-                    <div className="relative h-44 w-full overflow-hidden">
-                      <Image
-                        src={therapist.images[0] || "/placeholder.svg"}
-                        alt={therapist.name}
-                        fill
-                        className="object-cover transition-transform duration-300 group-hover:scale-105"
-                      />
+                    <div className="relative h-44 w-full overflow-hidden bg-muted">
+                      {therapist.image_url ? (
+                        <Image
+                          src={therapist.image_url}
+                          alt={therapist.name}
+                          fill
+                          className="object-cover transition-transform duration-300 group-hover:scale-105"
+                          unoptimized
+                        />
+                      ) : (
+                        <div className="h-full w-full flex items-center justify-center text-2xl text-muted-foreground">
+                          {therapist.name[0]}
+                        </div>
+                      )}
                       {/* Rank Badge */}
                       {index < 3 && (
                         <div className={`absolute top-2 left-2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
@@ -62,30 +104,13 @@ export function PopularTherapists() {
                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-3 pt-8">
                         <div className="flex items-center gap-1 text-white">
                           <span className="font-bold text-sm">{therapist.name}</span>
-                          <span className="text-xs opacity-80">({therapist.age})</span>
+                          {therapist.age && (
+                            <span className="text-xs opacity-80">({therapist.age})</span>
+                          )}
                         </div>
-                        <p className="text-xs text-white/70 truncate">{therapist.shopName}</p>
+                        <p className="text-xs text-white/70 truncate">{therapist.shop_name}</p>
                       </div>
                     </div>
-                    <CardContent className="p-3">
-                      {/* Tags - シンプルに統一 */}
-                      <div className="flex flex-wrap gap-1 mb-2">
-                        <Badge variant="secondary" className="text-xs bg-primary/10 text-primary border-0">
-                          {therapist.tags[0]}
-                        </Badge>
-                        {therapist.tags[1] && (
-                          <Badge variant="secondary" className="text-xs bg-muted text-muted-foreground border-0">
-                            {therapist.tags[1]}
-                          </Badge>
-                        )}
-                      </div>
-                      {/* Score */}
-                      <div className="flex items-center gap-1">
-                        <Star className="h-4 w-4 fill-primary text-primary" />
-                        <span className="font-bold text-sm">{therapist.averageScore}</span>
-                        <span className="text-xs text-muted-foreground">点</span>
-                      </div>
-                    </CardContent>
                   </Card>
                 </Link>
               ))}

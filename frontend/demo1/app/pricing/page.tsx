@@ -27,6 +27,7 @@ const plans = [
       { label: "SKR/HRフィルター", included: false },
     ],
     cta: "無料で始める",
+    href: "/register",
     popular: false,
     tier: "free",
   },
@@ -44,6 +45,7 @@ const plans = [
       { label: "月3本投稿 → VIP相当の全機能解放", included: true, highlight: true },
     ],
     cta: "スタンダードに登録",
+    href: "https://buy.stripe.com/3cIfZ90SIej4cq8goJ2Ji00",
     popular: true,
     tier: "standard",
   },
@@ -62,6 +64,7 @@ const plans = [
       { label: "投稿不要", included: true },
     ],
     cta: "VIPに登録",
+    href: "https://buy.stripe.com/4gMaEP0SI1wi1Lu5K52Ji01",
     popular: false,
     tier: "vip",
   },
@@ -203,6 +206,7 @@ export default function PricingPage() {
                   ))}
                 </ul>
                 <Button
+                  asChild
                   className={`w-full ${
                     plan.tier === "vip"
                       ? "bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white border-0"
@@ -212,7 +216,9 @@ export default function PricingPage() {
                   }`}
                   variant={plan.popular ? "default" : plan.tier === "vip" ? "default" : "outline"}
                 >
-                  {plan.cta}
+                  <Link href={plan.href} target={plan.tier === "free" ? undefined : "_blank"}>
+                    {plan.cta}
+                  </Link>
                 </Button>
               </CardContent>
             </Card>

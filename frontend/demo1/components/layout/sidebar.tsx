@@ -5,7 +5,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { Crown, TrendingUp, Star, Building2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { mockTherapists } from "@/lib/data";
 import { supabase } from "@/lib/supabase";
 
 interface SidebarShop {
@@ -16,23 +15,49 @@ interface SidebarShop {
   access: string | null;
 }
 
-const rankingTherapists = [...mockTherapists]
-  .sort((a, b) => b.averageScore - a.averageScore)
-  .slice(0, 5);
+interface SidebarTherapist {
+  id: number;
+  name: string;
+  image_url: string | null;
+  shop_name: string;
+}
 
 export function Sidebar() {
   const [shops, setShops] = useState<SidebarShop[]>([]);
+  const [therapists, setTherapists] = useState<SidebarTherapist[]>([]);
 
   useEffect(() => {
-    async function fetchShops() {
-      const { data } = await supabase
-        .from("shops")
-        .select("id, name, display_name, slug, access")
-        .eq("is_active", true)
-        .limit(5);
-      if (data) setShops(data as SidebarShop[]);
+    async function fetchData() {
+      const [shopRes, therapistRes] = await Promise.all([
+        supabase
+          .from("shops")
+          .select("id, name, display_name, slug, access")
+          .eq("is_active", true)
+          .limit(5),
+        supabase
+          .from("therapists")
+          .select("id, name, image_urls, shop_id, shops(name, display_name)")
+          .eq("status", "active")
+          .order("created_at", { ascending: false })
+          .limit(5),
+      ]);
+      if (shopRes.data) setShops(shopRes.data as SidebarShop[]);
+      if (therapistRes.data) {
+        setTherapists(
+          therapistRes.data.map((t) => {
+            const imgs = t.image_urls as string[] | null;
+            const shop = t.shops as { name: string; display_name: string | null } | null;
+            return {
+              id: Number(t.id),
+              name: t.name.replace(/\s*\(.*\)$/, ""), // Remove English name in parens
+              image_url: imgs?.[0] || null,
+              shop_name: shop?.display_name || shop?.name || "",
+            };
+          })
+        );
+      }
     }
-    fetchShops();
+    fetchData();
   }, []);
 
   return (
@@ -42,54 +67,63 @@ export function Sidebar() {
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
             <Crown className="h-5 w-5 text-primary" />
-            人気ランキング
+            新着セラピスト
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
-          <ul className="space-y-3">
-            {rankingTherapists.map((therapist, index) => (
-              <li key={therapist.id}>
-                <Link
-                  href={`/therapist/${therapist.id}`}
-                  className="flex items-center gap-3 group"
-                >
-                  <span
-                    className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
-                      index === 0
-                        ? "bg-primary text-primary-foreground"
-                        : index === 1
-                        ? "bg-primary/70 text-primary-foreground"
-                        : index === 2
-                        ? "bg-primary/50 text-primary-foreground"
-                        : "bg-muted text-muted-foreground"
-                    }`}
+          {therapists.length > 0 ? (
+            <ul className="space-y-3">
+              {therapists.map((therapist, index) => (
+                <li key={therapist.id}>
+                  <Link
+                    href={`/therapist/${therapist.id}`}
+                    className="flex items-center gap-3 group"
                   >
-                    {index + 1}
-                  </span>
-                  <div className="relative h-10 w-10 overflow-hidden rounded-full">
-                    <Image
-                      src={therapist.images[0] || "/placeholder.svg"}
-                      alt={therapist.name}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate group-hover:text-primary transition-colors">
-                      {therapist.name}
-                    </p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {therapist.shopName}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-0.5 text-primary">
-                    <Star className="h-3 w-3 fill-current" />
-                    <span className="text-xs font-bold">{therapist.averageScore}</span>
-                  </div>
-                </Link>
-              </li>
-            ))}
-          </ul>
+                    <span
+                      className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
+                        index === 0
+                          ? "bg-primary text-primary-foreground"
+                          : index === 1
+                          ? "bg-primary/70 text-primary-foreground"
+                          : index === 2
+                          ? "bg-primary/50 text-primary-foreground"
+                          : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      {index + 1}
+                    </span>
+                    <div className="relative h-10 w-10 overflow-hidden rounded-full bg-muted">
+                      {therapist.image_url ? (
+                        <Image
+                          src={therapist.image_url}
+                          alt={therapist.name}
+                          fill
+                          className="object-cover"
+                          unoptimized
+                        />
+                      ) : (
+                        <div className="h-full w-full flex items-center justify-center text-xs text-muted-foreground">
+                          {therapist.name[0]}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate group-hover:text-primary transition-colors">
+                        {therapist.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {therapist.shop_name}
+                      </p>
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              データを準備中です
+            </p>
+          )}
           <Link
             href="/ranking"
             className="mt-4 flex items-center justify-center gap-1 text-sm text-primary hover:underline"
