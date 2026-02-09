@@ -33,14 +33,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ReviewWizardModal } from "@/components/review/review-wizard-modal";
+import { useAuth } from "@/lib/auth-context";
 
 export function SiteHeader() {
-  // Demo state - in production, use auth context
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { user: authUser, loading: authLoading, signOut: authSignOut } = useAuth();
   const [memberLevel, setMemberLevel] = useState<"free" | "standard" | "vip">("free");
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
+
+  const isLoggedIn = !!authUser;
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,12 +54,14 @@ export function SiteHeader() {
 
   const [monthlyReviewCount, setMonthlyReviewCount] = useState(1);
 
+  const nickname = authUser?.user_metadata?.nickname || authUser?.email?.split("@")[0] || "ユーザー";
+
   const user = {
-    name: "山田太郎",
+    name: nickname,
     avatar: null,
     remainingDays: 3,
-    unreadNotifications: 5,
-    unreadMessages: 2,
+    unreadNotifications: 0,
+    unreadMessages: 0,
     monthlyReviewCount: monthlyReviewCount,
   };
 
@@ -82,17 +86,13 @@ export function SiteHeader() {
     }
   };
 
-  // Demo: cycle through states
-  const cycleAuthState = () => {
-    if (!isLoggedIn) {
-      setIsLoggedIn(true);
-      setMemberLevel("free");
-    } else if (memberLevel === "free") {
+  // Demo: cycle member levels (only when logged in)
+  const cycleMemberLevel = () => {
+    if (memberLevel === "free") {
       setMemberLevel("standard");
     } else if (memberLevel === "standard") {
       setMemberLevel("vip");
     } else {
-      setIsLoggedIn(false);
       setMemberLevel("free");
     }
   };
@@ -281,7 +281,7 @@ export function SiteHeader() {
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       className="cursor-pointer text-destructive focus:text-destructive"
-                      onClick={() => setIsLoggedIn(false)}
+                      onClick={() => authSignOut()}
                     >
                       <LogOut className="h-4 w-4 mr-2" />
                       ログアウト
@@ -304,15 +304,17 @@ export function SiteHeader() {
               </div>
             )}
 
-            {/* Demo Toggle Button */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={cycleAuthState}
-              className="text-xs hidden xl:flex bg-transparent"
-            >
-              Demo: {!isLoggedIn ? "未ログイン" : memberLevel}
-            </Button>
+            {/* Demo Toggle Button - member level only */}
+            {isLoggedIn && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={cycleMemberLevel}
+                className="text-xs hidden xl:flex bg-transparent"
+              >
+                Demo: {memberLevel}
+              </Button>
+            )}
 
             {/* Mobile Menu */}
             <Sheet>
@@ -478,7 +480,7 @@ export function SiteHeader() {
                       <Button
                         variant="ghost"
                         className="text-destructive hover:text-destructive"
-                        onClick={() => setIsLoggedIn(false)}
+                        onClick={() => authSignOut()}
                       >
                         <LogOut className="mr-2 h-4 w-4" />
                         ログアウト
