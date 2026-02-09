@@ -7,20 +7,22 @@
 - やりとりが20往復を超えたら新チャットへの切り替えを提案すること
 - 画像を複数枚受け取った場合はコンテキスト消費が大きいことを意識すること
 
-## 現在のステータス (2026-02-08 更新)
+## 現在のステータス (2026-02-09 更新)
 
 - **設計フェーズ完了**: サービス概要、システム設計、UXフロー、v0用プロンプトを作成済み。
 - **フロントエンド公開済み**: v0.appからVercelにデプロイ → https://menes-indexer.com/
 - **スクレイピングパイプライン動作確認済み**: 3エリア268件テスト完了
+- **全エリアスクレイピング実行中**: VPS上で821エリア一括スクレイピング稼働中（190/821完了、残り631エリア処理中）
 - **成果物**:
     - `docs/SERVICE_OVERVIEW.md`: サービス概要・ビジネスモデル
     - `docs/SYSTEM_DESIGN.md`: システム構成・DBスキーマ
     - `docs/UX_FLOW.txt`: ユーザー体験フロー
     - `docs/V0_PROMPTS.md`: フロントエンド生成用プロンプト
 - **次のステップ**:
-    1. 全821エリアの本番スクレイピング設計・実行
+    1. ~~全821エリアの本番スクレイピング設計・実行~~ → VPSで実行中
     2. フロントエンドとローカルSupabaseの接続
     3. Vercel/Supabase MCP OAuth認証
+    4. VPSのスクレイピングデータをpg_dumpで本番Supabaseに移行
 
 ## 開発フロー方針（確定）
 
@@ -137,7 +139,8 @@ supabase stop      # 停止
 | ドメイン | Cloudflare | `menes-indexer.com` |
 | フロントエンド | Vercel | Next.js App Router |
 | データベース | Supabase | PostgreSQL, Auth, Storage |
-| スクレイピングBot | VPS (162.43.14.182) | Python |
+| スクレイピングBot（旧） | VPS (162.43.14.182) | Python |
+| スクレイピングBot（新） | XServer VPS (220.158.18.6) | Python + PostgreSQL |
 
 ### 構成図
 ```
@@ -148,6 +151,41 @@ Vercel（Next.js フロントエンド）
 Supabase（DB + Auth + Storage）
       ↑
 VPS（スクレイピングBot → DB更新）
+```
+
+## スクレイピングVPS (2026-02-09 構築)
+
+| 項目 | 値 |
+|------|-----|
+| プロバイダ | XServer VPS |
+| サーバー名 | indexer |
+| IP | 220.158.18.6 |
+| OS | Ubuntu 25.04 |
+| プラン | VPS 2GB（3vCPU, 50GB NVMe SSD） |
+| SSH鍵 | `/Users/agatha/Downloads/indexer.pem` |
+| rootパスワード | VPSパネルで設定済み |
+| DB接続 | `postgresql://postgres:postgres@127.0.0.1:5432/menethe` |
+| スクリプト配置 | `/opt/scraper/` |
+| 契約期間 | 2026-02-09 〜 2026-04-30 |
+
+### SSH接続
+```bash
+ssh -i /Users/agatha/Downloads/indexer.pem root@220.158.18.6
+```
+
+### スクレイピング操作
+```bash
+# ログ確認
+ssh -i /Users/agatha/Downloads/indexer.pem root@220.158.18.6 "tail -20 /opt/scraper/batch_scrape.log"
+
+# チェックポイント確認
+ssh -i /Users/agatha/Downloads/indexer.pem root@220.158.18.6 "cat /opt/scraper/batch_scrape_checkpoint.json | python3 -m json.tool | tail -10"
+
+# 再開（停止した場合）
+ssh -i /Users/agatha/Downloads/indexer.pem root@220.158.18.6 "cd /opt/scraper && nohup python3 batch_scrape_shops.py --resume > /dev/null 2>&1 &"
+
+# データ取り出し（本番移行時）
+ssh -i /Users/agatha/Downloads/indexer.pem root@220.158.18.6 "sudo -u postgres pg_dump -d menethe --data-only -t shops -t shop_areas" > shops_dump.sql
 ```
 
 ## ディレクトリ構造
