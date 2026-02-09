@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
@@ -41,9 +41,16 @@ import {
 } from "@/components/ui/dialog";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
-import { therapists, therapistTypes, areas } from "@/lib/data";
+import { therapists, therapistTypes } from "@/lib/data";
+import { supabase } from "@/lib/supabase";
 
 type MemberLevel = "guest" | "free" | "freePosted" | "standard" | "vip";
+
+interface PrefectureOption {
+  id: string;
+  name: string;
+  districts: string[];
+}
 
 function SearchContent() {
   const searchParams = useSearchParams();
@@ -52,6 +59,44 @@ function SearchContent() {
 
   // Demo: 会員レベル切替
   const [memberLevel, setMemberLevel] = useState<MemberLevel>("free");
+
+  // エリアデータ（Supabaseから取得）
+  const [areas, setAreas] = useState<PrefectureOption[]>([]);
+
+  useEffect(() => {
+    async function fetchAreas() {
+      const { data: prefectures } = await supabase
+        .from("prefectures")
+        .select("id, name, slug")
+        .order("display_order", { ascending: true });
+      if (!prefectures) return;
+
+      const { data: allAreas } = await supabase
+        .from("areas")
+        .select("prefecture_id, name")
+        .gt("salon_count", 0)
+        .order("search_volume", { ascending: false });
+      if (!allAreas) return;
+
+      const areasByPref = new Map<number, string[]>();
+      for (const a of allAreas) {
+        const list = areasByPref.get(a.prefecture_id) || [];
+        list.push(a.name);
+        areasByPref.set(a.prefecture_id, list);
+      }
+
+      setAreas(
+        prefectures
+          .filter((p) => (areasByPref.get(p.id) || []).length > 0)
+          .map((p) => ({
+            id: p.slug,
+            name: p.name,
+            districts: areasByPref.get(p.id) || [],
+          }))
+      );
+    }
+    fetchAreas();
+  }, []);
 
   // フィルター状態
   const [query, setQuery] = useState(initialQuery);

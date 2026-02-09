@@ -209,7 +209,10 @@ def scrape_area_page(data_source_url):
 
         img_elem = card.select_one('.rd-image img')
         if img_elem:
-            salon['image_url'] = img_elem.get('data-src') or img_elem.get('src')
+            img_src = img_elem.get('data-src') or img_elem.get('src')
+            if img_src and img_src.startswith('/'):
+                img_src = BASE_URL + img_src
+            salon['image_url'] = img_src
 
         salon['display_order'] = rank
         salons.append(salon)

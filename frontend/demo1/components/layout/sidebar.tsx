@@ -1,14 +1,40 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Crown, TrendingUp, Star, Building2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { mockTherapists, mockShops } from "@/lib/data";
+import { mockTherapists } from "@/lib/data";
+import { supabase } from "@/lib/supabase";
+
+interface SidebarShop {
+  id: number;
+  name: string;
+  display_name: string | null;
+  slug: string | null;
+  access: string | null;
+}
 
 const rankingTherapists = [...mockTherapists]
   .sort((a, b) => b.averageScore - a.averageScore)
   .slice(0, 5);
 
 export function Sidebar() {
+  const [shops, setShops] = useState<SidebarShop[]>([]);
+
+  useEffect(() => {
+    async function fetchShops() {
+      const { data } = await supabase
+        .from("shops")
+        .select("id, name, display_name, slug, access")
+        .eq("is_active", true)
+        .limit(5);
+      if (data) setShops(data as SidebarShop[]);
+    }
+    fetchShops();
+  }, []);
+
   return (
     <aside className="flex flex-col gap-6">
       {/* Ranking Card */}
@@ -74,7 +100,7 @@ export function Sidebar() {
         </CardContent>
       </Card>
 
-      {/* Recommended Shops */}
+      {/* Recommended Shops - Real Data */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
@@ -84,24 +110,17 @@ export function Sidebar() {
         </CardHeader>
         <CardContent className="pt-0">
           <ul className="space-y-2">
-            {mockShops.map((shop) => (
+            {shops.map((shop) => (
               <li key={shop.id}>
                 <Link
-                  href={`/shop/${shop.id}`}
+                  href={`/shop/${shop.slug || shop.id}`}
                   className="flex items-center justify-between py-2 border-b last:border-0 hover:bg-muted/50 -mx-2 px-2 rounded transition-colors"
                 >
                   <div>
-                    <p className="text-sm font-medium">{shop.name}</p>
-                    <p className="text-xs text-muted-foreground">{shop.district}</p>
-                  </div>
-                  <div className="text-right">
-                    <div className="flex items-center gap-0.5 text-primary">
-                      <Star className="h-3 w-3 fill-current" />
-                      <span className="text-xs font-bold">{shop.averageScore}</span>
-                    </div>
-                    <span className="text-xs text-muted-foreground">
-                      {shop.reviewCount}件
-                    </span>
+                    <p className="text-sm font-medium">{shop.display_name || shop.name}</p>
+                    {shop.access && (
+                      <p className="text-xs text-muted-foreground">{shop.access}</p>
+                    )}
                   </div>
                 </Link>
               </li>

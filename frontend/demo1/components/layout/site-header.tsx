@@ -119,7 +119,7 @@ export function SiteHeader() {
               </Link>
             </Button>
             <Button variant="ghost" size="sm" asChild>
-              <Link href="/area/東京">
+              <Link href="/area/tokyo">
                 <MapPin className="mr-1 h-4 w-4" />
                 エリア検索
               </Link>
@@ -366,7 +366,7 @@ export function SiteHeader() {
                       </Link>
                     </Button>
                     <Button variant="ghost" className="justify-start" asChild>
-                      <Link href="/area/東京">
+                      <Link href="/area/tokyo">
                         <MapPin className="mr-2 h-4 w-4" />
                         エリア検索
                       </Link>

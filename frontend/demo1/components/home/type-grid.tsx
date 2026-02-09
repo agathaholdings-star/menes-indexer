@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { Sparkles, Crown, Star, Heart, Smile, Flame, ArrowRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { therapistTypes, mockTherapists } from "@/lib/data";
+import { therapistTypes } from "@/lib/data";
 
 const typeIcons: Record<string, React.ElementType> = {
   idol: Sparkles,
@@ -15,10 +15,16 @@ const typeIcons: Record<string, React.ElementType> = {
   yoen: Flame,
 };
 
-// セラピスト数をタイプ別にカウント
-const getTherapistCount = (typeId: string) => {
-  return mockTherapists.filter((t) => t.typeId === typeId).length * 127; // ダミーで水増し
+// セラピスト数（DB投入後に実数に置き換え予定）
+const typeCounts: Record<string, number> = {
+  idol: 1250,
+  seiso: 980,
+  gal: 870,
+  model: 760,
+  imouto: 1100,
+  yoen: 640,
 };
+const getTherapistCount = (typeId: string) => typeCounts[typeId] || 0;
 
 export function TypeGrid() {
   return (
