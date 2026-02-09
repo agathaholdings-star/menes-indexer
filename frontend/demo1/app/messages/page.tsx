@@ -2,15 +2,17 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { Send, ArrowLeft, MessageCircle, Search } from "lucide-react";
+import { Send, ArrowLeft, MessageCircle, Search, Plus, Lock, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { useAuth } from "@/lib/auth-context";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
+import { type EffectiveTier, type User, getEffectiveTier, tierPermissions } from "@/lib/data";
 
 interface Conversation {
   id: number;
@@ -28,6 +30,11 @@ interface Message {
   body: string;
   is_read: boolean;
   created_at: string;
+}
+
+interface SearchedUser {
+  id: string;
+  nickname: string;
 }
 
 function timeAgo(dateStr: string): string {
@@ -50,9 +57,51 @@ export default function MessagesPage() {
   const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // ティアチェック用
+  const [membershipType, setMembershipType] = useState<string>("free");
+  const [monthlyReviewCount, setMonthlyReviewCount] = useState(0);
+  const [profileLoading, setProfileLoading] = useState(true);
+
+  // 新規会話モーダル
+  const [showNewConvModal, setShowNewConvModal] = useState(false);
+  const [userSearchQuery, setUserSearchQuery] = useState("");
+  const [searchedUsers, setSearchedUsers] = useState<SearchedUser[]>([]);
+  const [searching, setSearching] = useState(false);
+
+  // プロフィール取得（ティア判定用）
+  useEffect(() => {
+    if (!authUser) { setProfileLoading(false); return; }
+    const supabase = createSupabaseBrowser();
+    supabase
+      .from("profiles")
+      .select("membership_type, monthly_review_count")
+      .eq("id", authUser.id)
+      .single()
+      .then(({ data }) => {
+        if (data) {
+          setMembershipType(data.membership_type || "free");
+          setMonthlyReviewCount(data.monthly_review_count || 0);
+        }
+        setProfileLoading(false);
+      });
+  }, [authUser]);
+
+  const tierUser: User = {
+    id: authUser?.id || "",
+    email: authUser?.email || "",
+    name: "",
+    memberType: (membershipType as "free" | "standard" | "vip"),
+    monthlyReviewCount,
+    totalReviewCount: 0,
+    registeredAt: "",
+    favorites: [],
+  };
+  const effectiveTier = authUser ? getEffectiveTier(tierUser) : "free";
+  const permissions = tierPermissions[effectiveTier];
+
   // 会話一覧取得
   useEffect(() => {
-    if (!authUser) { setLoading(false); return; }
+    if (!authUser || !permissions.canUseDM) { setLoading(false); return; }
     const supabase = createSupabaseBrowser();
 
     async function fetchConversations() {
@@ -122,7 +171,7 @@ export default function MessagesPage() {
     }
 
     fetchConversations();
-  }, [authUser]);
+  }, [authUser, permissions.canUseDM]);
 
   // メッセージ取得
   useEffect(() => {
@@ -178,6 +227,73 @@ export default function MessagesPage() {
     setSending(false);
   };
 
+  // ユーザー検索
+  const handleUserSearch = async () => {
+    if (!userSearchQuery.trim() || !authUser) return;
+    setSearching(true);
+    const supabase = createSupabaseBrowser();
+    const { data } = await supabase
+      .from("profiles")
+      .select("id, nickname")
+      .neq("id", authUser.id)
+      .ilike("nickname", `%${userSearchQuery.trim()}%`)
+      .limit(10);
+    setSearchedUsers((data as SearchedUser[]) || []);
+    setSearching(false);
+  };
+
+  // 新規会話開始
+  const handleStartConversation = async (partnerId: string) => {
+    if (!authUser) return;
+    const supabase = createSupabaseBrowser();
+
+    // 既存の会話を検索
+    const { data: existing } = await supabase
+      .from("conversations")
+      .select("id")
+      .or(
+        `and(user1_id.eq.${authUser.id},user2_id.eq.${partnerId}),and(user1_id.eq.${partnerId},user2_id.eq.${authUser.id})`
+      )
+      .maybeSingle();
+
+    if (existing) {
+      setSelectedConvId(existing.id);
+      setShowNewConvModal(false);
+      setUserSearchQuery("");
+      setSearchedUsers([]);
+      return;
+    }
+
+    // 新規会話作成
+    const { data: newConv, error } = await supabase
+      .from("conversations")
+      .insert({ user1_id: authUser.id, user2_id: partnerId })
+      .select("id")
+      .single();
+
+    if (!error && newConv) {
+      // 会話リストを再取得
+      setSelectedConvId(newConv.id);
+      setShowNewConvModal(false);
+      setUserSearchQuery("");
+      setSearchedUsers([]);
+      // パートナーのニックネームを取得して会話リストに追加
+      const partner = searchedUsers.find((u) => u.id === partnerId);
+      setConversations((prev) => [
+        {
+          id: newConv.id,
+          user1_id: authUser.id,
+          user2_id: partnerId,
+          last_message_at: null,
+          partner_nickname: partner?.nickname || "名無しさん",
+          unread_count: 0,
+        },
+        ...prev,
+      ]);
+    }
+  };
+
+  // 未ログイン
   if (!authUser) {
     return (
       <div className="min-h-screen bg-background">
@@ -192,6 +308,47 @@ export default function MessagesPage() {
     );
   }
 
+  // プロフィール読み込み中
+  if (profileLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <SiteHeader />
+        <main className="container mx-auto px-4 py-12 text-center">
+          <div className="animate-pulse h-8 bg-muted rounded w-48 mx-auto" />
+        </main>
+        <SiteFooter />
+      </div>
+    );
+  }
+
+  // ティアゲート: スタンダード以上のみ
+  if (!permissions.canUseDM) {
+    return (
+      <div className="min-h-screen bg-background">
+        <SiteHeader />
+        <main className="container mx-auto px-4 py-12">
+          <div className="max-w-md mx-auto text-center">
+            <div className="bg-muted/50 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6">
+              <Lock className="h-10 w-10 text-muted-foreground" />
+            </div>
+            <h1 className="text-2xl font-bold mb-3">メッセージ機能</h1>
+            <p className="text-muted-foreground mb-6">
+              ダイレクトメッセージはスタンダード会員以上の方がご利用いただけます。
+              アップグレードして他の会員とコミュニケーションを取りましょう。
+            </p>
+            <Link href="/pricing">
+              <Button size="lg" className="gap-2">
+                <Crown className="h-4 w-4" />
+                スタンダード会員にアップグレード
+              </Button>
+            </Link>
+          </div>
+        </main>
+        <SiteFooter />
+      </div>
+    );
+  }
+
   const selectedConv = conversations.find((c) => c.id === selectedConvId);
 
   return (
@@ -199,7 +356,13 @@ export default function MessagesPage() {
       <SiteHeader />
 
       <main className="container mx-auto px-4 py-6">
-        <h1 className="text-2xl font-bold mb-6">メッセージ</h1>
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold">メッセージ</h1>
+          <Button className="gap-2" onClick={() => setShowNewConvModal(true)}>
+            <Plus className="h-4 w-4" />
+            新しいメッセージ
+          </Button>
+        </div>
 
         <div className="flex gap-6 h-[600px]">
           {/* 会話リスト */}
@@ -218,6 +381,7 @@ export default function MessagesPage() {
                 <div className="text-center py-12 px-4">
                   <MessageCircle className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
                   <p className="text-sm text-muted-foreground">まだメッセージはありません</p>
+                  <p className="text-xs text-muted-foreground mt-1">「新しいメッセージ」から会話を始めましょう</p>
                 </div>
               ) : (
                 conversations.map((conv) => (
@@ -325,6 +489,54 @@ export default function MessagesPage() {
       </main>
 
       <SiteFooter />
+
+      {/* 新規会話モーダル */}
+      <Dialog open={showNewConvModal} onOpenChange={setShowNewConvModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>新しいメッセージ</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex gap-2">
+              <Input
+                placeholder="ニックネームで検索..."
+                value={userSearchQuery}
+                onChange={(e) => setUserSearchQuery(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") handleUserSearch(); }}
+              />
+              <Button onClick={handleUserSearch} disabled={searching || !userSearchQuery.trim()} size="icon">
+                <Search className="h-4 w-4" />
+              </Button>
+            </div>
+            {searching && (
+              <div className="text-center py-4 text-sm text-muted-foreground">検索中...</div>
+            )}
+            {!searching && searchedUsers.length > 0 && (
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {searchedUsers.map((u) => (
+                  <button
+                    key={u.id}
+                    onClick={() => handleStartConversation(u.id)}
+                    className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors text-left"
+                  >
+                    <Avatar className="h-9 w-9">
+                      <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                        {(u.nickname || "名")[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="font-medium text-sm">{u.nickname || "名無しさん"}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+            {!searching && searchedUsers.length === 0 && userSearchQuery && (
+              <div className="text-center py-4 text-sm text-muted-foreground">
+                ユーザーが見つかりませんでした
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

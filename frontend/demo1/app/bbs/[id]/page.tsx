@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
-import { ChevronRight, MessageCircle, Eye, ThumbsUp, Flag, Reply, Send } from "lucide-react";
+import { ChevronRight, MessageCircle, Eye, ThumbsUp, Flag, Reply, Send, Lock, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,7 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { useAuth } from "@/lib/auth-context";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
+import { type User, getEffectiveTier, tierPermissions } from "@/lib/data";
 
 const categoryLabels: Record<string, string> = {
   question: "質問",
@@ -59,6 +60,41 @@ export default function BBSThreadPage({ params }: { params: Promise<{ id: string
   const [loading, setLoading] = useState(true);
   const [replyContent, setReplyContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // ティアチェック用
+  const [membershipType, setMembershipType] = useState<string>("free");
+  const [monthlyReviewCount, setMonthlyReviewCount] = useState(0);
+  const [profileLoading, setProfileLoading] = useState(true);
+
+  useEffect(() => {
+    if (!authUser) { setProfileLoading(false); return; }
+    const supabase = createSupabaseBrowser();
+    supabase
+      .from("profiles")
+      .select("membership_type, monthly_review_count")
+      .eq("id", authUser.id)
+      .single()
+      .then(({ data }) => {
+        if (data) {
+          setMembershipType(data.membership_type || "free");
+          setMonthlyReviewCount(data.monthly_review_count || 0);
+        }
+        setProfileLoading(false);
+      });
+  }, [authUser]);
+
+  const tierUser: User = {
+    id: authUser?.id || "",
+    email: authUser?.email || "",
+    name: "",
+    memberType: (membershipType as "free" | "standard" | "vip"),
+    monthlyReviewCount,
+    totalReviewCount: 0,
+    registeredAt: "",
+    favorites: [],
+  };
+  const effectiveTier = authUser ? getEffectiveTier(tierUser) : "free";
+  const permissions = tierPermissions[effectiveTier];
 
   useEffect(() => {
     const supabase = createSupabaseBrowser();
@@ -115,6 +151,33 @@ export default function BBSThreadPage({ params }: { params: Promise<{ id: string
     }
     setIsSubmitting(false);
   };
+
+  // ティアゲート: スタンダード以上のみ
+  if (!profileLoading && !permissions.canUseBBS) {
+    return (
+      <div className="min-h-screen bg-background">
+        <SiteHeader />
+        <main className="container mx-auto px-4 py-12">
+          <div className="max-w-md mx-auto text-center">
+            <div className="bg-muted/50 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6">
+              <Lock className="h-10 w-10 text-muted-foreground" />
+            </div>
+            <h1 className="text-2xl font-bold mb-3">掲示板</h1>
+            <p className="text-muted-foreground mb-6">
+              掲示板はスタンダード会員以上の方がご利用いただけます。
+            </p>
+            <Link href="/pricing">
+              <Button size="lg" className="gap-2">
+                <Crown className="h-4 w-4" />
+                スタンダード会員にアップグレード
+              </Button>
+            </Link>
+          </div>
+        </main>
+        <SiteFooter />
+      </div>
+    );
+  }
 
   if (loading) {
     return (

@@ -42,10 +42,10 @@ import {
 } from "@/components/ui/dialog";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
-import { therapistTypes } from "@/lib/data";
+import { therapistTypes, type User, getEffectiveTier, tierPermissions } from "@/lib/data";
 import { supabase } from "@/lib/supabase";
-
-type MemberLevel = "guest" | "free" | "freePosted" | "standard" | "vip";
+import { useAuth } from "@/lib/auth-context";
+import { createSupabaseBrowser } from "@/lib/supabase/client";
 
 interface PrefectureOption {
   id: string;
@@ -72,9 +72,39 @@ function SearchContent() {
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get("q") || "";
   const initialType = searchParams.get("type") || "";
+  const { user: authUser } = useAuth();
 
-  // Demo: 会員レベル切替
-  const [memberLevel, setMemberLevel] = useState<MemberLevel>("free");
+  // ティアチェック
+  const [membershipType, setMembershipType] = useState<string>("free");
+  const [monthlyReviewCount, setMonthlyReviewCount] = useState(0);
+
+  useEffect(() => {
+    if (!authUser) return;
+    const sb = createSupabaseBrowser();
+    sb.from("profiles")
+      .select("membership_type, monthly_review_count")
+      .eq("id", authUser.id)
+      .single()
+      .then(({ data }) => {
+        if (data) {
+          setMembershipType(data.membership_type || "free");
+          setMonthlyReviewCount(data.monthly_review_count || 0);
+        }
+      });
+  }, [authUser]);
+
+  const tierUser: User = {
+    id: authUser?.id || "",
+    email: authUser?.email || "",
+    name: "",
+    memberType: (membershipType as "free" | "standard" | "vip"),
+    monthlyReviewCount,
+    totalReviewCount: 0,
+    registeredAt: "",
+    favorites: [],
+  };
+  const effectiveTier = authUser ? getEffectiveTier(tierUser) : "free";
+  const permissions = tierPermissions[effectiveTier];
 
   // エリアデータ（Supabaseから取得）
   const [areas, setAreas] = useState<PrefectureOption[]>([]);
@@ -324,13 +354,13 @@ function SearchContent() {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeType, setUpgradeType] = useState<"score" | "skr" | "hr">("score");
 
-  // 権限チェック
-  const canUseScoreFilter = ["freePosted", "standard", "vip"].includes(memberLevel);
-  const canUseSKRFilter = ["standard", "vip"].includes(memberLevel);
-  const canUseHRFilter = memberLevel === "vip";
-  const canSeeRecommend = ["freePosted", "standard", "vip"].includes(memberLevel);
-  const canSeeSKRBadge = ["standard", "vip"].includes(memberLevel);
-  const canSeeHRBadge = memberLevel === "vip";
+  // 権限チェック（実際のティアから判定）
+  const canUseScoreFilter = permissions.canViewScores;
+  const canUseSKRFilter = permissions.canUseSKRFilter;
+  const canUseHRFilter = permissions.canUseHRFilter;
+  const canSeeRecommend = permissions.canViewScores;
+  const canSeeSKRBadge = permissions.canUseSKRFilter;
+  const canSeeHRBadge = permissions.canUseHRFilter;
 
   const styleOptions = [
     { id: "slender", label: "スレンダー" },
@@ -394,28 +424,6 @@ function SearchContent() {
         <SiteHeader />
 
         <main className="container mx-auto px-4 py-6">
-          {/* Demo: 会員レベル切替 */}
-          <div className="mb-4 p-3 bg-muted/50 rounded-lg flex items-center gap-2 flex-wrap">
-            <span className="text-sm font-medium">Demo会員切替:</span>
-            {(["guest", "free", "freePosted", "standard", "vip"] as MemberLevel[]).map(
-              (level) => (
-                <Button
-                  key={level}
-                  size="sm"
-                  variant={memberLevel === level ? "default" : "outline"}
-                  onClick={() => setMemberLevel(level)}
-                  className={memberLevel !== level ? "bg-transparent" : ""}
-                >
-                  {level === "guest" && "未登録"}
-                  {level === "free" && "無料(未投稿)"}
-                  {level === "freePosted" && "無料(投稿済)"}
-                  {level === "standard" && "スタンダード"}
-                  {level === "vip" && "VIP"}
-                </Button>
-              )
-            )}
-          </div>
-
           {/* 検索フォーム（Sticky） */}
           <div className="sticky top-0 z-40 bg-background pb-4 border-b mb-6">
             <Card>

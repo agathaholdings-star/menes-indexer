@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { MessageCircle, Clock, Eye, Search, Plus, Pin, Flame, TrendingUp, Send } from "lucide-react";
+import { MessageCircle, Clock, Eye, Search, Plus, Pin, Flame, TrendingUp, Send, Lock, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,6 +16,7 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { useAuth } from "@/lib/auth-context";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
+import { type User, getEffectiveTier, tierPermissions } from "@/lib/data";
 
 const categories = [
   { id: "all", label: "すべて" },
@@ -60,6 +61,41 @@ export default function BBSPage() {
   const [newCategory, setNewCategory] = useState("other");
   const [creating, setCreating] = useState(false);
 
+  // ティアチェック用
+  const [membershipType, setMembershipType] = useState<string>("free");
+  const [monthlyReviewCount, setMonthlyReviewCount] = useState(0);
+  const [profileLoading, setProfileLoading] = useState(true);
+
+  useEffect(() => {
+    if (!authUser) { setProfileLoading(false); return; }
+    const supabase = createSupabaseBrowser();
+    supabase
+      .from("profiles")
+      .select("membership_type, monthly_review_count")
+      .eq("id", authUser.id)
+      .single()
+      .then(({ data }) => {
+        if (data) {
+          setMembershipType(data.membership_type || "free");
+          setMonthlyReviewCount(data.monthly_review_count || 0);
+        }
+        setProfileLoading(false);
+      });
+  }, [authUser]);
+
+  const tierUser: User = {
+    id: authUser?.id || "",
+    email: authUser?.email || "",
+    name: "",
+    memberType: (membershipType as "free" | "standard" | "vip"),
+    monthlyReviewCount,
+    totalReviewCount: 0,
+    registeredAt: "",
+    favorites: [],
+  };
+  const effectiveTier = authUser ? getEffectiveTier(tierUser) : "free";
+  const permissions = tierPermissions[effectiveTier];
+
   const fetchThreads = async () => {
     const supabase = createSupabaseBrowser();
     const { data } = await supabase
@@ -103,6 +139,47 @@ export default function BBSPage() {
 
   // 人気スレッド（reply_count順）
   const popularThreads = [...threads].sort((a, b) => b.reply_count - a.reply_count).slice(0, 5);
+
+  // プロフィール読み込み中
+  if (profileLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <SiteHeader />
+        <main className="container mx-auto px-4 py-12 text-center">
+          <div className="animate-pulse h-8 bg-muted rounded w-48 mx-auto" />
+        </main>
+        <SiteFooter />
+      </div>
+    );
+  }
+
+  // ティアゲート: スタンダード以上のみ
+  if (!permissions.canUseBBS) {
+    return (
+      <div className="min-h-screen bg-background">
+        <SiteHeader />
+        <main className="container mx-auto px-4 py-12">
+          <div className="max-w-md mx-auto text-center">
+            <div className="bg-muted/50 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6">
+              <Lock className="h-10 w-10 text-muted-foreground" />
+            </div>
+            <h1 className="text-2xl font-bold mb-3">掲示板</h1>
+            <p className="text-muted-foreground mb-6">
+              掲示板はスタンダード会員以上の方がご利用いただけます。
+              アップグレードしてコミュニティに参加しましょう。
+            </p>
+            <Link href="/pricing">
+              <Button size="lg" className="gap-2">
+                <Crown className="h-4 w-4" />
+                スタンダード会員にアップグレード
+              </Button>
+            </Link>
+          </div>
+        </main>
+        <SiteFooter />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
