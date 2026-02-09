@@ -99,6 +99,17 @@ export default function MyPage() {
   const [bbsTab, setBbsTab] = useState("general");
   const [listPublic, setListPublic] = useState(false);
 
+  // Settings state
+  const [editNickname, setEditNickname] = useState("");
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [profileSaved, setProfileSaved] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [savingPassword, setSavingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordSaved, setPasswordSaved] = useState(false);
+
   // Profile state
   const [profile, setProfile] = useState<{
     nickname: string;
@@ -132,6 +143,7 @@ export default function MyPage() {
         });
         setMemberLevel((data.membership_type || "free") as MemberLevel);
         setMonthlyReviewCount(data.monthly_review_count || 0);
+        setEditNickname(data.nickname || "名無し");
       }
       setProfileLoading(false);
     };
@@ -777,19 +789,42 @@ export default function MyPage() {
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-4">
                   <Avatar className="h-20 w-20">
-                    <AvatarFallback className="text-2xl bg-primary/10 text-primary">{user.nickname.charAt(0)}</AvatarFallback>
+                    <AvatarFallback className="text-2xl bg-primary/10 text-primary">{editNickname.charAt(0)}</AvatarFallback>
                   </Avatar>
-                  <Button variant="outline" className="bg-transparent">アバターを変更</Button>
                 </div>
                 <div>
                   <Label>ユーザー名</Label>
-                  <Input defaultValue={user.nickname} className="mt-1" />
+                  <Input
+                    value={editNickname}
+                    onChange={(e) => { setEditNickname(e.target.value); setProfileSaved(false); }}
+                    className="mt-1"
+                  />
                 </div>
                 <div>
                   <Label>メールアドレス</Label>
-                  <Input defaultValue={user.email} className="mt-1" />
+                  <Input value={user.email} disabled className="mt-1 bg-muted" />
                 </div>
-                <Button>保存</Button>
+                <div className="flex items-center gap-3">
+                  <Button
+                    disabled={savingProfile || editNickname === profile?.nickname}
+                    onClick={async () => {
+                      if (!authUser || !editNickname.trim()) return;
+                      setSavingProfile(true);
+                      const { error } = await supabase
+                        .from("profiles")
+                        .update({ nickname: editNickname.trim() })
+                        .eq("id", authUser.id);
+                      setSavingProfile(false);
+                      if (!error) {
+                        setProfile(prev => prev ? { ...prev, nickname: editNickname.trim() } : prev);
+                        setProfileSaved(true);
+                      }
+                    }}
+                  >
+                    {savingProfile ? "保存中..." : "保存"}
+                  </Button>
+                  {profileSaved && <span className="text-sm text-green-600">保存しました</span>}
+                </div>
               </CardContent>
             </Card>
 
@@ -799,18 +834,53 @@ export default function MyPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label>現在のパスワード</Label>
-                  <Input type="password" className="mt-1" />
-                </div>
-                <div>
                   <Label>新しいパスワード</Label>
-                  <Input type="password" className="mt-1" />
+                  <Input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => { setNewPassword(e.target.value); setPasswordError(""); setPasswordSaved(false); }}
+                    className="mt-1"
+                    placeholder="8文字以上"
+                  />
                 </div>
                 <div>
                   <Label>新しいパスワード（確認）</Label>
-                  <Input type="password" className="mt-1" />
+                  <Input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => { setConfirmPassword(e.target.value); setPasswordError(""); setPasswordSaved(false); }}
+                    className="mt-1"
+                  />
                 </div>
-                <Button>パスワードを変更</Button>
+                {passwordError && <p className="text-sm text-destructive">{passwordError}</p>}
+                <div className="flex items-center gap-3">
+                  <Button
+                    disabled={savingPassword || !newPassword || !confirmPassword}
+                    onClick={async () => {
+                      if (newPassword.length < 8) {
+                        setPasswordError("パスワードは8文字以上にしてください");
+                        return;
+                      }
+                      if (newPassword !== confirmPassword) {
+                        setPasswordError("パスワードが一致しません");
+                        return;
+                      }
+                      setSavingPassword(true);
+                      const { error } = await supabase.auth.updateUser({ password: newPassword });
+                      setSavingPassword(false);
+                      if (error) {
+                        setPasswordError(error.message);
+                      } else {
+                        setNewPassword("");
+                        setConfirmPassword("");
+                        setPasswordSaved(true);
+                      }
+                    }}
+                  >
+                    {savingPassword ? "変更中..." : "パスワードを変更"}
+                  </Button>
+                  {passwordSaved && <span className="text-sm text-green-600">変更しました</span>}
+                </div>
               </CardContent>
             </Card>
 
