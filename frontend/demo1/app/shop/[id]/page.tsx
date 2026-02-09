@@ -1,21 +1,99 @@
 import { notFound } from "next/navigation";
-import { mockShops, getTherapistsByShopId, mockReviews } from "@/lib/data";
 import { ShopPageClient } from "./shop-page-client";
+import { getShopById, getShopBySlug, getTherapistsByShopId } from "@/lib/supabase-data";
+import type { Shop as DbShop, Therapist as DbTherapist } from "@/types/database";
+import type { Shop, Therapist, Review } from "@/lib/data";
 
 interface ShopPageProps {
   params: Promise<{ id: string }>;
 }
 
+// DBのShop → フロントのShop型
+function toFrontendShop(dbShop: DbShop): Shop {
+  return {
+    id: String(dbShop.id),
+    name: dbShop.display_name || dbShop.name,
+    area: "",
+    district: "",
+    access: dbShop.access || "",
+    hours: dbShop.business_hours || "",
+    priceRange: dbShop.base_price
+      ? `${dbShop.base_duration || 60}分 ¥${dbShop.base_price.toLocaleString()}〜`
+      : "",
+    genres: dbShop.service_tags || [],
+    description: dbShop.description || dbShop.salon_overview || "",
+    therapistCount: 0,
+    reviewCount: 0,
+    averageScore: 0,
+    rating: 0,
+    thumbnail: dbShop.image_url || "/placeholder.svg",
+    images: dbShop.image_url ? [dbShop.image_url] : [],
+    courses: [],
+  };
+}
+
+// DBのTherapist → フロントのTherapist型
+function toFrontendTherapist(t: DbTherapist, shopName: string): Therapist {
+  return {
+    id: String(t.id),
+    name: t.name,
+    age: t.age || 0,
+    shopId: String(t.shop_id),
+    shopName,
+    area: "",
+    district: "",
+    images: (t.image_urls as string[]) || [],
+    profile: {
+      height: t.height || 0,
+      bust: t.bust || "",
+      waist: t.waist || 0,
+      hip: t.hip || 0,
+      cup: t.cup || "",
+    },
+    comment: t.profile_text || "",
+    schedule: {},
+    tags: [],
+    typeId: "",
+    primaryType: "",
+    types: [],
+    bodyType: "",
+    parameters: {
+      conversation: 0,
+      distance: 0,
+      technique: 0,
+      personality: 0,
+    },
+    reviewCount: 0,
+    averageScore: 0,
+    rating: 0,
+  };
+}
+
 export default async function ShopPage({ params }: ShopPageProps) {
   const { id } = await params;
-  const shop = mockShops.find((s) => s.id === id);
 
-  if (!shop) {
+  // IDが数値ならIDで検索、そうでなければslugで検索
+  const isNumeric = /^\d+$/.test(id);
+  const dbShop = isNumeric
+    ? await getShopById(Number(id))
+    : await getShopBySlug(id);
+
+  if (!dbShop) {
     notFound();
   }
 
-  const therapists = getTherapistsByShopId(id);
-  const shopReviews = mockReviews.filter(r => therapists.some(t => t.id === r.therapistId));
+  const shop = toFrontendShop(dbShop);
+  shop.therapistCount = 0;
+
+  // セラピスト取得
+  const dbTherapists = await getTherapistsByShopId(dbShop.id);
+  const therapists = dbTherapists.map((t) =>
+    toFrontendTherapist(t, shop.name)
+  );
+  shop.therapistCount = therapists.length;
+
+  // レビューは未実装のため空配列
+  const shopReviews: Review[] = [];
 
   return <ShopPageClient shop={shop} therapists={therapists} shopReviews={shopReviews} />;
 }

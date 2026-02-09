@@ -8,12 +8,16 @@ export const therapistTypes = [
   { id: "yoen", label: "大人のお姉さん系", icon: "Flame", description: "落ち着いた雰囲気" },
 ] as const;
 
+export type TherapistType = typeof therapistTypes[number];
+
 export const bodyTypes = [
   { id: "slender", label: "スレンダー" },
   { id: "normal", label: "普通" },
   { id: "glamour", label: "グラマー（巨乳）" },
   { id: "chubby", label: "ぽっちゃり" },
 ] as const;
+
+export type BodyType = typeof bodyTypes[number];
 
 export const serviceTypes = [
   { id: "kenzen", label: "健全", icon: "Leaf", description: "マッサージ重視" },
