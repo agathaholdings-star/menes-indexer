@@ -30,31 +30,35 @@ export function HeroSection() {
 
   useEffect(() => {
     async function fetchData() {
-      // 都道府県を取得
-      const { data: prefs } = await supabase
-        .from("prefectures")
-        .select("id, name, slug")
-        .order("display_order", { ascending: true });
+      try {
+        // 都道府県を取得
+        const { data: prefs } = await supabase
+          .from("prefectures")
+          .select("id, name, slug")
+          .order("display_order", { ascending: true });
 
-      if (prefs) {
-        setPrefectures([
-          defaultArea,
-          ...prefs.map((p) => ({ label: p.name, value: p.name, slug: p.slug })),
-        ]);
+        if (prefs) {
+          setPrefectures([
+            defaultArea,
+            ...prefs.map((p) => ({ label: p.name, value: p.name, slug: p.slug })),
+          ]);
+        }
+
+        // 店舗数とエリア数を取得
+        const { count: sc } = await supabase
+          .from("shops")
+          .select("*", { count: "exact", head: true })
+          .eq("is_active", true);
+        if (sc !== null) setShopCount(sc);
+
+        const { count: ac } = await supabase
+          .from("areas")
+          .select("*", { count: "exact", head: true })
+          .gt("salon_count", 0);
+        if (ac !== null) setAreaCount(ac);
+      } catch (err) {
+        console.error("ヒーローセクションデータ取得エラー:", err);
       }
-
-      // 店舗数とエリア数を取得
-      const { count: sc } = await supabase
-        .from("shops")
-        .select("*", { count: "exact", head: true })
-        .eq("is_active", true);
-      if (sc) setShopCount(sc);
-
-      const { count: ac } = await supabase
-        .from("areas")
-        .select("*", { count: "exact", head: true })
-        .gt("salon_count", 0);
-      if (ac) setAreaCount(ac);
     }
     fetchData();
   }, []);

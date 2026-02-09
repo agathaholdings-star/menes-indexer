@@ -115,6 +115,7 @@ export default function MyPage() {
     nickname: string;
     membership_type: string;
     monthly_review_count: number;
+    total_review_count: number;
     view_permission_until: string | null;
   } | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
@@ -130,7 +131,7 @@ export default function MyPage() {
     const fetchProfile = async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("nickname, membership_type, monthly_review_count, view_permission_until")
+        .select("nickname, membership_type, monthly_review_count, total_review_count, view_permission_until")
         .eq("id", authUser.id)
         .single();
 
@@ -139,6 +140,7 @@ export default function MyPage() {
           nickname: data.nickname || "名無し",
           membership_type: data.membership_type || "free",
           monthly_review_count: data.monthly_review_count || 0,
+          total_review_count: data.total_review_count || 0,
           view_permission_until: data.view_permission_until,
         });
         setMemberLevel((data.membership_type || "free") as MemberLevel);
@@ -175,7 +177,7 @@ export default function MyPage() {
     name: profile?.nickname || "名無し",
     memberType: memberLevel,
     monthlyReviewCount: monthlyReviewCount,
-    totalReviewCount: 0,
+    totalReviewCount: profile?.total_review_count || 0,
     registeredAt: authUser.created_at || "",
     favorites: [],
   };
@@ -190,7 +192,7 @@ export default function MyPage() {
     nickname: profile?.nickname || "名無し",
     email: authUser.email || "",
     memberSince: memberSinceDate,
-    reviewCount: 0,
+    reviewCount: profile?.total_review_count || 0,
     favoriteCount: 0,
   };
 

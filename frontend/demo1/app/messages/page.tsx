@@ -68,8 +68,11 @@ export default function MessagesPage() {
   const [searchedUsers, setSearchedUsers] = useState<SearchedUser[]>([]);
   const [searching, setSearching] = useState(false);
 
+  const { loading: authLoading } = useAuth();
+
   // プロフィール取得（ティア判定用）
   useEffect(() => {
+    if (authLoading) return;
     if (!authUser) { setProfileLoading(false); return; }
     const supabase = createSupabaseBrowser();
     supabase
@@ -84,7 +87,7 @@ export default function MessagesPage() {
         }
         setProfileLoading(false);
       });
-  }, [authUser]);
+  }, [authUser, authLoading]);
 
   const tierUser: User = {
     id: authUser?.id || "",
@@ -292,6 +295,19 @@ export default function MessagesPage() {
       ]);
     }
   };
+
+  // Auth/プロフィール読み込み中
+  if (authLoading || profileLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <SiteHeader />
+        <main className="container mx-auto px-4 py-12 text-center">
+          <div className="animate-pulse h-8 bg-muted rounded w-48 mx-auto" />
+        </main>
+        <SiteFooter />
+      </div>
+    );
+  }
 
   // 未ログイン
   if (!authUser) {

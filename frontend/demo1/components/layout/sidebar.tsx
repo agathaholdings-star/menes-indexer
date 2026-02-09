@@ -28,33 +28,37 @@ export function Sidebar() {
 
   useEffect(() => {
     async function fetchData() {
-      const [shopRes, therapistRes] = await Promise.all([
-        supabase
-          .from("shops")
-          .select("id, name, display_name, slug, access")
-          .eq("is_active", true)
-          .limit(5),
-        supabase
-          .from("therapists")
-          .select("id, name, image_urls, shop_id, shops(name, display_name)")
-          .eq("status", "active")
-          .order("created_at", { ascending: false })
-          .limit(5),
-      ]);
-      if (shopRes.data) setShops(shopRes.data as SidebarShop[]);
-      if (therapistRes.data) {
-        setTherapists(
-          therapistRes.data.map((t) => {
-            const imgs = t.image_urls as string[] | null;
-            const shop = t.shops as { name: string; display_name: string | null } | null;
-            return {
-              id: Number(t.id),
-              name: t.name.replace(/\s*\(.*\)$/, ""), // Remove English name in parens
-              image_url: imgs?.[0] || null,
-              shop_name: shop?.display_name || shop?.name || "",
-            };
-          })
-        );
+      try {
+        const [shopRes, therapistRes] = await Promise.all([
+          supabase
+            .from("shops")
+            .select("id, name, display_name, slug, access")
+            .eq("is_active", true)
+            .limit(5),
+          supabase
+            .from("therapists")
+            .select("id, name, image_urls, shop_id, shops(name, display_name)")
+            .eq("status", "active")
+            .order("created_at", { ascending: false })
+            .limit(5),
+        ]);
+        if (shopRes.data) setShops(shopRes.data as SidebarShop[]);
+        if (therapistRes.data) {
+          setTherapists(
+            therapistRes.data.map((t) => {
+              const imgs = t.image_urls as string[] | null;
+              const shop = t.shops as { name: string; display_name: string | null } | null;
+              return {
+                id: Number(t.id),
+                name: t.name.replace(/\s*\(.*\)$/, ""),
+                image_url: imgs?.[0] || null,
+                shop_name: shop?.display_name || shop?.name || "",
+              };
+            })
+          );
+        }
+      } catch (err) {
+        console.error("サイドバーデータ取得エラー:", err);
       }
     }
     fetchData();
@@ -121,7 +125,7 @@ export function Sidebar() {
             </ul>
           ) : (
             <p className="text-sm text-muted-foreground text-center py-4">
-              データを準備中です
+              セラピスト情報を準備中です。<br />もう少々お待ちください。
             </p>
           )}
           <Link

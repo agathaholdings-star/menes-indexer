@@ -23,6 +23,7 @@ interface DBShop {
   id: number;
   name: string;
   display_name: string | null;
+  access: string | null;
 }
 
 interface DBTherapist {
@@ -51,8 +52,11 @@ const typeIcons: Record<string, React.ElementType> = {
   yoen: Flame,
 };
 
-// Top prefectures for quick access
-const topPrefectures = ["東京", "大阪", "福岡", "名古屋"];
+// Prefecture short name → DB name mapping
+const prefectureShortNames: Record<string, string> = {
+  "東京": "東京都", "大阪": "大阪府", "京都": "京都府",
+  "北海道": "北海道",
+};
 
 export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, memberType = "free", monthlyReviewCount = 0 }: ReviewWizardModalProps) {
   const supabase = createSupabaseBrowser();
@@ -87,24 +91,69 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
 
   // DB state
   const [prefectures, setPrefectures] = useState<{ id: number; name: string }[]>([]);
+  const [prefecturesWithShops, setPrefecturesWithShops] = useState<{ id: number; name: string; shop_count: number }[]>([]);
   const [dbShops, setDbShops] = useState<DBShop[]>([]);
   const [dbTherapists, setDbTherapists] = useState<DBTherapist[]>([]);
+  const [directSearchMode, setDirectSearchMode] = useState(false);
+  const [directShopSearch, setDirectShopSearch] = useState("");
+  const [directSearchResults, setDirectSearchResults] = useState<DBShop[]>([]);
+  const [shopStepSkipped, setShopStepSkipped] = useState(false);
 
-  // Fetch prefectures on mount
+  // Fetch prefectures on mount + which ones have shops
   useEffect(() => {
     if (!open) return;
     const fetchPrefectures = async () => {
       const { data } = await supabase.from("prefectures").select("id, name").order("id");
       if (data) setPrefectures(data);
+
+      // Get prefectures that actually have shops
+      const { data: shopPrefData } = await supabase.rpc("get_prefectures_with_shops");
+      if (shopPrefData) {
+        setPrefecturesWithShops(shopPrefData);
+      } else {
+        // Fallback: fetch manually
+        const { data: allShopAreas } = await supabase
+          .from("shop_areas")
+          .select("area_id, areas(prefecture_id)");
+        if (allShopAreas && data) {
+          const prefCounts = new Map<number, number>();
+          allShopAreas.forEach((sa: any) => {
+            if (sa.areas?.prefecture_id) {
+              prefCounts.set(sa.areas.prefecture_id, (prefCounts.get(sa.areas.prefecture_id) || 0) + 1);
+            }
+          });
+          const withShops = data
+            .filter(p => prefCounts.has(p.id))
+            .map(p => ({ ...p, shop_count: prefCounts.get(p.id) || 0 }));
+          setPrefecturesWithShops(withShops);
+        }
+      }
     };
     fetchPrefectures();
   }, [open]);
+
+  // Direct shop search (across all shops)
+  useEffect(() => {
+    if (!directSearchMode || directShopSearch.length < 1) { setDirectSearchResults([]); return; }
+    const timer = setTimeout(async () => {
+      const { data } = await supabase
+        .from("shops")
+        .select("id, name, display_name, access")
+        .or(`display_name.ilike.%${directShopSearch}%,name.ilike.%${directShopSearch}%`)
+        .limit(30);
+      if (data) setDirectSearchResults(data);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [directShopSearch, directSearchMode]);
 
   // Fetch shops when area (prefecture) selected
   useEffect(() => {
     if (!selectedArea) { setDbShops([]); return; }
     const fetchShops = async () => {
-      const prefecture = prefectures.find(p => p.name === selectedArea);
+      // Match prefecture name: try exact, then with suffix, then partial
+      const prefecture = prefectures.find(p => p.name === selectedArea)
+        || prefectures.find(p => p.name === prefectureShortNames[selectedArea])
+        || prefectures.find(p => p.name.startsWith(selectedArea));
       if (!prefecture) return;
       // Get area IDs for this prefecture, then shops via shop_areas
       const { data: areaData } = await supabase
@@ -115,7 +164,7 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
       const areaIds = areaData.map(a => a.id);
       const { data: shopAreaData } = await supabase
         .from("shop_areas")
-        .select("shop_id, shops(id, name, display_name)")
+        .select("shop_id, shops(id, name, display_name, access)")
         .in("area_id", areaIds);
       if (shopAreaData) {
         const shopMap = new Map<string, DBShop>();
@@ -125,6 +174,7 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
               id: sa.shops.id,
               name: sa.shops.name,
               display_name: sa.shops.display_name,
+              access: sa.shops.access,
             });
           }
         });
@@ -218,8 +268,16 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
           console.error("Review insert failed:", error);
         } else {
           // Review-to-Earn: プロフィール更新
+          // 現在のtotal_review_countを取得してインクリメント
+          const { data: profileData } = await supabase
+            .from("profiles")
+            .select("total_review_count")
+            .eq("id", authUser.id)
+            .single();
+
           const updates: Record<string, unknown> = {
             monthly_review_count: monthlyReviewCount + 1,
+            total_review_count: (profileData?.total_review_count || 0) + 1,
           };
           // 無料会員: 3日間の閲覧権限を付与
           if (memberType === "free") {
@@ -243,7 +301,14 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
 
   const handleBack = () => {
     if (step > 0) {
-      setStep(step - 1);
+      // 直接検索でstep 1をスキップした場合、step 2→step 0に戻る
+      if (step === 2 && shopStepSkipped) {
+        setShopStepSkipped(false);
+        setSelectedShopId(null);
+        setStep(0);
+      } else {
+        setStep(step - 1);
+      }
     }
   };
 
@@ -298,6 +363,7 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
     setIsComplete(false);
     setShowMissingReport(false);
     setMissingTherapistName("");
+    setShopStepSkipped(false);
     onOpenChange(false);
   };
 
@@ -328,19 +394,23 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
         </DialogHeader>
 
         {/* Progress Bar */}
-        {!isComplete && (
-          <div className="flex gap-1 px-6 pt-4">
-            {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
-              <div
-                key={i}
-                className={cn(
-                  "h-1.5 flex-1 rounded-full transition-colors",
-                  i <= step ? "bg-primary" : "bg-muted"
-                )}
-              />
-            ))}
-          </div>
-        )}
+        {!isComplete && (() => {
+          const totalSteps = shopStepSkipped ? TOTAL_STEPS - 1 : TOTAL_STEPS;
+          const currentStep = shopStepSkipped && step >= 2 ? step - 1 : step;
+          return (
+            <div className="flex gap-1 px-6 pt-4">
+              {Array.from({ length: totalSteps }).map((_, i) => (
+                <div
+                  key={i}
+                  className={cn(
+                    "h-1.5 flex-1 rounded-full transition-colors",
+                    i <= currentStep ? "bg-primary" : "bg-muted"
+                  )}
+                />
+              ))}
+            </div>
+          );
+        })()}
 
         {/* Step Content */}
         <div className="min-h-[400px] p-6">
@@ -353,13 +423,30 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
           ) : (
             <>
               {step === 0 && (
-                <StepArea
-                  selectedArea={selectedArea}
-                  onSelect={handleAreaSelect}
-                  showAllAreas={showAllAreas}
-                  setShowAllAreas={setShowAllAreas}
-                  allAreas={allAreas}
-                />
+                directSearchMode ? (
+                  <StepDirectSearch
+                    directShopSearch={directShopSearch}
+                    setDirectShopSearch={setDirectShopSearch}
+                    searchResults={directSearchResults}
+                    onSelectShop={(shop) => {
+                      setSelectedShopId(shop.id);
+                      setDirectSearchMode(false);
+                      setShopStepSkipped(true);
+                      setTimeout(() => setStep(2), 300);
+                    }}
+                    onBack={() => setDirectSearchMode(false)}
+                  />
+                ) : (
+                  <StepArea
+                    selectedArea={selectedArea}
+                    onSelect={handleAreaSelect}
+                    showAllAreas={showAllAreas}
+                    setShowAllAreas={setShowAllAreas}
+                    allAreas={allAreas}
+                    prefecturesWithShops={prefecturesWithShops}
+                    onDirectSearch={() => setDirectSearchMode(true)}
+                  />
+                )
               )}
               {step === 1 && (
                 <StepShop
@@ -425,7 +512,7 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
               戻る
             </Button>
             <span className="text-sm text-muted-foreground">
-              {step + 1} / {TOTAL_STEPS}
+              {(shopStepSkipped && step >= 2 ? step : step + 1)} / {shopStepSkipped ? TOTAL_STEPS - 1 : TOTAL_STEPS}
             </span>
             <Button onClick={handleNext} disabled={!canProceed() || submitting} className="gap-1">
               {submitting ? "投稿中..." : step === TOTAL_STEPS - 1 ? "投稿する" : "次へ"}
@@ -445,14 +532,21 @@ function StepArea({
   showAllAreas,
   setShowAllAreas,
   allAreas,
+  prefecturesWithShops,
+  onDirectSearch,
 }: {
   selectedArea: string | null;
   onSelect: (area: string) => void;
   showAllAreas: boolean;
   setShowAllAreas: (v: boolean) => void;
   allAreas: string[];
+  prefecturesWithShops: { id: number; name: string; shop_count: number }[];
+  onDirectSearch: () => void;
 }) {
-  const displayAreas = showAllAreas ? allAreas : topPrefectures;
+  // Show prefectures with shops first, then all
+  const topAreas = prefecturesWithShops.slice(0, 8);
+  const displayAreas = showAllAreas ? allAreas : topAreas.map(p => p.name);
+  const shopCounts = new Map(prefecturesWithShops.map(p => [p.name, p.shop_count]));
 
   return (
     <div>
@@ -460,6 +554,17 @@ function StepArea({
       <p className="text-sm text-muted-foreground mb-4">
         メンズエステのあるエリアを選んでください
       </p>
+
+      {/* Direct search shortcut */}
+      <button
+        type="button"
+        onClick={onDirectSearch}
+        className="w-full mb-4 flex items-center gap-2 px-4 py-3 rounded-lg border border-dashed hover:bg-muted/50 transition-colors"
+      >
+        <Search className="h-4 w-4 text-muted-foreground" />
+        <span className="text-sm text-muted-foreground">店舗名で直接検索</span>
+      </button>
+
       <div className="grid grid-cols-2 gap-3">
         {displayAreas.map((area) => (
           <button
@@ -474,7 +579,12 @@ function StepArea({
             )}
           >
             <MapPin className="h-5 w-5 text-primary" />
-            <span className="font-medium">{area}</span>
+            <div className="text-left">
+              <span className="font-medium">{area}</span>
+              {shopCounts.has(area) && (
+                <span className="text-xs text-muted-foreground ml-1">({shopCounts.get(area)})</span>
+              )}
+            </div>
           </button>
         ))}
       </div>
@@ -484,9 +594,76 @@ function StepArea({
           onClick={() => setShowAllAreas(true)}
           className="w-full mt-4 text-sm text-primary hover:underline"
         >
-          他のエリアを表示
+          他のエリアを表示（{allAreas.length}都道府県）
         </button>
       )}
+      {displayAreas.length === 0 && (
+        <p className="text-sm text-muted-foreground text-center py-4">
+          店舗データを準備中です。「店舗名で直接検索」をお試しください。
+        </p>
+      )}
+    </div>
+  );
+}
+
+// Direct Shop Search (skip prefecture selection)
+function StepDirectSearch({
+  directShopSearch,
+  setDirectShopSearch,
+  searchResults,
+  onSelectShop,
+  onBack,
+}: {
+  directShopSearch: string;
+  setDirectShopSearch: (v: string) => void;
+  searchResults: DBShop[];
+  onSelectShop: (shop: DBShop) => void;
+  onBack: () => void;
+}) {
+  return (
+    <div>
+      <div className="flex items-center gap-2 mb-1">
+        <button type="button" onClick={onBack} className="text-muted-foreground hover:text-foreground">
+          <ChevronLeft className="h-4 w-4" />
+        </button>
+        <h3 className="text-base font-semibold">店舗名で検索</h3>
+      </div>
+      <p className="text-sm text-muted-foreground mb-4">
+        店舗名の一部を入力してください
+      </p>
+      <div className="relative mb-4">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          placeholder="例: アロマ、リラク、スパ..."
+          value={directShopSearch}
+          onChange={(e) => setDirectShopSearch(e.target.value)}
+          className="pl-10"
+          autoFocus
+        />
+      </div>
+      <div className="space-y-2 max-h-64 overflow-y-auto">
+        {directShopSearch.length === 0 && (
+          <p className="text-sm text-muted-foreground text-center py-4">店舗名を入力すると候補が表示されます</p>
+        )}
+        {directShopSearch.length > 0 && searchResults.length === 0 && (
+          <p className="text-sm text-muted-foreground text-center py-4">該当する店舗が見つかりません</p>
+        )}
+        {searchResults.map(shop => (
+          <button
+            key={shop.id}
+            type="button"
+            onClick={() => onSelectShop(shop)}
+            className="w-full text-left px-4 py-3 rounded-lg transition-colors hover:bg-muted border flex items-center justify-between"
+          >
+            <div>
+              <span className="font-medium">{shop.display_name || shop.name}</span>
+              {shop.access && (
+                <p className="text-xs text-muted-foreground mt-0.5">{shop.access}</p>
+              )}
+            </div>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
@@ -906,7 +1083,7 @@ function StepText({
         </label>
         <Textarea
           id="q1"
-          placeholder="写真より可愛くてびっくり！明るい笑顔で出迎えてくれました。"
+          placeholder="写真より可愛くてびっくり！とても明るい笑顔で出迎えてくれて、初めての緊張が一気にほぐれました。雰囲気も良くて安心感がありました。"
           value={reviewText.q1}
           onChange={(e) => onChange("q1", e.target.value)}
           rows={2}
@@ -925,7 +1102,7 @@ function StepText({
         </label>
         <Textarea
           id="q2"
-          placeholder="会話がとても楽しく、施術も丁寧。時間があっという間に過ぎました。技術もしっかりしていてコリがほぐれました。"
+          placeholder="会話がとても楽しく、施術も丁寧で時間があっという間に過ぎました。技術もしっかりしていてコリがほぐれました。特にアロマの香りが良く、肩甲骨まわりの圧が絶妙で、施術後は体がとても軽くなりました。リラックスできる空間づくりも素晴らしかったです。"
           value={reviewText.q2}
           onChange={(e) => onChange("q2", e.target.value)}
           rows={3}
@@ -944,7 +1121,7 @@ function StepText({
         </label>
         <Textarea
           id="q3"
-          placeholder="人気なので予約は早めがおすすめ。土日は特に取りにくいです。"
+          placeholder="人気なので予約は早めがおすすめです。土日は特に取りにくいので平日がねらい目。次回は指名で予約しようと思います。"
           value={reviewText.q3}
           onChange={(e) => onChange("q3", e.target.value)}
           rows={2}

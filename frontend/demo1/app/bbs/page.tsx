@@ -66,7 +66,10 @@ export default function BBSPage() {
   const [monthlyReviewCount, setMonthlyReviewCount] = useState(0);
   const [profileLoading, setProfileLoading] = useState(true);
 
+  const { loading: authLoading } = useAuth();
+
   useEffect(() => {
+    if (authLoading) return;
     if (!authUser) { setProfileLoading(false); return; }
     const supabase = createSupabaseBrowser();
     supabase
@@ -81,7 +84,7 @@ export default function BBSPage() {
         }
         setProfileLoading(false);
       });
-  }, [authUser]);
+  }, [authUser, authLoading]);
 
   const tierUser: User = {
     id: authUser?.id || "",
@@ -140,8 +143,8 @@ export default function BBSPage() {
   // 人気スレッド（reply_count順）
   const popularThreads = [...threads].sort((a, b) => b.reply_count - a.reply_count).slice(0, 5);
 
-  // プロフィール読み込み中
-  if (profileLoading) {
+  // Auth/プロフィール読み込み中
+  if (authLoading || profileLoading) {
     return (
       <div className="min-h-screen bg-background">
         <SiteHeader />

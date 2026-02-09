@@ -95,7 +95,20 @@ export function SiteHeader() {
     }
   };
 
-  const [monthlyReviewCount, setMonthlyReviewCount] = useState(1);
+  const [monthlyReviewCount, setMonthlyReviewCount] = useState(0);
+
+  useEffect(() => {
+    if (!authUser) return;
+    const supabase = createSupabaseBrowser();
+    supabase
+      .from("profiles")
+      .select("monthly_review_count")
+      .eq("id", authUser.id)
+      .single()
+      .then(({ data }) => {
+        if (data) setMonthlyReviewCount(data.monthly_review_count || 0);
+      });
+  }, [authUser]);
 
   const nickname = authUser?.user_metadata?.nickname || authUser?.email?.split("@")[0] || "ユーザー";
 
