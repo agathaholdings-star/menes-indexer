@@ -1,16 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { MessageCircle, Clock, Eye, ChevronRight, Search, Plus, Pin, Flame, TrendingUp } from "lucide-react";
+import { MessageCircle, Clock, Eye, Search, Plus, Pin, Flame, TrendingUp, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
-import { Sidebar } from "@/components/layout/sidebar";
+import { useAuth } from "@/lib/auth-context";
+import { createSupabaseBrowser } from "@/lib/supabase/client";
 
 const categories = [
   { id: "all", label: "すべて" },
@@ -20,84 +25,55 @@ const categories = [
   { id: "other", label: "雑談" },
 ];
 
-const threads = [
-  {
-    id: 1,
-    title: "新宿エリアでおすすめの店舗を教えてください",
-    category: "question",
-    author: "名無しさん",
-    createdAt: "2時間前",
-    replyCount: 24,
-    viewCount: 312,
-    lastReplyAt: "5分前",
-    isPinned: true,
-    isHot: true,
-  },
-  {
-    id: 2,
-    title: "初めてメンズエステに行く方へのアドバイス",
-    category: "info",
-    author: "経験者A",
-    createdAt: "1日前",
-    replyCount: 156,
-    viewCount: 2341,
-    lastReplyAt: "30分前",
-    isPinned: true,
-    isHot: false,
-  },
-  {
-    id: 3,
-    title: "池袋の〇〇に行ってきました",
-    category: "review",
-    author: "レビュアーB",
-    createdAt: "3時間前",
-    replyCount: 8,
-    viewCount: 89,
-    lastReplyAt: "1時間前",
-    isPinned: false,
-    isHot: true,
-  },
-  {
-    id: 4,
-    title: "施術中の会話ってどうしてますか？",
-    category: "question",
-    author: "名無しさん",
-    createdAt: "5時間前",
-    replyCount: 42,
-    viewCount: 523,
-    lastReplyAt: "10分前",
-    isPinned: false,
-    isHot: false,
-  },
-  {
-    id: 5,
-    title: "最近オープンした店舗情報まとめ",
-    category: "info",
-    author: "情報通C",
-    createdAt: "2日前",
-    replyCount: 67,
-    viewCount: 1205,
-    lastReplyAt: "2時間前",
-    isPinned: false,
-    isHot: false,
-  },
-  {
-    id: 6,
-    title: "予約が取りにくいセラピストの攻略法",
-    category: "other",
-    author: "名無しさん",
-    createdAt: "1日前",
-    replyCount: 33,
-    viewCount: 678,
-    lastReplyAt: "45分前",
-    isPinned: false,
-    isHot: false,
-  },
-];
+interface DBThread {
+  id: number;
+  title: string;
+  category: string;
+  is_pinned: boolean;
+  view_count: number;
+  reply_count: number;
+  last_reply_at: string | null;
+  created_at: string;
+  user_id: string;
+  profiles: { nickname: string | null } | null;
+}
+
+function timeAgo(dateStr: string): string {
+  const now = new Date();
+  const date = new Date(dateStr);
+  const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
+  if (diff < 60) return `${diff}秒前`;
+  if (diff < 3600) return `${Math.floor(diff / 60)}分前`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}時間前`;
+  return `${Math.floor(diff / 86400)}日前`;
+}
 
 export default function BBSPage() {
+  const { user: authUser } = useAuth();
   const [activeCategory, setActiveCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [threads, setThreads] = useState<DBThread[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newTitle, setNewTitle] = useState("");
+  const [newBody, setNewBody] = useState("");
+  const [newCategory, setNewCategory] = useState("other");
+  const [creating, setCreating] = useState(false);
+
+  const fetchThreads = async () => {
+    const supabase = createSupabaseBrowser();
+    const { data } = await supabase
+      .from("bbs_threads")
+      .select("id, title, category, is_pinned, view_count, reply_count, last_reply_at, created_at, user_id, profiles(nickname)")
+      .order("is_pinned", { ascending: false })
+      .order("last_reply_at", { ascending: false, nullsFirst: false })
+      .order("created_at", { ascending: false })
+      .limit(50);
+    setThreads((data as unknown as DBThread[]) || []);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchThreads(); }, []);
 
   const filteredThreads = threads.filter((thread) => {
     const matchesCategory = activeCategory === "all" || thread.category === activeCategory;
@@ -105,11 +81,28 @@ export default function BBSPage() {
     return matchesCategory && matchesSearch;
   });
 
-  const sortedThreads = [...filteredThreads].sort((a, b) => {
-    if (a.isPinned && !b.isPinned) return -1;
-    if (!a.isPinned && b.isPinned) return 1;
-    return 0;
-  });
+  const handleCreateThread = async () => {
+    if (!authUser || !newTitle.trim() || !newBody.trim()) return;
+    setCreating(true);
+    const supabase = createSupabaseBrowser();
+    const { error } = await supabase.from("bbs_threads").insert({
+      user_id: authUser.id,
+      title: newTitle.trim(),
+      body: newBody.trim(),
+      category: newCategory,
+    });
+    if (!error) {
+      setNewTitle("");
+      setNewBody("");
+      setNewCategory("other");
+      setShowCreateModal(false);
+      fetchThreads();
+    }
+    setCreating(false);
+  };
+
+  // 人気スレッド（reply_count順）
+  const popularThreads = [...threads].sort((a, b) => b.reply_count - a.reply_count).slice(0, 5);
 
   return (
     <div className="min-h-screen bg-background">
@@ -123,7 +116,7 @@ export default function BBSPage() {
                 <h1 className="text-2xl font-bold">掲示板</h1>
                 <p className="text-muted-foreground">メンズエステについて自由に語り合おう</p>
               </div>
-              <Button className="gap-2">
+              <Button className="gap-2" onClick={() => setShowCreateModal(true)} disabled={!authUser}>
                 <Plus className="h-4 w-4" />
                 新規スレッド作成
               </Button>
@@ -151,91 +144,101 @@ export default function BBSPage() {
               </TabsList>
             </Tabs>
 
-            <div className="space-y-3">
-              {sortedThreads.map((thread) => (
-                <Link key={thread.id} href={`/bbs/${thread.id}`}>
-                  <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                    <CardContent className="p-4">
-                      <div className="flex items-start gap-4">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1 flex-wrap">
-                            {thread.isPinned && (
-                              <Badge variant="outline" className="gap-1 text-xs">
-                                <Pin className="h-3 w-3" />
-                                固定
+            {loading ? (
+              <div className="space-y-3">
+                {[...Array(5)].map((_, i) => (
+                  <Card key={i}><CardContent className="p-4"><div className="animate-pulse h-16 bg-muted rounded" /></CardContent></Card>
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {filteredThreads.map((thread) => (
+                  <Link key={thread.id} href={`/bbs/${thread.id}`}>
+                    <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                      <CardContent className="p-4">
+                        <div className="flex items-start gap-4">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
+                              {thread.is_pinned && (
+                                <Badge variant="outline" className="gap-1 text-xs">
+                                  <Pin className="h-3 w-3" />
+                                  固定
+                                </Badge>
+                              )}
+                              {thread.reply_count >= 10 && (
+                                <Badge variant="secondary" className="gap-1 text-xs bg-orange-100 text-orange-700">
+                                  <Flame className="h-3 w-3" />
+                                  HOT
+                                </Badge>
+                              )}
+                              <Badge variant="outline" className="text-xs">
+                                {categories.find((c) => c.id === thread.category)?.label}
                               </Badge>
-                            )}
-                            {thread.isHot && (
-                              <Badge variant="secondary" className="gap-1 text-xs bg-orange-100 text-orange-700">
-                                <Flame className="h-3 w-3" />
-                                HOT
-                              </Badge>
-                            )}
-                            <Badge variant="outline" className="text-xs">
-                              {categories.find((c) => c.id === thread.category)?.label}
-                            </Badge>
+                            </div>
+                            <h3 className="font-medium mb-2 line-clamp-1">{thread.title}</h3>
+                            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                              <span>{thread.profiles?.nickname || "名無しさん"}</span>
+                              <span>{timeAgo(thread.created_at)}</span>
+                            </div>
                           </div>
-                          <h3 className="font-medium mb-2 line-clamp-1">{thread.title}</h3>
-                          <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                            <span>{thread.author}</span>
-                            <span>{thread.createdAt}</span>
+                          <div className="flex flex-col items-end gap-1 text-xs text-muted-foreground flex-shrink-0">
+                            <div className="flex items-center gap-1">
+                              <MessageCircle className="h-3 w-3" />
+                              <span>{thread.reply_count}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Eye className="h-3 w-3" />
+                              <span>{thread.view_count}</span>
+                            </div>
+                            {thread.last_reply_at && (
+                              <div className="flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                <span>{timeAgo(thread.last_reply_at)}</span>
+                              </div>
+                            )}
                           </div>
                         </div>
-                        <div className="flex flex-col items-end gap-1 text-xs text-muted-foreground flex-shrink-0">
-                          <div className="flex items-center gap-1">
-                            <MessageCircle className="h-3 w-3" />
-                            <span>{thread.replyCount}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Eye className="h-3 w-3" />
-                            <span>{thread.viewCount}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            <span>{thread.lastReplyAt}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-
-            {sortedThreads.length === 0 && (
-              <div className="text-center py-12">
-                <MessageCircle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">該当するスレッドがありません</p>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))}
               </div>
             )}
 
-            <div className="flex justify-center mt-8">
-              <Button variant="outline">もっと見る</Button>
-            </div>
+            {!loading && filteredThreads.length === 0 && (
+              <div className="text-center py-12">
+                <MessageCircle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground mb-2">まだスレッドがありません</p>
+                <p className="text-sm text-muted-foreground mb-4">最初のスレッドを作成しましょう</p>
+                <Button onClick={() => setShowCreateModal(true)} disabled={!authUser}>新規スレッド作成</Button>
+              </div>
+            )}
           </div>
 
           <aside className="w-full lg:w-80 flex-shrink-0">
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4 text-primary" />
-                  人気のスレッド
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {threads.slice(0, 5).map((thread, index) => (
-                  <Link key={thread.id} href={`/bbs/${thread.id}`} className="flex items-start gap-3 group">
-                    <span className="text-lg font-bold text-muted-foreground w-6">{index + 1}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors">
-                        {thread.title}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">{thread.replyCount}件のレス</p>
-                    </div>
-                  </Link>
-                ))}
-              </CardContent>
-            </Card>
+            {popularThreads.length > 0 && (
+              <Card className="mb-6">
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-primary" />
+                    人気のスレッド
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {popularThreads.map((thread, index) => (
+                    <Link key={thread.id} href={`/bbs/${thread.id}`} className="flex items-start gap-3 group">
+                      <span className="text-lg font-bold text-muted-foreground w-6">{index + 1}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors">
+                          {thread.title}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">{thread.reply_count}件のレス</p>
+                      </div>
+                    </Link>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
 
             <Card>
               <CardHeader>
@@ -255,6 +258,58 @@ export default function BBSPage() {
       </main>
 
       <SiteFooter />
+
+      {/* 新規スレッド作成モーダル */}
+      <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>新規スレッド作成</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>カテゴリ</Label>
+              <Select value={newCategory} onValueChange={setNewCategory}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.filter((c) => c.id !== "all").map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>タイトル</Label>
+              <Input
+                value={newTitle}
+                onChange={(e) => setNewTitle(e.target.value)}
+                placeholder="スレッドのタイトルを入力"
+                className="mt-1"
+                maxLength={100}
+              />
+            </div>
+            <div>
+              <Label>本文</Label>
+              <Textarea
+                value={newBody}
+                onChange={(e) => setNewBody(e.target.value)}
+                placeholder="スレッドの内容を入力"
+                rows={5}
+                className="mt-1"
+              />
+            </div>
+            <Button
+              className="w-full gap-2"
+              onClick={handleCreateThread}
+              disabled={creating || !newTitle.trim() || !newBody.trim()}
+            >
+              <Send className="h-4 w-4" />
+              {creating ? "作成中..." : "スレッドを作成"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

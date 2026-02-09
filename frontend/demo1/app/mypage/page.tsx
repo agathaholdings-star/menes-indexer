@@ -415,24 +415,7 @@ export default function MyPage() {
         );
 
       case "favorites":
-        return (
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-lg">お気に入りセラピスト</CardTitle>
-              <Badge variant="outline">0 / {permissions.favoriteLimit === 999 ? "無制限" : permissions.favoriteLimit}</Badge>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                <Heart className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground mb-4">まだお気に入りがありません</p>
-                <p className="text-sm text-muted-foreground mb-4">セラピスト詳細ページからお気に入り登録できます</p>
-                <Link href="/search">
-                  <Button>セラピストを探す</Button>
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
-        );
+        return <FavoritesSection userId={authUser?.id} favoriteLimit={permissions.favoriteLimit} />;
 
       case "lists":
         if (!permissions.canUseDM) {
@@ -503,89 +486,23 @@ export default function MyPage() {
 
       case "messages":
         if (!permissions.canUseDM) {
-          return <LockScreen title="メッセージ機能" description="他のユーザーとDMやグループチャットでコミュニケーションができます。スタンダード会員（月2本投稿）以上で利用可能です。" upgradeText="スタンダード会員になる" targetLevel="standard" />;
+          return <LockScreen title="メッセージ機能" description="他のユーザーとDMでコミュニケーションができます。スタンダード会員（月2本投稿）以上で利用可能です。" upgradeText="スタンダード会員になる" targetLevel="standard" />;
         }
         return (
-          <Card className="h-[600px] flex flex-col">
-            <CardHeader className="border-b">
-              <Tabs defaultValue="dm" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="dm">DM</TabsTrigger>
-                  <TabsTrigger value="groups">グループ</TabsTrigger>
-                </TabsList>
-              </Tabs>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">メッセージ</CardTitle>
             </CardHeader>
-            <div className="flex flex-1 overflow-hidden">
-              <div className="w-1/3 border-r overflow-y-auto">
-                {mockConversations.map((conv) => (
-                  <div
-                    key={conv.id}
-                    onClick={() => setSelectedConversation(conv.id)}
-                    className={`p-4 cursor-pointer hover:bg-muted/50 transition-colors border-b ${selectedConversation === conv.id ? "bg-primary/5" : ""}`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-10 w-10">
-                        <AvatarFallback className="bg-primary/10 text-primary">{conv.avatar}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <p className="font-medium truncate">{conv.name}</p>
-                          <span className="text-xs text-muted-foreground">{conv.time}</span>
-                        </div>
-                        <p className="text-sm text-muted-foreground truncate">{conv.lastMessage}</p>
-                      </div>
-                      {conv.unread > 0 && (
-                        <Badge className="bg-primary text-primary-foreground">{conv.unread}</Badge>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="flex-1 flex flex-col">
-                {selectedConversation ? (
-                  <>
-                    <div className="p-4 border-b">
-                      <h4 className="font-medium">{mockConversations.find(c => c.id === selectedConversation)?.name}</h4>
-                    </div>
-                    <div className="flex-1 p-4 overflow-y-auto space-y-4">
-                      <div className="flex justify-start">
-                        <div className="max-w-[70%] p-3 rounded-lg bg-muted">
-                          <p className="text-sm">こんにちは！渋谷でおすすめの店舗ありますか？</p>
-                          <p className="text-xs text-muted-foreground mt-1">10:25</p>
-                        </div>
-                      </div>
-                      <div className="flex justify-end">
-                        <div className="max-w-[70%] p-3 rounded-lg bg-primary text-primary-foreground">
-                          <p className="text-sm">アロマモアがおすすめですよ！</p>
-                          <p className="text-xs text-primary-foreground/70 mt-1">10:28</p>
-                        </div>
-                      </div>
-                      <div className="flex justify-start">
-                        <div className="max-w-[70%] p-3 rounded-lg bg-muted">
-                          <p className="text-sm">了解です！ありがとうございます</p>
-                          <p className="text-xs text-muted-foreground mt-1">10:30</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="p-4 border-t">
-                      <div className="flex gap-2">
-                        <Input
-                          placeholder="メッセージを入力..."
-                          value={messageInput}
-                          onChange={(e) => setMessageInput(e.target.value)}
-                          className="flex-1"
-                        />
-                        <Button size="icon"><Send className="h-4 w-4" /></Button>
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <div className="flex-1 flex items-center justify-center text-muted-foreground">
-                    会話を選択してください
-                  </div>
-                )}
-              </div>
-            </div>
+            <CardContent className="text-center py-8">
+              <MessageCircle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <p className="text-muted-foreground mb-4">メッセージページで会話を管理できます</p>
+              <Link href="/messages">
+                <Button className="gap-2">
+                  <MessageCircle className="h-4 w-4" />
+                  メッセージを開く
+                </Button>
+              </Link>
+            </CardContent>
           </Card>
         );
 
@@ -596,55 +513,17 @@ export default function MyPage() {
         return (
           <Card>
             <CardHeader>
-              <Tabs value={bbsTab} onValueChange={setBbsTab}>
-                <div className="flex items-center justify-between">
-                  <TabsList>
-                    <TabsTrigger value="general">一般</TabsTrigger>
-                    <TabsTrigger value="vip" className="gap-1">
-                      <Crown className="h-4 w-4" />
-                      VIP限定
-                    </TabsTrigger>
-                  </TabsList>
-                  <Button size="sm" className="gap-1">
-                    <Plus className="h-4 w-4" />
-                    新規スレッド
-                  </Button>
-                </div>
-              </Tabs>
+              <CardTitle className="text-lg">掲示板</CardTitle>
             </CardHeader>
-            <CardContent>
-              {bbsTab === "vip" && !permissions.canUseVIPBBS ? (
-                <LockScreen title="VIP限定掲示板" description="VIP会員専用の掲示板です。より深い情報交換ができます。スタンダード会員は月3本投稿、またはVIP会員で利用可能です。" upgradeText="VIP会員になる" targetLevel="vip" />
-              ) : (
-                <>
-                  <div className="flex gap-2 mb-4 flex-wrap">
-                    <Button variant="outline" size="sm" className="bg-transparent">全て</Button>
-                    <Button variant="outline" size="sm" className="bg-transparent">雑談</Button>
-                    <Button variant="outline" size="sm" className="bg-transparent">情報交換</Button>
-                    <Button variant="outline" size="sm" className="bg-transparent">質問</Button>
-                    <Button variant="outline" size="sm" className="bg-transparent">エリア別</Button>
-                  </div>
-                  <div className="space-y-3">
-                    {mockBBSThreads.map((thread) => (
-                      <Link key={thread.id} href={`/bbs/${thread.id}`} className="block p-4 border rounded-lg hover:bg-muted/50 transition-colors">
-                        <div className="flex items-start justify-between gap-4">
-                          <div>
-                            <div className="flex items-center gap-2 mb-1">
-                              <Badge variant="outline" className="text-xs">{thread.category}</Badge>
-                              <h4 className="font-medium">{thread.title}</h4>
-                            </div>
-                            <p className="text-sm text-muted-foreground">{thread.author} / {thread.lastUpdate}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-sm font-medium">{thread.comments}</p>
-                            <p className="text-xs text-muted-foreground">コメント</p>
-                          </div>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </>
-              )}
+            <CardContent className="text-center py-8">
+              <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <p className="text-muted-foreground mb-4">掲示板でメンズエステについて語り合おう</p>
+              <Link href="/bbs">
+                <Button className="gap-2">
+                  <MessageSquare className="h-4 w-4" />
+                  掲示板を開く
+                </Button>
+              </Link>
             </CardContent>
           </Card>
         );
@@ -749,35 +628,7 @@ export default function MyPage() {
         );
 
       case "notifications":
-        return (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">通知</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {[
-                  { title: "新着口コミがあります", description: "お気に入りのセラピストに新しい口コミが投稿されました", time: "1時間前", read: false },
-                  { title: "DMが届きました", description: "田中さんからメッセージが届いています", time: "3時間前", read: false },
-                  { title: "口コミが承認されました", description: "投稿した口コミが承認され、公開されました", time: "1日前", read: true },
-                  { title: "フォロー中のリストが更新", description: "「渋谷ギャル系TOP10」に新しいセラピストが追加されました", time: "2日前", read: true },
-                  { title: "今月の投稿数リセット", description: "毎月1日に投稿数がリセットされました", time: "3日前", read: true },
-                ].map((notification, index) => (
-                  <div key={index} className={`p-4 border rounded-lg ${!notification.read ? "bg-primary/5 border-primary/20" : ""}`}>
-                    <div className="flex items-start gap-3">
-                      <div className={`w-2 h-2 rounded-full mt-2 ${!notification.read ? "bg-primary" : "bg-transparent"}`} />
-                      <div className="flex-1">
-                        <h4 className="font-medium">{notification.title}</h4>
-                        <p className="text-sm text-muted-foreground">{notification.description}</p>
-                        <p className="text-xs text-muted-foreground mt-1">{notification.time}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        );
+        return <NotificationsSection userId={authUser?.id} />;
 
       case "settings":
         return (
@@ -1108,5 +959,171 @@ export default function MyPage() {
 
       <SiteFooter />
     </div>
+  );
+}
+
+// お気に入りセクション（DB連動）
+function FavoritesSection({ userId, favoriteLimit }: { userId: string | undefined; favoriteLimit: number }) {
+  const [favorites, setFavorites] = useState<{ id: number; name: string; age: number | null; image_url: string | null; shop_name: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!userId) { setLoading(false); return; }
+    const supabase = createSupabaseBrowser();
+    supabase
+      .from("favorites")
+      .select("therapist_id, therapists(id, name, age, image_urls, shops(name, display_name))")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .then(({ data }) => {
+        if (data) {
+          setFavorites(
+            data.map((f: any) => {
+              const t = f.therapists;
+              const imgs = t?.image_urls as string[] | null;
+              const shop = t?.shops as { name: string; display_name: string | null } | null;
+              return {
+                id: t?.id || 0,
+                name: t?.name || "",
+                age: t?.age || null,
+                image_url: imgs?.[0] || null,
+                shop_name: shop?.display_name || shop?.name || "",
+              };
+            })
+          );
+        }
+        setLoading(false);
+      });
+  }, [userId]);
+
+  const removeFavorite = async (therapistId: number) => {
+    if (!userId) return;
+    const supabase = createSupabaseBrowser();
+    await supabase.from("favorites").delete().eq("user_id", userId).eq("therapist_id", therapistId);
+    setFavorites((prev) => prev.filter((f) => f.id !== therapistId));
+  };
+
+  if (loading) {
+    return <Card><CardContent className="p-6"><div className="animate-pulse h-32 bg-muted rounded" /></CardContent></Card>;
+  }
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="text-lg">お気に入りセラピスト</CardTitle>
+        <Badge variant="outline">{favorites.length} / {favoriteLimit === 999 ? "無制限" : favoriteLimit}</Badge>
+      </CardHeader>
+      <CardContent>
+        {favorites.length === 0 ? (
+          <div className="text-center py-8">
+            <Heart className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <p className="text-muted-foreground mb-4">まだお気に入りがありません</p>
+            <p className="text-sm text-muted-foreground mb-4">セラピスト詳細ページからお気に入り登録できます</p>
+            <Link href="/search">
+              <Button>セラピストを探す</Button>
+            </Link>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {favorites.map((fav) => (
+              <div key={fav.id} className="flex items-center gap-4 p-3 border rounded-lg">
+                <Link href={`/therapist/${fav.id}`} className="flex items-center gap-4 flex-1 min-w-0">
+                  <div className="w-12 h-12 rounded-full overflow-hidden bg-muted flex-shrink-0">
+                    {fav.image_url ? (
+                      <img src={fav.image_url} alt={fav.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-lg font-bold text-muted-foreground">{fav.name[0]}</div>
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-medium truncate">{fav.name}{fav.age ? ` (${fav.age})` : ""}</p>
+                    <p className="text-sm text-muted-foreground truncate">{fav.shop_name}</p>
+                  </div>
+                </Link>
+                <Button variant="ghost" size="sm" onClick={() => removeFavorite(fav.id)} className="text-muted-foreground hover:text-destructive">
+                  <Heart className="h-4 w-4 fill-current text-red-500" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// 通知セクション（DB連動）
+function NotificationsSection({ userId }: { userId: string | undefined }) {
+  const [notifications, setNotifications] = useState<{ id: number; type: string; title: string; body: string | null; link: string | null; is_read: boolean; created_at: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!userId) { setLoading(false); return; }
+    const supabase = createSupabaseBrowser();
+    supabase
+      .from("notifications")
+      .select("id, type, title, body, link, is_read, created_at")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(30)
+      .then(({ data }) => {
+        setNotifications((data || []) as any[]);
+        setLoading(false);
+      });
+  }, [userId]);
+
+  const markAllRead = async () => {
+    if (!userId) return;
+    const supabase = createSupabaseBrowser();
+    await supabase.from("notifications").update({ is_read: true }).eq("user_id", userId).eq("is_read", false);
+    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+  };
+
+  if (loading) {
+    return <Card><CardContent className="p-6"><div className="animate-pulse h-32 bg-muted rounded" /></CardContent></Card>;
+  }
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="text-lg">通知</CardTitle>
+        {notifications.some((n) => !n.is_read) && (
+          <Button variant="ghost" size="sm" onClick={markAllRead} className="text-xs">
+            すべて既読にする
+          </Button>
+        )}
+      </CardHeader>
+      <CardContent>
+        {notifications.length === 0 ? (
+          <div className="text-center py-8">
+            <Bell className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <p className="text-muted-foreground">通知はありません</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {notifications.map((n) => (
+              <div key={n.id} className={`p-4 border rounded-lg ${!n.is_read ? "bg-primary/5 border-primary/20" : ""}`}>
+                <div className="flex items-start gap-3">
+                  <div className={`w-2 h-2 rounded-full mt-2 ${!n.is_read ? "bg-primary" : "bg-transparent"}`} />
+                  <div className="flex-1">
+                    {n.link ? (
+                      <Link href={n.link} className="hover:underline">
+                        <h4 className="font-medium">{n.title}</h4>
+                      </Link>
+                    ) : (
+                      <h4 className="font-medium">{n.title}</h4>
+                    )}
+                    {n.body && <p className="text-sm text-muted-foreground">{n.body}</p>}
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {new Date(n.created_at).toLocaleDateString("ja-JP")}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useRef } from "react";
+import { useState, useEffect } from "react";
 import {
   Search,
   Menu,
@@ -32,8 +32,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ReviewWizardModal } from "@/components/review/review-wizard-modal";
 import { useAuth } from "@/lib/auth-context";
+import { createSupabaseBrowser } from "@/lib/supabase/client";
 
 export function SiteHeader() {
   const { user: authUser, loading: authLoading, signOut: authSignOut } = useAuth();
@@ -43,6 +45,47 @@ export function SiteHeader() {
   const router = useRouter();
 
   const isLoggedIn = !!authUser;
+
+  // 通知
+  interface Notification {
+    id: number;
+    type: string;
+    title: string;
+    body: string | null;
+    link: string | null;
+    is_read: boolean;
+    created_at: string;
+  }
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (!authUser) return;
+    const supabase = createSupabaseBrowser();
+    supabase
+      .from("notifications")
+      .select("id, type, title, body, link, is_read, created_at")
+      .eq("user_id", authUser.id)
+      .order("created_at", { ascending: false })
+      .limit(10)
+      .then(({ data }) => {
+        const items = (data || []) as Notification[];
+        setNotifications(items);
+        setUnreadCount(items.filter((n) => !n.is_read).length);
+      });
+  }, [authUser]);
+
+  const markAllRead = async () => {
+    if (!authUser || unreadCount === 0) return;
+    const supabase = createSupabaseBrowser();
+    await supabase
+      .from("notifications")
+      .update({ is_read: true })
+      .eq("user_id", authUser.id)
+      .eq("is_read", false);
+    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+    setUnreadCount(0);
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -166,16 +209,47 @@ export function SiteHeader() {
               /* Logged In State */
               <div className="flex items-center gap-2">
                 {/* Notifications */}
-                <Button variant="ghost" size="icon" className="relative hidden sm:flex" asChild>
-                  <Link href="/mypage?tab=notifications">
-                    <Bell className="h-5 w-5" />
-                    {user.unreadNotifications > 0 && (
-                      <span className="absolute -top-1 -right-1 h-4 w-4 bg-primary text-primary-foreground text-[10px] rounded-full flex items-center justify-center">
-                        {user.unreadNotifications}
-                      </span>
-                    )}
-                  </Link>
-                </Button>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="ghost" size="icon" className="relative hidden sm:flex">
+                      <Bell className="h-5 w-5" />
+                      {unreadCount > 0 && (
+                        <span className="absolute -top-1 -right-1 h-4 w-4 bg-primary text-primary-foreground text-[10px] rounded-full flex items-center justify-center">
+                          {unreadCount}
+                        </span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent align="end" className="w-80 p-0">
+                    <div className="flex items-center justify-between px-4 py-3 border-b">
+                      <p className="font-medium text-sm">通知</p>
+                      {unreadCount > 0 && (
+                        <button onClick={markAllRead} className="text-xs text-primary hover:underline">
+                          すべて既読にする
+                        </button>
+                      )}
+                    </div>
+                    <div className="max-h-80 overflow-y-auto">
+                      {notifications.length === 0 ? (
+                        <div className="text-center py-8 text-sm text-muted-foreground">通知はありません</div>
+                      ) : (
+                        notifications.map((n) => (
+                          <Link
+                            key={n.id}
+                            href={n.link || "/mypage"}
+                            className={`block px-4 py-3 border-b last:border-0 hover:bg-muted/50 transition-colors ${!n.is_read ? "bg-primary/5" : ""}`}
+                          >
+                            <p className="text-sm font-medium">{n.title}</p>
+                            {n.body && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{n.body}</p>}
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {new Date(n.created_at).toLocaleDateString("ja-JP")}
+                            </p>
+                          </Link>
+                        ))
+                      )}
+                    </div>
+                  </PopoverContent>
+                </Popover>
 
                 {/* User Dropdown */}
                 <DropdownMenu>

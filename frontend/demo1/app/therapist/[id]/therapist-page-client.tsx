@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Share2, Heart, ChevronLeft, ChevronRight, PenSquare, Star } from "lucide-react";
@@ -16,6 +16,8 @@ import { CompositionChart } from "@/components/therapist/composition-chart";
 import { ReviewList } from "@/components/therapist/review-list";
 import { Recommendations } from "@/components/therapist/recommendations";
 import { ReviewWizardModal } from "@/components/review/review-wizard-modal";
+import { useAuth } from "@/lib/auth-context";
+import { createSupabaseBrowser } from "@/lib/supabase/client";
 import type { Therapist, Review } from "@/lib/data";
 
 interface TherapistPageClientProps {
@@ -27,6 +29,42 @@ export function TherapistPageClient({ therapist, reviews }: TherapistPageClientP
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [isLocked] = useState(true);
+  const { user: authUser } = useAuth();
+  const [isFavorited, setIsFavorited] = useState(false);
+  const [favLoading, setFavLoading] = useState(false);
+
+  useEffect(() => {
+    if (!authUser) return;
+    const supabase = createSupabaseBrowser();
+    supabase
+      .from("favorites")
+      .select("therapist_id")
+      .eq("user_id", authUser.id)
+      .eq("therapist_id", Number(therapist.id))
+      .then(({ data }) => {
+        setIsFavorited((data?.length || 0) > 0);
+      });
+  }, [authUser, therapist.id]);
+
+  const toggleFavorite = async () => {
+    if (!authUser) return;
+    setFavLoading(true);
+    const supabase = createSupabaseBrowser();
+    if (isFavorited) {
+      await supabase
+        .from("favorites")
+        .delete()
+        .eq("user_id", authUser.id)
+        .eq("therapist_id", Number(therapist.id));
+      setIsFavorited(false);
+    } else {
+      await supabase
+        .from("favorites")
+        .insert({ user_id: authUser.id, therapist_id: Number(therapist.id) });
+      setIsFavorited(true);
+    }
+    setFavLoading(false);
+  };
 
   const nextImage = () => {
     setCurrentImageIndex((prev) =>
@@ -168,9 +206,15 @@ export function TherapistPageClient({ therapist, reviews }: TherapistPageClientP
                           )}
                         </div>
                         <div className="flex gap-2">
-                          <Button variant="outline" size="icon">
-                            <Heart className="h-4 w-4" />
-                            <span className="sr-only">お気に入りに追加</span>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={toggleFavorite}
+                            disabled={favLoading || !authUser}
+                            className={isFavorited ? "text-red-500 border-red-200" : ""}
+                          >
+                            <Heart className={`h-4 w-4 ${isFavorited ? "fill-current" : ""}`} />
+                            <span className="sr-only">{isFavorited ? "お気に入り解除" : "お気に入りに追加"}</span>
                           </Button>
                           <Button variant="outline" size="icon">
                             <Share2 className="h-4 w-4" />

@@ -58,8 +58,14 @@ interface DBTherapist {
   name: string;
   age: number | null;
   image_url: string | null;
+  shop_id: number;
   shop_name: string;
   shop_access: string | null;
+  avg_score: number | null;
+  review_count: number;
+  looks_types: string[];
+  body_types: string[];
+  service_levels: string[];
 }
 
 function SearchContent() {
@@ -128,31 +134,168 @@ function SearchContent() {
     searchShops();
   }, [initialQuery]);
 
-  // セラピスト検索結果（DBから取得）
+  // セラピスト検索結果（DBから取得 + reviewsフィルタ）
   const [dbTherapists, setDbTherapists] = useState<DBTherapist[]>([]);
   const [therapistLoading, setTherapistLoading] = useState(true);
+  const [searchTriggered, setSearchTriggered] = useState(0);
 
   useEffect(() => {
     async function fetchTherapists() {
       setTherapistLoading(true);
-      const { data } = await supabase
+
+      // 1) reviewsベースのフィルタが必要かチェック
+      const needsReviewFilter =
+        selectedTypes.length > 0 ||
+        selectedStyles.length > 0 ||
+        (scoreFilter && scoreFilter !== "none") ||
+        skrFilter ||
+        hrFilter;
+
+      let therapistIds: number[] | null = null;
+      const reviewAggMap = new Map<number, { avg_score: number; count: number; looks: Set<string>; bodies: Set<string>; services: Set<string> }>();
+
+      if (needsReviewFilter) {
+        // reviews全件取得してクライアントサイドで集計（テストデータ規模なので問題なし）
+        let reviewQuery = supabase.from("reviews").select("therapist_id, looks_type, body_type, service_level, score");
+
+        const { data: revData } = await reviewQuery;
+        if (revData) {
+          // セラピストごとに集計
+          for (const r of revData) {
+            const tid = Number(r.therapist_id);
+            if (!reviewAggMap.has(tid)) {
+              reviewAggMap.set(tid, { avg_score: 0, count: 0, looks: new Set(), bodies: new Set(), services: new Set() });
+            }
+            const agg = reviewAggMap.get(tid)!;
+            agg.count++;
+            agg.avg_score += (r.score || 0);
+            if (r.looks_type) agg.looks.add(r.looks_type);
+            if (r.body_type) agg.bodies.add(r.body_type);
+            if (r.service_level) agg.services.add(r.service_level);
+          }
+
+          // 平均点計算
+          for (const [, agg] of reviewAggMap) {
+            agg.avg_score = Math.round(agg.avg_score / agg.count);
+          }
+
+          // フィルタ適用
+          therapistIds = [];
+          for (const [tid, agg] of reviewAggMap) {
+            // タイプフィルタ
+            if (selectedTypes.length > 0 && !selectedTypes.some((t) => agg.looks.has(t))) continue;
+            // スタイルフィルタ
+            if (selectedStyles.length > 0 && !selectedStyles.some((s) => agg.bodies.has(s))) continue;
+            // スコアフィルタ
+            if (scoreFilter && scoreFilter !== "none") {
+              const minScore = parseInt(scoreFilter);
+              if (agg.avg_score < minScore) continue;
+            }
+            // SKRフィルタ
+            if (skrFilter && !agg.services.has("skr") && !agg.services.has("hr")) continue;
+            // HRフィルタ
+            if (hrFilter && !agg.services.has("hr")) continue;
+            therapistIds.push(tid);
+          }
+
+          if (therapistIds.length === 0) {
+            setDbTherapists([]);
+            setTherapistLoading(false);
+            return;
+          }
+        }
+      }
+
+      // 2) エリアフィルタ: shop_idを絞る
+      let shopIds: number[] | null = null;
+      if (selectedArea && selectedArea !== "all") {
+        // 都道府県 → areas → shop_areas
+        const { data: pref } = await supabase
+          .from("prefectures")
+          .select("id")
+          .eq("slug", selectedArea)
+          .single();
+        if (pref) {
+          let areaQuery = supabase.from("areas").select("id").eq("prefecture_id", pref.id);
+          if (selectedDistrict && selectedDistrict !== "all") {
+            areaQuery = areaQuery.eq("name", selectedDistrict);
+          }
+          const { data: areaData } = await areaQuery;
+          if (areaData && areaData.length > 0) {
+            const areaIds = areaData.map((a) => a.id);
+            const { data: saData } = await supabase
+              .from("shop_areas")
+              .select("shop_id")
+              .in("area_id", areaIds);
+            shopIds = [...new Set((saData || []).map((sa) => Number(sa.shop_id)))];
+          } else {
+            shopIds = [];
+          }
+        }
+        if (shopIds && shopIds.length === 0) {
+          setDbTherapists([]);
+          setTherapistLoading(false);
+          return;
+        }
+      }
+
+      // 3) therapists取得
+      let q = supabase
         .from("therapists")
-        .select("id, name, age, image_urls, shops(name, display_name, access)")
-        .eq("status", "active")
-        .order("created_at", { ascending: false })
-        .limit(100);
+        .select("id, name, age, image_urls, shop_id, shops(name, display_name, access)")
+        .eq("status", "active");
+
+      if (therapistIds) {
+        q = q.in("id", therapistIds);
+      }
+      if (shopIds) {
+        q = q.in("shop_id", shopIds);
+      }
+
+      q = q.order("created_at", { ascending: false }).limit(100);
+
+      const { data } = await q;
       if (data) {
+        // レビュー集計データがない場合は全件から集計
+        if (!needsReviewFilter) {
+          const { data: allRevs } = await supabase.from("reviews").select("therapist_id, looks_type, body_type, service_level, score");
+          if (allRevs) {
+            for (const r of allRevs) {
+              const tid = Number(r.therapist_id);
+              if (!reviewAggMap.has(tid)) {
+                reviewAggMap.set(tid, { avg_score: 0, count: 0, looks: new Set(), bodies: new Set(), services: new Set() });
+              }
+              const agg = reviewAggMap.get(tid)!;
+              agg.count++;
+              agg.avg_score += (r.score || 0);
+              if (r.looks_type) agg.looks.add(r.looks_type);
+              if (r.body_type) agg.bodies.add(r.body_type);
+              if (r.service_level) agg.services.add(r.service_level);
+            }
+            for (const [, agg] of reviewAggMap) {
+              agg.avg_score = Math.round(agg.avg_score / agg.count);
+            }
+          }
+        }
+
         setDbTherapists(
           data.map((t) => {
             const imgs = t.image_urls as string[] | null;
             const shop = t.shops as { name: string; display_name: string | null; access: string | null } | null;
+            const agg = reviewAggMap.get(Number(t.id));
             return {
               id: Number(t.id),
               name: t.name.replace(/\s*\(.*\)$/, ""),
               age: t.age,
               image_url: imgs?.[0] || null,
+              shop_id: Number(t.shop_id),
               shop_name: shop?.display_name || shop?.name || "",
               shop_access: shop?.access || null,
+              avg_score: agg?.avg_score || null,
+              review_count: agg?.count || 0,
+              looks_types: agg ? [...agg.looks] : [],
+              body_types: agg ? [...agg.bodies] : [],
+              service_levels: agg ? [...agg.services] : [],
             };
           })
         );
@@ -160,7 +303,8 @@ function SearchContent() {
       setTherapistLoading(false);
     }
     fetchTherapists();
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTriggered]);
 
   // フィルター状態
   const [query, setQuery] = useState(initialQuery);
@@ -197,7 +341,7 @@ function SearchContent() {
 
   const currentArea = areas.find((a) => a.id === selectedArea);
 
-  // フィルタリング
+  // クライアントサイドフィルタリング（テキスト検索のみ）
   const filteredTherapists = dbTherapists.filter((t) => {
     const matchesQuery =
       !query ||
@@ -205,6 +349,13 @@ function SearchContent() {
       t.shop_name.includes(query);
     const matchesShop = !shopName || t.shop_name.includes(shopName);
     return matchesQuery && matchesShop;
+  });
+
+  // ソート
+  const sortedTherapists = [...filteredTherapists].sort((a, b) => {
+    if (sortBy === "rating") return (b.avg_score || 0) - (a.avg_score || 0);
+    if (sortBy === "reviews") return b.review_count - a.review_count;
+    return 0; // newest = default DB order
   });
 
   const toggleType = (typeId: string) => {
@@ -234,6 +385,7 @@ function SearchContent() {
     setScoreFilter("");
     setSkrFilter(false);
     setHrFilter(false);
+    setSearchTriggered((n) => n + 1);
   };
 
   return (
@@ -332,7 +484,7 @@ function SearchContent() {
 
                   {/* 検索ボタン */}
                   <div className="flex items-end">
-                    <Button className="w-full gap-2">
+                    <Button className="w-full gap-2" onClick={() => setSearchTriggered((n) => n + 1)}>
                       <Search className="h-4 w-4" />
                       検索
                     </Button>
@@ -548,7 +700,7 @@ function SearchContent() {
             <div className="flex-1">
               <div className="mb-4 flex items-center justify-between">
                 <p className="text-sm text-muted-foreground">
-                  {therapistLoading ? "読み込み中..." : `${filteredTherapists.length}件のセラピストが見つかりました`}
+                  {therapistLoading ? "読み込み中..." : `${sortedTherapists.length}件のセラピストが見つかりました`}
                 </p>
               </div>
 
@@ -567,7 +719,7 @@ function SearchContent() {
                 </div>
               ) : (
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {filteredTherapists.map((therapist) => (
+                  {sortedTherapists.map((therapist) => (
                     <Link key={therapist.id} href={`/therapist/${therapist.id}`}>
                       <Card className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer h-full group">
                         <div className="aspect-[3/4] relative bg-muted">
@@ -597,6 +749,26 @@ function SearchContent() {
                             </h3>
                             <p className="text-xs text-muted-foreground">{therapist.shop_name}</p>
                           </div>
+                          {therapist.review_count > 0 && (
+                            <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                              {therapist.avg_score && (
+                                <Badge variant="secondary" className="text-xs gap-1">
+                                  <Star className="h-3 w-3 fill-current" />
+                                  {therapist.avg_score}
+                                </Badge>
+                              )}
+                              {canSeeSKRBadge && therapist.service_levels.includes("skr") && (
+                                <Badge className="text-xs bg-orange-100 text-orange-700">
+                                  <Flame className="h-3 w-3 mr-0.5" />SKR
+                                </Badge>
+                              )}
+                              {canSeeHRBadge && therapist.service_levels.includes("hr") && (
+                                <Badge className="text-xs bg-purple-100 text-purple-700">
+                                  <Gem className="h-3 w-3 mr-0.5" />HR
+                                </Badge>
+                              )}
+                            </div>
+                          )}
                           {therapist.shop_access && (
                             <div className="flex items-center gap-1 text-xs text-muted-foreground">
                               <MapPin className="h-3 w-3" />
@@ -610,7 +782,7 @@ function SearchContent() {
                 </div>
               )}
 
-              {!therapistLoading && filteredTherapists.length === 0 && (
+              {!therapistLoading && sortedTherapists.length === 0 && (
                 <div className="text-center py-12">
                   <p className="text-muted-foreground mb-4">
                     条件に一致するセラピストが見つかりませんでした
