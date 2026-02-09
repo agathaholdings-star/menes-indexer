@@ -15,12 +15,27 @@ import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { therapistTypes, bodyTypes, parameterLabels, mockShops, mockTherapists, areas } from "@/lib/data";
+import { therapistTypes, bodyTypes, parameterLabels } from "@/lib/data";
+import { createSupabaseBrowser } from "@/lib/supabase/client";
+import { useAuth } from "@/lib/auth-context";
+
+interface DBShop {
+  id: number;
+  name: string;
+  display_name: string | null;
+}
+
+interface DBTherapist {
+  id: number;
+  name: string;
+  image_urls: string[] | null;
+  shop_id: number;
+}
 
 interface ReviewWizardModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  preselectedTherapistId?: string;
+  preselectedTherapistId?: number | string;
   memberType?: "free" | "standard" | "vip";
   monthlyReviewCount?: number;
 }
@@ -36,18 +51,20 @@ const typeIcons: Record<string, React.ElementType> = {
   yoen: Flame,
 };
 
-// Area list
-const areaList = ["東京", "福岡", "大阪", "名古屋"];
-const allAreas = areas.map(a => a.name);
+// Top prefectures for quick access
+const topPrefectures = ["東京", "大阪", "福岡", "名古屋"];
 
 export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, memberType = "free", monthlyReviewCount = 0 }: ReviewWizardModalProps) {
+  const supabase = createSupabaseBrowser();
+  const { user: authUser } = useAuth();
+
   const [step, setStep] = useState(0);
   const [showAllAreas, setShowAllAreas] = useState(false);
   const [selectedArea, setSelectedArea] = useState<string | null>(null);
   const [shopSearch, setShopSearch] = useState("");
   const [therapistSearch, setTherapistSearch] = useState("");
-  const [selectedShopId, setSelectedShopId] = useState<string | null>(null);
-  const [selectedTherapistId, setSelectedTherapistId] = useState<string | null>(preselectedTherapistId || null);
+  const [selectedShopId, setSelectedShopId] = useState<number | null>(null);
+  const [selectedTherapistId, setSelectedTherapistId] = useState<number | null>(preselectedTherapistId || null);
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [selectedBody, setSelectedBody] = useState<string | null>(null);
   const [selectedService, setSelectedService] = useState<string | null>(null);
@@ -66,38 +83,146 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
   const [isComplete, setIsComplete] = useState(false);
   const [showMissingReport, setShowMissingReport] = useState(false);
   const [missingTherapistName, setMissingTherapistName] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
+  // DB state
+  const [prefectures, setPrefectures] = useState<{ id: number; name: string }[]>([]);
+  const [dbShops, setDbShops] = useState<DBShop[]>([]);
+  const [dbTherapists, setDbTherapists] = useState<DBTherapist[]>([]);
+
+  // Fetch prefectures on mount
   useEffect(() => {
-    if (preselectedTherapistId) {
-      const therapist = mockTherapists.find(t => t.id === preselectedTherapistId);
-      if (therapist) {
-        setSelectedTherapistId(preselectedTherapistId);
-        setSelectedShopId(therapist.shopId);
-        setSelectedArea(therapist.area);
+    if (!open) return;
+    const fetchPrefectures = async () => {
+      const { data } = await supabase.from("prefectures").select("id, name").order("id");
+      if (data) setPrefectures(data);
+    };
+    fetchPrefectures();
+  }, [open]);
+
+  // Fetch shops when area (prefecture) selected
+  useEffect(() => {
+    if (!selectedArea) { setDbShops([]); return; }
+    const fetchShops = async () => {
+      const prefecture = prefectures.find(p => p.name === selectedArea);
+      if (!prefecture) return;
+      // Get area IDs for this prefecture, then shops via shop_areas
+      const { data: areaData } = await supabase
+        .from("areas")
+        .select("id")
+        .eq("prefecture_id", prefecture.id);
+      if (!areaData || areaData.length === 0) { setDbShops([]); return; }
+      const areaIds = areaData.map(a => a.id);
+      const { data: shopAreaData } = await supabase
+        .from("shop_areas")
+        .select("shop_id, shops(id, name, display_name)")
+        .in("area_id", areaIds);
+      if (shopAreaData) {
+        const shopMap = new Map<string, DBShop>();
+        shopAreaData.forEach((sa: any) => {
+          if (sa.shops && !shopMap.has(sa.shops.id)) {
+            shopMap.set(sa.shops.id, {
+              id: sa.shops.id,
+              name: sa.shops.name,
+              display_name: sa.shops.display_name,
+            });
+          }
+        });
+        setDbShops(Array.from(shopMap.values()));
+      }
+    };
+    fetchShops();
+  }, [selectedArea, prefectures]);
+
+  // Fetch therapists when shop selected
+  useEffect(() => {
+    if (!selectedShopId) { setDbTherapists([]); return; }
+    const fetchTherapists = async () => {
+      const { data } = await supabase
+        .from("therapists")
+        .select("id, name, image_urls, shop_id")
+        .eq("shop_id", selectedShopId)
+        .order("name");
+      if (data) setDbTherapists(data as unknown as DBTherapist[]);
+    };
+    fetchTherapists();
+  }, [selectedShopId]);
+
+  // Handle preselected therapist
+  useEffect(() => {
+    if (!preselectedTherapistId) return;
+    const fetchPreselected = async () => {
+      const { data } = await supabase
+        .from("therapists")
+        .select("id, name, shop_id")
+        .eq("id", preselectedTherapistId)
+        .single();
+      if (data) {
+        setSelectedTherapistId(data.id);
+        setSelectedShopId(data.shop_id);
         setStep(3); // Skip to type selection
       }
-    }
+    };
+    fetchPreselected();
   }, [preselectedTherapistId]);
 
-  // Filter shops by area and search
-  const filteredShops = mockShops.filter(shop =>
-    (!selectedArea || shop.area === selectedArea) &&
-    (shop.name.toLowerCase().includes(shopSearch.toLowerCase()) ||
-     shop.name.includes(shopSearch))
+  // Filter shops by search (client-side on already-fetched data)
+  const filteredShops = dbShops.filter(shop => {
+    const displayName = shop.display_name || shop.name;
+    return displayName.toLowerCase().includes(shopSearch.toLowerCase()) ||
+      displayName.includes(shopSearch);
+  });
+
+  // Filter therapists by search (client-side on already-fetched data)
+  const filteredTherapists = dbTherapists.filter(t =>
+    t.name.toLowerCase().includes(therapistSearch.toLowerCase()) ||
+    t.name.includes(therapistSearch)
   );
 
-  // Filter therapists by shop and search
-  const filteredTherapists = mockTherapists.filter(t =>
-    (!selectedShopId || t.shopId === selectedShopId) &&
-    (t.name.toLowerCase().includes(therapistSearch.toLowerCase()) ||
-     t.name.includes(therapistSearch))
-  );
+  // All prefecture names for area selector
+  const allAreas = prefectures.map(p => p.name);
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (step < TOTAL_STEPS - 1) {
       setStep(step + 1);
     } else {
-      setIsComplete(true);
+      // 最終ステップ: DBに口コミを保存
+      if (!authUser || !selectedShopId || !selectedTherapistId) {
+        setIsComplete(true);
+        return;
+      }
+
+      setSubmitting(true);
+      try {
+        // Find shop_id from the selected therapist's shop
+        const shopId = selectedShopId;
+
+        const { error } = await supabase.from("reviews").insert({
+          user_id: authUser.id,
+          therapist_id: selectedTherapistId,
+          shop_id: shopId,
+          looks_type: selectedType,
+          body_type: selectedBody,
+          service_level: selectedService,
+          param_conversation: ratings.conversation,
+          param_distance: ratings.distance,
+          param_technique: ratings.technique,
+          param_personality: ratings.personality,
+          score: score,
+          comment_first_impression: reviewText.q1,
+          comment_service: reviewText.q2,
+          comment_advice: reviewText.q3,
+        });
+
+        if (error) {
+          console.error("Review insert failed:", error);
+        }
+      } catch (err) {
+        console.error("Review submission error:", err);
+      } finally {
+        setSubmitting(false);
+        setIsComplete(true);
+      }
     }
   };
 
@@ -115,13 +240,13 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
     setTimeout(() => setStep(1), 300);
   };
 
-  const handleShopSelect = (shopId: string) => {
+  const handleShopSelect = (shopId: number) => {
     setSelectedShopId(shopId);
     setSelectedTherapistId(null);
     setTimeout(() => setStep(2), 300);
   };
 
-  const handleTherapistSelect = (therapistId: string) => {
+  const handleTherapistSelect = (therapistId: number) => {
     setSelectedTherapistId(therapistId);
     setTimeout(() => setStep(3), 300);
   };
@@ -218,6 +343,7 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
                   onSelect={handleAreaSelect}
                   showAllAreas={showAllAreas}
                   setShowAllAreas={setShowAllAreas}
+                  allAreas={allAreas}
                 />
               )}
               {step === 1 && (
@@ -286,9 +412,9 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
             <span className="text-sm text-muted-foreground">
               {step + 1} / {TOTAL_STEPS}
             </span>
-            <Button onClick={handleNext} disabled={!canProceed()} className="gap-1">
-              {step === TOTAL_STEPS - 1 ? "投稿する" : "次へ"}
-              {step < TOTAL_STEPS - 1 && <ChevronRight className="h-4 w-4" />}
+            <Button onClick={handleNext} disabled={!canProceed() || submitting} className="gap-1">
+              {submitting ? "投稿中..." : step === TOTAL_STEPS - 1 ? "投稿する" : "次へ"}
+              {step < TOTAL_STEPS - 1 && !submitting && <ChevronRight className="h-4 w-4" />}
             </Button>
           </div>
         )}
@@ -303,13 +429,15 @@ function StepArea({
   onSelect,
   showAllAreas,
   setShowAllAreas,
+  allAreas,
 }: {
   selectedArea: string | null;
   onSelect: (area: string) => void;
   showAllAreas: boolean;
   setShowAllAreas: (v: boolean) => void;
+  allAreas: string[];
 }) {
-  const displayAreas = showAllAreas ? allAreas : areaList;
+  const displayAreas = showAllAreas ? allAreas : topPrefectures;
 
   return (
     <div>
@@ -359,9 +487,9 @@ function StepShop({
 }: {
   shopSearch: string;
   setShopSearch: (v: string) => void;
-  selectedShopId: string | null;
-  onSelect: (shopId: string) => void;
-  filteredShops: typeof mockShops;
+  selectedShopId: number | null;
+  onSelect: (shopId: number) => void;
+  filteredShops: DBShop[];
   selectedArea: string | null;
 }) {
   return (
@@ -380,6 +508,9 @@ function StepShop({
         />
       </div>
       <div className="space-y-2 max-h-64 overflow-y-auto">
+        {filteredShops.length === 0 && (
+          <p className="text-sm text-muted-foreground text-center py-4">サロンが見つかりません</p>
+        )}
         {filteredShops.map(shop => (
           <button
             key={shop.id}
@@ -392,13 +523,7 @@ function StepShop({
                 : "hover:bg-muted border"
             )}
           >
-            <span className="font-medium">{shop.name}</span>
-            <span className={cn(
-              "text-sm",
-              selectedShopId === shop.id ? "text-primary-foreground/70" : "text-muted-foreground"
-            )}>
-              {shop.district}
-            </span>
+            <span className="font-medium">{shop.display_name || shop.name}</span>
           </button>
         ))}
       </div>
@@ -420,9 +545,9 @@ function StepTherapist({
 }: {
   therapistSearch: string;
   setTherapistSearch: (v: string) => void;
-  selectedTherapistId: string | null;
-  onSelect: (therapistId: string) => void;
-  filteredTherapists: typeof mockTherapists;
+  selectedTherapistId: number | null;
+  onSelect: (therapistId: number) => void;
+  filteredTherapists: DBTherapist[];
   showMissingReport: boolean;
   setShowMissingReport: (v: boolean) => void;
   missingTherapistName: string;
@@ -444,39 +569,46 @@ function StepTherapist({
         />
       </div>
 
-      <p className="text-xs text-muted-foreground mb-2">【50音順】</p>
-      <div className="grid grid-cols-4 gap-2 max-h-64 overflow-y-auto">
-        {filteredTherapists.map(t => (
-          <button
-            key={t.id}
-            type="button"
-            onClick={() => onSelect(t.id)}
-            className={cn(
-              "relative rounded-lg overflow-hidden transition-all aspect-[3/4]",
-              selectedTherapistId === t.id
-                ? "ring-2 ring-primary ring-offset-2"
-                : "hover:opacity-80"
-            )}
-          >
-            <Image
-              src={t.images[0] || "/placeholder.svg"}
-              alt={t.name}
-              fill
-              className="object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-            <div className="absolute bottom-0 left-0 right-0 p-1.5 text-white">
-              <p className="text-xs font-medium truncate">{t.name}</p>
-              <p className="text-[10px] opacity-80">({t.age})</p>
-            </div>
-            {t.reviewCount > 0 && (
-              <div className="absolute top-1 right-1 bg-primary text-primary-foreground text-[10px] px-1.5 py-0.5 rounded-full">
-                {t.reviewCount}
-              </div>
-            )}
-          </button>
-        ))}
-      </div>
+      {filteredTherapists.length === 0 ? (
+        <p className="text-sm text-muted-foreground text-center py-4">セラピストが見つかりません</p>
+      ) : (
+        <>
+          <p className="text-xs text-muted-foreground mb-2">【50音順】</p>
+          <div className="grid grid-cols-4 gap-2 max-h-64 overflow-y-auto">
+            {filteredTherapists.map(t => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => onSelect(t.id)}
+                className={cn(
+                  "relative rounded-lg overflow-hidden transition-all aspect-[3/4]",
+                  selectedTherapistId === t.id
+                    ? "ring-2 ring-primary ring-offset-2"
+                    : "hover:opacity-80"
+                )}
+              >
+                {t.image_urls && t.image_urls.length > 0 ? (
+                  <Image
+                    src={t.image_urls[0]}
+                    alt={t.name}
+                    fill
+                    className="object-cover"
+                    unoptimized
+                  />
+                ) : (
+                  <div className="w-full h-full bg-muted flex items-center justify-center">
+                    <span className="text-2xl font-bold text-muted-foreground">{t.name.charAt(0)}</span>
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-1.5 text-white">
+                  <p className="text-xs font-medium truncate">{t.name}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
 
       {/* Missing therapist report */}
       <div className="mt-4 pt-4 border-t">

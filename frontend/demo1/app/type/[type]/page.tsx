@@ -1,11 +1,23 @@
 import Link from "next/link";
-import { ChevronRight, Star, MapPin } from "lucide-react";
+import Image from "next/image";
+import { ChevronRight, Star, MapPin, PenSquare } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { Sidebar } from "@/components/layout/sidebar";
-import { therapists, therapistTypes } from "@/lib/data";
+import { therapistTypes } from "@/lib/data";
+import { supabase } from "@/lib/supabase";
+
+interface DBTherapist {
+  id: number;
+  name: string;
+  image_urls: string[] | null;
+  shop_id: number;
+  age: number | null;
+  shops: { name: string; display_name: string | null } | null;
+}
 
 export default async function TypePage({
   params,
@@ -14,10 +26,27 @@ export default async function TypePage({
 }) {
   const { type } = await params;
   const typeInfo = therapistTypes.find((t) => t.id === type);
-  const typeTherapists = therapists.filter((t) => t.primaryType === type);
-
   const typeName = typeInfo?.label || decodeURIComponent(type);
   const typeDescription = typeInfo?.description || "";
+
+  // 口コミからタイプが判明しているセラピストを取得
+  const { data: reviewData } = await supabase
+    .from("reviews")
+    .select("therapist_id")
+    .eq("looks_type", type);
+
+  let typeTherapists: DBTherapist[] = [];
+
+  if (reviewData && reviewData.length > 0) {
+    const therapistIds = [...new Set(reviewData.map((r) => r.therapist_id))];
+    const { data } = await supabase
+      .from("therapists")
+      .select("id, name, image_urls, shop_id, age, shops(name, display_name)")
+      .in("id", therapistIds)
+      .eq("status", "active")
+      .limit(30);
+    typeTherapists = (data as unknown as DBTherapist[]) || [];
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -45,7 +74,9 @@ export default async function TypePage({
                 <div>
                   <h1 className="text-2xl font-bold">{typeName}系セラピスト</h1>
                   <p className="text-muted-foreground">
-                    {typeTherapists.length > 0 ? typeTherapists.length : "多数"}名のセラピストが登録中
+                    {typeTherapists.length > 0
+                      ? `${typeTherapists.length}名のセラピストが登録中`
+                      : "口コミ投稿でセラピストのタイプが判明します"}
                   </p>
                 </div>
               </div>
@@ -56,59 +87,69 @@ export default async function TypePage({
               )}
             </div>
 
-            {/* Results Count */}
-            <div className="mb-4">
-              <p className="text-sm text-muted-foreground">
-                {typeTherapists.length > 0 ? typeTherapists.length : therapists.length}件のセラピストが見つかりました
-              </p>
-            </div>
+            {typeTherapists.length > 0 ? (
+              <>
+                <div className="mb-4">
+                  <p className="text-sm text-muted-foreground">
+                    {typeTherapists.length}件のセラピストが見つかりました
+                  </p>
+                </div>
 
-            {/* Therapist Grid */}
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {(typeTherapists.length > 0 ? typeTherapists : therapists).map((therapist) => (
-                <Link key={therapist.id} href={`/therapist/${therapist.id}`}>
-                  <Card className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer h-full">
-                    <div className="aspect-[4/3] relative bg-muted">
-                      <img
-                        src={therapist.images[0] || "/placeholder.svg"}
-                        alt={therapist.name}
-                        className="object-cover w-full h-full"
-                      />
-                      <div className="absolute top-2 left-2">
-                        <Badge className="bg-primary text-primary-foreground">
-                          {therapistTypes.find((t) => t.id === therapist.primaryType)?.label || typeName}
-                        </Badge>
-                      </div>
-                    </div>
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between gap-2 mb-2">
-                        <div>
-                          <h3 className="font-bold">{therapist.name}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            {therapist.shopName}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-1 text-sm">
-                          <Star className="h-4 w-4 fill-primary text-primary" />
-                          <span className="font-medium">{therapist.rating}</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground mb-2">
-                        <MapPin className="h-3 w-3" />
-                        <span>{therapist.area}</span>
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        {therapist.tags.slice(0, 3).map((tag) => (
-                          <Badge key={tag} variant="outline" className="text-xs">
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {typeTherapists.map((therapist) => {
+                    const imageUrl = therapist.image_urls?.[0];
+                    const shopName = therapist.shops?.display_name || therapist.shops?.name || "";
+                    return (
+                      <Link key={therapist.id} href={`/therapist/${therapist.id}`}>
+                        <Card className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer h-full">
+                          <div className="aspect-[4/3] relative bg-muted">
+                            {imageUrl ? (
+                              <Image
+                                src={imageUrl}
+                                alt={therapist.name}
+                                fill
+                                className="object-cover"
+                                unoptimized
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <span className="text-4xl font-bold text-muted-foreground">
+                                  {therapist.name.charAt(0)}
+                                </span>
+                              </div>
+                            )}
+                            <div className="absolute top-2 left-2">
+                              <Badge className="bg-primary text-primary-foreground">
+                                {typeName}
+                              </Badge>
+                            </div>
+                          </div>
+                          <CardContent className="p-4">
+                            <h3 className="font-bold">{therapist.name}</h3>
+                            <p className="text-sm text-muted-foreground">{shopName}</p>
+                          </CardContent>
+                        </Card>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </>
+            ) : (
+              /* Empty state - no typed therapists yet */
+              <div className="text-center py-16">
+                <PenSquare className="h-16 w-16 mx-auto text-muted-foreground mb-6" />
+                <h2 className="text-xl font-bold mb-2">
+                  まだ{typeName}系のデータがありません
+                </h2>
+                <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                  口コミを投稿するとセラピストのタイプが記録され、このページに表示されます。
+                  あなたの投稿が他のユーザーの「発見」につながります。
+                </p>
+                <Link href="/review">
+                  <Button size="lg">口コミを投稿する</Button>
                 </Link>
-              ))}
-            </div>
+              </div>
+            )}
           </div>
 
           {/* Sidebar */}

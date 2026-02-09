@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   Heart,
@@ -9,13 +10,11 @@ import {
   Bell,
   Crown,
   ChevronRight,
-  Star,
   Edit,
   Eye,
   Lock,
   Sparkles,
   LayoutDashboard,
-  Users,
   MessageCircle,
   Flame,
   Menu,
@@ -23,11 +22,8 @@ import {
   Send,
   Plus,
   Share2,
-  Globe,
-  Trash2,
   UserPlus,
   Search,
-  Filter,
   ExternalLink,
   BarChart3,
   PenSquare,
@@ -44,7 +40,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
-import { therapists, reviews, type EffectiveTier, getEffectiveTier, tierPermissions } from "@/lib/data";
+import { type EffectiveTier, getEffectiveTier, tierPermissions } from "@/lib/data";
+import { useAuth } from "@/lib/auth-context";
+import { createSupabaseBrowser } from "@/lib/supabase/client";
 
 type MemberLevel = "free" | "standard" | "vip";
 type Section = "dashboard" | "reviews" | "favorites" | "lists" | "messages" | "bbs" | "skr" | "notifications" | "settings";
@@ -82,45 +80,109 @@ const mockBBSThreads = [
 ];
 
 const mockSKRReviews = [
-  { id: "1", therapistName: "あいか", shopName: "アロマモア", level: "skr", rating: 92, comment: "サービスが素晴らしかった...", date: "2024-01-15", image: therapists[0]?.images[0] },
-  { id: "2", therapistName: "みく", shopName: "Premium Salon", level: "hr", rating: 95, comment: "期待以上の対応で...", date: "2024-01-14", image: therapists[1]?.images[0] },
-  { id: "3", therapistName: "りの", shopName: "Healing Room", level: "skr", rating: 88, comment: "リピート確定です...", date: "2024-01-13", image: therapists[2]?.images[0] },
+  { id: "1", therapistName: "あいか", shopName: "アロマモア", level: "skr", rating: 92, comment: "サービスが素晴らしかった...", date: "2024-01-15", image: undefined },
+  { id: "2", therapistName: "みく", shopName: "Premium Salon", level: "hr", rating: 95, comment: "期待以上の対応で...", date: "2024-01-14", image: undefined },
+  { id: "3", therapistName: "りの", shopName: "Healing Room", level: "skr", rating: 88, comment: "リピート確定です...", date: "2024-01-13", image: undefined },
 ];
 
 export default function MyPage() {
+  const { user: authUser, loading: authLoading } = useAuth();
+  const router = useRouter();
+  const supabase = createSupabaseBrowser();
+
   const [activeSection, setActiveSection] = useState<Section>("dashboard");
-  const [memberLevel, setMemberLevel] = useState<MemberLevel>("standard");
-  const [monthlyReviewCount, setMonthlyReviewCount] = useState(1);
+  const [memberLevel, setMemberLevel] = useState<MemberLevel>("free");
+  const [monthlyReviewCount, setMonthlyReviewCount] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedConversation, setSelectedConversation] = useState<string | null>("1");
   const [messageInput, setMessageInput] = useState("");
   const [bbsTab, setBbsTab] = useState("general");
   const [listPublic, setListPublic] = useState(false);
 
+  // Profile state
+  const [profile, setProfile] = useState<{
+    nickname: string;
+    membership_type: string;
+    monthly_review_count: number;
+    view_permission_until: string | null;
+  } | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+
+  // Fetch profile when auth user changes
+  useEffect(() => {
+    if (authLoading) return;
+    if (!authUser) {
+      router.push("/login");
+      return;
+    }
+
+    const fetchProfile = async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("nickname, membership_type, monthly_review_count, view_permission_until")
+        .eq("id", authUser.id)
+        .single();
+
+      if (data) {
+        setProfile({
+          nickname: data.nickname || "名無し",
+          membership_type: data.membership_type || "free",
+          monthly_review_count: data.monthly_review_count || 0,
+          view_permission_until: data.view_permission_until,
+        });
+        setMemberLevel((data.membership_type || "free") as MemberLevel);
+        setMonthlyReviewCount(data.monthly_review_count || 0);
+      }
+      setProfileLoading(false);
+    };
+
+    fetchProfile();
+  }, [authUser, authLoading]);
+
+  // Loading state
+  if (authLoading || profileLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <SiteHeader />
+        <main className="container mx-auto px-4 py-6">
+          <div className="flex items-center justify-center py-20">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+          </div>
+        </main>
+        <SiteFooter />
+      </div>
+    );
+  }
+
+  if (!authUser) return null; // redirect happening
+
   // getEffectiveTier でティアを計算
-  const mockUser = {
-    id: "user1",
-    email: "test@example.com",
-    name: "テストユーザー",
+  const tierUser = {
+    id: authUser.id,
+    email: authUser.email || "",
+    name: profile?.nickname || "名無し",
     memberType: memberLevel,
     monthlyReviewCount: monthlyReviewCount,
-    totalReviewCount: 12,
-    registeredAt: "2024-01-01",
+    totalReviewCount: 0,
+    registeredAt: authUser.created_at || "",
     favorites: [],
   };
-  const effectiveTier = getEffectiveTier(mockUser);
+  const effectiveTier = getEffectiveTier(tierUser);
   const permissions = tierPermissions[effectiveTier];
 
+  const memberSinceDate = authUser.created_at
+    ? new Date(authUser.created_at).toLocaleDateString("ja-JP", { year: "numeric", month: "long" })
+    : "";
+
   const user = {
-    nickname: "テストユーザー",
-    email: "test@example.com",
-    memberSince: "2024年1月",
-    reviewCount: 12,
-    favoriteCount: 5,
+    nickname: profile?.nickname || "名無し",
+    email: authUser.email || "",
+    memberSince: memberSinceDate,
+    reviewCount: 0,
+    favoriteCount: 0,
   };
 
-  const userReviews = reviews.slice(0, 3);
-  const favoriteTherapists = therapists.slice(0, 5);
+  const userReviews: never[] = [];
 
   // Lock screen component
   const LockScreen = ({ title, description, upgradeText, targetLevel }: { title: string; description: string; upgradeText: string; targetLevel: "standard" | "vip" }) => (
@@ -325,53 +387,17 @@ export default function MyPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-lg">投稿した口コミ</CardTitle>
-              <Badge variant="outline">{userReviews.length}件</Badge>
+              <Badge variant="outline">0件</Badge>
             </CardHeader>
             <CardContent>
-              {userReviews.length > 0 ? (
-                <div className="space-y-4">
-                  {userReviews.map((review) => (
-                    <div key={review.id} className="p-4 border rounded-lg hover:bg-muted/50 transition-colors">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <Link href={`/therapist/${review.therapistId}`} className="font-medium hover:text-primary">
-                              {review.therapistName}
-                            </Link>
-                            <Badge className="bg-primary text-primary-foreground">{review.score}点</Badge>
-                          </div>
-                          <p className="text-sm text-muted-foreground">{review.shopName} / {review.createdAt}</p>
-                          <div className="flex flex-wrap gap-2 mt-2">
-                            {review.tags?.map((tag, i) => (
-                              <Badge key={i} variant="outline" className="text-xs">{tag}</Badge>
-                            ))}
-                          </div>
-                          <div className="mt-3 space-y-2 text-sm">
-                            <div>
-                              <span className="text-muted-foreground">第一印象: </span>
-                              {review.q1FirstImpression}
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground">施術・接客: </span>
-                              {review.q2Service}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button variant="ghost" size="icon"><Edit className="h-4 w-4" /></Button>
-                          <Button variant="ghost" size="icon" className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground mb-4">まだ口コミを投稿していません</p>
+              <div className="text-center py-8">
+                <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground mb-4">まだ口コミを投稿していません</p>
+                <p className="text-sm text-muted-foreground mb-4">口コミを投稿すると機能が解放されます</p>
+                <Link href="/review">
                   <Button>口コミを投稿する</Button>
-                </div>
-              )}
+                </Link>
+              </div>
             </CardContent>
           </Card>
         );
@@ -381,28 +407,16 @@ export default function MyPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-lg">お気に入りセラピスト</CardTitle>
-              <Badge variant="outline">{favoriteTherapists.length} / {permissions.favoriteLimit === 999 ? "無制限" : permissions.favoriteLimit}</Badge>
+              <Badge variant="outline">0 / {permissions.favoriteLimit === 999 ? "無制限" : permissions.favoriteLimit}</Badge>
             </CardHeader>
             <CardContent>
-              <div className="grid sm:grid-cols-2 gap-4">
-                {favoriteTherapists.map((therapist) => (
-                  <div key={therapist.id} className="flex items-center gap-4 p-3 border rounded-lg hover:bg-muted/50 transition-colors">
-                    <div className="w-16 h-16 rounded-lg bg-muted overflow-hidden flex-shrink-0">
-                      <img src={therapist.images[0] || "/placeholder.svg"} alt={therapist.name} className="w-full h-full object-cover" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <Link href={`/therapist/${therapist.id}`} className="font-medium hover:text-primary">{therapist.name}</Link>
-                      <p className="text-sm text-muted-foreground truncate">{therapist.shopName}</p>
-                      <div className="flex items-center gap-1 mt-1">
-                        <Star className="h-3 w-3 fill-primary text-primary" />
-                        <span className="text-xs font-medium">{therapist.rating}</span>
-                      </div>
-                    </div>
-                    <Button variant="ghost" size="icon" className="text-primary flex-shrink-0">
-                      <Heart className="h-5 w-5 fill-current" />
-                    </Button>
-                  </div>
-                ))}
+              <div className="text-center py-8">
+                <Heart className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground mb-4">まだお気に入りがありません</p>
+                <p className="text-sm text-muted-foreground mb-4">セラピスト詳細ページからお気に入り登録できます</p>
+                <Link href="/search">
+                  <Button>セラピストを探す</Button>
+                </Link>
               </div>
             </CardContent>
           </Card>
