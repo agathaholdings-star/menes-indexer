@@ -502,11 +502,16 @@ def main():
         return
 
     # --- DB接続 ---
+    def connect_db():
+        """DB接続（再接続対応）"""
+        c = psycopg2.connect(DB_DSN)
+        c.autocommit = False
+        cr = c.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        return c, cr
+
     if not args.dry_run:
         try:
-            conn = psycopg2.connect(DB_DSN)
-            conn.autocommit = False
-            cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            conn, cur = connect_db()
             log.info("ローカルSupabase接続成功")
         except Exception as e:
             log.error(f"DB接続失敗: {e}")
@@ -618,11 +623,34 @@ def main():
             log.info(f"再開: python batch_scrape_shops.py --resume")
             sys.exit(0)
 
+        except (psycopg2.OperationalError, psycopg2.InterfaceError) as e:
+            log.error(f"  DB接続エラー: {e}")
+            errors.append({'slug': slug, 'error': str(e)})
+            if not args.dry_run:
+                # DB再接続を試行
+                for retry in range(3):
+                    try:
+                        log.info(f"  DB再接続試行 ({retry + 1}/3)...")
+                        time.sleep(2 ** retry)
+                        conn, cur = connect_db()
+                        log.info(f"  DB再接続成功")
+                        break
+                    except Exception as re_err:
+                        log.error(f"  DB再接続失敗: {re_err}")
+                else:
+                    log.error("  DB再接続に3回失敗。終了します。")
+                    save_checkpoint(checkpoint)
+                    sys.exit(1)
+            continue
+
         except Exception as e:
             log.error(f"  エラー: {e}")
             errors.append({'slug': slug, 'error': str(e)})
             if conn and not args.dry_run:
-                conn.rollback()
+                try:
+                    conn.rollback()
+                except Exception:
+                    pass
             continue
 
     # --- 完了 ---
