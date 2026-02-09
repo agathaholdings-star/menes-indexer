@@ -174,11 +174,11 @@ export default function RegisterPage() {
                     }
                   />
                   <Label htmlFor="terms" className="text-sm leading-relaxed">
-                    <Link href="/terms" className="text-primary hover:underline">
+                    <Link href="/legal/terms" className="text-primary hover:underline">
                       利用規約
                     </Link>
                     と
-                    <Link href="/privacy" className="text-primary hover:underline">
+                    <Link href="/legal/privacy" className="text-primary hover:underline">
                       プライバシーポリシー
                     </Link>
                     に同意します

@@ -51,18 +51,30 @@ export function TherapistPageClient({ therapist, reviews }: TherapistPageClientP
             <Link href="/" className="hover:text-foreground">
               トップ
             </Link>
-            <span className="mx-2">/</span>
-            <Link href={`/area/${therapist.area}`} className="hover:text-foreground">
-              {therapist.area}
-            </Link>
-            <span className="mx-2">/</span>
-            <Link href={`/area/${therapist.area}/${therapist.district}`} className="hover:text-foreground">
-              {therapist.district}
-            </Link>
-            <span className="mx-2">/</span>
-            <Link href={`/shop/${therapist.shopId}`} className="hover:text-foreground">
-              {therapist.shopName}
-            </Link>
+            {therapist.area && (
+              <>
+                <span className="mx-2">/</span>
+                <Link href={`/area/${therapist.area}`} className="hover:text-foreground">
+                  {therapist.area}
+                </Link>
+              </>
+            )}
+            {therapist.district && (
+              <>
+                <span className="mx-2">/</span>
+                <Link href={`/area/${therapist.area}/${therapist.district}`} className="hover:text-foreground">
+                  {therapist.district}
+                </Link>
+              </>
+            )}
+            {therapist.shopName && (
+              <>
+                <span className="mx-2">/</span>
+                <Link href={`/shop/${therapist.shopId}`} className="hover:text-foreground">
+                  {therapist.shopName}
+                </Link>
+              </>
+            )}
             <span className="mx-2">/</span>
             <span className="text-foreground">{therapist.name}</span>
           </nav>
@@ -83,6 +95,7 @@ export function TherapistPageClient({ therapist, reviews }: TherapistPageClientP
                           alt={therapist.name}
                           fill
                           className="object-cover"
+                          unoptimized
                         />
                         {therapist.images.length > 1 && (
                           <>
@@ -125,6 +138,7 @@ export function TherapistPageClient({ therapist, reviews }: TherapistPageClientP
                                 alt=""
                                 fill
                                 className="object-cover"
+                                unoptimized
                               />
                             </button>
                           ))}
@@ -143,13 +157,15 @@ export function TherapistPageClient({ therapist, reviews }: TherapistPageClientP
                           <Link href={`/shop/${therapist.shopId}`} className="text-primary hover:underline">
                             {therapist.shopName}
                           </Link>
-                          <div className="flex items-center gap-2 mt-2">
-                            <div className="flex items-center gap-1 bg-primary/10 px-2 py-1 rounded">
-                              <Star className="h-4 w-4 fill-primary text-primary" />
-                              <span className="font-bold text-primary">{therapist.averageScore}点</span>
+                          {(therapist.averageScore > 0 || therapist.reviewCount > 0) && (
+                            <div className="flex items-center gap-2 mt-2">
+                              <div className="flex items-center gap-1 bg-primary/10 px-2 py-1 rounded">
+                                <Star className="h-4 w-4 fill-primary text-primary" />
+                                <span className="font-bold text-primary">{therapist.averageScore}点</span>
+                              </div>
+                              <span className="text-sm text-muted-foreground">({therapist.reviewCount}件の口コミ)</span>
                             </div>
-                            <span className="text-sm text-muted-foreground">({therapist.reviewCount}件の口コミ)</span>
-                          </div>
+                          )}
                         </div>
                         <div className="flex gap-2">
                           <Button variant="outline" size="icon">

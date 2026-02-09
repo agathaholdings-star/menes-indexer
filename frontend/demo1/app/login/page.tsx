@@ -69,7 +69,7 @@ export default function LoginPage() {
                   <div className="flex items-center justify-between">
                     <Label htmlFor="password">パスワード</Label>
                     <Link
-                      href="/forgot-password"
+                      href="/login?reset=true"
                       className="text-sm text-primary hover:underline"
                     >
                       パスワードを忘れた方

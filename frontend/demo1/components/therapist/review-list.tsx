@@ -37,8 +37,8 @@ export function ReviewList({
   const getBodyLabel = (id: string) => bodyTypes.find(b => b.id === id)?.label || id;
   const getServiceLabel = (id: string) => serviceTypes.find(s => s.id === id)?.label || id;
 
-  const lockedCount = reviews.length - 1;
-  const avgScore = Math.round(reviews.reduce((acc, r) => acc + r.score, 0) / reviews.length);
+  const lockedCount = Math.max(reviews.length - 1, 0);
+  const avgScore = reviews.length > 0 ? Math.round(reviews.reduce((acc, r) => acc + r.score, 0) / reviews.length) : 0;
 
   return (
     <>
