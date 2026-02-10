@@ -220,7 +220,9 @@ class TherapistScraper:
             name = name.strip()
             if not name:
                 continue
-            src = img.get('src') or img.get('srcset', '').split(',')[0].split()[0] or img.get('data-src') or ''
+            srcset = img.get('srcset', '')
+            srcset_url = srcset.split(',')[0].split()[0] if srcset.strip() else ''
+            src = img.get('src') or srcset_url or img.get('data-src') or ''
             if not src:
                 continue
             src = urljoin(list_url, src)

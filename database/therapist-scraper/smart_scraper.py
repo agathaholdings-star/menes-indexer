@@ -419,14 +419,20 @@ class SmartScraper:
                 if not imgs and entry.get('list_image_url'):
                     data['image_urls'] = [entry['list_image_url']]
 
-                therapists.append(data)
                 n = data.get('name', '?')
                 a = data.get('age', '?')
                 h = data.get('height', '?')
                 sizes = f"B{data.get('bust','?')}/W{data.get('waist','?')}/H{data.get('hip','?')}"
                 print(f"       -> {n} ({a}, {h}cm, {sizes})")
 
-                # rule_miner用にサンプルHTMLを保存（最大5件）
+                # バリデーション: 無効データはスキップ
+                if not self.validator.validate_therapist(data):
+                    print(f"       -> (無効: スキップ)")
+                    continue
+
+                therapists.append(data)
+
+                # rule_miner用にサンプルHTMLを保存（有効データのみ、最大5件）
                 if len(sample_htmls) < 5:
                     sample_htmls.append({
                         'html': t_html,
