@@ -4,11 +4,12 @@
 全サロン一括セラピストスクレイピング → ローカルSupabase投入
 
 実行:
-  python database/batch_scrape_therapists.py                    # 全サロン
+  python database/batch_scrape_therapists.py                    # 全サロン（Smart Scraper）
   python database/batch_scrape_therapists.py --limit 5          # 最初の5サロン
   python database/batch_scrape_therapists.py --resume            # チェックポイントから再開
   python database/batch_scrape_therapists.py --dry-run           # DB投入せず確認のみ
   python database/batch_scrape_therapists.py --max-per-salon 10  # サロンあたり最大10名
+  python database/batch_scrape_therapists.py --llm-only          # LLMのみ（従来動作）
 
 前提:
   - supabase start 済み (127.0.0.1:54322)
@@ -33,9 +34,10 @@ from dotenv import load_dotenv
 # .env読み込み
 load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
 
-# TherapistScraperをimport
+# スクレイパーをimport
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'therapist-scraper'))
 from therapist_scraper import TherapistScraper
+from smart_scraper import SmartScraper
 
 # --- 設定 ---
 DB_DSN = "postgresql://postgres:postgres@127.0.0.1:54322/postgres"
@@ -164,6 +166,8 @@ def main():
                        help='サロンあたり最大取得人数（0=無制限）')
     parser.add_argument('--dry-run', action='store_true', help='DB投入せず確認のみ')
     parser.add_argument('--resume', action='store_true', help='チェックポイントから再開')
+    parser.add_argument('--llm-only', action='store_true',
+                       help='LLMのみ使用（従来のTherapistScraper動作）')
     args = parser.parse_args()
 
     log.info("=" * 60)
@@ -199,7 +203,12 @@ def main():
         return
 
     # --- スクレイパー初期化 ---
-    scraper = TherapistScraper()
+    if args.llm_only:
+        scraper = TherapistScraper()
+        log.info("モード: LLMのみ（従来動作）")
+    else:
+        scraper = SmartScraper(db_conn=conn)
+        log.info("モード: Smart Scraper（自動学習）")
 
     # --- 統計 ---
     start_time = time.time()
@@ -220,11 +229,19 @@ def main():
         log.info(f"  URL: {shop['official_url']}")
 
         try:
-            therapists = scraper.scrape_salon(
-                shop['official_url'],
-                shop['display_name'] or shop['name'],
-                max_therapists=args.max_per_salon
-            )
+            if args.llm_only:
+                therapists = scraper.scrape_salon(
+                    shop['official_url'],
+                    shop['display_name'] or shop['name'],
+                    max_therapists=args.max_per_salon
+                )
+            else:
+                therapists = scraper.scrape_salon(
+                    shop['id'],
+                    shop['official_url'],
+                    shop['display_name'] or shop['name'],
+                    max_therapists=args.max_per_salon
+                )
 
             if not therapists:
                 log.info(f"  → セラピスト0名")
@@ -283,6 +300,10 @@ def main():
         log.info(f"\n  エラー詳細:")
         for err in errors[:20]:
             log.info(f"    - [{err['shop_id']}] {err['name']}: {err['error']}")
+
+    # Smart Scraper統計
+    if not args.llm_only and hasattr(scraper, 'print_stats'):
+        scraper.print_stats()
 
     # DB結果サマリー
     if not args.dry_run:

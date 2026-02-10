@@ -1,0 +1,71 @@
+[
+  {
+    "cms_name": "upfu8_cms",
+    "fingerprint": {
+      "url_patterns": ["mobileImg/", "item_"],
+      "html_signatures": ["mobileImg"],
+      "css_patterns": ["item_img", "item_name"]
+    },
+    "list_url_rules": {
+      "link_selectors": ["a[href*='/cast']", "a[href*='/therapist']"],
+      "link_text_patterns": ["セラピスト", "キャスト", "在籍"],
+      "url_patterns": ["/cast", "/therapist"]
+    },
+    "therapist_list_rules": {
+      "item_selector": ".item_box, .cast_box, [class*='item_']",
+      "link_selector": "a",
+      "name_selector": ".item_name, .cast_name, [class*='name']",
+      "image_selector": "img",
+      "url_pattern": "/(cast|therapist|item)/",
+      "exclude_patterns": ["/blog", "/news", "/info"]
+    },
+    "therapist_data_rules": {
+      "name": {"selector": "h1, h2, .item_name, .cast_name", "regex": null},
+      "age": {"selector": ".item_spec, .spec, .profile-spec", "regex": "(\\d+)歳"},
+      "height": {"selector": ".item_spec, .spec, .profile-spec", "regex": "(\\d+)cm"},
+      "bust": {"selector": ".item_spec, .spec, .profile-spec", "regex": "B(\\d+)"},
+      "waist": {"selector": ".item_spec, .spec, .profile-spec", "regex": "W(\\d+)"},
+      "hip": {"selector": ".item_spec, .spec, .profile-spec", "regex": "H(\\d+)"},
+      "images": {"selector": ".item_img img, .cast_img img, .profile-img img", "attr": "src"},
+      "profile_text": {"selector": ".item_text, .profile-text, .comment", "regex": null}
+    },
+    "confidence": 0.5,
+    "success_count": 0,
+    "fail_count": 0
+  },
+  {
+    "cms_name": "estama",
+    "fingerprint": {
+      "url_patterns": ["img.estama.jp"],
+      "html_signatures": ["estama"],
+      "domain_patterns": ["estama"],
+      "script_patterns": ["estama"]
+    },
+    "list_url_rules": {
+      "link_selectors": ["a[href*='/therapist']", "a[href*='/cast']"],
+      "link_text_patterns": ["セラピスト", "キャスト", "在籍一覧"],
+      "url_patterns": ["/therapist", "/cast"]
+    },
+    "therapist_list_rules": {
+      "item_selector": ".therapist-item, .cast-item, .therapist-list-item",
+      "link_selector": "a",
+      "name_selector": ".therapist-name, .name",
+      "image_selector": "img",
+      "url_pattern": "/therapist/\\d+",
+      "exclude_patterns": ["/blog", "/news", "/schedule"]
+    },
+    "therapist_data_rules": {
+      "name": {"selector": "h1, .therapist-name, .profile-name", "regex": null},
+      "age": {"selector": ".profile-spec, .therapist-spec, table", "regex": "(\\d+)歳"},
+      "height": {"selector": ".profile-spec, .therapist-spec, table", "regex": "(\\d+)cm"},
+      "bust": {"selector": ".profile-spec, .therapist-spec, table", "regex": "B(\\d+)"},
+      "waist": {"selector": ".profile-spec, .therapist-spec, table", "regex": "W(\\d+)"},
+      "hip": {"selector": ".profile-spec, .therapist-spec, table", "regex": "H(\\d+)"},
+      "images": {"selector": ".therapist-photo img, .profile-photo img", "attr": "src"},
+      "profile_text": {"selector": ".therapist-comment, .profile-text", "regex": null}
+    },
+    "confidence": 0.5,
+    "success_count": 0,
+    "fail_count": 0
+  }
+]
