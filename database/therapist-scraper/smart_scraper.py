@@ -535,7 +535,21 @@ class SmartScraper:
                     sample['html'], sample['url'], mined_rules)
                 if re_extracted and self.validator.validate_therapist(re_extracted):
                     # 名前が一致するか
-                    if re_extracted.get('name') == sample['data'].get('name'):
+                    if re_extracted.get('name') != sample['data'].get('name'):
+                        continue
+                    # 数値フィールドも一致するか確認（セレクタ衝突の検出）
+                    fields_ok = True
+                    for field in ('age', 'height'):
+                        expected = sample['data'].get(field)
+                        actual = re_extracted.get(field)
+                        if expected is not None and actual is not None:
+                            try:
+                                if int(expected) != int(actual):
+                                    fields_ok = False
+                                    break
+                            except (ValueError, TypeError):
+                                pass
+                    if fields_ok:
                         success_count += 1
 
             success_rate = success_count / len(sample_htmls) if sample_htmls else 0

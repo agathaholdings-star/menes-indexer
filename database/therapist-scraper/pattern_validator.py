@@ -10,6 +10,15 @@
     is_batch_valid = validator.validate_batch(therapists, expected_count)
 """
 
+# 数値フィールドの妥当範囲
+PLAUSIBLE_RANGES = {
+    'age': (18, 60),
+    'height': (140, 185),
+    'bust': (60, 120),
+    'waist': (45, 90),
+    'hip': (60, 120),
+}
+
 
 class PatternValidator:
     """抽出結果の品質検証"""
@@ -21,6 +30,8 @@ class PatternValidator:
         基準:
             - name必須
             - age, height, bust/waist/hip, image_urls のうち2つ以上が存在
+            - 数値フィールドが妥当範囲内
+            - age==height等のセレクタ衝突パターンを検出
 
         Args:
             data: 抽出データ dict
@@ -33,6 +44,33 @@ class PatternValidator:
 
         if not data.get('name'):
             return False
+
+        # 数値フィールドの妥当性チェック
+        for field, (min_val, max_val) in PLAUSIBLE_RANGES.items():
+            val = data.get(field)
+            if val is not None:
+                try:
+                    v = int(val)
+                    if v < min_val or v > max_val:
+                        return False
+                except (ValueError, TypeError):
+                    pass
+
+        # セレクタ衝突パターン検出: age==heightやage==bustは典型的な衝突
+        age = data.get('age')
+        if age is not None:
+            try:
+                age_int = int(age)
+                for field in ('height', 'bust', 'waist', 'hip'):
+                    other = data.get(field)
+                    if other is not None:
+                        try:
+                            if int(other) == age_int and age_int < 100:
+                                return False
+                        except (ValueError, TypeError):
+                            pass
+            except (ValueError, TypeError):
+                pass
 
         optional_fields_present = 0
 
