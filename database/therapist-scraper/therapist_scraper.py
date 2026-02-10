@@ -236,15 +236,40 @@ class TherapistScraper:
         # 一覧ページから画像URLを事前抽出
         name_to_img = self._extract_list_page_images(list_url, html)
 
-        cleaned = clean_html_for_llm(html, list_url)
+        # リンク一覧を抽出してLLMに渡す（HTML全体を渡すと切り詰めで情報欠落するため）
+        links = extract_links_with_context(html, list_url)
+
+        # セラピスト関連のリンク候補を優先抽出
+        profile_keywords = ['profile', 'staff', 'cast', 'therapist', 'girl',
+                           'item', 'detail', 'member']
+        candidates = [
+            l for l in links
+            if any(kw in l['url'].lower() for kw in profile_keywords)
+        ]
+
+        # 候補が少なすぎる場合は全リンクを使う
+        if len(candidates) < 3:
+            search_links = links
+        else:
+            search_links = candidates
+
+        links_text = "\n".join(
+            f"- [{l['text']}]({l['url']})" + (f" ({l['context'][:50]})" if l['context'] and l['context'] != l['text'] else "")
+            for l in search_links if l['url']
+        )
+
+        if not links_text:
+            # リンクが取れなかった場合はHTMLフォールバック
+            cleaned = clean_html_for_llm(html, list_url)
+            links_text = cleaned
 
         result = self._ask_llm(f"""このメンズエステサロンの「セラピスト一覧」ページから、
 個々のセラピストのプロフィールページURLをすべて抽出してください。
 
 ページURL: {list_url}
 
-ページ内容:
-{cleaned}
+ページ内のリンク一覧:
+{links_text}
 
 JSON配列で出力。形式: [{{"name": "名前", "url": "URL"}}]
 セラピスト名が不明なら空文字列でOK。該当なしなら空配列 [] を返してください。
