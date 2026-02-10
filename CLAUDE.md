@@ -7,12 +7,13 @@
 - やりとりが20往復を超えたら新チャットへの切り替えを提案すること
 - 画像を複数枚受け取った場合はコンテキスト消費が大きいことを意識すること
 
-## 現在のステータス (2026-02-09 更新)
+## 現在のステータス (2026-02-10 更新)
 
 - **設計フェーズ完了**: サービス概要、システム設計、UXフロー、v0用プロンプトを作成済み。
 - **フロントエンド公開済み**: v0.appからVercelにデプロイ → https://menes-indexer.com/
 - **スクレイピングパイプライン動作確認済み**: 3エリア268件テスト完了
 - **全エリアスクレイピング完了**: VPS上で821エリア一括スクレイピング完了（7,685店舗、エラー0件）
+- **Smart Scraper実装完了**: 自己学習型セラピストスクレイパー実装・テスト済み（25サロン/303名で動作確認）
 - **成果物**:
     - `docs/SERVICE_OVERVIEW.md`: サービス概要・ビジネスモデル
     - `docs/SYSTEM_DESIGN.md`: システム構成・DBスキーマ
@@ -20,9 +21,11 @@
     - `docs/V0_PROMPTS.md`: フロントエンド生成用プロンプト
 - **次のステップ**:
     1. ~~全821エリアの本番スクレイピング設計・実行~~ → ✅ 完了（7,685店舗）
-    2. フロントエンドとローカルSupabaseの接続
-    3. Vercel/Supabase MCP OAuth認証
-    4. VPSのスクレイピングデータをpg_dumpで本番Supabaseに移行
+    2. ~~Smart Scraper実装~~ → ✅ 完了（16サロン成功/303名取得テスト済み）
+    3. Smart Scraperのシードパターン改善（estama系のStep 3/4ルール化）
+    4. フロントエンドとローカルSupabaseの接続
+    5. Vercel/Supabase MCP OAuth認証
+    6. VPSのスクレイピングデータをpg_dumpで本番Supabaseに移行
 
 ## 開発フロー方針（確定）
 
@@ -103,7 +106,10 @@ supabase stop      # 停止
 | areas | 821 | シード済み（スラッグ重複解決済み） |
 | shops | 7,685 | 全821エリアスクレイピング完了（VPS） |
 | shop_areas | 11,653 | shops連動（複数エリア掲載含む） |
-| therapists | 0 | セラピスト取得テスト済み（別途スクリプトあり） |
+| therapists | 303 | Smart Scraperテスト済み（25サロン/16成功） |
+| cms_patterns | 2 | シード済み（upfu8_cms, estama） |
+| shop_scrape_cache | 16 | テストで蓄積（一覧URLキャッシュ） |
+| scrape_log | - | テストログ蓄積済み |
 | reviews | 0 | サービス開始後 |
 | profiles | 0 | サービス開始後 |
 | user_rewards | 0 | サービス開始後 |
@@ -196,14 +202,24 @@ ssh -i /Users/agatha/Downloads/indexer.pem root@220.158.18.6 "sudo -u postgres p
 ├── supabase/              ← Supabase Local設定
 │   ├── config.toml            ← Supabase設定
 │   ├── migrations/            ← DBマイグレーション
-│   │   └── 20260208000001_create_schema.sql  ← 全8テーブル定義
+│   │   ├── 20260208000001_create_schema.sql  ← 全8テーブル定義
+│   │   └── 20260210000001_smart_scraper_tables.sql ← Smart Scraper用3テーブル
 │   ├── seed.sql               ← シードデータ（47都道府県+821エリア）
 │   └── seed_areas.sql         ← エリアシードSQL（seed.sqlに結合済み）
 ├── database/              ← データ・スクリプト
 │   ├── esthe-ranking/         ← エリアマスタ・サロン数データ
 │   ├── seed_areas.py          ← CSV→SQLシード生成スクリプト
 │   ├── extract_kana_from_title.py ← サロン名カナ抽出
+│   ├── batch_scrape_therapists.py ← 全サロン一括セラピストスクレイピング
 │   └── therapist-scraper/     ← セラピストスクレイパー
+│       ├── therapist_scraper.py   ← LLMベーススクレイパー（従来版）
+│       ├── smart_scraper.py       ← Smart Scraper オーケストレーション
+│       ├── cms_fingerprinter.py   ← CMS指紋判定
+│       ├── rule_extractor.py      ← ルールベース抽出（CSSセレクタ）
+│       ├── rule_miner.py          ← パターン自動学習
+│       ├── pattern_validator.py   ← 抽出品質検証
+│       ├── cms_patterns_seed.json ← 初期CMSパターン2件
+│       └── seed_cms_patterns.py   ← シード投入スクリプト
 ├── docs/                  ← ドキュメント
 │   ├── SERVICE_OVERVIEW.md    ← サービス概要書（最重要）
 │   ├── SYSTEM_DESIGN.md       ← システム設計・DBスキーマ
@@ -448,52 +464,82 @@ Level 3: /sapporo/asahikawa-city/all/   ← 263市（市単位に絞り込んだ
 | `database/mens-mg/mg_area_list.csv` | メンマガ 114エリア |
 | `database/merged/salon_counts_cache.json` | サロン数キャッシュ（854URL分） |
 
-## 設計済み・未実装
+## Smart Scraper（自己学習型セラピストスクレイパー）✅ 実装済み (2026-02-10)
 
-### 自己学習型セラピストスクレイパー（Smart Scraper）
+### 概要
 
-**状態**: 設計完了、実装待ち
-**設計書**: チャットトランスクリプト `202a350b-7c62-4818-8aa7-ff45a9e3f913.jsonl`
+CMS指紋判定→ルールベース抽出→LLMフォールバック→自動学習のパイプライン。
+初回はLLMで抽出し、成功パターンをCSSセレクタとして自動学習。2回目以降は同じCMSのサロンをLLM不要で処理。
 
-**課題**: 現行 `therapist_scraper.py` は全ステップでClaude Haiku APIを使用。5000店舗規模だとAPI費用~$900・所要~67時間。
-
-**解決策**: サロンサイトは少数のCMSプラットフォーム（推定10〜20種類）に集約されるため、一度学習したCMSはルールベース（CSSセレクタ）で処理。LLMは未知CMSの初回学習時のみ使用。
-
-**アーキテクチャ**:
+### アーキテクチャ
 ```
-サロンURL → トップHTML取得 → CMS指紋判定
-  既知CMS → ルールベース抽出（無料・高速）
-  未知CMS → LLM抽出 → ルールマイニング（次回からルールベース化）
+サロンURL
+  ↓
+shop_scrape_cache確認（前回の一覧URL・CMSパターンあり？）
+  ├─ あり → キャッシュされた一覧URLへ直行（Step 2省略）
+  └─ なし → CMS指紋判定
+                ├─ 既知CMS → ルールベース抽出（CSSセレクタ、LLM不要）
+                └─ 未知CMS → LLM抽出 → パターン自動学習 → 次回からルール化
 ```
 
-**判明済みCMS**: `upfu8_cms`（aromamore.tokyo等）、`estama`（emerald-akasaka.com等）
+### ファイル構成 (`database/therapist-scraper/`)
+| ファイル | 状態 | 説明 |
+|---------|------|------|
+| `therapist_scraper.py` | 既存（変更なし） | LLMベーススクレイパー（SmartScraperから呼び出し） |
+| `smart_scraper.py` | ✅ | オーケストレーション（キャッシュ→CMS判定→ルール→LLMフォールバック→学習） |
+| `cms_fingerprinter.py` | ✅ | CMS指紋判定（metaタグ・script・CSS・URLパターンの加重スコアマッチング） |
+| `rule_extractor.py` | ✅ | ルールベース抽出（CSSセレクタ + 正規表現） |
+| `rule_miner.py` | ✅ | パターン自動学習（LLM結果 + HTMLからCSSセレクタ導出） |
+| `pattern_validator.py` | ✅ | 抽出品質検証（name必須 + 2フィールド以上） |
+| `cms_patterns_seed.json` | ✅ | 初期パターン2件（upfu8_cms, estama） |
+| `seed_cms_patterns.py` | ✅ | シードデータ投入スクリプト |
 
-**ファイル構成** (`database/therapist-scraper/`):
-- `therapist_scraper.py` — 既存LLMベーススクレイパー（変更なし、"教師"として残す）
-- `therapist.db` / `therapist.csv` — 抽出済みデータ
-- `smart_scraper.py` — エントリポイント（未作成）
-- `cms_fingerprinter.py` — CMS判定（未作成）
-- `rule_extractor.py` — ルールベース抽出（未作成）
-- `rule_miner.py` — 自動ルール導出・Phase 2（未作成）
-- `cms_patterns_seed.json` — 初期パターン2件（未作成）
+### DBテーブル（migration: `20260210000001_smart_scraper_tables.sql`）
+| テーブル | 用途 |
+|---------|------|
+| `cms_patterns` | CMS抽出ルール（指紋・セレクタ・信頼度） |
+| `shop_scrape_cache` | サロン別キャッシュ（一覧URL・CMS紐づけ） |
+| `scrape_log` | スクレイピングログ（ステップ・方式・成否） |
+| `shops.cms_fingerprint` | 追加カラム |
 
-**DBスキーマ追加（未作成）**: `cms_pattern`, `scrape_log` テーブル
+### 信頼度モデル
+| confidence | 動作 |
+|-----------|------|
+| >= 0.7 | ルールのみ（LLM不使用） |
+| 0.4-0.7 | ルール + LLMでサンプル検証（ハイブリッド） |
+| < 0.4 | ルール破棄、LLM使用、再学習トリガー |
 
-**コスト見積もり**: 現行$900 → Phase1(80%ルール)$180 → Phase2(95%ルール)$45
+`confidence = success / (success + fail * 2)` — 失敗の重みを2倍
+
+### テスト結果 (2026-02-10)
+- **25サロン処理 → 16サロン成功 → 303名取得 → 所要21分 → エラー0**
+- estama系7サロン: CMS判定成功（confidence 0.77〜1.00）、Step 2（一覧URL発見）をルール処理
+- Step 3/4はまだLLMフォールバック中（シードのCSSセレクタ要チューニング）
+- パターン自動学習: 成功率80%閾値に未到達 → 保留中
+
+### 実行コマンド
+```bash
+# Smart Scraper（デフォルト）
+python database/batch_scrape_therapists.py --limit 10 --max-per-salon 0
+
+# LLMのみ（従来動作）
+python database/batch_scrape_therapists.py --llm-only
+
+# シード投入
+python database/therapist-scraper/seed_cms_patterns.py
+```
+
+### 今後の改善
+- シードパターンのCSSセレクタをestama実サイトに合わせてチューニング → Step 3/4もルール化
+- 学習閾値の調整（80% → 60%等）で蓄積を加速
+- コスト見積もり: 現行$900 → Phase1(60%ルール)$370 → Phase2(90%ルール)$93
 
 ## 未解決課題
 
-### セラピスト一覧ページURL特定の学習（2026-02-08 発見）
+### セラピスト一覧ページURL特定の学習 → ✅ Smart Scraperで対応済み
 
-**問題**: セラピスト一覧ページのスラッグがサロンごとに異なる。LLMがリンク候補から誤判定するケースあり。
-
-**確認済みパターン**:
-- `/cast/` — リンダスパ等
-- `/therapist` — エルテラス等
-- `/staff/` `/girl/` — 他サイト
-- `/blog-therapist/` — ブログ型（誤判定されやすい）
-
-**対策方針**: Smart Scraperの一部として、サロンごとに正解の一覧ページURLパターンを蓄積・学習していく。初回はLLM判定、成功パターンをDBに保存して同一CMS/ドメインに再利用。
+`shop_scrape_cache`テーブルに一覧URLをキャッシュ。2回目以降はLLM不要で直行。
+CMS判定で`/therapist/`等のパターンもルールベースで発見可能（estama系で動作確認済み）。
 
 ### 新規店舗URLの自動発見
 esthe-ranking.jpをメインソースとして採用決定。
