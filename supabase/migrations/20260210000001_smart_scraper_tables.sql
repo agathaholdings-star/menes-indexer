@@ -13,6 +13,8 @@ CREATE TABLE cms_patterns (
     list_url_rules  jsonb NOT NULL DEFAULT '{}',         -- Step 2: 一覧ページURL発見ルール
     therapist_list_rules jsonb NOT NULL DEFAULT '{}',    -- Step 3: 個別URL抽出ルール
     therapist_data_rules jsonb NOT NULL DEFAULT '{}',    -- Step 4: データ抽出ルール
+    ajax_pagination jsonb NOT NULL DEFAULT '{}',         -- AJAXページネーション設定
+    list_data_rules jsonb NOT NULL DEFAULT '{}',         -- 一覧カード直接抽出ルール
     confidence      float NOT NULL DEFAULT 0.0,          -- 0.0-1.0 成功率ベース
     success_count   int NOT NULL DEFAULT 0,
     fail_count      int NOT NULL DEFAULT 0,

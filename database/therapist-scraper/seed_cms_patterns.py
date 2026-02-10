@@ -35,13 +35,16 @@ def main():
             INSERT INTO cms_patterns (
                 cms_name, fingerprint, list_url_rules,
                 therapist_list_rules, therapist_data_rules,
+                ajax_pagination, list_data_rules,
                 confidence, success_count, fail_count
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (cms_name) DO UPDATE SET
                 fingerprint = EXCLUDED.fingerprint,
                 list_url_rules = EXCLUDED.list_url_rules,
                 therapist_list_rules = EXCLUDED.therapist_list_rules,
                 therapist_data_rules = EXCLUDED.therapist_data_rules,
+                ajax_pagination = EXCLUDED.ajax_pagination,
+                list_data_rules = EXCLUDED.list_data_rules,
                 version = cms_patterns.version + 1
         """, (
             p['cms_name'],
@@ -49,6 +52,8 @@ def main():
             json.dumps(p['list_url_rules'], ensure_ascii=False),
             json.dumps(p['therapist_list_rules'], ensure_ascii=False),
             json.dumps(p['therapist_data_rules'], ensure_ascii=False),
+            json.dumps(p.get('ajax_pagination', {}), ensure_ascii=False),
+            json.dumps(p.get('list_data_rules', {}), ensure_ascii=False),
             p.get('confidence', 0.5),
             p.get('success_count', 0),
             p.get('fail_count', 0),

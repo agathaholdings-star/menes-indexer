@@ -8,7 +8,7 @@
     },
     "list_url_rules": {
       "link_selectors": ["a[href*='/cast']", "a[href*='/therapist']"],
-      "link_text_patterns": ["セラピスト", "キャスト", "在籍"],
+      "link_text_patterns": ["\u30bb\u30e9\u30d4\u30b9\u30c8", "\u30ad\u30e3\u30b9\u30c8", "\u5728\u7c4d"],
       "url_patterns": ["/cast", "/therapist"]
     },
     "therapist_list_rules": {
@@ -21,7 +21,7 @@
     },
     "therapist_data_rules": {
       "name": {"selector": "h1, h2, .item_name, .cast_name", "regex": null},
-      "age": {"selector": ".item_spec, .spec, .profile-spec", "regex": "(\\d+)歳"},
+      "age": {"selector": ".item_spec, .spec, .profile-spec", "regex": "(\\d+)\u6b73"},
       "height": {"selector": ".item_spec, .spec, .profile-spec", "regex": "(\\d+)cm"},
       "bust": {"selector": ".item_spec, .spec, .profile-spec", "regex": "B(\\d+)"},
       "waist": {"selector": ".item_spec, .spec, .profile-spec", "regex": "W(\\d+)"},
@@ -43,28 +43,48 @@
     },
     "list_url_rules": {
       "link_selectors": ["a[href*='/therapist']", "a[href*='/cast']"],
-      "link_text_patterns": ["セラピスト", "キャスト", "在籍一覧"],
+      "link_text_patterns": ["\u30bb\u30e9\u30d4\u30b9\u30c8", "\u30ad\u30e3\u30b9\u30c8", "\u5728\u7c4d\u4e00\u89a7"],
       "url_patterns": ["/therapist", "/cast"]
     },
     "therapist_list_rules": {
-      "item_selector": ".therapist-item, .cast-item, .therapist-list-item",
-      "link_selector": "a",
-      "name_selector": ".therapist-name, .name",
-      "image_selector": "img",
+      "item_selector": ".c-therapist-cards__item",
+      "link_selector": "a.c-therapist-cards__link",
+      "name_selector": ".c-therapist-cards__name",
+      "image_selector": ".c-therapist-cards__img img",
       "url_pattern": "/therapist/\\d+",
       "exclude_patterns": ["/blog", "/news", "/schedule"]
     },
     "therapist_data_rules": {
-      "name": {"selector": "h1, .therapist-name, .profile-name", "regex": null},
-      "age": {"selector": ".profile-spec, .therapist-spec, table", "regex": "(\\d+)歳"},
-      "height": {"selector": ".profile-spec, .therapist-spec, table", "regex": "(\\d+)cm"},
-      "bust": {"selector": ".profile-spec, .therapist-spec, table", "regex": "B(\\d+)"},
-      "waist": {"selector": ".profile-spec, .therapist-spec, table", "regex": "W(\\d+)"},
-      "hip": {"selector": ".profile-spec, .therapist-spec, table", "regex": "H(\\d+)"},
-      "images": {"selector": ".therapist-photo img, .profile-photo img", "attr": "src"},
+      "name": {"selector": "h1, .c-therapist-cards__name, .therapist-name", "regex": null},
+      "age": {"selector": ".c-therapist-cards__name, .profile-spec", "regex": "\\((\\d+)\\)"},
+      "height": {"selector": ".c-therapist-cards__style, .profile-spec", "regex": "T(\\d+)"},
+      "bust": {"selector": ".c-therapist-cards__style, .profile-spec", "regex": "B(\\d+)"},
+      "waist": {"selector": ".c-therapist-cards__style, .profile-spec", "regex": "W(\\d+)"},
+      "hip": {"selector": ".c-therapist-cards__style, .profile-spec", "regex": "H(\\d+)"},
+      "images": {"selector": ".c-therapist-cards__img img, .therapist-photo img", "attr": "src"},
       "profile_text": {"selector": ".therapist-comment, .profile-text", "regex": null}
     },
-    "confidence": 0.5,
+    "ajax_pagination": {
+      "trigger_selector": ".js-scrl-reading-point",
+      "url_attr": "data-ajax-url",
+      "page_attr": "data-page",
+      "response_list_key": "list",
+      "response_page_key": "page",
+      "response_last_key": "is_last",
+      "last_value": 1
+    },
+    "list_data_rules": {
+      "item_selector": ".c-therapist-cards__item",
+      "name": {"selector": ".c-therapist-cards__name", "regex": "^(.+?)\\(\\d+\\)$", "fallback_regex": "^(.+)$"},
+      "age": {"selector": ".c-therapist-cards__name", "regex": "\\((\\d+)\\)"},
+      "height": {"selector": ".c-therapist-cards__style", "regex": "T(\\d+)"},
+      "bust": {"selector": ".c-therapist-cards__style", "regex": "B(\\d+)"},
+      "waist": {"selector": ".c-therapist-cards__style", "regex": "W(\\d+)"},
+      "hip": {"selector": ".c-therapist-cards__style", "regex": "H(\\d+)"},
+      "image": {"selector": ".c-therapist-cards__img img", "attr": "src"},
+      "link": {"selector": "a.c-therapist-cards__link", "attr": "href"}
+    },
+    "confidence": 0.7,
     "success_count": 0,
     "fail_count": 0
   }

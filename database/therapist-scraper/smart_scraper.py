@@ -61,6 +61,7 @@ class SmartScraper:
             cur.execute("""
                 SELECT id, cms_name, fingerprint, list_url_rules,
                        therapist_list_rules, therapist_data_rules,
+                       ajax_pagination, list_data_rules,
                        confidence, success_count, fail_count
                 FROM cms_patterns
             """)
@@ -268,7 +269,33 @@ class SmartScraper:
         else:
             list_html = html
 
-        # === Step 3: セラピスト個別URL抽出 ===
+        # === AJAX高速パス: 一覧カードから直接データ抽出 ===
+        ajax_rules = pattern.get('ajax_pagination') if pattern else None
+        list_data_rules = pattern.get('list_data_rules') if pattern else None
+
+        if ajax_rules and list_data_rules and cms_confidence >= 0.4:
+            therapists = self._extract_via_ajax_list(
+                shop_id, list_html, list_url, pattern, ajax_rules,
+                list_data_rules, max_therapists)
+
+            if therapists:
+                # 成功 → キャッシュ・ログ更新して返す
+                self.stats['rule_success'] += 1
+                if pattern_id:
+                    self._update_cms_confidence(pattern_id, True)
+                self._update_cache(shop_id, pattern_id, list_url, 'rule',
+                                  len(therapists), True)
+                if self.db_conn:
+                    try:
+                        self.db_conn.commit()
+                    except Exception:
+                        pass
+                print(f"\n  完了: {len(therapists)}名 (method=ajax_rule)")
+                return therapists
+            else:
+                log.info("  AJAX高速パス失敗、通常フローにフォールバック")
+
+        # === Step 3: セラピスト個別URL抽出（通常フロー） ===
         entries = []
         step3_method = 'llm'
 
@@ -439,6 +466,59 @@ class SmartScraper:
                 pass
 
         print(f"\n  完了: {len(therapists)}/{len(entries)}名 (method={overall_method})")
+        return therapists
+
+    def _extract_via_ajax_list(self, shop_id, list_html, list_url, pattern,
+                                ajax_rules, list_data_rules, max_therapists):
+        """
+        AJAX一覧ページから直接セラピストデータを抽出（個別ページ訪問不要）
+
+        estama等のCMSで、一覧カードに全情報（名前、年齢、身長、BWH、画像）が含まれる場合、
+        個別プロフィールページへのリクエストを省略して高速抽出。
+
+        Returns:
+            [therapist_data_dict, ...] or []
+        """
+        print(f"  [AJAX] 一覧カードから直接データ抽出...")
+
+        # AJAXページネーション検出
+        ajax_path, start_page = self.rule_extractor.detect_ajax_pagination(
+            list_html, ajax_rules)
+
+        ajax_snippets = []
+        if ajax_path:
+            print(f"  [AJAX] ページネーション検出: {ajax_path} (page={start_page}〜)")
+            ajax_snippets = self.rule_extractor.fetch_ajax_pages(
+                list_url, ajax_path, start_page, ajax_rules)
+            print(f"  [AJAX] 追加取得: {len(ajax_snippets)}件のスニペット")
+        else:
+            print(f"  [AJAX] ページネーションなし（全件SSR）")
+
+        # 一覧カードからデータ抽出
+        therapists = self.rule_extractor.extract_therapists_from_list(
+            list_html, list_url, list_data_rules, ajax_snippets)
+
+        if not therapists:
+            return []
+
+        # max_therapists制限
+        if max_therapists > 0:
+            therapists = therapists[:max_therapists]
+
+        # 結果表示
+        for i, t in enumerate(therapists):
+            n = t.get('name', '?')
+            a = t.get('age', '?')
+            h = t.get('height', '?')
+            sizes = f"B{t.get('bust','?')}/W{t.get('waist','?')}/H{t.get('hip','?')}"
+            if i < 10 or i == len(therapists) - 1:
+                print(f"  [{i+1}/{len(therapists)}] {n} ({a}, {h}cm, {sizes})")
+            elif i == 10:
+                print(f"  ... (残り{len(therapists) - 10}名)")
+
+        self._log_scrape(shop_id, 'extract_ajax_list', 'rule', True,
+                         detail=f'{len(therapists)} from ajax list')
+
         return therapists
 
     def _try_learn_pattern(self, shop_id, salon_url, top_html, sample_htmls, existing_pattern_id):
