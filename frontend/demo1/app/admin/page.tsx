@@ -38,7 +38,9 @@ interface ReviewRow {
   created_at: string | null;
   user_id: string;
   therapist_id: number;
+  shop_id: number;
   therapist_name?: string;
+  shop_name?: string;
   user_nickname?: string;
 }
 
@@ -124,7 +126,7 @@ export default function AdminPage() {
       // Reviews (all statuses - admin RLS allows full access)
       const { data: reviewData } = await supabase
         .from("reviews")
-        .select("id, score, looks_type, body_type, service_level, moderation_status, comment_first_impression, comment_service, comment_advice, created_at, user_id, therapist_id")
+        .select("id, score, looks_type, body_type, service_level, moderation_status, comment_first_impression, comment_service, comment_advice, created_at, user_id, therapist_id, shop_id")
         .order("created_at", { ascending: false })
         .limit(100);
 
@@ -135,6 +137,13 @@ export default function AdminPage() {
           .select("id, name")
           .in("id", therapistIds);
         const therapistMap = new Map((therapists || []).map((t) => [t.id, t.name]));
+
+        const shopIds = [...new Set(reviewData.map((r) => r.shop_id))];
+        const { data: shops } = await supabase
+          .from("shops")
+          .select("id, display_name, name")
+          .in("id", shopIds);
+        const shopMap = new Map((shops || []).map((s) => [s.id, s.display_name || s.name]));
 
         const userIds = [...new Set(reviewData.map((r) => r.user_id))];
         const { data: profiles } = await supabase
@@ -148,6 +157,7 @@ export default function AdminPage() {
             ...r,
             moderation_status: r.moderation_status as ModerationStatus,
             therapist_name: therapistMap.get(r.therapist_id) || `ID:${r.therapist_id}`,
+            shop_name: shopMap.get(r.shop_id) || `ID:${r.shop_id}`,
             user_nickname: userMap.get(r.user_id) || "不明",
           }))
         );
@@ -335,79 +345,93 @@ export default function AdminPage() {
               {filteredReviews.map((r) => (
                 <Card key={r.id}>
                   <CardContent className="p-4">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <Badge variant={STATUS_BADGE_VARIANT[r.moderation_status]}>
-                            {STATUS_LABELS[r.moderation_status]}
-                          </Badge>
-                          <Badge>{r.score ?? 0}点</Badge>
-                          {r.looks_type && <Badge variant="secondary">{r.looks_type}</Badge>}
-                          {r.service_level && (
-                            <Badge variant={r.service_level === "hr" ? "destructive" : "secondary"}>
-                              {r.service_level.toUpperCase()}
-                            </Badge>
-                          )}
+                    {/* Header: who wrote about whom */}
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <p className="font-semibold text-base">
+                          {r.therapist_name}
+                          <span className="text-muted-foreground font-normal text-sm ml-1">
+                            @ {r.shop_name}
+                          </span>
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          投稿者: {r.user_nickname} / {r.created_at && new Date(r.created_at).toLocaleString("ja-JP")}
+                        </p>
+                      </div>
+                      <Badge variant={STATUS_BADGE_VARIANT[r.moderation_status]}>
+                        {STATUS_LABELS[r.moderation_status]}
+                      </Badge>
+                    </div>
+
+                    {/* Tags */}
+                    <div className="flex items-center gap-2 mb-3 flex-wrap">
+                      <Badge>{r.score ?? 0}点</Badge>
+                      {r.looks_type && <Badge variant="secondary">{r.looks_type}</Badge>}
+                      {r.body_type && <Badge variant="secondary">{r.body_type}</Badge>}
+                      {r.service_level && (
+                        <Badge variant={r.service_level === "hr" ? "destructive" : "secondary"}>
+                          {r.service_level.toUpperCase()}
+                        </Badge>
+                      )}
+                    </div>
+
+                    {/* Review content */}
+                    <div className="space-y-2 text-sm border-l-2 border-muted pl-3">
+                      {r.comment_first_impression && (
+                        <div>
+                          <span className="font-medium text-xs">第一印象: </span>
+                          <span className="text-muted-foreground">{r.comment_first_impression}</span>
                         </div>
-                        <p className="text-sm font-medium">
-                          {r.therapist_name} / {r.user_nickname}
-                        </p>
-                        {r.comment_first_impression && (
-                          <div className="mt-2">
-                            <p className="text-xs font-medium text-muted-foreground">第一印象:</p>
-                            <p className="text-sm text-muted-foreground">{r.comment_first_impression}</p>
-                          </div>
-                        )}
-                        {r.comment_service && (
-                          <div className="mt-1">
-                            <p className="text-xs font-medium text-muted-foreground">サービス:</p>
-                            <p className="text-sm text-muted-foreground">{r.comment_service}</p>
-                          </div>
-                        )}
-                        {r.comment_advice && (
-                          <div className="mt-1">
-                            <p className="text-xs font-medium text-muted-foreground">アドバイス:</p>
-                            <p className="text-sm text-muted-foreground">{r.comment_advice}</p>
-                          </div>
-                        )}
-                        <p className="text-xs text-muted-foreground mt-2">
-                          {r.created_at && new Date(r.created_at).toLocaleString("ja-JP")}
-                        </p>
-                      </div>
-                      <div className="flex flex-col gap-1">
-                        {r.moderation_status === "pending" && (
-                          <>
-                            <Button
-                              variant="default"
-                              size="sm"
-                              disabled={actionLoading === r.id}
-                              onClick={() => handleApprove(r.id)}
-                              className="gap-1"
-                            >
-                              <CheckCircle className="h-3.5 w-3.5" />
-                              承認
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              disabled={actionLoading === r.id}
-                              onClick={() => handleReject(r.id)}
-                              className="gap-1 bg-transparent"
-                            >
-                              <XCircle className="h-3.5 w-3.5" />
-                              却下
-                            </Button>
-                          </>
-                        )}
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-destructive hover:text-destructive"
-                          onClick={() => setDeleteTarget({ type: "review", id: r.id })}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+                      )}
+                      {r.comment_service && (
+                        <div>
+                          <span className="font-medium text-xs">サービス: </span>
+                          <span className="text-muted-foreground">{r.comment_service}</span>
+                        </div>
+                      )}
+                      {r.comment_advice && (
+                        <div>
+                          <span className="font-medium text-xs">アドバイス: </span>
+                          <span className="text-muted-foreground">{r.comment_advice}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-2 mt-3 pt-3 border-t">
+                      {r.moderation_status === "pending" && (
+                        <>
+                          <Button
+                            variant="default"
+                            size="sm"
+                            disabled={actionLoading === r.id}
+                            onClick={() => handleApprove(r.id)}
+                            className="gap-1"
+                          >
+                            <CheckCircle className="h-3.5 w-3.5" />
+                            承認
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={actionLoading === r.id}
+                            onClick={() => handleReject(r.id)}
+                            className="gap-1 bg-transparent"
+                          >
+                            <XCircle className="h-3.5 w-3.5" />
+                            却下
+                          </Button>
+                        </>
+                      )}
+                      <div className="flex-1" />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => setDeleteTarget({ type: "review", id: r.id })}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>

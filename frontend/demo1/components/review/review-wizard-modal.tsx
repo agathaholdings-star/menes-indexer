@@ -1163,26 +1163,11 @@ function CompletionScreen({
       </div>
       <h3 className="text-xl font-bold mb-2">投稿ありがとうございます！</h3>
       <p className="text-muted-foreground mb-2">
-        管理者の承認後に口コミが公開されます
+        数営業日以内に口コミを審査いたします
       </p>
-
-      {memberType === "free" && (
-        <p className="text-sm text-muted-foreground mb-6">
-          承認後、口コミ閲覧が<span className="text-primary font-bold">3日間</span>解放されます
-        </p>
-      )}
-
-      {memberType === "standard" && (
-        <p className="text-sm text-muted-foreground mb-6">
-          承認後、投稿数にカウントされます
-        </p>
-      )}
-
-      {memberType === "vip" && (
-        <p className="text-sm text-muted-foreground mb-6">
-          いつもご利用ありがとうございます
-        </p>
-      )}
+      <p className="text-sm text-muted-foreground mb-6">
+        口コミの質に応じて、口コミ見放題になる日数を付与します
+      </p>
 
       <div className="space-y-3">
         <Button onClick={onClose} className="w-full">
