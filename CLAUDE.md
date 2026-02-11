@@ -14,7 +14,9 @@
 - **スクレイピングパイプライン動作確認済み**: 3エリア268件テスト完了
 - **全エリアスクレイピング完了**: VPS上で821エリア一括スクレイピング完了（7,685店舗、エラー0件）
 - **Smart Scraper実装完了**: 自己学習型セラピストスクレイパー実装・テスト済み（25サロン/303名で動作確認）
-- **ヒューリスティック優先抽出 実装完了**: LLM不要の高速抽出（10件テスト: Step2成功率80%, Step3成功率70%）
+- **ヒューリスティック優先抽出 実装完了**: 全7,684店スキャン済み（Step2: 86.5%, Step3: 48%）
+- **ヒューリスティックv2**: flat HTML構造+共通サブパス検出で+1,227店改善
+- **Phase② VPS稼働中**: セラピストデータ抽出（3,708店対象、tmux phase2）
 - **成果物**:
     - `docs/SERVICE_OVERVIEW.md`: サービス概要・ビジネスモデル
     - `docs/SYSTEM_DESIGN.md`: システム構成・DBスキーマ
@@ -24,7 +26,7 @@
     1. ~~全821エリアの本番スクレイピング設計・実行~~ → ✅ 完了（7,685店舗）
     2. ~~Smart Scraper実装~~ → ✅ 完了（16サロン成功/303名取得テスト済み）
     3. ~~ヒューリスティック優先抽出~~ → ✅ 完了（batch_heuristic.py + smart_scraper.py改修）
-    4. **セラピスト本番スクレイピング（3段階パイプライン）** ← 次はここ
+    4. **セラピスト本番スクレイピング（3段階パイプライン）** ← Phase②稼働中、Phase③待ち
     5. フロントエンドとローカルSupabaseの接続
     6. Vercel/Supabase MCP OAuth認証
     7. VPSのスクレイピングデータをpg_dumpで本番Supabaseに移行
@@ -467,35 +469,31 @@ Level 3: /sapporo/asahikawa-city/all/   ← 263市（市単位に絞り込んだ
 | `database/mens-mg/mg_area_list.csv` | メンマガ 114エリア |
 | `database/merged/salon_counts_cache.json` | サロン数キャッシュ（854URL分） |
 
-## セラピスト本番スクレイピング: 3段階パイプライン（2026-02-11 設計）
+## セラピスト本番スクレイピング: 3段階パイプライン（2026-02-11）
 
 ### 設計方針
 
 **「確実に取れるものを先に全部取り切る → 残った例外だけ別途対処」**
 
-1本のプログラムで全部やると、取れない店でのLLM待ちやエラーで全体が遅くなる。
-3つの独立したステップに分離し、それぞれ完了してから次に進む。
-
 ### 3段階の流れ
 
 ```
-① ローカル: ヒューリスティック全店スキャン（~4時間、$0）
+① ローカル: ヒューリスティック全店スキャン（28分、$0）  ← ✅ 完了
    → 全7,684店のトップページにアクセス
    → リンクテキスト/URLキーワード/HTTPプローブで一覧URL特定
    → 一覧ページからURLパターンでセラピスト個別URL抽出
    → 結果: shop_scrape_cache + scrape_log に記録
-   → 成功店（~5,000）/ 失敗店（~2,500）/ 死亡（~200）に振り分け
 
-② VPS: 成功店のセラピストデータ取得（~30時間）  ← スクリプト未作成
-   → ①でDBに入ったセラピストURLリストをひたすらfetch
+② VPS: 成功店のセラピストデータ取得（~30時間）  ← 🔄 稼働中 (tmux phase2)
+   → ①でセラピストURL取得済みの3,708店が対象
    → 個別ページのHTMLから正規表現/BeautifulSoupでデータ抽出
-   → LLMはフォールバックとしてのみ使用
+   → LLMはフォールバックとしてのみ使用（成功率95.5%テスト済み）
    → therapistsテーブルに投入
 
-③ VPS: 失敗店のLLM再挑戦（~15時間、~$300）
-   → ①で一覧URLが見つからなかった店に対してLLMで探索
-   → 見つかったらそのままセラピストデータ取得まで実行
-   → 既存の batch_scrape_therapists.py がそのまま使える
+③ VPS: 失敗店のLLM再挑戦（~15時間、~$200）  ← 待ち
+   → ①②で取れなかった3,976店が対象
+   → batch_scrape_therapists.py --failed-only で実行
+   → SmartScraperのフルパイプライン（ヒューリスティック→LLMフォールバック）
 
 ②と③はVPS上で同時並行で実行可能（対象shopが重複しない）
 ```
@@ -504,38 +502,52 @@ Level 3: /sapporo/asahikawa-city/all/   ← 263市（市単位に絞り込んだ
 
 | ステップ | スクリプト | 状態 | 実行場所 |
 |---------|----------|------|---------|
-| ① 全店スキャン | `batch_heuristic.py` | ✅ 完了 | ローカル |
-| ② 成功店データ取得 | **未作成**（要新規作成） | ❌ | VPS |
-| ③ 失敗店LLM再挑戦 | `batch_scrape_therapists.py`（既存） | ✅ そのまま使える | VPS |
+| ① 全店スキャン | `batch_heuristic.py` | ✅ 完了（28分） | ローカル |
+| ② 成功店データ取得 | `batch_therapist_data.py` | 🔄 VPS稼働中 | VPS (tmux phase2) |
+| ③ 失敗店LLM再挑戦 | `batch_scrape_therapists.py --failed-only` | ⏳ 待ち | VPS |
 
-### ②のスクリプト仕様（未作成）
+### ヒューリスティックスキャン結果
 
-- `shop_scrape_cache` からセラピストURLリストを読み取り
-- 各URLをfetchしてHTMLからデータ抽出（正規表現ベース、LLMフォールバック）
-- `therapists` テーブルに投入
-- チェックポイント対応（--resume）
-- ①の結果（scrape_log）で失敗理由別の集計も出力
+**Phase①（全7,684店、ローカル28分）:**
 
-### 時間・コスト見積もり
+| ステップ | 成功 | 失敗 | 成功率 |
+|---------|------|------|--------|
+| fetch（トップページ取得） | 7,003 | 681 | 91.1% |
+| Step2（一覧URL発見） | 6,649 | 354 | 86.5% |
+| Step3（セラピストURL抽出） | 2,475 | 4,174 | 32.2% |
 
-| ステップ | 対象 | 所要時間 | コスト |
-|---------|------|---------|--------|
-| ① ヒューリスティック | 全7,684店 | ~4時間 | $0 |
-| ② 成功店データ取得 | ~5,000店×平均20人 | ~30時間 | LLMフォールバック分のみ |
-| ③ 失敗店LLM | ~2,500店 | ~15時間 | ~$300 |
-| **合計** | | **~50時間** | **~$300** |
+**ヒューリスティックv2（改良後、4,166店再スキャン、4.5分）:**
+- flat HTML構造（/staff.html → /名前.html）対応
+- 共通サブパス検出（/staff/ → /prof/profXX/）対応
+- **+1,227店改善** → Phase②対象: 2,481 → 3,708店（48%）
 
-### テスト結果（2026-02-11）
+### 失敗パターン分析（Phase③対象 ~3,976店）
 
-**batch_heuristic.py 10件テスト:**
-- Step2成功（一覧URL発見）: 8/10 (80%)
-- Step3成功（URL抽出）: 7/10 (70%)
-- fetch失敗: 2件（403, 接続エラー）
-- 所要時間: 19秒、LLMコスト$0
+| パターン | 件数 | LLM改善見込み |
+|----------|------|-------------|
+| extract_urls失敗（一覧URLはあるがURL抽出不可） | 2,939 | 高い |
+| fetch失敗（サイト死亡/403/タイムアウト） | 681 | 低い（スキップ推奨） |
+| find_list_url失敗（一覧URL自体不明） | 346 | 中 |
+| fetch_list失敗（一覧ページだけ404） | 8 | 低い |
 
-**smart_scraper.py 統合テスト 3件:**
-- ルール率100%、LLMフォールバック0回
-- コス×コス: 106名、ラッテ: 31名（いずれもLLM不使用）
+### VPS操作コマンド
+
+```bash
+# Phase②進捗確認
+ssh -i ~/Downloads/indexer.pem root@220.158.18.6 "tail -20 /opt/scraper/batch_therapist_data.log"
+
+# Phase②tmux接続
+ssh -i ~/Downloads/indexer.pem root@220.158.18.6 -t "tmux attach -t phase2"
+
+# Phase②完了後 → 追加1,227店分も処理（--resumeで自動）
+ssh -i ~/Downloads/indexer.pem root@220.158.18.6 "cd /opt/scraper && tmux new-session -d -s phase2 'python3 batch_therapist_data.py --resume --workers 5 2>&1 | tee -a batch_therapist_data.log'"
+
+# Phase③開始（②と並行可能）
+ssh -i ~/Downloads/indexer.pem root@220.158.18.6 "cd /opt/scraper && tmux new-session -d -s phase3 'python3 batch_scrape_therapists.py --failed-only --resume 2>&1 | tee batch_therapist_phase3.log'"
+
+# DB状況確認
+ssh -i ~/Downloads/indexer.pem root@220.158.18.6 "sudo -u postgres psql -d menethe -c 'SELECT count(*) FROM therapists;'"
+```
 
 ## Smart Scraper（自己学習型セラピストスクレイパー）✅ 実装済み (2026-02-10)
 
