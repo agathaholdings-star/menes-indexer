@@ -12,11 +12,15 @@ Smart Scraper: 自己学習型セラピストスクレイパー
 import hashlib
 import json
 import logging
+import re
 import time
 
+import requests
 import psycopg2.extras
+from bs4 import BeautifulSoup
+from urllib.parse import urljoin, urlparse
 
-from therapist_scraper import TherapistScraper, fetch_page, REQUEST_DELAY
+from therapist_scraper import TherapistScraper, fetch_page, REQUEST_DELAY, HEADERS
 from cms_fingerprinter import CMSFingerprinter
 from rule_extractor import RuleExtractor
 from pattern_validator import PatternValidator
@@ -172,6 +176,272 @@ class SmartScraper:
                 return p
         return None
 
+    # =========================================================================
+    # ヒューリスティック抽出メソッド（LLM不要）
+    # =========================================================================
+
+    def _find_list_url_heuristic(self, html, base_url):
+        """
+        LLM不要のヒューリスティックでセラピスト一覧URLを特定
+
+        1. リンクテキストにキーワード含む
+        2. URL自体にキーワード含む
+        3. よくあるパスをHTTPプローブ（HEAD）
+
+        Returns:
+            (url, detail_reason) or (None, None)
+        """
+        soup = BeautifulSoup(html, 'html.parser')
+        domain = urlparse(base_url).netloc
+
+        # パターン1: リンクテキストにキーワード含む
+        text_keywords = ['セラピスト', 'キャスト', 'スタッフ', '在籍', 'ガール',
+                         'セラピスト一覧', 'キャスト一覧', 'スタッフ紹介',
+                         'THERAPIST', 'CAST', 'STAFF']
+        for a in soup.find_all('a', href=True):
+            text = a.get_text(strip=True)
+            href = a['href']
+            # fragment-only links (#staff) are handled separately
+            if href.startswith('#'):
+                continue
+            if any(kw.lower() in text.lower() for kw in text_keywords):
+                url = urljoin(base_url, href)
+                if urlparse(url).netloc == domain:
+                    return url, f'text_keyword: {text[:30]}'
+
+        # パターン2: URL自体にキーワード含む
+        url_keywords = ['/cast', '/staff', '/therapist', '/girl',
+                        'staff.html', 'cast.html', 'therapist.html',
+                        '/item_list', '/member']
+        for a in soup.find_all('a', href=True):
+            href = a['href']
+            if href.startswith('#'):
+                continue
+            href_lower = href.lower()
+            for kw in url_keywords:
+                if kw in href_lower:
+                    url = urljoin(base_url, href)
+                    if urlparse(url).netloc == domain:
+                        return url, f'url_keyword: {kw}'
+
+        # パターン3: よくあるパスをHTTPプローブ
+        common_paths = ['/cast/', '/staff/', '/therapist/', '/girl/',
+                        '/cast', '/staff', '/therapist']
+        for path in common_paths:
+            url = urljoin(base_url, path)
+            try:
+                resp = requests.head(url, headers=HEADERS, timeout=5,
+                                     allow_redirects=True)
+                if resp.status_code == 200:
+                    # Redirect先が別ドメインでないか確認
+                    final_domain = urlparse(resp.url).netloc
+                    if final_domain == domain:
+                        return resp.url, f'http_probe: {path}'
+            except Exception:
+                pass
+
+        return None, None
+
+    def _detect_anchor_list(self, html, base_url):
+        """
+        アンカーリンク(#staff, #cast等)でセラピスト一覧がトップページ内にある場合を検出
+
+        Returns:
+            anchor_id or None
+        """
+        soup = BeautifulSoup(html, 'html.parser')
+        anchor_keywords = ['staff', 'cast', 'therapist', 'girl', 'member']
+
+        for a in soup.find_all('a', href=True):
+            href = a['href']
+            if not href.startswith('#'):
+                continue
+            anchor_id = href[1:]
+            if any(kw in anchor_id.lower() for kw in anchor_keywords):
+                # アンカー先が実際にHTMLに存在するか確認
+                target = soup.find(id=anchor_id) or soup.find(attrs={'name': anchor_id})
+                if target:
+                    return anchor_id
+
+        return None
+
+    def _extract_therapist_urls_heuristic(self, html, list_url):
+        """
+        URLパターンでセラピスト個別URLを抽出（LLM不要）
+
+        一覧ページのリンクから、URLパターンだけでセラピスト個別URLを特定。
+
+        Returns:
+            [{"name": "...", "url": "...", "list_image_url": None}, ...]
+        """
+        soup = BeautifulSoup(html, 'html.parser')
+        domain = urlparse(list_url).netloc
+        list_path = urlparse(list_url).path.rstrip('/')
+
+        # セラピスト個別URLパターン
+        profile_patterns = [
+            r'/cast/[^/]+/?$',
+            r'/staff/[^/]+/?$',
+            r'/therapist/[^/]+/?$',
+            r'/girl/[^/]+/?$',
+            r'/profile[/?]',
+            r'/item_\d+',
+            r'/item/\d+',
+            r'/member/[^/]+/?$',
+            r'/detail/[^/]+/?$',
+        ]
+
+        candidates = []
+        seen = set()
+
+        for a in soup.find_all('a', href=True):
+            url = urljoin(list_url, a['href'])
+            parsed = urlparse(url)
+            if parsed.netloc != domain or url in seen:
+                continue
+            seen.add(url)
+
+            path = parsed.path.rstrip('/')
+
+            # 一覧ページ自身は除外
+            if path == list_path:
+                continue
+
+            # ページネーションは除外
+            if re.search(r'[?&]page=\d+|/page/\d+|[?&]p=\d+', url):
+                continue
+
+            # プロフィールURLパターンにマッチするか
+            if any(re.search(p, path) for p in profile_patterns):
+                name = a.get_text(strip=True) or ''
+                # 画像取得を試みる（リンク内のimg）
+                img = a.find('img')
+                img_url = None
+                if img:
+                    src = (img.get('src') or img.get('data-src')
+                           or img.get('data-lazy-src') or '')
+                    if src:
+                        img_url = urljoin(list_url, src)
+                candidates.append({
+                    'name': name,
+                    'url': url,
+                    'list_image_url': img_url,
+                })
+
+        # フォールバック: パターンマッチしなかった場合、一覧URLの配下リンクを収集
+        if not candidates and list_path:
+            for a in soup.find_all('a', href=True):
+                url = urljoin(list_url, a['href'])
+                parsed = urlparse(url)
+                if parsed.netloc != domain or url in seen:
+                    continue
+                seen.add(url)
+
+                path = parsed.path.rstrip('/')
+                if path == list_path:
+                    continue
+
+                # 一覧URLの直下のサブパスのみ
+                if path.startswith(list_path + '/') and path.count('/') == list_path.count('/') + 1:
+                    # ブログ・ニュース等を除外
+                    exclude = ['/blog', '/news', '/schedule', '/access',
+                               '/price', '/menu', '/contact', '/reserve']
+                    if any(excl in path.lower() for excl in exclude):
+                        continue
+
+                    name = a.get_text(strip=True) or ''
+                    img = a.find('img')
+                    img_url = None
+                    if img:
+                        src = (img.get('src') or img.get('data-src') or '')
+                        if src:
+                            img_url = urljoin(list_url, src)
+                    candidates.append({
+                        'name': name,
+                        'url': url,
+                        'list_image_url': img_url,
+                    })
+
+        return candidates
+
+    def _extract_data_from_list_cards(self, html, list_url, entries):
+        """
+        一覧ページのカードHTMLからセラピストデータを抽出（LLM不要）
+
+        個別ページに飛ぶ前に、一覧ページのカード情報からデータを直接取得する。
+        成功した場合、entriesにデータをマージして返す。
+
+        Returns:
+            [therapist_data_dict, ...] — 抽出成功分のみ
+        """
+        soup = BeautifulSoup(html, 'html.parser')
+        results = []
+
+        for entry in entries:
+            entry_path = urlparse(entry['url']).path
+            # このURLに対応するリンク要素を探す
+            a_tag = None
+            for a in soup.find_all('a', href=True):
+                href = urljoin(list_url, a['href'])
+                if href.rstrip('/') == entry['url'].rstrip('/'):
+                    a_tag = a
+                    break
+
+            if not a_tag:
+                continue
+
+            # カード = リンクの親要素を辿って意味のある範囲を見つける
+            card = a_tag.parent
+            # 親が body/html なら小さすぎ → スキップ
+            if card and card.name in ('body', 'html', '[document]'):
+                continue
+
+            # 更に親を試す（li > a パターンなど）
+            if card and card.name == 'a':
+                card = card.parent
+
+            if not card:
+                continue
+
+            text = card.get_text(' ', strip=True)
+
+            data = {
+                'name': entry.get('name', ''),
+                'source_url': entry['url'],
+                'image_urls': [entry['list_image_url']] if entry.get('list_image_url') else None,
+            }
+
+            # 正規表現でデータ抽出
+            age_m = re.search(r'(\d{2})歳|AGE\s*(\d{2})', text, re.IGNORECASE)
+            if age_m:
+                data['age'] = int(age_m.group(1) or age_m.group(2))
+
+            height_m = re.search(r'T(\d{3})|(\d{3})\s*cm|身長\s*(\d{3})', text)
+            if height_m:
+                data['height'] = int(height_m.group(1) or height_m.group(2) or height_m.group(3))
+
+            bwh_m = re.search(r'B[:\s]*(\d{2,3})[^\d]*W[:\s]*(\d{2,3})[^\d]*H[:\s]*(\d{2,3})', text)
+            if bwh_m:
+                data['bust'] = int(bwh_m.group(1))
+                data['waist'] = int(bwh_m.group(2))
+                data['hip'] = int(bwh_m.group(3))
+
+            # 画像取得（カード内のimg）
+            if not data.get('image_urls'):
+                imgs = card.find_all('img')
+                for img in imgs:
+                    src = (img.get('src') or img.get('data-src')
+                           or img.get('data-lazy-src') or '')
+                    if src and 'logo' not in src.lower() and 'icon' not in src.lower():
+                        data['image_urls'] = [urljoin(list_url, src)]
+                        break
+
+            # バリデーション: nameが必須
+            if data.get('name') and self.validator.validate_therapist(data):
+                results.append(data)
+
+        return results
+
     def scrape_salon(self, shop_id, salon_url, salon_name="", max_therapists=0):
         """
         サロン1件分のセラピストデータを取得（Smart版）
@@ -228,41 +498,69 @@ class SmartScraper:
         list_url = None
         list_html = None
         step2_method = 'cache'
+        is_anchor_list = False  # トップページ内アンカーの場合True
 
-        # キャッシュ済み一覧URLを優先
+        # 1. キャッシュ済み一覧URLを優先
         if cached_list_url:
             print(f"  [2/3] 一覧URL（キャッシュ）: {cached_list_url}")
             list_url = cached_list_url
             self.stats['cache_hits'] += 1
-        elif pattern and cms_confidence >= 0.4:
-            # ルールベースで一覧URLを探す
+
+        # 2. CMSルールベースで一覧URLを探す
+        if not list_url and pattern and cms_confidence >= 0.4:
             list_url = self.rule_extractor.find_list_url(
                 html, salon_url, pattern.get('list_url_rules', {}))
             if list_url:
                 step2_method = 'rule'
                 print(f"  [2/3] 一覧URL（ルール）: {list_url}")
 
+        # 3. ヒューリスティック（LLM不要）
         if not list_url:
-            # LLMフォールバック
+            heuristic_url, heuristic_detail = self._find_list_url_heuristic(html, salon_url)
+            if heuristic_url:
+                list_url = heuristic_url
+                step2_method = 'heuristic'
+                print(f"  [2/3] 一覧URL（ヒューリスティック）: {list_url}")
+                self._log_scrape(shop_id, 'find_list_url', 'heuristic', True,
+                                 detail=heuristic_detail)
+
+        # 4. アンカーリンク検出（#staff等 → トップページ内に一覧がある場合）
+        if not list_url:
+            anchor_id = self._detect_anchor_list(html, salon_url)
+            if anchor_id:
+                list_url = salon_url
+                is_anchor_list = True
+                step2_method = 'heuristic'
+                print(f"  [2/3] 一覧URL（アンカー #{anchor_id}）: トップページ内")
+
+        # 5. LLMフォールバック
+        if not list_url:
             step2_method = 'llm'
             print(f"  [2/3] 一覧ページを探索（LLM）...")
             list_url = self.llm_scraper.find_therapist_list_url(salon_url, html)
 
         if not list_url:
             print(f"  x 一覧ページが見つかりません")
-            self._log_scrape(shop_id, 'find_list_url', step2_method, False, html)
+            self._log_scrape(shop_id, 'find_list_url', step2_method, False, html,
+                             detail='no_match')
             self._update_cache(shop_id, pattern_id, None, step2_method, 0, False)
             self.stats['errors'] += 1
             return []
 
-        self._log_scrape(shop_id, 'find_list_url', step2_method, True, html)
+        if step2_method != 'heuristic':
+            self._log_scrape(shop_id, 'find_list_url', step2_method, True, html)
         print(f"  -> {list_url}")
 
         # 一覧ページ取得
-        time.sleep(REQUEST_DELAY)
-        if list_url.rstrip('/') != salon_url.rstrip('/'):
+        if is_anchor_list:
+            # アンカーリンクの場合はトップページHTMLをそのまま使用
+            list_html = html
+        elif list_url.rstrip('/') != salon_url.rstrip('/'):
+            time.sleep(REQUEST_DELAY)
             list_html = fetch_page(list_url)
             if not list_html:
+                self._log_scrape(shop_id, 'fetch_list', 'http', False,
+                                 detail=f'fetch failed: {list_url}')
                 self._update_cache(shop_id, pattern_id, list_url, step2_method, 0, False)
                 self.stats['errors'] += 1
                 return []
@@ -299,21 +597,28 @@ class SmartScraper:
         entries = []
         step3_method = 'llm'
 
+        # 1. CMSルールベースで抽出試行
         if pattern and cms_confidence >= 0.4:
-            # ルールベースで抽出試行
             entries = self.rule_extractor.extract_therapist_urls(
                 list_html, list_url, pattern.get('therapist_list_rules', {}))
             if entries:
                 step3_method = 'rule'
                 print(f"  [3/3] セラピストURL抽出（ルール）: {len(entries)}名")
 
+        # 2. ヒューリスティックでURL抽出（LLM不要）
         if not entries:
-            # LLMフォールバック
+            entries = self._extract_therapist_urls_heuristic(list_html, list_url)
+            if entries:
+                step3_method = 'heuristic'
+                print(f"  [3/3] セラピストURL抽出（ヒューリスティック）: {len(entries)}名")
+
+        # 3. LLMフォールバック
+        if not entries:
             step3_method = 'llm'
             print(f"  [3/3] セラピスト情報を抽出（LLM）...")
             entries = self.llm_scraper.extract_therapist_urls(list_url, list_html)
 
-        # ページネーション対応
+        # ページネーション対応（ヒューリスティックでも使える）
         next_pages = self.llm_scraper.find_next_pages(list_url, list_html)
         for page_url in next_pages[:5]:
             time.sleep(REQUEST_DELAY)
@@ -322,6 +627,8 @@ class SmartScraper:
                 if step3_method == 'rule' and pattern:
                     more = self.rule_extractor.extract_therapist_urls(
                         page_html, page_url, pattern.get('therapist_list_rules', {}))
+                elif step3_method == 'heuristic':
+                    more = self._extract_therapist_urls_heuristic(page_html, page_url)
                 else:
                     more = self.llm_scraper.extract_therapist_urls(page_url, page_html)
                 entries.extend(more)
@@ -355,6 +662,27 @@ class SmartScraper:
         # === Step 4: 各セラピストの詳細取得 ===
         therapists = []
         step4_method = 'llm'
+
+        # まず一覧ページのカードから直接データ抽出を試みる（LLM不要・個別fetch不要）
+        if step3_method in ('heuristic', 'rule') and entries:
+            list_card_results = self._extract_data_from_list_cards(
+                list_html, list_url, entries)
+            if list_card_results and len(list_card_results) >= len(entries) * 0.5:
+                # 半数以上の抽出成功 → 一覧カードから十分なデータが取れた
+                step4_method = 'heuristic_list'
+                print(f"  [4] 一覧カードから直接抽出: {len(list_card_results)}/{len(entries)}名")
+                self._log_scrape(shop_id, 'extract_data', 'heuristic_list',
+                                 True, detail=f'{len(list_card_results)}/{len(entries)} from list cards')
+                self._update_cache(shop_id, pattern_id, list_url, 'heuristic',
+                                  len(list_card_results), True)
+                if self.db_conn:
+                    try:
+                        self.db_conn.commit()
+                    except Exception:
+                        pass
+                self.stats['rule_success'] += 1
+                print(f"\n  完了: {len(list_card_results)}名 (method=heuristic_list)")
+                return list_card_results
 
         # ルールベース抽出が使えるか判定
         use_rule_for_data = (
@@ -446,7 +774,7 @@ class SmartScraper:
                          detail=f'{len(therapists)}/{len(entries)} extracted')
 
         # === 統計更新 ===
-        if step3_method == 'rule' or step4_method == 'rule':
+        if step3_method in ('rule', 'heuristic') or step4_method in ('rule', 'heuristic_list'):
             self.stats['rule_success'] += 1
         if step3_method == 'llm' or step4_method == 'llm':
             self.stats['llm_fallback'] += 1
@@ -461,7 +789,12 @@ class SmartScraper:
             self._try_learn_pattern(shop_id, salon_url, html, sample_htmls, pattern_id)
 
         # === キャッシュ更新 ===
-        overall_method = 'rule' if step4_method == 'rule' else 'llm'
+        if step4_method in ('rule', 'heuristic_list'):
+            overall_method = 'rule'
+        elif step3_method == 'heuristic':
+            overall_method = 'heuristic'
+        else:
+            overall_method = 'llm'
         self._update_cache(shop_id, pattern_id, list_url, overall_method,
                           len(therapists), bool(therapists))
 
