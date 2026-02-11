@@ -285,8 +285,18 @@ def get_shops_with_therapists(cur):
     return {row['shop_id'] for row in cur.fetchall()}
 
 
+def _safe_int(val):
+    """整数に変換できない値（"D"等）はNoneにする"""
+    if val is None:
+        return None
+    try:
+        return int(val)
+    except (ValueError, TypeError):
+        return None
+
+
 def insert_therapist(cur, shop_id, data):
-    """セラピスト1名をDB投入。Returns id or None."""
+    """セラピスト1名をDB投入。SAVEPOINTで他レコードに影響しない。Returns id or None."""
     t_name = data.get('name')
     if not t_name:
         return None
@@ -303,6 +313,7 @@ def insert_therapist(cur, shop_id, data):
             image_urls = [image_urls]
 
     try:
+        cur.execute("SAVEPOINT sp_insert")
         cur.execute("""
             INSERT INTO therapists (
                 shop_id, name, age, height,
@@ -318,11 +329,11 @@ def insert_therapist(cur, shop_id, data):
         """, {
             'shop_id': shop_id,
             'name': t_name,
-            'age': data.get('age'),
-            'height': data.get('height'),
+            'age': _safe_int(data.get('age')),
+            'height': _safe_int(data.get('height')),
             'bust': bust_val,
-            'waist': data.get('waist'),
-            'hip': data.get('hip'),
+            'waist': _safe_int(data.get('waist')),
+            'hip': _safe_int(data.get('hip')),
             'image_urls': json.dumps(image_urls, ensure_ascii=False),
             'profile_text': data.get('profile_text'),
             'source_url': data.get('source_url'),
@@ -332,9 +343,12 @@ def insert_therapist(cur, shop_id, data):
             t_id = row['id']
             cur.execute("UPDATE therapists SET slug = %s WHERE id = %s",
                         (str(t_id), t_id))
+            cur.execute("RELEASE SAVEPOINT sp_insert")
             return t_id
+        cur.execute("RELEASE SAVEPOINT sp_insert")
         return None
     except Exception as e:
+        cur.execute("ROLLBACK TO SAVEPOINT sp_insert")
         log.warning(f"  DB投入エラー: {t_name}: {e}")
         return None
 
