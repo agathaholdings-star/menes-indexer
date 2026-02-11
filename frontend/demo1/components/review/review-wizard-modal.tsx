@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useState, useEffect } from "react";
-import { X, ChevronLeft, ChevronRight, Check, Sparkles, Crown, Star, Heart, Smile, Flame, Leaf, Search, MapPin, AlertCircle } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Check, Clock, Sparkles, Crown, Star, Heart, Smile, Flame, Leaf, Search, MapPin, AlertCircle } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { therapistTypes, bodyTypes, parameterLabels } from "@/lib/data";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { useRouter } from "next/navigation";
 
 interface DBShop {
   id: number;
@@ -61,6 +62,7 @@ const prefectureShortNames: Record<string, string> = {
 export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, memberType = "free", monthlyReviewCount = 0 }: ReviewWizardModalProps) {
   const supabase = createSupabaseBrowser();
   const { user: authUser } = useAuth();
+  const router = useRouter();
 
   const [step, setStep] = useState(0);
   const [showAllAreas, setShowAllAreas] = useState(false);
@@ -237,8 +239,13 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
       setStep(step + 1);
     } else {
       // 最終ステップ: DBに口コミを保存
-      if (!authUser || !selectedShopId || !selectedTherapistId) {
-        setIsComplete(true);
+      if (!authUser) {
+        // 未認証ユーザーはログインページへリダイレクト
+        onOpenChange(false);
+        router.push("/login?redirect=/review");
+        return;
+      }
+      if (!selectedShopId || !selectedTherapistId) {
         return;
       }
 
@@ -266,29 +273,6 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
 
         if (error) {
           console.error("Review insert failed:", error);
-        } else {
-          // Review-to-Earn: プロフィール更新
-          // 現在のtotal_review_countを取得してインクリメント
-          const { data: profileData } = await supabase
-            .from("profiles")
-            .select("total_review_count")
-            .eq("id", authUser.id)
-            .single();
-
-          const updates: Record<string, unknown> = {
-            monthly_review_count: monthlyReviewCount + 1,
-            total_review_count: (profileData?.total_review_count || 0) + 1,
-          };
-          // 無料会員: 3日間の閲覧権限を付与
-          if (memberType === "free") {
-            const until = new Date();
-            until.setDate(until.getDate() + 3);
-            updates.view_permission_until = until.toISOString();
-          }
-          await supabase
-            .from("profiles")
-            .update(updates)
-            .eq("id", authUser.id);
         }
       } catch (err) {
         console.error("Review submission error:", err);
@@ -417,6 +401,28 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
           {isComplete ? (
             <CompletionScreen
               onClose={handleClose}
+              onContinue={() => {
+                setStep(0);
+                setShowAllAreas(false);
+                setSelectedArea(null);
+                setShopSearch("");
+                setTherapistSearch("");
+                setSelectedShopId(null);
+                setSelectedTherapistId(null);
+                setSelectedType(null);
+                setSelectedBody(null);
+                setSelectedService(null);
+                setRatings({ conversation: 3, distance: 3, technique: 3, personality: 3 });
+                setScore(80);
+                setReviewText({ q1: "", q2: "", q3: "" });
+                setIsComplete(false);
+                setShowMissingReport(false);
+                setMissingTherapistName("");
+                setShopStepSkipped(false);
+                setDirectSearchMode(false);
+                setDirectShopSearch("");
+                setDirectSearchResults([]);
+              }}
               memberType={memberType}
               monthlyReviewCount={monthlyReviewCount}
             />
@@ -1138,59 +1144,43 @@ function StepText({
   );
 }
 
-// Completion Screen - tier-specific messages
+// Completion Screen - pending approval message
 function CompletionScreen({
   onClose,
+  onContinue,
   memberType,
   monthlyReviewCount,
 }: {
   onClose: () => void;
+  onContinue: () => void;
   memberType: "free" | "standard" | "vip";
   monthlyReviewCount: number;
 }) {
-  const newCount = monthlyReviewCount + 1;
-  const remaining = Math.max(0, 3 - newCount);
-
   return (
     <div className="text-center py-8">
-      <div className="h-20 w-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
-        <Check className="h-10 w-10 text-green-600" />
+      <div className="h-20 w-20 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-6">
+        <Clock className="h-10 w-10 text-amber-600" />
       </div>
       <h3 className="text-xl font-bold mb-2">投稿ありがとうございます！</h3>
+      <p className="text-muted-foreground mb-2">
+        管理者の承認後に口コミが公開されます
+      </p>
 
       {memberType === "free" && (
-        <p className="text-muted-foreground mb-6">
-          口コミ閲覧が<span className="text-primary font-bold">3日間</span>解放されました！
+        <p className="text-sm text-muted-foreground mb-6">
+          承認後、口コミ閲覧が<span className="text-primary font-bold">3日間</span>解放されます
         </p>
       )}
 
       {memberType === "standard" && (
-        <div className="mb-6">
-          <p className="text-muted-foreground mb-3">
-            今月の投稿: <span className="text-primary font-bold">{newCount}/3</span>本
-          </p>
-          {/* Progress bar */}
-          <div className="w-full max-w-xs mx-auto bg-muted rounded-full h-2 mb-2">
-            <div
-              className="bg-primary h-2 rounded-full transition-all"
-              style={{ width: `${Math.min(100, (newCount / 3) * 100)}%` }}
-            />
-          </div>
-          {remaining > 0 ? (
-            <p className="text-sm text-muted-foreground">
-              あと<span className="text-primary font-bold">{remaining}本</span>でVIP機能解放！
-            </p>
-          ) : (
-            <p className="text-sm text-primary font-bold">
-              VIP相当の全機能が解放されました！
-            </p>
-          )}
-        </div>
+        <p className="text-sm text-muted-foreground mb-6">
+          承認後、投稿数にカウントされます
+        </p>
       )}
 
       {memberType === "vip" && (
-        <p className="text-muted-foreground mb-6">
-          いつもご利用ありがとうございます！
+        <p className="text-sm text-muted-foreground mb-6">
+          いつもご利用ありがとうございます
         </p>
       )}
 
@@ -1198,7 +1188,7 @@ function CompletionScreen({
         <Button onClick={onClose} className="w-full">
           閉じる
         </Button>
-        <Button variant="outline" className="w-full bg-transparent">
+        <Button variant="outline" className="w-full bg-transparent" onClick={onContinue}>
           続けて投稿する
         </Button>
       </div>

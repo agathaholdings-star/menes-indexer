@@ -127,6 +127,7 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
+          is_admin: boolean
           membership_type: string | null
           monthly_review_count: number | null
           monthly_review_reset_at: string | null
@@ -139,6 +140,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           id: string
+          is_admin?: boolean
           membership_type?: string | null
           monthly_review_count?: number | null
           monthly_review_reset_at?: string | null
@@ -151,6 +153,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           id?: string
+          is_admin?: boolean
           membership_type?: string | null
           monthly_review_count?: number | null
           monthly_review_reset_at?: string | null
@@ -173,6 +176,7 @@ export type Database = {
           id: string
           is_verified: boolean | null
           looks_type: string | null
+          moderation_status: string
           param_conversation: number | null
           param_distance: number | null
           param_personality: number | null
@@ -193,6 +197,7 @@ export type Database = {
           id?: string
           is_verified?: boolean | null
           looks_type?: string | null
+          moderation_status?: string
           param_conversation?: number | null
           param_distance?: number | null
           param_personality?: number | null
@@ -213,6 +218,7 @@ export type Database = {
           id?: string
           is_verified?: boolean | null
           looks_type?: string | null
+          moderation_status?: string
           param_conversation?: number | null
           param_distance?: number | null
           param_personality?: number | null
@@ -475,7 +481,26 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      approve_review: {
+        Args: {
+          review_id: string
+        }
+        Returns: undefined
+      }
+      get_prefectures_with_shops: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: number
+          name: string
+          shop_count: number
+        }[]
+      }
+      reject_review: {
+        Args: {
+          review_id: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
