@@ -24,6 +24,7 @@ import re
 import sys
 import time
 import argparse
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta
 
 import psycopg2
@@ -330,64 +331,91 @@ def save_checkpoint(checkpoint):
 # メイン処理
 # =============================================================================
 
-def process_shop(cur, shop, dry_run=False):
+def process_shop_http(shop):
     """
-    1店舗のヒューリスティック処理
+    1店舗のヒューリスティック処理（HTTP部分のみ、スレッドセーフ）
+
+    DB操作なし。結果をdictで返し、メインスレッドでDB書き込み。
 
     Returns:
-        (step2_ok, step3_count, detail)
+        dict with keys: shop_id, step2_ok, step3_count, detail, list_url,
+                        top_html, logs (list of log entries)
     """
     shop_id = shop['id']
     salon_url = shop['official_url']
-    salon_name = shop['display_name'] or shop['name']
+    result = {
+        'shop_id': shop_id,
+        'step2_ok': False,
+        'step3_count': 0,
+        'detail': '',
+        'list_url': None,
+        'top_html': None,
+        'logs': [],
+    }
 
     # Step 1: トップページ取得
     html, status_code = fetch_page(salon_url)
     if not html:
         reason = f'fetch_fail: status={status_code}'
-        if not dry_run:
-            log_scrape(cur, shop_id, 'fetch_top', 'heuristic', False, detail=reason)
-        return False, 0, reason
+        result['detail'] = reason
+        result['logs'].append(('fetch_top', 'heuristic', False, reason, None))
+        return result
+
+    result['top_html'] = html
 
     # Step 2: 一覧URL特定
-    list_url, detail = find_list_url_heuristic(html, salon_url)
+    list_url, heuristic_detail = find_list_url_heuristic(html, salon_url)
     if not list_url:
-        if not dry_run:
-            log_scrape(cur, shop_id, 'find_list_url', 'heuristic', False,
-                       html=html, detail=detail)
-            update_cache(cur, shop_id, None, 0, False)
-        return False, 0, f'step2_fail: {detail}'
+        result['detail'] = f'step2_fail: {heuristic_detail}'
+        result['logs'].append(('find_list_url', 'heuristic', False, heuristic_detail, html))
+        return result
 
-    if not dry_run:
-        log_scrape(cur, shop_id, 'find_list_url', 'heuristic', True,
-                   html=html, detail=detail)
+    result['list_url'] = list_url
+    result['logs'].append(('find_list_url', 'heuristic', True, heuristic_detail, html))
 
     # 一覧ページ取得（トップページと同一URLの場合はスキップ）
     if list_url.rstrip('/') != salon_url.rstrip('/'):
-        time.sleep(REQUEST_DELAY)
         list_html, list_status = fetch_page(list_url)
         if not list_html:
             reason = f'fetch_list_fail: status={list_status}'
-            if not dry_run:
-                log_scrape(cur, shop_id, 'fetch_list', 'heuristic', False,
-                           detail=reason)
-                update_cache(cur, shop_id, list_url, 0, False)
-            return False, 0, reason
+            result['detail'] = reason
+            result['logs'].append(('fetch_list', 'heuristic', False, reason, None))
+            return result
     else:
         list_html = html
 
     # Step 3: セラピストURL抽出
     entries = extract_therapist_urls_heuristic(list_html, list_url)
 
-    if not dry_run:
-        log_scrape(cur, shop_id, 'extract_urls', 'heuristic', bool(entries),
-                   detail=f'{len(entries)} urls')
-        update_cache(cur, shop_id, list_url, len(entries), bool(entries))
+    result['step2_ok'] = True
+    result['step3_count'] = len(entries)
+    result['logs'].append(('extract_urls', 'heuristic', bool(entries),
+                           f'{len(entries)} urls', None))
 
     if entries:
-        return True, len(entries), f'ok: {len(entries)} therapists at {list_url}'
+        result['detail'] = f'ok: {len(entries)} therapists at {list_url}'
     else:
-        return True, 0, f'step3_fail: list_url={list_url} but 0 urls extracted'
+        result['detail'] = f'step3_fail: list_url={list_url} but 0 urls extracted'
+
+    return result
+
+
+def write_result_to_db(cur, result, dry_run=False):
+    """process_shop_httpの結果をDBに書き込む（メインスレッドで呼ぶ）"""
+    if dry_run:
+        return
+
+    shop_id = result['shop_id']
+
+    for step, method, success, detail, html in result['logs']:
+        log_scrape(cur, shop_id, step, method, success, detail=detail, html=html)
+
+    list_url = result['list_url']
+    step3_count = result['step3_count']
+    if result['step2_ok']:
+        update_cache(cur, shop_id, list_url, step3_count, step3_count > 0)
+    elif list_url is None and any(not l[2] for l in result['logs']):
+        update_cache(cur, shop_id, None, 0, False)
 
 
 def main():
@@ -395,6 +423,8 @@ def main():
         description='Phase 1: ヒューリスティックのみで全店舗スキャン')
     parser.add_argument('--limit', type=int, default=0,
                         help='処理サロン数制限（0=全件）')
+    parser.add_argument('--workers', type=int, default=10,
+                        help='並列ワーカー数（デフォルト10）')
     parser.add_argument('--resume', action='store_true',
                         help='チェックポイントから再開')
     parser.add_argument('--dry-run', action='store_true',
@@ -403,6 +433,7 @@ def main():
 
     log.info("=" * 60)
     log.info(" Phase 1: ヒューリスティック全店舗スキャン")
+    log.info(f" 並列ワーカー: {args.workers}")
     log.info("=" * 60)
 
     # DB接続
@@ -441,6 +472,9 @@ def main():
         conn.close()
         return
 
+    # shop_id → shop名のマップ（ログ表示用）
+    shop_names = {s['id']: s['display_name'] or s['name'] for s in all_shops}
+
     # 統計
     stats = checkpoint['stats']
     if not stats.get('started_at'):
@@ -448,63 +482,76 @@ def main():
     start_time = time.time()
 
     total_target = len(all_shops) + len(completed_ids)
-    commit_interval = 100  # 100件ごとにcommit
+    processed_count = 0
+    commit_interval = 100
 
-    # メインループ
-    for idx, shop in enumerate(all_shops):
-        shop_num = len(completed_ids) + idx + 1
-        elapsed = timedelta(seconds=int(time.time() - start_time))
+    # 並列処理
+    try:
+        with ThreadPoolExecutor(max_workers=args.workers) as executor:
+            futures = {
+                executor.submit(process_shop_http, shop): shop
+                for shop in all_shops
+            }
 
-        salon_name = shop['display_name'] or shop['name']
-        log.info(f"[{shop_num}/{total_target}] {salon_name} "
-                 f"(id={shop['id']}) [経過: {elapsed}]")
+            for future in as_completed(futures):
+                shop = futures[future]
+                shop_id = shop['id']
+                salon_name = shop_names[shop_id]
 
-        try:
-            step2_ok, therapist_count, detail = process_shop(
-                cur, shop, dry_run=args.dry_run)
+                try:
+                    result = future.result()
+                except Exception as e:
+                    log.error(f"  [{salon_name}] エラー: {e}")
+                    continue
 
-            if step2_ok:
-                stats['step2_success'] = stats.get('step2_success', 0) + 1
-                if therapist_count > 0:
-                    stats['step3_success'] = stats.get('step3_success', 0) + 1
-                    log.info(f"  -> {therapist_count}名検出 ({detail})")
+                # DB書き込み（メインスレッドのみ）
+                write_result_to_db(cur, result, dry_run=args.dry_run)
+
+                # 統計更新
+                detail = result['detail']
+                if result['step2_ok']:
+                    stats['step2_success'] = stats.get('step2_success', 0) + 1
+                    if result['step3_count'] > 0:
+                        stats['step3_success'] = stats.get('step3_success', 0) + 1
+                elif 'fetch_fail' in detail:
+                    stats['fetch_fail'] = stats.get('fetch_fail', 0) + 1
                 else:
-                    log.info(f"  -> 一覧URL発見、セラピスト0名 ({detail})")
-            elif 'fetch_fail' in detail:
-                stats['fetch_fail'] = stats.get('fetch_fail', 0) + 1
-                log.info(f"  -> {detail}")
-            else:
-                stats['step2_fail'] = stats.get('step2_fail', 0) + 1
-                log.info(f"  -> {detail}")
+                    stats['step2_fail'] = stats.get('step2_fail', 0) + 1
 
-            stats['total'] = stats.get('total', 0) + 1
+                stats['total'] = stats.get('total', 0) + 1
+                processed_count += 1
 
-            # チェックポイント更新
-            completed_ids.add(shop['id'])
-            checkpoint['completed_shop_ids'] = list(completed_ids)
-            checkpoint['stats'] = stats
+                # チェックポイント更新
+                completed_ids.add(shop_id)
+                checkpoint['completed_shop_ids'] = list(completed_ids)
+                checkpoint['stats'] = stats
 
-            # 定期commit
-            if not args.dry_run and (idx + 1) % commit_interval == 0:
-                conn.commit()
-                save_checkpoint(checkpoint)
-                log.info(f"  [checkpoint] {len(completed_ids)}件完了")
+                # ログ出力
+                elapsed = timedelta(seconds=int(time.time() - start_time))
+                shop_num = len(completed_ids)
+                if result['step3_count'] > 0:
+                    log.info(f"[{shop_num}/{total_target}] {salon_name} "
+                             f"-> {result['step3_count']}名 [{elapsed}]")
+                elif result['step2_ok']:
+                    log.info(f"[{shop_num}/{total_target}] {salon_name} "
+                             f"-> URL発見,セラピスト0名 [{elapsed}]")
+                else:
+                    log.info(f"[{shop_num}/{total_target}] {salon_name} "
+                             f"-> {detail} [{elapsed}]")
 
-            time.sleep(REQUEST_DELAY)
+                # 定期commit
+                if not args.dry_run and processed_count % commit_interval == 0:
+                    conn.commit()
+                    save_checkpoint(checkpoint)
+                    log.info(f"  [checkpoint] {len(completed_ids)}件完了")
 
-        except KeyboardInterrupt:
-            log.info("\n中断されました。チェックポイント保存中...")
-            if not args.dry_run:
-                conn.commit()
-            save_checkpoint(checkpoint)
-            log.info(f"再開: python batch_heuristic.py --resume")
-            sys.exit(0)
-
-        except Exception as e:
-            log.error(f"  エラー: {e}")
-            if not args.dry_run:
-                conn.rollback()
-            continue
+    except KeyboardInterrupt:
+        log.info("\n中断されました。チェックポイント保存中...")
+        if not args.dry_run:
+            conn.commit()
+        save_checkpoint(checkpoint)
+        log.info(f"再開: python batch_heuristic.py --resume")
+        sys.exit(0)
 
     # 最終commit
     if not args.dry_run:
