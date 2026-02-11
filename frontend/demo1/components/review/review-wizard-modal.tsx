@@ -288,12 +288,15 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
 
         if (error) {
           console.error("Review insert failed:", error);
+          alert(`投稿に失敗しました: ${error.message}`);
+          return;
         }
+        setIsComplete(true);
       } catch (err) {
         console.error("Review submission error:", err);
+        alert("投稿中にエラーが発生しました。もう一度お試しください。");
       } finally {
         setSubmitting(false);
-        setIsComplete(true);
       }
     }
   };
