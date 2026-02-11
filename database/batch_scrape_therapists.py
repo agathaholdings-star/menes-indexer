@@ -84,15 +84,29 @@ def save_checkpoint(checkpoint):
 # DB操作
 # =============================================================================
 
-def get_target_shops(cur, limit=0):
+def get_target_shops(cur, limit=0, failed_only=False):
     """official_urlを持つサロン一覧を取得"""
-    query = """
-        SELECT s.id, s.name, s.display_name, s.official_url, s.domain
-        FROM shops s
-        WHERE s.official_url IS NOT NULL
-          AND s.is_active = true
-        ORDER BY s.id
-    """
+    if failed_only:
+        # Phase③: ヒューリスティックでセラピストURL取得できなかった店舗のみ
+        query = """
+            SELECT s.id, s.name, s.display_name, s.official_url, s.domain
+            FROM shops s
+            WHERE s.official_url IS NOT NULL
+              AND s.is_active = true
+              AND s.id NOT IN (
+                SELECT shop_id FROM shop_scrape_cache
+                WHERE last_therapist_count > 0
+              )
+            ORDER BY s.id
+        """
+    else:
+        query = """
+            SELECT s.id, s.name, s.display_name, s.official_url, s.domain
+            FROM shops s
+            WHERE s.official_url IS NOT NULL
+              AND s.is_active = true
+            ORDER BY s.id
+        """
     if limit > 0:
         query += f" LIMIT {limit}"
     cur.execute(query)
@@ -168,6 +182,8 @@ def main():
     parser.add_argument('--resume', action='store_true', help='チェックポイントから再開')
     parser.add_argument('--llm-only', action='store_true',
                        help='LLMのみ使用（従来のTherapistScraper動作）')
+    parser.add_argument('--failed-only', action='store_true',
+                       help='Phase③: ヒューリスティック失敗分のみ対象')
     args = parser.parse_args()
 
     log.info("=" * 60)
@@ -185,8 +201,11 @@ def main():
         sys.exit(1)
 
     # --- 対象サロン取得 ---
-    all_shops = get_target_shops(cur, limit=args.limit)
-    log.info(f"公式URLありのサロン: {len(all_shops)}件")
+    all_shops = get_target_shops(cur, limit=args.limit, failed_only=args.failed_only)
+    if args.failed_only:
+        log.info(f"Phase③対象（ヒューリスティック失敗分）: {len(all_shops)}件")
+    else:
+        log.info(f"公式URLありのサロン: {len(all_shops)}件")
 
     # --- チェックポイント ---
     checkpoint = load_checkpoint()

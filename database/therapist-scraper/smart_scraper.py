@@ -328,7 +328,101 @@ class SmartScraper:
                     'list_image_url': img_url,
                 })
 
-        # フォールバック: パターンマッチしなかった場合、一覧URLの配下リンクを収集
+        # フォールバック1: flat .html構造（staff.htmlから/名前.htmlへのリンク）
+        if not candidates and list_path.endswith('.html'):
+            nav_pages = {
+                'index', 'staff', 'therapist', 'cast', 'system', 'access',
+                'recruit', 'interior', 'guide', 'info', 'coupon', 'service',
+                'map', 'contact', 'reserve', 'schedule', 'news', 'blog',
+                'price', 'menu', 'top', 'home', 'about', 'concept', 'hotel',
+                'faq', 'link', 'sitemap', 'privacy', 'terms',
+            }
+            seen_fb1 = set()
+            for a in soup.find_all('a', href=True):
+                url = urljoin(list_url, a['href'])
+                parsed = urlparse(url)
+                if parsed.netloc != domain or url in seen_fb1:
+                    continue
+                seen_fb1.add(url)
+                path = parsed.path.rstrip('/')
+                # ルート直下の .html ファイルのみ（/xxx.html）
+                m = re.match(r'^/([^/]+)\.html?$', path)
+                if not m:
+                    continue
+                stem = m.group(1).lower()
+                if stem in nav_pages:
+                    continue
+                # 数字だけのファイル名も除外（ページネーション等）
+                if stem.isdigit():
+                    continue
+                name = a.get_text(strip=True) or ''
+                img = a.find('img')
+                img_url = None
+                if img:
+                    src = (img.get('src') or img.get('data-src') or '')
+                    if src:
+                        img_url = urljoin(list_url, src)
+                candidates.append({
+                    'name': name,
+                    'url': url,
+                    'list_image_url': img_url,
+                })
+
+        # フォールバック2: 共通サブパスパターン検出（/staff/ → /prof/profXX/等）
+        if not candidates and list_path:
+            # 一覧ページ以外の内部リンクを全収集
+            all_links = []
+            for a in soup.find_all('a', href=True):
+                url = urljoin(list_url, a['href'])
+                parsed = urlparse(url)
+                if parsed.netloc != domain:
+                    continue
+                path = parsed.path.rstrip('/')
+                if path and path != list_path:
+                    all_links.append((path, a))
+
+            # パスの先頭ディレクトリでグループ化、最多グループを候補とする
+            from collections import Counter
+            dir_counts = Counter()
+            dir_links = {}
+            nav_dirs = {'/news', '/blog', '/schedule', '/access', '/price',
+                        '/menu', '/contact', '/reserve', '/hotel', '/recruit',
+                        '/system', '/concept', '/about', '/faq'}
+            for path, a in all_links:
+                parts = path.split('/')
+                if len(parts) >= 3:  # /dir/something 以上
+                    dir_key = '/' + parts[1]
+                    if dir_key.lower() not in nav_dirs and dir_key != list_path.split('/')[1:2]:
+                        dir_counts[dir_key] += 1
+                        if dir_key not in dir_links:
+                            dir_links[dir_key] = []
+                        dir_links[dir_key].append((path, a))
+
+            # 3件以上あるグループで、一覧パスと異なるものを候補とする
+            if dir_counts:
+                top_dir, top_count = dir_counts.most_common(1)[0]
+                list_dir = '/' + list_path.strip('/').split('/')[0] if list_path.strip('/') else ''
+                if top_count >= 3 and top_dir != list_dir:
+                    seen_paths = set()
+                    for path, a in dir_links[top_dir]:
+                        url = urljoin(list_url, path)
+                        if path in seen_paths:
+                            continue
+                        seen_paths.add(path)
+                        name = a.get_text(strip=True) or ''
+                        img = a.find('img')
+                        img_url = None
+                        if img:
+                            src = (img.get('src') or img.get('data-src') or '')
+                            if src:
+                                img_url = urljoin(list_url, src)
+                        candidates.append({
+                            'name': name,
+                            'url': url,
+                            'list_image_url': img_url,
+                        })
+
+        # フォールバック3: 一覧URLの直下サブパス
         if not candidates and list_path:
             for a in soup.find_all('a', href=True):
                 url = urljoin(list_url, a['href'])
