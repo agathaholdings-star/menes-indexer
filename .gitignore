@@ -19,3 +19,18 @@ supabase/.temp/
 # IDE
 .vscode/
 .idea/
+
+# Dev artifacts
+*.log
+*.jpeg
+*.png
+!frontend/**/*.png
+!frontend/**/*.jpeg
+database/*_checkpoint.json
+database/therapist-scraper/*_checkpoint.json
+database/shops_dump.sql
+.playwright-mcp/
+
+# Unrelated projects
+stripe/
+system-company/
