@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useState, useEffect } from "react";
-import { X, ChevronLeft, ChevronRight, Check, Clock, Sparkles, Crown, Star, Heart, Smile, Flame, Leaf, Search, MapPin, AlertCircle } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Check, Clock, Sparkles, Crown, Star, Heart, Smile, Flame, Leaf, Search, MapPin, AlertCircle, Camera, ImageIcon, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
@@ -42,7 +42,7 @@ interface ReviewWizardModalProps {
   monthlyReviewCount?: number;
 }
 
-const TOTAL_STEPS = 9;
+const TOTAL_STEPS = 10;
 
 const typeIcons: Record<string, React.ElementType> = {
   idol: Sparkles,
@@ -90,6 +90,8 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
   const [showMissingReport, setShowMissingReport] = useState(false);
   const [missingTherapistName, setMissingTherapistName] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [verificationImage, setVerificationImage] = useState<File | null>(null);
+  const [verificationPreview, setVerificationPreview] = useState<string | null>(null);
 
   // DB state
   const [prefectures, setPrefectures] = useState<{ id: number; name: string }[]>([]);
@@ -238,9 +240,8 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
     if (step < TOTAL_STEPS - 1) {
       setStep(step + 1);
     } else {
-      // 最終ステップ: DBに口コミを保存
+      // 最終ステップ (Step 9): DBに口コミを保存
       if (!authUser) {
-        // 未認証ユーザーはログインページへリダイレクト
         onOpenChange(false);
         router.push("/login?redirect=/review");
         return;
@@ -251,13 +252,26 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
 
       setSubmitting(true);
       try {
-        // Find shop_id from the selected therapist's shop
-        const shopId = selectedShopId;
+        let imagePath: string | null = null;
+
+        // 画像がある場合 → Supabase Storage にアップロード
+        if (verificationImage) {
+          const ext = verificationImage.name.split(".").pop() || "jpg";
+          const filePath = `${authUser.id}/${Date.now()}.${ext}`;
+          const { error: uploadError } = await supabase.storage
+            .from("review-verifications")
+            .upload(filePath, verificationImage);
+          if (uploadError) {
+            console.error("Image upload failed:", uploadError);
+          } else {
+            imagePath = filePath;
+          }
+        }
 
         const { error } = await supabase.from("reviews").insert({
           user_id: authUser.id,
           therapist_id: selectedTherapistId,
-          shop_id: shopId,
+          shop_id: selectedShopId,
           looks_type: selectedType,
           body_type: selectedBody,
           service_level: selectedService,
@@ -269,6 +283,7 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
           comment_first_impression: reviewText.q1,
           comment_service: reviewText.q2,
           comment_advice: reviewText.q3,
+          verification_image_path: imagePath,
         });
 
         if (error) {
@@ -348,6 +363,8 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
     setShowMissingReport(false);
     setMissingTherapistName("");
     setShopStepSkipped(false);
+    setVerificationImage(null);
+    setVerificationPreview(null);
     onOpenChange(false);
   };
 
@@ -362,6 +379,7 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
       case 6: return true; // Ratings are optional
       case 7: return true; // Score always has default
       case 8: return reviewText.q1.length >= 50 && reviewText.q2.length >= 100 && reviewText.q3.length >= 50;
+      case 9: return true; // 画像は任意なので常にtrue
       default: return false;
     }
   };
@@ -422,6 +440,8 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
                 setDirectSearchMode(false);
                 setDirectShopSearch("");
                 setDirectSearchResults([]);
+                setVerificationImage(null);
+                setVerificationPreview(null);
               }}
               memberType={memberType}
               monthlyReviewCount={monthlyReviewCount}
@@ -499,6 +519,26 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
                 <StepText
                   reviewText={reviewText}
                   onChange={(key, value) => setReviewText(prev => ({ ...prev, [key]: value }))}
+                />
+              )}
+              {step === 9 && (
+                <StepVerificationImage
+                  image={verificationImage}
+                  preview={verificationPreview}
+                  onSelect={(file) => {
+                    setVerificationImage(file);
+                    if (file) {
+                      const url = URL.createObjectURL(file);
+                      setVerificationPreview(url);
+                    }
+                  }}
+                  onRemove={() => {
+                    setVerificationImage(null);
+                    if (verificationPreview) {
+                      URL.revokeObjectURL(verificationPreview);
+                    }
+                    setVerificationPreview(null);
+                  }}
                 />
               )}
             </>
@@ -1139,6 +1179,91 @@ function StepText({
         )}>
           {reviewText.q3.length}/100字（最低50字）
         </p>
+      </div>
+    </div>
+  );
+}
+
+// Step 9: Verification Image Upload (optional)
+function StepVerificationImage({
+  image,
+  preview,
+  onSelect,
+  onRemove,
+}: {
+  image: File | null;
+  preview: string | null;
+  onSelect: (file: File) => void;
+  onRemove: () => void;
+}) {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    // 10MB制限
+    if (file.size > 10 * 1024 * 1024) {
+      alert("ファイルサイズは10MB以下にしてください");
+      return;
+    }
+    onSelect(file);
+  };
+
+  return (
+    <div>
+      <h3 className="text-base font-semibold mb-1">予約スクショを添付（任意）</h3>
+      <p className="text-sm text-muted-foreground mb-4">
+        予約確認画面のスクリーンショットを添付すると、管理者が確認後「認証済み」バッジが付きます。
+        スキップしても投稿できます。
+      </p>
+
+      {preview ? (
+        <div className="space-y-3">
+          <div className="relative rounded-lg overflow-hidden border">
+            <img
+              src={preview}
+              alt="予約スクショプレビュー"
+              className="w-full max-h-64 object-contain bg-muted"
+            />
+          </div>
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground truncate max-w-[200px]">
+              {image?.name}
+            </p>
+            <Button variant="ghost" size="sm" onClick={onRemove} className="text-destructive gap-1">
+              <Trash2 className="h-3.5 w-3.5" />
+              削除
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <label
+          htmlFor="verification-image"
+          className="flex flex-col items-center gap-3 p-8 rounded-xl border-2 border-dashed cursor-pointer hover:border-primary/50 hover:bg-muted/50 transition-colors"
+        >
+          <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
+            <Camera className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <div className="text-center">
+            <p className="font-medium text-sm">タップして画像を選択</p>
+            <p className="text-xs text-muted-foreground mt-1">JPEG, PNG（最大10MB）</p>
+          </div>
+          <input
+            id="verification-image"
+            type="file"
+            accept="image/jpeg,image/png"
+            className="hidden"
+            onChange={handleFileChange}
+          />
+        </label>
+      )}
+
+      <div className="mt-4 p-3 rounded-lg bg-muted/50 border">
+        <div className="flex items-start gap-2">
+          <ImageIcon className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+          <div className="text-xs text-muted-foreground">
+            <p>予約スクショは管理者のみが確認でき、一般ユーザーには公開されません。</p>
+            <p className="mt-1">個人情報（名前・電話番号等）が含まれる場合はモザイク加工をおすすめします。</p>
+          </div>
+        </div>
       </div>
     </div>
   );

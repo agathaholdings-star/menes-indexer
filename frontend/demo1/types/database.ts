@@ -186,6 +186,7 @@ export type Database = {
           shop_id: number
           therapist_id: number
           user_id: string
+          verification_image_path: string | null
         }
         Insert: {
           body_type?: string | null
@@ -207,6 +208,7 @@ export type Database = {
           shop_id: number
           therapist_id: number
           user_id: string
+          verification_image_path?: string | null
         }
         Update: {
           body_type?: string | null
@@ -228,6 +230,7 @@ export type Database = {
           shop_id?: number
           therapist_id?: number
           user_id?: string
+          verification_image_path?: string | null
         }
         Relationships: [
           {

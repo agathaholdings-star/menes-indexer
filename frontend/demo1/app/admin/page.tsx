@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Shield, Trash2, Eye, CheckCircle, XCircle, Clock, MessageCircle, Star, Users } from "lucide-react";
+import { Shield, Trash2, Eye, CheckCircle, XCircle, Clock, MessageCircle, Star, Users, ShieldCheck, ImageIcon, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -42,6 +42,8 @@ interface ReviewRow {
   therapist_name?: string;
   shop_name?: string;
   user_nickname?: string;
+  verification_image_path: string | null;
+  is_verified: boolean | null;
 }
 
 interface ThreadRow {
@@ -86,6 +88,7 @@ export default function AdminPage() {
   const [deleteTarget, setDeleteTarget] = useState<{ type: string; id: number | string } | null>(null);
   const [reviewFilter, setReviewFilter] = useState<ReviewFilter>("pending");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
 
   // DB-based admin check
   useEffect(() => {
@@ -126,7 +129,7 @@ export default function AdminPage() {
       // Reviews (all statuses - admin RLS allows full access)
       const { data: reviewData } = await supabase
         .from("reviews")
-        .select("id, score, looks_type, body_type, service_level, moderation_status, comment_first_impression, comment_service, comment_advice, created_at, user_id, therapist_id, shop_id")
+        .select("id, score, looks_type, body_type, service_level, moderation_status, comment_first_impression, comment_service, comment_advice, created_at, user_id, therapist_id, shop_id, verification_image_path, is_verified")
         .order("created_at", { ascending: false })
         .limit(100);
 
@@ -234,6 +237,56 @@ export default function AdminPage() {
       setThreads((prev) => prev.filter((t) => t.id !== id));
     }
     setDeleteTarget(null);
+  };
+
+  const handleVerify = async (reviewId: string) => {
+    setActionLoading(reviewId);
+    const supabase = createSupabaseBrowser();
+    const { error } = await supabase
+      .from("reviews")
+      .update({ is_verified: true })
+      .eq("id", reviewId);
+    if (!error) {
+      setReviews((prev) =>
+        prev.map((r) => (r.id === reviewId ? { ...r, is_verified: true } : r))
+      );
+    } else {
+      console.error("Verify failed:", error);
+    }
+    setActionLoading(null);
+  };
+
+  const handleApproveAndVerify = async (reviewId: string) => {
+    setActionLoading(reviewId);
+    const supabase = createSupabaseBrowser();
+    const { error: approveError } = await supabase.rpc("approve_review", { review_id: reviewId });
+    if (!approveError) {
+      const { error: verifyError } = await supabase
+        .from("reviews")
+        .update({ is_verified: true })
+        .eq("id", reviewId);
+      if (!verifyError) {
+        setReviews((prev) =>
+          prev.map((r) =>
+            r.id === reviewId ? { ...r, moderation_status: "approved" as ModerationStatus, is_verified: true } : r
+          )
+        );
+      }
+      setStats((prev) => ({ ...prev, pending: Math.max(0, prev.pending - 1) }));
+    } else {
+      console.error("Approve+Verify failed:", approveError);
+    }
+    setActionLoading(null);
+  };
+
+  const handleShowImage = async (path: string) => {
+    const supabase = createSupabaseBrowser();
+    const { data } = await supabase.storage
+      .from("review-verifications")
+      .createSignedUrl(path, 300); // 5分間有効
+    if (data?.signedUrl) {
+      setPreviewImageUrl(data.signedUrl);
+    }
   };
 
   const filteredReviews = reviewFilter === "all"
@@ -373,7 +426,33 @@ export default function AdminPage() {
                           {r.service_level.toUpperCase()}
                         </Badge>
                       )}
+                      {r.is_verified && (
+                        <Badge variant="default" className="bg-green-600 gap-1">
+                          <ShieldCheck className="h-3 w-3" />
+                          認証済み
+                        </Badge>
+                      )}
+                      {r.verification_image_path && !r.is_verified && (
+                        <Badge variant="outline" className="gap-1">
+                          <ImageIcon className="h-3 w-3" />
+                          スクショあり
+                        </Badge>
+                      )}
                     </div>
+
+                    {/* Verification Image */}
+                    {r.verification_image_path && (
+                      <div className="mb-3">
+                        <button
+                          type="button"
+                          onClick={() => handleShowImage(r.verification_image_path!)}
+                          className="flex items-center gap-2 px-3 py-2 rounded-lg border hover:bg-muted/50 transition-colors text-sm"
+                        >
+                          <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                          予約スクショを確認
+                        </button>
+                      </div>
+                    )}
 
                     {/* Review content */}
                     <div className="space-y-2 text-sm border-l-2 border-muted pl-3">
@@ -398,7 +477,7 @@ export default function AdminPage() {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center gap-2 mt-3 pt-3 border-t">
+                    <div className="flex items-center gap-2 mt-3 pt-3 border-t flex-wrap">
                       {r.moderation_status === "pending" && (
                         <>
                           <Button
@@ -411,6 +490,18 @@ export default function AdminPage() {
                             <CheckCircle className="h-3.5 w-3.5" />
                             承認
                           </Button>
+                          {r.verification_image_path && !r.is_verified && (
+                            <Button
+                              variant="default"
+                              size="sm"
+                              disabled={actionLoading === r.id}
+                              onClick={() => handleApproveAndVerify(r.id)}
+                              className="gap-1 bg-green-600 hover:bg-green-700"
+                            >
+                              <ShieldCheck className="h-3.5 w-3.5" />
+                              承認&認証
+                            </Button>
+                          )}
                           <Button
                             variant="outline"
                             size="sm"
@@ -422,6 +513,18 @@ export default function AdminPage() {
                             却下
                           </Button>
                         </>
+                      )}
+                      {r.verification_image_path && !r.is_verified && r.moderation_status !== "pending" && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={actionLoading === r.id}
+                          onClick={() => handleVerify(r.id)}
+                          className="gap-1 border-green-600 text-green-600 hover:bg-green-50 bg-transparent"
+                        >
+                          <ShieldCheck className="h-3.5 w-3.5" />
+                          認証する
+                        </Button>
                       )}
                       <div className="flex-1" />
                       <Button
@@ -516,6 +619,25 @@ export default function AdminPage() {
       </main>
 
       <SiteFooter />
+
+      {/* Image preview overlay */}
+      {previewImageUrl && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
+          onClick={() => setPreviewImageUrl(null)}
+        >
+          <div className="relative max-w-2xl max-h-[80vh]" onClick={(e) => e.stopPropagation()}>
+            <img src={previewImageUrl} alt="予約スクショ" className="max-w-full max-h-[80vh] rounded-lg object-contain" />
+            <button
+              type="button"
+              onClick={() => setPreviewImageUrl(null)}
+              className="absolute -top-3 -right-3 h-8 w-8 rounded-full bg-white text-black flex items-center justify-center shadow-lg hover:bg-gray-100"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Delete confirmation dialog */}
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
