@@ -48,7 +48,23 @@ def fetch_page(url, timeout=15):
     try:
         resp = requests.get(url, headers=HEADERS, timeout=timeout, allow_redirects=True)
         resp.raise_for_status()
-        resp.encoding = resp.apparent_encoding
+        # エンコーディング判定: Content-Type → meta charset → apparent_encoding
+        # apparent_encoding はUTF-8サイトをWindows-1254等と誤判定することがあるため
+        # サーバー指定やHTMLのmeta charsetを優先する
+        if resp.encoding and resp.encoding.lower().replace('-', '') != 'iso88591':
+            # サーバーが明示的に指定（ISO-8859-1はrequestsのデフォルトなので無視）
+            pass
+        else:
+            # サーバー未指定 → HTMLのmeta charsetを確認
+            head = resp.content[:2048].lower()
+            if b'charset=utf-8' in head or b'charset="utf-8"' in head:
+                resp.encoding = 'utf-8'
+            elif b'charset=shift_jis' in head or b'charset=sjis' in head:
+                resp.encoding = 'shift_jis'
+            elif b'charset=euc-jp' in head:
+                resp.encoding = 'euc-jp'
+            else:
+                resp.encoding = resp.apparent_encoding
         return resp.text
     except Exception as e:
         print(f"    ⚠ fetch失敗: {url} ({e})")

@@ -65,12 +65,27 @@ log = logging.getLogger(__name__)
 # HTTP
 # =============================================================================
 
+def _detect_encoding(resp):
+    """エンコーディング判定: Content-Type → meta charset → apparent_encoding"""
+    if resp.encoding and resp.encoding.lower().replace('-', '') != 'iso88591':
+        return
+    head = resp.content[:2048].lower()
+    if b'charset=utf-8' in head or b'charset="utf-8"' in head:
+        resp.encoding = 'utf-8'
+    elif b'charset=shift_jis' in head or b'charset=sjis' in head:
+        resp.encoding = 'shift_jis'
+    elif b'charset=euc-jp' in head:
+        resp.encoding = 'euc-jp'
+    else:
+        resp.encoding = resp.apparent_encoding
+
+
 def fetch_page(url, timeout=15):
     """ページを取得"""
     try:
         resp = requests.get(url, headers=HEADERS, timeout=timeout, allow_redirects=True)
         resp.raise_for_status()
-        resp.encoding = resp.apparent_encoding
+        _detect_encoding(resp)
         return resp.text, resp.status_code
     except requests.exceptions.HTTPError as e:
         return None, getattr(e.response, 'status_code', 0)
