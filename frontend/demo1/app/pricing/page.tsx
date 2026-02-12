@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
+import { useAuth } from "@/lib/auth-context";
 
 const plans = [
   {
@@ -120,7 +121,23 @@ const faqs = [
   },
 ];
 
+function buildPaymentUrl(baseUrl: string, userId?: string, email?: string): string {
+  if (!baseUrl.startsWith("http")) return baseUrl;
+  const url = new URL(baseUrl);
+  if (userId) url.searchParams.set("client_reference_id", userId);
+  if (email) url.searchParams.set("prefilled_email", email);
+  return url.toString();
+}
+
 export default function PricingPage() {
+  const { user: authUser } = useAuth();
+
+  const getHref = (plan: typeof plans[number]) => {
+    if (plan.tier === "free") return plan.href;
+    if (!authUser) return `/login?redirect=/pricing`;
+    return buildPaymentUrl(plan.href, authUser.id, authUser.email || undefined);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
@@ -216,8 +233,8 @@ export default function PricingPage() {
                   }`}
                   variant={plan.popular ? "default" : plan.tier === "vip" ? "default" : "outline"}
                 >
-                  <Link href={plan.href} target={plan.tier === "free" ? undefined : "_blank"}>
-                    {plan.cta}
+                  <Link href={getHref(plan)} target={plan.tier === "free" || !authUser ? undefined : "_blank"}>
+                    {!authUser && plan.tier !== "free" ? "ログインして登録" : plan.cta}
                   </Link>
                 </Button>
               </CardContent>

@@ -46,6 +46,7 @@ import { therapistTypes, type User, getEffectiveTier, tierPermissions } from "@/
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth-context";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
+import { cleanTherapistName, isPlaceholderName } from "@/lib/therapist-utils";
 
 interface PrefectureOption {
   id: string;
@@ -317,25 +318,27 @@ function SearchContent() {
           }
 
           setDbTherapists(
-            data.map((t) => {
-              const imgs = t.image_urls as string[] | null;
-              const shop = t.salons as { name: string; display_name: string | null; access: string | null } | null;
-              const agg = reviewAggMap.get(Number(t.id));
-              return {
-                id: Number(t.id),
-                name: t.name.replace(/\s*\(.*\)$/, ""),
-                age: t.age,
-                image_url: imgs?.[0] || null,
-                salon_id: Number(t.salon_id),
-                shop_name: shop?.display_name || shop?.name || "",
-                shop_access: shop?.access || null,
-                avg_score: agg?.avg_score || null,
-                review_count: agg?.count || 0,
-                looks_types: agg ? [...agg.looks] : [],
-                body_types: agg ? [...agg.bodies] : [],
-                service_levels: agg ? [...agg.services] : [],
-              };
-            })
+            data
+              .filter((t) => !isPlaceholderName(t.name))
+              .map((t) => {
+                const imgs = t.image_urls as string[] | null;
+                const shop = t.salons as { name: string; display_name: string | null; access: string | null } | null;
+                const agg = reviewAggMap.get(Number(t.id));
+                return {
+                  id: Number(t.id),
+                  name: cleanTherapistName(t.name),
+                  age: t.age,
+                  image_url: imgs?.[0] || null,
+                  salon_id: Number(t.salon_id),
+                  shop_name: shop?.display_name || shop?.name || "",
+                  shop_access: shop?.access || null,
+                  avg_score: agg?.avg_score || null,
+                  review_count: agg?.count || 0,
+                  looks_types: agg ? [...agg.looks] : [],
+                  body_types: agg ? [...agg.bodies] : [],
+                  service_levels: agg ? [...agg.services] : [],
+                };
+              })
           );
         } else {
           setDbTherapists([]);

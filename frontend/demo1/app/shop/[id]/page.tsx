@@ -4,6 +4,7 @@ import { ShopPageClient } from "./shop-page-client";
 import { getShopById, getShopBySlug, getTherapistsByShopId, getShopAreaInfo } from "@/lib/supabase-data";
 import type { Shop as DbShop, Therapist as DbTherapist } from "@/types/database";
 import type { Shop, Therapist, Review } from "@/lib/data";
+import { parseNameAge } from "@/lib/therapist-utils";
 
 interface ShopPageProps {
   params: Promise<{ id: string }>;
@@ -45,15 +46,6 @@ function toFrontendShop(dbShop: DbShop): Shop {
     images: dbShop.image_url ? [dbShop.image_url] : [],
     courses: [],
   };
-}
-
-// 名前から年齢を抽出: "あやの(19)" → { name: "あやの", age: 19 }
-function parseNameAge(raw: string, dbAge: number | null): { name: string; age: number } {
-  const match = raw.match(/^(.+?)\((\d{2})\)$/);
-  if (match) {
-    return { name: match[1], age: dbAge || Number(match[2]) };
-  }
-  return { name: raw, age: dbAge || 0 };
 }
 
 // DBのTherapist → フロントのTherapist型

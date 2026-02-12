@@ -7,6 +7,7 @@ import { ChevronRight, TrendingUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { supabase } from "@/lib/supabase";
+import { cleanTherapistName, isPlaceholderName } from "@/lib/therapist-utils";
 
 interface PopularTherapist {
   id: number;
@@ -29,17 +30,19 @@ export function PopularTherapists() {
         .limit(8);
       if (data) {
         setTherapists(
-          data.map((t) => {
-            const imgs = t.image_urls as string[] | null;
-            const shop = t.salons as { name: string; display_name: string | null } | null;
-            return {
-              id: Number(t.id),
-              name: t.name.replace(/\s*\(.*\)$/, ""),
-              age: t.age,
-              image_url: imgs?.[0] || null,
-              shop_name: shop?.display_name || shop?.name || "",
-            };
-          })
+          data
+            .filter((t) => !isPlaceholderName(t.name))
+            .map((t) => {
+              const imgs = t.image_urls as string[] | null;
+              const shop = t.salons as { name: string; display_name: string | null } | null;
+              return {
+                id: Number(t.id),
+                name: cleanTherapistName(t.name),
+                age: t.age,
+                image_url: imgs?.[0] || null,
+                shop_name: shop?.display_name || shop?.name || "",
+              };
+            })
         );
       }
     }

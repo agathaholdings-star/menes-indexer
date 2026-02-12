@@ -36,10 +36,12 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { ReviewWizardModal } from "@/components/review/review-wizard-modal";
 import { useAuth } from "@/lib/auth-context";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
+import { useTier } from "@/lib/hooks/use-tier";
 
 export function SiteHeader() {
   const { user: authUser, loading: authLoading, signOut: authSignOut } = useAuth();
-  const [memberLevel, setMemberLevel] = useState<"free" | "standard" | "vip">("free");
+  const { effectiveTier, membershipType, monthlyReviewCount: tierMonthlyReviewCount } = useTier();
+  const memberLevel = (membershipType || "free") as "free" | "standard" | "vip";
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
@@ -95,20 +97,7 @@ export function SiteHeader() {
     }
   };
 
-  const [monthlyReviewCount, setMonthlyReviewCount] = useState(0);
-
-  useEffect(() => {
-    if (!authUser) return;
-    const supabase = createSupabaseBrowser();
-    supabase
-      .from("profiles")
-      .select("monthly_review_count")
-      .eq("id", authUser.id)
-      .single()
-      .then(({ data }) => {
-        if (data) setMonthlyReviewCount(data.monthly_review_count || 0);
-      });
-  }, [authUser]);
+  const monthlyReviewCount = tierMonthlyReviewCount;
 
   const nickname = authUser?.user_metadata?.nickname || authUser?.email?.split("@")[0] || "ユーザー";
 
@@ -139,17 +128,6 @@ export function SiteHeader() {
         );
       default:
         return <Badge variant="secondary" className="text-xs">無料会員</Badge>;
-    }
-  };
-
-  // Demo: cycle member levels (only when logged in)
-  const cycleMemberLevel = () => {
-    if (memberLevel === "free") {
-      setMemberLevel("standard");
-    } else if (memberLevel === "standard") {
-      setMemberLevel("vip");
-    } else {
-      setMemberLevel("free");
     }
   };
 
@@ -389,18 +367,6 @@ export function SiteHeader() {
                   <Link href="/register">新規登録</Link>
                 </Button>
               </div>
-            )}
-
-            {/* Demo Toggle Button - member level only */}
-            {isLoggedIn && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={cycleMemberLevel}
-                className="text-xs hidden xl:flex bg-transparent"
-              >
-                Demo: {memberLevel}
-              </Button>
             )}
 
             {/* Mobile Menu */}

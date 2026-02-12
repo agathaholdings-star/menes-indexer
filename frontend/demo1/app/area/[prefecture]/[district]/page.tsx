@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { therapistTypes, bodyTypes } from "@/lib/data";
 import { ShopListPageClient } from "./shop-list-client";
-import { getPrefectureBySlug, getAreaBySlug, getShopsByAreaSlug } from "@/lib/supabase-data";
+import { getPrefectureBySlug, getAreaBySlug, getShopsByAreaSlug, getTherapistCountsBySalonIds } from "@/lib/supabase-data";
 import type { Shop as DbShop } from "@/types/database";
 import type { Shop } from "@/lib/data";
 
@@ -63,7 +63,13 @@ export default async function ShopListPage({ params }: ShopListPageProps) {
   }
 
   const dbShops = await getShopsByAreaSlug(district);
-  const shops = dbShops.map(toFrontendShop);
+  const salonIds = dbShops.map((s) => s.id);
+  const therapistCounts = await getTherapistCountsBySalonIds(salonIds);
+  const shops = dbShops.map((s) => {
+    const shop = toFrontendShop(s);
+    shop.therapistCount = therapistCounts.get(s.id) || 0;
+    return shop;
+  });
 
   return (
     <ShopListPageClient

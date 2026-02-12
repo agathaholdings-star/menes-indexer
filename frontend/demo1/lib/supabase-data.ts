@@ -176,3 +176,23 @@ export async function getAreaShopCount(areaId: number): Promise<number> {
     .eq("area_id", areaId);
   return count || 0;
 }
+
+/** Get therapist counts for multiple salon IDs in one query */
+export async function getTherapistCountsBySalonIds(
+  salonIds: number[]
+): Promise<Map<number, number>> {
+  if (salonIds.length === 0) return new Map();
+  const { data } = await supabase
+    .from("therapists")
+    .select("salon_id")
+    .in("salon_id", salonIds)
+    .eq("status", "active")
+    .neq("name", "THERAPISTセラピスト");
+  const counts = new Map<number, number>();
+  if (data) {
+    for (const row of data) {
+      counts.set(row.salon_id, (counts.get(row.salon_id) || 0) + 1);
+    }
+  }
+  return counts;
+}

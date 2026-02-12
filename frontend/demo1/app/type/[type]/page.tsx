@@ -9,6 +9,7 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { Sidebar } from "@/components/layout/sidebar";
 import { therapistTypes } from "@/lib/data";
 import { supabase } from "@/lib/supabase";
+import { cleanTherapistName } from "@/lib/therapist-utils";
 
 interface DBTherapist {
   id: number;
@@ -99,6 +100,7 @@ export default async function TypePage({
                   {typeTherapists.map((therapist) => {
                     const imageUrl = therapist.image_urls?.[0];
                     const shopName = therapist.salons?.display_name || therapist.salons?.name || "";
+                    const displayName = cleanTherapistName(therapist.name);
                     return (
                       <Link key={therapist.id} href={`/therapist/${therapist.id}`}>
                         <Card className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer h-full">
@@ -106,7 +108,7 @@ export default async function TypePage({
                             {imageUrl ? (
                               <Image
                                 src={imageUrl}
-                                alt={therapist.name}
+                                alt={displayName}
                                 fill
                                 className="object-cover"
                                 unoptimized
@@ -114,7 +116,7 @@ export default async function TypePage({
                             ) : (
                               <div className="w-full h-full flex items-center justify-center">
                                 <span className="text-4xl font-bold text-muted-foreground">
-                                  {therapist.name.charAt(0)}
+                                  {displayName.charAt(0)}
                                 </span>
                               </div>
                             )}
@@ -125,7 +127,7 @@ export default async function TypePage({
                             </div>
                           </div>
                           <CardContent className="p-4">
-                            <h3 className="font-bold">{therapist.name}</h3>
+                            <h3 className="font-bold">{displayName}</h3>
                             <p className="text-sm text-muted-foreground">{shopName}</p>
                           </CardContent>
                         </Card>

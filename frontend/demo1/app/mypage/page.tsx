@@ -60,29 +60,11 @@ const sidebarItems = [
   { id: "settings", label: "設定", icon: Settings },
 ] as const;
 
-// Mock data
-const mockConversations = [
-  { id: "1", name: "田中さん", lastMessage: "了解です！ありがとうございます", time: "10:30", unread: 2, avatar: "T" },
-  { id: "2", name: "佐藤さん", lastMessage: "その店舗良かったですよ", time: "昨日", unread: 0, avatar: "S" },
-  { id: "3", name: "山田さん", lastMessage: "今度行ってみます", time: "3日前", unread: 0, avatar: "Y" },
-];
-
+// Mock data for sections not yet fully implemented
 const mockPublicLists = [
   { id: "1", userName: "メンエスマスター", avatar: "M", listName: "渋谷ギャル系TOP10", count: 10, followers: 234 },
   { id: "2", userName: "癒し探求者", avatar: "Y", listName: "清楚系おすすめ", count: 8, followers: 156 },
   { id: "3", userName: "週末リピーター", avatar: "S", listName: "コスパ最強リスト", count: 15, followers: 89 },
-];
-
-const mockBBSThreads = [
-  { id: "1", title: "初心者におすすめの店舗教えてください", author: "新規さん", comments: 24, lastUpdate: "1時間前", category: "質問" },
-  { id: "2", title: "渋谷エリアの最新情報", author: "渋谷マスター", comments: 56, lastUpdate: "3時間前", category: "エリア" },
-  { id: "3", title: "最近のトレンドについて", author: "情報通", comments: 18, lastUpdate: "昨日", category: "雑談" },
-];
-
-const mockSKRReviews = [
-  { id: "1", therapistName: "あいか", shopName: "アロマモア", level: "skr", rating: 92, comment: "サービスが素晴らしかった...", date: "2024-01-15", image: undefined },
-  { id: "2", therapistName: "みく", shopName: "Premium Salon", level: "hr", rating: 95, comment: "期待以上の対応で...", date: "2024-01-14", image: undefined },
-  { id: "3", therapistName: "りの", shopName: "Healing Room", level: "skr", rating: 88, comment: "リピート確定です...", date: "2024-01-13", image: undefined },
 ];
 
 export default function MyPage() {
@@ -120,6 +102,29 @@ export default function MyPage() {
   } | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
 
+  // Real data states
+  const [favoriteCount, setFavoriteCount] = useState(0);
+  const [userReviews, setUserReviews] = useState<{
+    id: string;
+    therapist_name: string;
+    shop_name: string;
+    score: number;
+    service_level: string | null;
+    moderation_status: string;
+    created_at: string;
+  }[]>([]);
+  const [skrReviews, setSkrReviews] = useState<{
+    id: string;
+    therapist_id: number;
+    therapist_name: string;
+    therapist_image: string | null;
+    shop_name: string;
+    service_level: string;
+    score: number;
+    comment: string;
+    created_at: string;
+  }[]>([]);
+
   // Fetch profile when auth user changes
   useEffect(() => {
     if (authLoading) return;
@@ -150,7 +155,67 @@ export default function MyPage() {
       setProfileLoading(false);
     };
 
+    const fetchFavoriteCount = async () => {
+      const { count } = await supabase
+        .from("favorites")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", authUser.id);
+      setFavoriteCount(count || 0);
+    };
+
+    const fetchUserReviews = async () => {
+      const { data } = await supabase
+        .from("reviews")
+        .select("id, score, service_level, moderation_status, created_at, therapist_id, salon_id, therapists(name), salons(name, display_name)")
+        .eq("user_id", authUser.id)
+        .order("created_at", { ascending: false });
+      if (data) {
+        setUserReviews(
+          data.map((r: any) => ({
+            id: r.id,
+            therapist_name: r.therapists?.name || "",
+            shop_name: r.salons?.display_name || r.salons?.name || "",
+            score: r.score || 0,
+            service_level: r.service_level,
+            moderation_status: r.moderation_status,
+            created_at: r.created_at,
+          }))
+        );
+      }
+    };
+
+    const fetchSkrReviews = async () => {
+      const { data } = await supabase
+        .from("reviews")
+        .select("id, therapist_id, score, service_level, comment_service, created_at, therapists(name, image_urls), salons(name, display_name)")
+        .in("service_level", ["skr", "hr"])
+        .eq("moderation_status", "approved")
+        .order("created_at", { ascending: false })
+        .limit(20);
+      if (data) {
+        setSkrReviews(
+          data.map((r: any) => {
+            const imgs = r.therapists?.image_urls as string[] | null;
+            return {
+              id: r.id,
+              therapist_id: r.therapist_id,
+              therapist_name: r.therapists?.name || "",
+              therapist_image: imgs?.[0] || null,
+              shop_name: r.salons?.display_name || r.salons?.name || "",
+              service_level: r.service_level,
+              score: r.score || 0,
+              comment: r.comment_service || "",
+              created_at: r.created_at,
+            };
+          })
+        );
+      }
+    };
+
     fetchProfile();
+    fetchFavoriteCount();
+    fetchUserReviews();
+    fetchSkrReviews();
   }, [authUser, authLoading]);
 
   // Loading state
@@ -193,10 +258,8 @@ export default function MyPage() {
     email: authUser.email || "",
     memberSince: memberSinceDate,
     reviewCount: profile?.total_review_count || 0,
-    favoriteCount: 0,
+    favoriteCount,
   };
-
-  const userReviews: never[] = [];
 
   // Lock screen component
   const LockScreen = ({ title, description, upgradeText, targetLevel }: { title: string; description: string; upgradeText: string; targetLevel: "standard" | "vip" }) => (
@@ -401,17 +464,52 @@ export default function MyPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-lg">投稿した口コミ</CardTitle>
-              <Badge variant="outline">0件</Badge>
+              <Badge variant="outline">{userReviews.length}件</Badge>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8">
-                <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground mb-4">まだ口コミを投稿していません</p>
-                <p className="text-sm text-muted-foreground mb-4">口コミを投稿すると機能が解放されます</p>
-                <Link href="/review">
-                  <Button>口コミを投稿する</Button>
-                </Link>
-              </div>
+              {userReviews.length === 0 ? (
+                <div className="text-center py-8">
+                  <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground mb-4">まだ口コミを投稿していません</p>
+                  <p className="text-sm text-muted-foreground mb-4">口コミを投稿すると機能が解放されます</p>
+                  <Link href="/review">
+                    <Button>口コミを投稿する</Button>
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {userReviews.map((review) => (
+                    <div key={review.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{review.therapist_name}</p>
+                        <p className="text-sm text-muted-foreground truncate">{review.shop_name}</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {new Date(review.created_at).toLocaleDateString("ja-JP")}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 ml-4">
+                        <Badge variant="secondary">{review.score}点</Badge>
+                        <Badge
+                          variant="outline"
+                          className={
+                            review.moderation_status === "approved"
+                              ? "text-green-600 border-green-300"
+                              : review.moderation_status === "rejected"
+                              ? "text-destructive border-destructive"
+                              : "text-amber-600 border-amber-300"
+                          }
+                        >
+                          {review.moderation_status === "approved"
+                            ? "承認済み"
+                            : review.moderation_status === "rejected"
+                            ? "却下"
+                            : "審査中"}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         );
@@ -537,13 +635,13 @@ export default function MyPage() {
               <CardContent className="p-0">
                 <div className="relative">
                   <div className="blur-sm pointer-events-none p-6 space-y-4">
-                    {mockSKRReviews.map((review) => (
-                      <div key={review.id} className="flex gap-4 p-4 border rounded-lg">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="flex gap-4 p-4 border rounded-lg">
                         <div className="w-16 h-16 rounded-lg bg-muted" />
-                        <div className="flex-1">
-                          <p className="font-medium">{review.therapistName}</p>
-                          <p className="text-sm text-muted-foreground">{review.shopName}</p>
-                          <p className="text-sm mt-2">{review.comment}</p>
+                        <div className="flex-1 space-y-2">
+                          <div className="h-4 bg-muted rounded w-24" />
+                          <div className="h-3 bg-muted rounded w-32" />
+                          <div className="h-3 bg-muted rounded w-full" />
                         </div>
                       </div>
                     ))}
@@ -580,51 +678,49 @@ export default function MyPage() {
                   <Flame className="h-5 w-5 text-amber-500" />
                   SKR/HRリスト
                 </CardTitle>
-                <div className="flex gap-2">
-                  <Select defaultValue="all">
-                    <SelectTrigger className="w-32">
-                      <SelectValue placeholder="レベル" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">全て</SelectItem>
-                      <SelectItem value="skr">SKR</SelectItem>
-                      <SelectItem value="hr">HR</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Select defaultValue="all">
-                    <SelectTrigger className="w-32">
-                      <SelectValue placeholder="エリア" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">全エリア</SelectItem>
-                      <SelectItem value="tokyo">東京</SelectItem>
-                      <SelectItem value="osaka">大阪</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {mockSKRReviews.map((review) => (
-                  <div key={review.id} className="flex gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors">
-                    <div className="w-16 h-16 rounded-lg bg-muted overflow-hidden flex-shrink-0">
-                      <img src={review.image || "/placeholder.svg"} alt={review.therapistName} className="w-full h-full object-cover" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Link href="#" className="font-medium hover:text-primary">{review.therapistName}</Link>
-                        <Badge className={review.level === "hr" ? "bg-gradient-to-r from-purple-500 to-purple-400" : "bg-gradient-to-r from-orange-500 to-orange-400"}>
-                          {review.level === "hr" ? "HR" : "SKR"}
-                        </Badge>
-                        <Badge className="bg-primary text-primary-foreground">{review.rating}点</Badge>
+              {skrReviews.length === 0 ? (
+                <div className="text-center py-8">
+                  <Flame className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">SKR/HRの口コミはまだありません</p>
+                  <p className="text-sm text-muted-foreground mt-2">口コミが承認されると表示されます</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {skrReviews.map((review) => (
+                    <div key={review.id} className="flex gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+                      <div className="w-16 h-16 rounded-lg bg-muted overflow-hidden flex-shrink-0">
+                        {review.therapist_image ? (
+                          <img src={review.therapist_image} alt={review.therapist_name} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-lg font-bold text-muted-foreground">
+                            {review.therapist_name.charAt(0)}
+                          </div>
+                        )}
                       </div>
-                      <p className="text-sm text-muted-foreground">{review.shopName} / {review.date}</p>
-                      <p className="text-sm mt-2">{review.comment}</p>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Link href={`/therapist/${review.therapist_id}`} className="font-medium hover:text-primary">
+                            {review.therapist_name}
+                          </Link>
+                          <Badge className={review.service_level === "hr" ? "bg-gradient-to-r from-purple-500 to-purple-400" : "bg-gradient-to-r from-orange-500 to-orange-400"}>
+                            {review.service_level === "hr" ? "HR" : "SKR"}
+                          </Badge>
+                          <Badge className="bg-primary text-primary-foreground">{review.score}点</Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {review.shop_name} / {new Date(review.created_at).toLocaleDateString("ja-JP")}
+                        </p>
+                        {review.comment && (
+                          <p className="text-sm mt-2 line-clamp-2">{review.comment}</p>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         );
@@ -797,45 +893,47 @@ export default function MyPage() {
       <SiteHeader />
 
       <main className="container mx-auto px-4 py-6">
-        {/* Debug: Member Level & Post Count Switcher */}
-        <Card className="mb-6 border-dashed border-2 border-primary/30 bg-primary/5">
-          <CardContent className="p-4">
-            <div className="flex flex-col gap-4">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div>
-                  <p className="text-sm font-medium text-primary mb-1">デバッグ: 会員レベル切替</p>
-                  <p className="text-xs text-muted-foreground">各会員レベルでの表示を確認できます</p>
-                </div>
-                <div className="flex gap-2">
-                  <Button size="sm" variant={memberLevel === "free" ? "default" : "outline"} onClick={() => setMemberLevel("free")} className={memberLevel === "free" ? "" : "bg-transparent"}>無料</Button>
-                  <Button size="sm" variant={memberLevel === "standard" ? "default" : "outline"} onClick={() => setMemberLevel("standard")} className={memberLevel === "standard" ? "" : "bg-transparent"}>スタンダード</Button>
-                  <Button size="sm" variant={memberLevel === "vip" ? "default" : "outline"} onClick={() => setMemberLevel("vip")} className={memberLevel === "vip" ? "bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-600 hover:to-amber-500" : "bg-transparent"}>VIP</Button>
-                </div>
-              </div>
-              {memberLevel === "standard" && (
-                <div className="flex items-center gap-4 pt-2 border-t border-primary/20">
-                  <p className="text-xs text-muted-foreground">今月の投稿数:</p>
-                  <div className="flex gap-2">
-                    {[0, 1, 2, 3].map(n => (
-                      <Button
-                        key={n}
-                        size="sm"
-                        variant={monthlyReviewCount === n ? "default" : "outline"}
-                        onClick={() => setMonthlyReviewCount(n)}
-                        className={monthlyReviewCount === n ? "" : "bg-transparent"}
-                      >
-                        {n}本
-                      </Button>
-                    ))}
+        {/* Debug: Member Level & Post Count Switcher (dev only) */}
+        {process.env.NODE_ENV === "development" && (
+          <Card className="mb-6 border-dashed border-2 border-primary/30 bg-primary/5">
+            <CardContent className="p-4">
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-medium text-primary mb-1">デバッグ: 会員レベル切替</p>
+                    <p className="text-xs text-muted-foreground">各会員レベルでの表示を確認できます</p>
                   </div>
-                  <span className="text-xs text-muted-foreground">
-                    → 有効ティア: <Badge variant="outline" className="text-xs">{effectiveTier}</Badge>
-                  </span>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant={memberLevel === "free" ? "default" : "outline"} onClick={() => setMemberLevel("free")} className={memberLevel === "free" ? "" : "bg-transparent"}>無料</Button>
+                    <Button size="sm" variant={memberLevel === "standard" ? "default" : "outline"} onClick={() => setMemberLevel("standard")} className={memberLevel === "standard" ? "" : "bg-transparent"}>スタンダード</Button>
+                    <Button size="sm" variant={memberLevel === "vip" ? "default" : "outline"} onClick={() => setMemberLevel("vip")} className={memberLevel === "vip" ? "bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-600 hover:to-amber-500" : "bg-transparent"}>VIP</Button>
+                  </div>
                 </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+                {memberLevel === "standard" && (
+                  <div className="flex items-center gap-4 pt-2 border-t border-primary/20">
+                    <p className="text-xs text-muted-foreground">今月の投稿数:</p>
+                    <div className="flex gap-2">
+                      {[0, 1, 2, 3].map(n => (
+                        <Button
+                          key={n}
+                          size="sm"
+                          variant={monthlyReviewCount === n ? "default" : "outline"}
+                          onClick={() => setMonthlyReviewCount(n)}
+                          className={monthlyReviewCount === n ? "" : "bg-transparent"}
+                        >
+                          {n}本
+                        </Button>
+                      ))}
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      → 有効ティア: <Badge variant="outline" className="text-xs">{effectiveTier}</Badge>
+                    </span>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="flex gap-6">
           {/* Sidebar - Desktop */}

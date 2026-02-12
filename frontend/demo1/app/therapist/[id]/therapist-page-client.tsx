@@ -23,9 +23,11 @@ import type { Therapist, Review } from "@/lib/data";
 interface TherapistPageClientProps {
   therapist: Therapist;
   reviews: Review[];
+  areaName?: string;
+  prefName?: string;
 }
 
-export function TherapistPageClient({ therapist, reviews }: TherapistPageClientProps) {
+export function TherapistPageClient({ therapist, reviews, areaName, prefName }: TherapistPageClientProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const { permissions, authUser, membershipType, monthlyReviewCount } = useTier();
@@ -93,7 +95,7 @@ export function TherapistPageClient({ therapist, reviews }: TherapistPageClientP
               <>
                 <span className="mx-2">/</span>
                 <Link href={`/area/${therapist.area}`} className="hover:text-foreground">
-                  {therapist.area}
+                  {prefName || therapist.area}
                 </Link>
               </>
             )}
@@ -101,7 +103,7 @@ export function TherapistPageClient({ therapist, reviews }: TherapistPageClientP
               <>
                 <span className="mx-2">/</span>
                 <Link href={`/area/${therapist.area}/${therapist.district}`} className="hover:text-foreground">
-                  {therapist.district}
+                  {areaName || therapist.district}
                 </Link>
               </>
             )}

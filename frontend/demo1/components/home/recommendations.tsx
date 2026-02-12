@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Radar } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { cleanTherapistName, isPlaceholderName } from "@/lib/therapist-utils";
 
 interface RecommendTherapist {
   id: number;
@@ -26,16 +27,18 @@ export function Recommendations() {
         .limit(10);
       if (data) {
         setTherapists(
-          data.map((t) => {
-            const imgs = t.image_urls as string[] | null;
-            const shop = t.salons as { name: string; display_name: string | null } | null;
-            return {
-              id: Number(t.id),
-              name: t.name.replace(/\s*\(.*\)$/, ""),
-              image_url: imgs?.[0] || null,
-              shop_name: shop?.display_name || shop?.name || "",
-            };
-          })
+          data
+            .filter((t) => !isPlaceholderName(t.name))
+            .map((t) => {
+              const imgs = t.image_urls as string[] | null;
+              const shop = t.salons as { name: string; display_name: string | null } | null;
+              return {
+                id: Number(t.id),
+                name: cleanTherapistName(t.name),
+                image_url: imgs?.[0] || null,
+                shop_name: shop?.display_name || shop?.name || "",
+              };
+            })
         );
       }
     }

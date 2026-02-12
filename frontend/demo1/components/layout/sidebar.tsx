@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Crown, TrendingUp, Star, Building2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/lib/supabase";
+import { cleanTherapistName, isPlaceholderName } from "@/lib/therapist-utils";
 
 interface SidebarShop {
   id: number;
@@ -45,16 +46,18 @@ export function Sidebar() {
         if (shopRes.data) setShops(shopRes.data as SidebarShop[]);
         if (therapistRes.data) {
           setTherapists(
-            therapistRes.data.map((t) => {
-              const imgs = t.image_urls as string[] | null;
-              const shop = t.salons as { name: string; display_name: string | null } | null;
-              return {
-                id: Number(t.id),
-                name: t.name.replace(/\s*\(.*\)$/, ""),
-                image_url: imgs?.[0] || null,
-                shop_name: shop?.display_name || shop?.name || "",
-              };
-            })
+            therapistRes.data
+              .filter((t) => !isPlaceholderName(t.name))
+              .map((t) => {
+                const imgs = t.image_urls as string[] | null;
+                const shop = t.salons as { name: string; display_name: string | null } | null;
+                return {
+                  id: Number(t.id),
+                  name: cleanTherapistName(t.name),
+                  image_url: imgs?.[0] || null,
+                  shop_name: shop?.display_name || shop?.name || "",
+                };
+              })
           );
         }
       } catch (err) {

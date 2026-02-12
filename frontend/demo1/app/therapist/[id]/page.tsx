@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { TherapistPageClient } from "./therapist-page-client";
 import { supabase } from "@/lib/supabase";
 import type { Therapist, Review } from "@/lib/data";
+import { parseNameAge } from "@/lib/therapist-utils";
+import { getShopAreaInfo } from "@/lib/supabase-data";
 
 interface TherapistPageProps {
   params: Promise<{ id: string }>;
@@ -55,14 +57,17 @@ export default async function TherapistPage({ params }: TherapistPageProps) {
     .eq("id", dbTherapist.salon_id)
     .single();
 
+  const { name: parsedName, age: parsedAge } = parseNameAge(dbTherapist.name, dbTherapist.age);
+  const areaInfo = await getShopAreaInfo(dbTherapist.salon_id);
+
   const therapist: Therapist = {
     id: String(dbTherapist.id),
-    name: dbTherapist.name,
-    age: dbTherapist.age || 0,
+    name: parsedName,
+    age: parsedAge,
     shopId: String(dbTherapist.salon_id),
     shopName: shop?.display_name || shop?.name || "",
-    area: "",
-    district: "",
+    area: areaInfo?.prefSlug || "",
+    district: areaInfo?.areaSlug || "",
     images: (dbTherapist.image_urls as string[]) || [],
     profile: {
       height: dbTherapist.height || 0,
@@ -114,5 +119,12 @@ export default async function TherapistPage({ params }: TherapistPageProps) {
     userId: r.user_id || "",
   }));
 
-  return <TherapistPageClient therapist={therapist} reviews={reviews} />;
+  return (
+    <TherapistPageClient
+      therapist={therapist}
+      reviews={reviews}
+      areaName={areaInfo?.areaName}
+      prefName={areaInfo?.prefName}
+    />
+  );
 }

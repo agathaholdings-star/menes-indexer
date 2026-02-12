@@ -47,21 +47,35 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No email" }, { status: 400 });
     }
 
-    // Determine plan from line items
+    // Determine plan from line items (must fetch separately - not in webhook payload)
     let membershipType = "standard"; // default
-    if (session.line_items?.data?.length) {
-      for (const item of session.line_items.data) {
+    try {
+      const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
+      for (const item of lineItems.data) {
         const priceId = item.price?.id || "";
         if (PLAN_MAP[priceId]) {
           membershipType = PLAN_MAP[priceId];
           break;
         }
       }
+    } catch (err) {
+      console.error("Failed to fetch line items:", err);
     }
 
-    // Find user by email
-    const { data: authData } = await supabaseAdmin.auth.admin.listUsers();
-    const user = authData?.users?.find((u) => u.email === customerEmail);
+    // Find user by client_reference_id first (set by Payment Link), then by email
+    let user: { id: string; email?: string } | undefined;
+    if (session.client_reference_id) {
+      const { data: authData } = await supabaseAdmin.auth.admin.getUserById(
+        session.client_reference_id
+      );
+      if (authData?.user) {
+        user = authData.user;
+      }
+    }
+    if (!user) {
+      const { data: authData } = await supabaseAdmin.auth.admin.listUsers();
+      user = authData?.users?.find((u) => u.email === customerEmail);
+    }
 
     if (!user) {
       console.error("No user found for email:", customerEmail);
