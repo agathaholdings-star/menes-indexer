@@ -12,7 +12,7 @@ interface RankedTherapist {
   name: string;
   age: number | null;
   image_urls: string[] | null;
-  shop_id: number;
+  salon_id: number;
   shop_name: string;
   review_count: number;
   avg_score: number;
@@ -54,15 +54,15 @@ async function getRankings(): Promise<RankedTherapist[]> {
   const therapistIds = ranked.map((r) => r.therapist_id);
   const { data: therapists } = await supabase
     .from("therapists")
-    .select("id, name, age, image_urls, shop_id")
+    .select("id, name, age, image_urls, salon_id")
     .in("id", therapistIds);
 
   if (!therapists) return [];
 
   // 店舗名を取得
-  const shopIds = [...new Set(therapists.map((t) => t.shop_id))];
+  const shopIds = [...new Set(therapists.map((t) => t.salon_id))];
   const { data: shops } = await supabase
-    .from("shops")
+    .from("salons")
     .select("id, display_name, name")
     .in("id", shopIds);
 
@@ -80,8 +80,8 @@ async function getRankings(): Promise<RankedTherapist[]> {
         name: t.name,
         age: t.age,
         image_urls: t.image_urls as string[] | null,
-        shop_id: t.shop_id,
-        shop_name: shopMap.get(t.shop_id) || "",
+        salon_id: t.salon_id,
+        shop_name: shopMap.get(t.salon_id) || "",
         review_count: r.review_count,
         avg_score: r.avg_score,
       };

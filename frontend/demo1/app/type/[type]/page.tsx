@@ -14,9 +14,9 @@ interface DBTherapist {
   id: number;
   name: string;
   image_urls: string[] | null;
-  shop_id: number;
+  salon_id: number;
   age: number | null;
-  shops: { name: string; display_name: string | null } | null;
+  salons: { name: string; display_name: string | null } | null;
 }
 
 export default async function TypePage({
@@ -41,7 +41,7 @@ export default async function TypePage({
     const therapistIds = [...new Set(reviewData.map((r) => r.therapist_id))];
     const { data } = await supabase
       .from("therapists")
-      .select("id, name, image_urls, shop_id, age, shops(name, display_name)")
+      .select("id, name, image_urls, salon_id, age, salons(name, display_name)")
       .in("id", therapistIds)
       .eq("status", "active")
       .limit(30);
@@ -98,7 +98,7 @@ export default async function TypePage({
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {typeTherapists.map((therapist) => {
                     const imageUrl = therapist.image_urls?.[0];
-                    const shopName = therapist.shops?.display_name || therapist.shops?.name || "";
+                    const shopName = therapist.salons?.display_name || therapist.salons?.name || "";
                     return (
                       <Link key={therapist.id} href={`/therapist/${therapist.id}`}>
                         <Card className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer h-full">

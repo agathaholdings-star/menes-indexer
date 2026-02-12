@@ -43,7 +43,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // 店舗ページ
   const { data: shops } = await supabase
-    .from("shops")
+    .from("salons")
     .select("id, updated_at")
     .order("id");
 

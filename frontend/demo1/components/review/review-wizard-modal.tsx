@@ -31,7 +31,7 @@ interface DBTherapist {
   id: number;
   name: string;
   image_urls: string[] | null;
-  shop_id: number;
+  salon_id: number;
 }
 
 interface ReviewWizardModalProps {
@@ -117,7 +117,7 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
       } else {
         // Fallback: fetch manually
         const { data: allShopAreas } = await supabase
-          .from("shop_areas")
+          .from("salon_areas")
           .select("area_id, areas(prefecture_id)");
         if (allShopAreas && data) {
           const prefCounts = new Map<number, number>();
@@ -141,7 +141,7 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
     if (!directSearchMode || directShopSearch.length < 1) { setDirectSearchResults([]); return; }
     const timer = setTimeout(async () => {
       const { data } = await supabase
-        .from("shops")
+        .from("salons")
         .select("id, name, display_name, access")
         .or(`display_name.ilike.%${directShopSearch}%,name.ilike.%${directShopSearch}%`)
         .limit(30);
@@ -167,18 +167,18 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
       if (!areaData || areaData.length === 0) { setDbShops([]); return; }
       const areaIds = areaData.map(a => a.id);
       const { data: shopAreaData } = await supabase
-        .from("shop_areas")
-        .select("shop_id, shops(id, name, display_name, access)")
+        .from("salon_areas")
+        .select("salon_id, salons(id, name, display_name, access)")
         .in("area_id", areaIds);
       if (shopAreaData) {
         const shopMap = new Map<string, DBShop>();
         shopAreaData.forEach((sa: any) => {
-          if (sa.shops && !shopMap.has(sa.shops.id)) {
-            shopMap.set(sa.shops.id, {
-              id: sa.shops.id,
-              name: sa.shops.name,
-              display_name: sa.shops.display_name,
-              access: sa.shops.access,
+          if (sa.salons && !shopMap.has(sa.salons.id)) {
+            shopMap.set(sa.salons.id, {
+              id: sa.salons.id,
+              name: sa.salons.name,
+              display_name: sa.salons.display_name,
+              access: sa.salons.access,
             });
           }
         });
@@ -194,8 +194,8 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
     const fetchTherapists = async () => {
       const { data } = await supabase
         .from("therapists")
-        .select("id, name, image_urls, shop_id")
-        .eq("shop_id", selectedShopId)
+        .select("id, name, image_urls, salon_id")
+        .eq("salon_id", selectedShopId)
         .order("name");
       if (data) setDbTherapists(data as unknown as DBTherapist[]);
     };
@@ -208,12 +208,12 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
     const fetchPreselected = async () => {
       const { data } = await supabase
         .from("therapists")
-        .select("id, name, shop_id")
+        .select("id, name, salon_id")
         .eq("id", preselectedTherapistId)
         .single();
       if (data) {
         setSelectedTherapistId(data.id);
-        setSelectedShopId(data.shop_id);
+        setSelectedShopId(data.salon_id);
         setStep(3); // Skip to type selection
       }
     };
@@ -271,7 +271,7 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
         const { error } = await supabase.from("reviews").insert({
           user_id: authUser.id,
           therapist_id: selectedTherapistId,
-          shop_id: selectedShopId,
+          salon_id: selectedShopId,
           looks_type: selectedType,
           body_type: selectedBody,
           service_level: selectedService,

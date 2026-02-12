@@ -23,7 +23,7 @@ export function PopularTherapists() {
     async function fetchTherapists() {
       const { data } = await supabase
         .from("therapists")
-        .select("id, name, age, image_urls, shops(name, display_name)")
+        .select("id, name, age, image_urls, salons(name, display_name)")
         .eq("status", "active")
         .order("created_at", { ascending: false })
         .limit(8);
@@ -31,7 +31,7 @@ export function PopularTherapists() {
         setTherapists(
           data.map((t) => {
             const imgs = t.image_urls as string[] | null;
-            const shop = t.shops as { name: string; display_name: string | null } | null;
+            const shop = t.salons as { name: string; display_name: string | null } | null;
             return {
               id: Number(t.id),
               name: t.name.replace(/\s*\(.*\)$/, ""),

@@ -31,13 +31,13 @@ export function Sidebar() {
       try {
         const [shopRes, therapistRes] = await Promise.all([
           supabase
-            .from("shops")
+            .from("salons")
             .select("id, name, display_name, slug, access")
             .eq("is_active", true)
             .limit(5),
           supabase
             .from("therapists")
-            .select("id, name, image_urls, shop_id, shops(name, display_name)")
+            .select("id, name, image_urls, salon_id, salons(name, display_name)")
             .eq("status", "active")
             .order("created_at", { ascending: false })
             .limit(5),
@@ -47,7 +47,7 @@ export function Sidebar() {
           setTherapists(
             therapistRes.data.map((t) => {
               const imgs = t.image_urls as string[] | null;
-              const shop = t.shops as { name: string; display_name: string | null } | null;
+              const shop = t.salons as { name: string; display_name: string | null } | null;
               return {
                 id: Number(t.id),
                 name: t.name.replace(/\s*\(.*\)$/, ""),

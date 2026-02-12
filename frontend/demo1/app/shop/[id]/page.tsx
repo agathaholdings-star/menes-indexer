@@ -53,7 +53,7 @@ function toFrontendTherapist(t: DbTherapist, shopName: string): Therapist {
     id: String(t.id),
     name: t.name,
     age: t.age || 0,
-    shopId: String(t.shop_id),
+    shopId: String(t.salon_id),
     shopName,
     area: "",
     district: "",

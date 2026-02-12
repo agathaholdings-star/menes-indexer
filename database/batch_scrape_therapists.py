@@ -90,11 +90,11 @@ def get_target_shops(cur, limit=0, failed_only=False):
         # Phase③: ヒューリスティックでセラピストURL取得できなかった店舗のみ
         query = """
             SELECT s.id, s.name, s.display_name, s.official_url, s.domain
-            FROM shops s
+            FROM salons s
             WHERE s.official_url IS NOT NULL
               AND s.is_active = true
               AND s.id NOT IN (
-                SELECT shop_id FROM shop_scrape_cache
+                SELECT salon_id FROM salon_scrape_cache
                 WHERE last_therapist_count > 0
               )
             ORDER BY s.id
@@ -102,7 +102,7 @@ def get_target_shops(cur, limit=0, failed_only=False):
     else:
         query = """
             SELECT s.id, s.name, s.display_name, s.official_url, s.domain
-            FROM shops s
+            FROM salons s
             WHERE s.official_url IS NOT NULL
               AND s.is_active = true
             ORDER BY s.id
@@ -113,7 +113,7 @@ def get_target_shops(cur, limit=0, failed_only=False):
     return cur.fetchall()
 
 
-def insert_therapist(cur, shop_id, t_data):
+def insert_therapist(cur, salon_id, t_data):
     """セラピスト1名をDB投入"""
     t_name = t_data.get('name')
     if not t_name:
@@ -135,18 +135,18 @@ def insert_therapist(cur, shop_id, t_data):
     try:
         cur.execute("""
             INSERT INTO therapists (
-                shop_id, name, age, height,
+                salon_id, name, age, height,
                 bust, waist, hip, image_urls,
                 profile_text, source_url, status, last_scraped_at
             ) VALUES (
-                %(shop_id)s, %(name)s, %(age)s, %(height)s,
+                %(salon_id)s, %(name)s, %(age)s, %(height)s,
                 %(bust)s, %(waist)s, %(hip)s, %(image_urls)s::jsonb,
                 %(profile_text)s, %(source_url)s, 'active', now()
             )
-            ON CONFLICT (shop_id, slug) DO NOTHING
+            ON CONFLICT (salon_id, slug) DO NOTHING
             RETURNING id
         """, {
-            'shop_id': shop_id,
+            'salon_id': salon_id,
             'name': t_name,
             'age': t_data.get('age'),
             'height': t_data.get('height'),

@@ -125,17 +125,17 @@ export function AreaPopularShops() {
 
         // shop_areasから店舗IDを取得（上位4件）
         const { data: shopAreaRows } = await supabase
-          .from("shop_areas")
-          .select("shop_id")
+          .from("salon_areas")
+          .select("salon_id")
           .eq("area_id", area.id)
           .order("display_order", { ascending: true })
           .limit(4);
 
         if (!shopAreaRows || shopAreaRows.length === 0) continue;
 
-        const shopIds = shopAreaRows.map((sa) => sa.shop_id);
+        const shopIds = shopAreaRows.map((sa) => sa.salon_id);
         const { data: shops } = await supabase
-          .from("shops")
+          .from("salons")
           .select("id, name, display_name, slug, image_url, access, description")
           .in("id", shopIds)
           .eq("is_active", true);

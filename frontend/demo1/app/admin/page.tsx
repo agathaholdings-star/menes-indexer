@@ -38,7 +38,7 @@ interface ReviewRow {
   created_at: string | null;
   user_id: string;
   therapist_id: number;
-  shop_id: number;
+  salon_id: number;
   therapist_name?: string;
   shop_name?: string;
   user_nickname?: string;
@@ -112,7 +112,7 @@ export default function AdminPage() {
     async function fetchData() {
       // Stats
       const [shopCount, therapistCount, reviewCount, userCount, pendingCount] = await Promise.all([
-        supabase.from("shops").select("id", { count: "exact", head: true }),
+        supabase.from("salons").select("id", { count: "exact", head: true }),
         supabase.from("therapists").select("id", { count: "exact", head: true }),
         supabase.from("reviews").select("id", { count: "exact", head: true }),
         supabase.from("profiles").select("id", { count: "exact", head: true }),
@@ -129,7 +129,7 @@ export default function AdminPage() {
       // Reviews (all statuses - admin RLS allows full access)
       const { data: reviewData } = await supabase
         .from("reviews")
-        .select("id, score, looks_type, body_type, service_level, moderation_status, comment_first_impression, comment_service, comment_advice, created_at, user_id, therapist_id, shop_id, verification_image_path, is_verified")
+        .select("id, score, looks_type, body_type, service_level, moderation_status, comment_first_impression, comment_service, comment_advice, created_at, user_id, therapist_id, salon_id, verification_image_path, is_verified")
         .order("created_at", { ascending: false })
         .limit(100);
 
@@ -141,9 +141,9 @@ export default function AdminPage() {
           .in("id", therapistIds);
         const therapistMap = new Map((therapists || []).map((t) => [t.id, t.name]));
 
-        const shopIds = [...new Set(reviewData.map((r) => r.shop_id))];
+        const shopIds = [...new Set(reviewData.map((r) => r.salon_id))];
         const { data: shops } = await supabase
-          .from("shops")
+          .from("salons")
           .select("id, display_name, name")
           .in("id", shopIds);
         const shopMap = new Map((shops || []).map((s) => [s.id, s.display_name || s.name]));
@@ -160,7 +160,7 @@ export default function AdminPage() {
             ...r,
             moderation_status: r.moderation_status as ModerationStatus,
             therapist_name: therapistMap.get(r.therapist_id) || `ID:${r.therapist_id}`,
-            shop_name: shopMap.get(r.shop_id) || `ID:${r.shop_id}`,
+            shop_name: shopMap.get(r.salon_id) || `ID:${r.salon_id}`,
             user_nickname: userMap.get(r.user_id) || "不明",
           }))
         );

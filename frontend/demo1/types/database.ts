@@ -183,7 +183,7 @@ export type Database = {
           param_technique: number | null
           score: number | null
           service_level: string | null
-          shop_id: number
+          salon_id: number
           therapist_id: number
           user_id: string
           verification_image_path: string | null
@@ -205,7 +205,7 @@ export type Database = {
           param_technique?: number | null
           score?: number | null
           service_level?: string | null
-          shop_id: number
+          salon_id: number
           therapist_id: number
           user_id: string
           verification_image_path?: string | null
@@ -227,17 +227,17 @@ export type Database = {
           param_technique?: number | null
           score?: number | null
           service_level?: string | null
-          shop_id?: number
+          salon_id?: number
           therapist_id?: number
           user_id?: string
           verification_image_path?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "reviews_shop_id_fkey"
-            columns: ["shop_id"]
+            foreignKeyName: "reviews_salon_id_fkey"
+            columns: ["salon_id"]
             isOneToOne: false
-            referencedRelation: "shops"
+            referencedRelation: "salons"
             referencedColumns: ["id"]
           },
           {
@@ -256,43 +256,43 @@ export type Database = {
           },
         ]
       }
-      shop_areas: {
+      salon_areas: {
         Row: {
           area_id: number
           display_order: number | null
           is_primary: boolean | null
-          shop_id: number
+          salon_id: number
         }
         Insert: {
           area_id: number
           display_order?: number | null
           is_primary?: boolean | null
-          shop_id: number
+          salon_id: number
         }
         Update: {
           area_id?: number
           display_order?: number | null
           is_primary?: boolean | null
-          shop_id?: number
+          salon_id?: number
         }
         Relationships: [
           {
-            foreignKeyName: "shop_areas_area_id_fkey"
+            foreignKeyName: "salon_areas_area_id_fkey"
             columns: ["area_id"]
             isOneToOne: false
             referencedRelation: "areas"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "shop_areas_shop_id_fkey"
-            columns: ["shop_id"]
+            foreignKeyName: "salon_areas_salon_id_fkey"
+            columns: ["salon_id"]
             isOneToOne: false
-            referencedRelation: "shops"
+            referencedRelation: "salons"
             referencedColumns: ["id"]
           },
         ]
       }
-      shops: {
+      salons: {
         Row: {
           access: string | null
           base_duration: number | null
@@ -386,7 +386,7 @@ export type Database = {
           last_scraped_at: string | null
           name: string
           profile_text: string | null
-          shop_id: number
+          salon_id: number
           slug: string | null
           source_url: string | null
           stats: Json | null
@@ -406,7 +406,7 @@ export type Database = {
           last_scraped_at?: string | null
           name: string
           profile_text?: string | null
-          shop_id: number
+          salon_id: number
           slug?: string | null
           source_url?: string | null
           stats?: Json | null
@@ -426,7 +426,7 @@ export type Database = {
           last_scraped_at?: string | null
           name?: string
           profile_text?: string | null
-          shop_id?: number
+          salon_id?: number
           slug?: string | null
           source_url?: string | null
           stats?: Json | null
@@ -436,10 +436,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "therapists_shop_id_fkey"
-            columns: ["shop_id"]
+            foreignKeyName: "therapists_salon_id_fkey"
+            columns: ["salon_id"]
             isOneToOne: false
-            referencedRelation: "shops"
+            referencedRelation: "salons"
             referencedColumns: ["id"]
           },
         ]
@@ -643,8 +643,9 @@ export const Constants = {
 // 便利な型エイリアス
 export type Prefecture = Database["public"]["Tables"]["prefectures"]["Row"];
 export type Area = Database["public"]["Tables"]["areas"]["Row"];
-export type Shop = Database["public"]["Tables"]["shops"]["Row"];
-export type ShopArea = Database["public"]["Tables"]["shop_areas"]["Row"];
+export type Salon = Database["public"]["Tables"]["salons"]["Row"];
+export type Shop = Salon; // backward compat alias
+export type SalonArea = Database["public"]["Tables"]["salon_areas"]["Row"];
 export type Therapist = Database["public"]["Tables"]["therapists"]["Row"];
 export type Review = Database["public"]["Tables"]["reviews"]["Row"];
 

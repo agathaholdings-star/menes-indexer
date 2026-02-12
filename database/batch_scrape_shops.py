@@ -349,11 +349,11 @@ def insert_salons(cur, salons, area_id):
         # official_urlで既存チェック（source_idが違っても同一サロン）
         official_url = salon.get('official_url')
         if official_url:
-            cur.execute("SELECT id FROM shops WHERE official_url = %s", (official_url,))
+            cur.execute("SELECT id FROM salons WHERE official_url = %s", (official_url,))
             existing_by_url = cur.fetchone()
             if existing_by_url:
                 cur.execute("""
-                    INSERT INTO shop_areas (shop_id, area_id, is_primary, display_order)
+                    INSERT INTO salon_areas (salon_id, area_id, is_primary, display_order)
                     VALUES (%s, %s, false, %s)
                     ON CONFLICT DO NOTHING
                 """, (existing_by_url['id'], area_id, salon.get('display_order', 0)))
@@ -361,12 +361,12 @@ def insert_salons(cur, salons, area_id):
                 continue
 
         # source_idで既存チェック
-        cur.execute("SELECT id FROM shops WHERE source_id = %s::uuid", (source_id,))
+        cur.execute("SELECT id FROM salons WHERE source_id = %s::uuid", (source_id,))
         existing = cur.fetchone()
         if existing:
-            # shop_areasだけ追加（別エリアからの重複サロン対応）
+            # salon_areasだけ追加（別エリアからの重複サロン対応）
             cur.execute("""
-                INSERT INTO shop_areas (shop_id, area_id, is_primary, display_order)
+                INSERT INTO salon_areas (salon_id, area_id, is_primary, display_order)
                 VALUES (%s, %s, false, %s)
                 ON CONFLICT DO NOTHING
             """, (existing['id'], area_id, salon.get('display_order', 0)))
@@ -375,7 +375,7 @@ def insert_salons(cur, salons, area_id):
 
         # INSERT
         cur.execute("""
-            INSERT INTO shops (
+            INSERT INTO salons (
                 source_id, name, display_name, business_type,
                 access, business_hours, base_price, base_duration,
                 phone, official_url, domain, service_tags, image_url,
@@ -402,17 +402,17 @@ def insert_salons(cur, salons, area_id):
             'service_tags': salon.get('service_tags') or [],
             'image_url': salon.get('image_url'),
         })
-        shop_id = cur.fetchone()['id']
+        salon_id = cur.fetchone()['id']
 
         # slug = 数字ID
-        cur.execute("UPDATE shops SET slug = %s WHERE id = %s", (str(shop_id), shop_id))
+        cur.execute("UPDATE salons SET slug = %s WHERE id = %s", (str(salon_id), salon_id))
 
-        # shop_areas
+        # salon_areas
         cur.execute("""
-            INSERT INTO shop_areas (shop_id, area_id, is_primary, display_order)
+            INSERT INTO salon_areas (salon_id, area_id, is_primary, display_order)
             VALUES (%s, %s, true, %s)
             ON CONFLICT DO NOTHING
-        """, (shop_id, area_id, salon.get('display_order', 0)))
+        """, (salon_id, area_id, salon.get('display_order', 0)))
 
         inserted += 1
 
@@ -684,10 +684,10 @@ def main():
 
     # DB結果サマリー
     if not args.dry_run and cur:
-        cur.execute("SELECT count(*) AS cnt FROM shops")
-        log.info(f"\n  DB shops合計: {cur.fetchone()['cnt']}件")
-        cur.execute("SELECT count(*) AS cnt FROM shop_areas")
-        log.info(f"  DB shop_areas合計: {cur.fetchone()['cnt']}件")
+        cur.execute("SELECT count(*) AS cnt FROM salons")
+        log.info(f"\n  DB salons合計: {cur.fetchone()['cnt']}件")
+        cur.execute("SELECT count(*) AS cnt FROM salon_areas")
+        log.info(f"  DB salon_areas合計: {cur.fetchone()['cnt']}件")
         conn.close()
 
     log.info(f"\nログ: {LOG_FILE}")

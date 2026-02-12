@@ -6,7 +6,7 @@ Smart Scraper: 自己学習型セラピストスクレイパー
 
 使い方:
     scraper = SmartScraper(db_conn=conn)
-    therapists = scraper.scrape_salon(shop_id, salon_url, salon_name, max_therapists=0)
+    therapists = scraper.scrape_salon(salon_id, salon_url, salon_name, max_therapists=0)
 """
 
 import hashlib
@@ -76,59 +76,59 @@ class SmartScraper:
         except Exception as e:
             log.warning(f"CMSパターンロード失敗: {e}")
 
-    def _get_cache(self, shop_id):
-        """shop_scrape_cacheからキャッシュ取得"""
+    def _get_cache(self, salon_id):
+        """salon_scrape_cacheからキャッシュ取得"""
         if not self.db_conn:
             return None
         try:
             cur = self.db_conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
             cur.execute("""
-                SELECT shop_id, cms_pattern_id, therapist_list_url,
+                SELECT salon_id, cms_pattern_id, therapist_list_url,
                        extraction_method, last_therapist_count, fail_streak
-                FROM shop_scrape_cache
-                WHERE shop_id = %s AND fail_streak < 3
-            """, (shop_id,))
+                FROM salon_scrape_cache
+                WHERE salon_id = %s AND fail_streak < 3
+            """, (salon_id,))
             row = cur.fetchone()
             cur.close()
             return dict(row) if row else None
         except Exception:
             return None
 
-    def _update_cache(self, shop_id, cms_pattern_id, list_url, method, therapist_count, success):
-        """shop_scrape_cacheを更新"""
+    def _update_cache(self, salon_id, cms_pattern_id, list_url, method, therapist_count, success):
+        """salon_scrape_cacheを更新"""
         if not self.db_conn:
             return
         try:
             cur = self.db_conn.cursor()
             if success:
                 cur.execute("""
-                    INSERT INTO shop_scrape_cache
-                        (shop_id, cms_pattern_id, therapist_list_url,
+                    INSERT INTO salon_scrape_cache
+                        (salon_id, cms_pattern_id, therapist_list_url,
                          extraction_method, last_therapist_count, fail_streak, last_scraped_at)
                     VALUES (%s, %s, %s, %s, %s, 0, now())
-                    ON CONFLICT (shop_id) DO UPDATE SET
+                    ON CONFLICT (salon_id) DO UPDATE SET
                         cms_pattern_id = EXCLUDED.cms_pattern_id,
                         therapist_list_url = EXCLUDED.therapist_list_url,
                         extraction_method = EXCLUDED.extraction_method,
                         last_therapist_count = EXCLUDED.last_therapist_count,
                         fail_streak = 0,
                         last_scraped_at = now()
-                """, (shop_id, cms_pattern_id, list_url, method, therapist_count))
+                """, (salon_id, cms_pattern_id, list_url, method, therapist_count))
             else:
                 cur.execute("""
-                    INSERT INTO shop_scrape_cache
-                        (shop_id, cms_pattern_id, therapist_list_url,
+                    INSERT INTO salon_scrape_cache
+                        (salon_id, cms_pattern_id, therapist_list_url,
                          extraction_method, last_therapist_count, fail_streak, last_scraped_at)
                     VALUES (%s, %s, %s, %s, 0, 1, now())
-                    ON CONFLICT (shop_id) DO UPDATE SET
-                        fail_streak = shop_scrape_cache.fail_streak + 1,
+                    ON CONFLICT (salon_id) DO UPDATE SET
+                        fail_streak = salon_scrape_cache.fail_streak + 1,
                         last_scraped_at = now()
-                """, (shop_id, cms_pattern_id, list_url, method))
+                """, (salon_id, cms_pattern_id, list_url, method))
             cur.close()
         except Exception as e:
             log.warning(f"キャッシュ更新失敗: {e}")
 
-    def _log_scrape(self, shop_id, step, method, success, html=None, detail=None):
+    def _log_scrape(self, salon_id, step, method, success, html=None, detail=None):
         """scrape_logにログ書き込み"""
         if not self.db_conn:
             return
@@ -136,9 +136,9 @@ class SmartScraper:
             html_hash = hashlib.sha256(html.encode()).hexdigest()[:16] if html else None
             cur = self.db_conn.cursor()
             cur.execute("""
-                INSERT INTO scrape_log (shop_id, step, method, success, html_hash, detail)
+                INSERT INTO scrape_log (salon_id, step, method, success, html_hash, detail)
                 VALUES (%s, %s, %s, %s, %s, %s)
-            """, (shop_id, step, method, success, html_hash, detail))
+            """, (salon_id, step, method, success, html_hash, detail))
             cur.close()
         except Exception as e:
             log.warning(f"ログ書き込み失敗: {e}")
@@ -536,7 +536,7 @@ class SmartScraper:
 
         return results
 
-    def scrape_salon(self, shop_id, salon_url, salon_name="", max_therapists=0):
+    def scrape_salon(self, salon_id, salon_url, salon_name="", max_therapists=0):
         """
         サロン1件分のセラピストデータを取得（Smart版）
 
@@ -549,7 +549,7 @@ class SmartScraper:
         6. キャッシュ・ログ更新
 
         Args:
-            shop_id: shops.id
+            salon_id: salons.id
             salon_url: 公式URL
             salon_name: 表示名
             max_therapists: 最大取得人数（0=無制限）
@@ -565,12 +565,12 @@ class SmartScraper:
         print(f"  [1/3] トップページ取得...")
         html = fetch_page(salon_url)
         if not html:
-            self._log_scrape(shop_id, 'fetch_top', 'http', False, detail='fetch failed')
+            self._log_scrape(salon_id, 'fetch_top', 'http', False, detail='fetch failed')
             self.stats['errors'] += 1
             return []
 
         # === キャッシュ確認 ===
-        cache = self._get_cache(shop_id)
+        cache = self._get_cache(salon_id)
         cached_list_url = cache['therapist_list_url'] if cache else None
         cached_pattern_id = cache['cms_pattern_id'] if cache else None
 
@@ -615,7 +615,7 @@ class SmartScraper:
                 list_url = heuristic_url
                 step2_method = 'heuristic'
                 print(f"  [2/3] 一覧URL（ヒューリスティック）: {list_url}")
-                self._log_scrape(shop_id, 'find_list_url', 'heuristic', True,
+                self._log_scrape(salon_id, 'find_list_url', 'heuristic', True,
                                  detail=heuristic_detail)
 
         # 4. アンカーリンク検出（#staff等 → トップページ内に一覧がある場合）
@@ -635,14 +635,14 @@ class SmartScraper:
 
         if not list_url:
             print(f"  x 一覧ページが見つかりません")
-            self._log_scrape(shop_id, 'find_list_url', step2_method, False, html,
+            self._log_scrape(salon_id, 'find_list_url', step2_method, False, html,
                              detail='no_match')
-            self._update_cache(shop_id, pattern_id, None, step2_method, 0, False)
+            self._update_cache(salon_id, pattern_id, None, step2_method, 0, False)
             self.stats['errors'] += 1
             return []
 
         if step2_method != 'heuristic':
-            self._log_scrape(shop_id, 'find_list_url', step2_method, True, html)
+            self._log_scrape(salon_id, 'find_list_url', step2_method, True, html)
         print(f"  -> {list_url}")
 
         # 一覧ページ取得
@@ -653,9 +653,9 @@ class SmartScraper:
             time.sleep(REQUEST_DELAY)
             list_html = fetch_page(list_url)
             if not list_html:
-                self._log_scrape(shop_id, 'fetch_list', 'http', False,
+                self._log_scrape(salon_id, 'fetch_list', 'http', False,
                                  detail=f'fetch failed: {list_url}')
-                self._update_cache(shop_id, pattern_id, list_url, step2_method, 0, False)
+                self._update_cache(salon_id, pattern_id, list_url, step2_method, 0, False)
                 self.stats['errors'] += 1
                 return []
         else:
@@ -667,7 +667,7 @@ class SmartScraper:
 
         if ajax_rules and list_data_rules and cms_confidence >= 0.4:
             therapists = self._extract_via_ajax_list(
-                shop_id, list_html, list_url, pattern, ajax_rules,
+                salon_id, list_html, list_url, pattern, ajax_rules,
                 list_data_rules, max_therapists)
 
             if therapists:
@@ -675,7 +675,7 @@ class SmartScraper:
                 self.stats['rule_success'] += 1
                 if pattern_id:
                     self._update_cms_confidence(pattern_id, True)
-                self._update_cache(shop_id, pattern_id, list_url, 'rule',
+                self._update_cache(salon_id, pattern_id, list_url, 'rule',
                                   len(therapists), True)
                 if self.db_conn:
                     try:
@@ -736,12 +736,12 @@ class SmartScraper:
                 unique.append(e)
         entries = unique
 
-        self._log_scrape(shop_id, 'extract_urls', step3_method, bool(entries), list_html,
+        self._log_scrape(salon_id, 'extract_urls', step3_method, bool(entries), list_html,
                          detail=f'{len(entries)} urls')
 
         if not entries:
             print(f"  x セラピスト0名")
-            self._update_cache(shop_id, pattern_id, list_url, step3_method, 0, False)
+            self._update_cache(salon_id, pattern_id, list_url, step3_method, 0, False)
             if pattern_id:
                 self._update_cms_confidence(pattern_id, False)
             self.stats['errors'] += 1
@@ -765,9 +765,9 @@ class SmartScraper:
                 # 半数以上の抽出成功 → 一覧カードから十分なデータが取れた
                 step4_method = 'heuristic_list'
                 print(f"  [4] 一覧カードから直接抽出: {len(list_card_results)}/{len(entries)}名")
-                self._log_scrape(shop_id, 'extract_data', 'heuristic_list',
+                self._log_scrape(salon_id, 'extract_data', 'heuristic_list',
                                  True, detail=f'{len(list_card_results)}/{len(entries)} from list cards')
-                self._update_cache(shop_id, pattern_id, list_url, 'heuristic',
+                self._update_cache(salon_id, pattern_id, list_url, 'heuristic',
                                   len(list_card_results), True)
                 if self.db_conn:
                     try:
@@ -864,7 +864,7 @@ class SmartScraper:
             else:
                 print(f"       -> 抽出失敗")
 
-        self._log_scrape(shop_id, 'extract_data', step4_method, bool(therapists),
+        self._log_scrape(salon_id, 'extract_data', step4_method, bool(therapists),
                          detail=f'{len(therapists)}/{len(entries)} extracted')
 
         # === 統計更新 ===
@@ -880,7 +880,7 @@ class SmartScraper:
 
         # === 自動学習: LLMで抽出した場合、パターンを学習 ===
         if step4_method == 'llm' and therapists and sample_htmls and self.db_conn:
-            self._try_learn_pattern(shop_id, salon_url, html, sample_htmls, pattern_id)
+            self._try_learn_pattern(salon_id, salon_url, html, sample_htmls, pattern_id)
 
         # === キャッシュ更新 ===
         if step4_method in ('rule', 'heuristic_list'):
@@ -889,7 +889,7 @@ class SmartScraper:
             overall_method = 'heuristic'
         else:
             overall_method = 'llm'
-        self._update_cache(shop_id, pattern_id, list_url, overall_method,
+        self._update_cache(salon_id, pattern_id, list_url, overall_method,
                           len(therapists), bool(therapists))
 
         if self.db_conn:
@@ -901,7 +901,7 @@ class SmartScraper:
         print(f"\n  完了: {len(therapists)}/{len(entries)}名 (method={overall_method})")
         return therapists
 
-    def _extract_via_ajax_list(self, shop_id, list_html, list_url, pattern,
+    def _extract_via_ajax_list(self, salon_id, list_html, list_url, pattern,
                                 ajax_rules, list_data_rules, max_therapists):
         """
         AJAX一覧ページから直接セラピストデータを抽出（個別ページ訪問不要）
@@ -949,12 +949,12 @@ class SmartScraper:
             elif i == 10:
                 print(f"  ... (残り{len(therapists) - 10}名)")
 
-        self._log_scrape(shop_id, 'extract_ajax_list', 'rule', True,
+        self._log_scrape(salon_id, 'extract_ajax_list', 'rule', True,
                          detail=f'{len(therapists)} from ajax list')
 
         return therapists
 
-    def _try_learn_pattern(self, shop_id, salon_url, top_html, sample_htmls, existing_pattern_id):
+    def _try_learn_pattern(self, salon_id, salon_url, top_html, sample_htmls, existing_pattern_id):
         """LLM抽出結果からパターンを自動学習"""
         try:
             mined_rules = self.rule_miner.mine_therapist_data_rules(sample_htmls)

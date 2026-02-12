@@ -216,7 +216,7 @@ def get_therapist_shop_pairs(conn, n=10):
     """レビュー対象のセラピスト+店舗ペアを取得"""
     cur = conn.cursor()
     cur.execute(
-        "SELECT id AS therapist_id, shop_id FROM therapists WHERE status = 'active' LIMIT %s",
+        "SELECT id AS therapist_id, salon_id FROM therapists WHERE status = 'active' LIMIT %s",
         (n,),
     )
     return cur.fetchall()
@@ -257,7 +257,7 @@ def insert_reviews(conn, bot_ids, pairs):
 
             cur.execute("""
                 INSERT INTO reviews (
-                    user_id, therapist_id, shop_id,
+                    user_id, therapist_id, salon_id,
                     looks_type, body_type, service_level,
                     param_conversation, param_distance, param_technique, param_personality,
                     score,
@@ -265,7 +265,7 @@ def insert_reviews(conn, bot_ids, pairs):
                     created_at
                 ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
             """, (
-                bot_id, pair["therapist_id"], pair["shop_id"],
+                bot_id, pair["therapist_id"], pair["salon_id"],
                 tmpl["looks_type"], tmpl["body_type"], tmpl["service_level"],
                 tmpl["param_conversation"], tmpl["param_distance"],
                 tmpl["param_technique"], tmpl["param_personality"],

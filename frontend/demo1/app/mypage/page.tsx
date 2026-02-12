@@ -974,7 +974,7 @@ function FavoritesSection({ userId, favoriteLimit }: { userId: string | undefine
     const supabase = createSupabaseBrowser();
     supabase
       .from("favorites")
-      .select("therapist_id, therapists(id, name, age, image_urls, shops(name, display_name))")
+      .select("therapist_id, therapists(id, name, age, image_urls, salons(name, display_name))")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
       .then(({ data }) => {
@@ -983,7 +983,7 @@ function FavoritesSection({ userId, favoriteLimit }: { userId: string | undefine
             data.map((f: any) => {
               const t = f.therapists;
               const imgs = t?.image_urls as string[] | null;
-              const shop = t?.shops as { name: string; display_name: string | null } | null;
+              const shop = t?.salons as { name: string; display_name: string | null } | null;
               return {
                 id: t?.id || 0,
                 name: t?.name || "",

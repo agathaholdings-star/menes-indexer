@@ -13,14 +13,14 @@ export async function generateMetadata({ params }: TherapistPageProps): Promise<
   if (!/^\d+$/.test(id)) return {};
   const { data } = await supabase
     .from("therapists")
-    .select("name, age, shop_id")
+    .select("name, age, salon_id")
     .eq("id", Number(id))
     .single();
   if (!data) return {};
   const { data: shop } = await supabase
-    .from("shops")
+    .from("salons")
     .select("display_name, name")
-    .eq("id", data.shop_id)
+    .eq("id", data.salon_id)
     .single();
   const shopName = shop?.display_name || shop?.name || "";
   const desc = `${data.name}${data.age ? `（${data.age}歳）` : ""}${shopName ? ` | ${shopName}` : ""}の詳細・口コミ`;
@@ -50,16 +50,16 @@ export default async function TherapistPage({ params }: TherapistPageProps) {
   }
 
   const { data: shop } = await supabase
-    .from("shops")
+    .from("salons")
     .select("name, display_name")
-    .eq("id", dbTherapist.shop_id)
+    .eq("id", dbTherapist.salon_id)
     .single();
 
   const therapist: Therapist = {
     id: String(dbTherapist.id),
     name: dbTherapist.name,
     age: dbTherapist.age || 0,
-    shopId: String(dbTherapist.shop_id),
+    shopId: String(dbTherapist.salon_id),
     shopName: shop?.display_name || shop?.name || "",
     area: "",
     district: "",

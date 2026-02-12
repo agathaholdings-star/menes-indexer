@@ -267,12 +267,12 @@ def get_target_shops(cur, limit=0):
     """Phase①成功店（セラピストURL取得済み）を取得"""
     query = """
         SELECT DISTINCT ON (s.official_url)
-               c.shop_id, c.therapist_list_url, c.last_therapist_count,
+               c.salon_id, c.therapist_list_url, c.last_therapist_count,
                s.name, s.display_name, s.official_url
-        FROM shop_scrape_cache c
-        JOIN shops s ON s.id = c.shop_id
+        FROM salon_scrape_cache c
+        JOIN salons s ON s.id = c.salon_id
         WHERE c.last_therapist_count > 0
-        ORDER BY s.official_url, c.shop_id
+        ORDER BY s.official_url, c.salon_id
     """
     if limit > 0:
         query += f" LIMIT {limit}"
@@ -281,9 +281,9 @@ def get_target_shops(cur, limit=0):
 
 
 def get_shops_with_therapists(cur):
-    """既にtherapistsが入っている shop_id の集合"""
-    cur.execute("SELECT DISTINCT shop_id FROM therapists")
-    return {row['shop_id'] for row in cur.fetchall()}
+    """既にtherapistsが入っている salon_id の集合"""
+    cur.execute("SELECT DISTINCT salon_id FROM therapists")
+    return {row['salon_id'] for row in cur.fetchall()}
 
 
 def _safe_int(val):
@@ -296,7 +296,7 @@ def _safe_int(val):
         return None
 
 
-def insert_therapist(cur, shop_id, data):
+def insert_therapist(cur, salon_id, data):
     """セラピスト1名をDB投入。SAVEPOINTで他レコードに影響しない。Returns id or None."""
     t_name = data.get('name')
     if not t_name:
@@ -317,18 +317,18 @@ def insert_therapist(cur, shop_id, data):
         cur.execute("SAVEPOINT sp_insert")
         cur.execute("""
             INSERT INTO therapists (
-                shop_id, name, age, height,
+                salon_id, name, age, height,
                 bust, waist, hip, image_urls,
                 profile_text, source_url, status, last_scraped_at
             ) VALUES (
-                %(shop_id)s, %(name)s, %(age)s, %(height)s,
+                %(salon_id)s, %(name)s, %(age)s, %(height)s,
                 %(bust)s, %(waist)s, %(hip)s, %(image_urls)s::jsonb,
                 %(profile_text)s, %(source_url)s, 'active', now()
             )
-            ON CONFLICT (shop_id, slug) DO NOTHING
+            ON CONFLICT (salon_id, slug) DO NOTHING
             RETURNING id
         """, {
-            'shop_id': shop_id,
+            'salon_id': salon_id,
             'name': t_name,
             'age': _safe_int(data.get('age')),
             'height': _safe_int(data.get('height')),
@@ -391,7 +391,7 @@ def process_shop(shop, cur, llm_scraper, workers, dry_run=False):
     Returns:
         (inserted_count, failed_count, total_urls)
     """
-    shop_id = shop['shop_id']
+    salon_id = shop['salon_id']
     list_url = shop['therapist_list_url']
     salon_name = shop['display_name'] or shop['name']
 
@@ -420,7 +420,7 @@ def process_shop(shop, cur, llm_scraper, workers, dry_run=False):
     for entry, data, html in results:
         if data and validator.validate_therapist(data):
             if not dry_run:
-                t_id = insert_therapist(cur, shop_id, data)
+                t_id = insert_therapist(cur, salon_id, data)
                 if t_id:
                     inserted += 1
                 else:
@@ -435,7 +435,7 @@ def process_shop(shop, cur, llm_scraper, workers, dry_run=False):
                     if not data.get('image_urls') and entry.get('list_image_url'):
                         data['image_urls'] = [entry['list_image_url']]
                     if not dry_run:
-                        t_id = insert_therapist(cur, shop_id, data)
+                        t_id = insert_therapist(cur, salon_id, data)
                         if t_id:
                             inserted += 1
                             llm_used += 1
@@ -510,7 +510,7 @@ def main():
         completed_ids = completed_ids | db_done
         if completed_ids:
             log.info(f"処理済みスキップ: {len(completed_ids)}件")
-        all_shops = [s for s in all_shops if s['shop_id'] not in completed_ids]
+        all_shops = [s for s in all_shops if s['salon_id'] not in completed_ids]
         log.info(f"残り: {len(all_shops)}件")
 
     if not all_shops:
@@ -530,7 +530,7 @@ def main():
 
     # メインループ（店舗単位は順次、店舗内のfetchは並列）
     for idx, shop in enumerate(all_shops):
-        shop_id = shop['shop_id']
+        salon_id = shop['salon_id']
         salon_name = shop['display_name'] or shop['name']
         elapsed = timedelta(seconds=int(time.time() - start_time))
         shop_num = len(completed_ids) + idx + 1
@@ -557,7 +557,7 @@ def main():
                 conn.commit()
 
             # チェックポイント更新
-            completed_ids.add(shop_id)
+            completed_ids.add(salon_id)
             checkpoint['completed_shop_ids'] = list(completed_ids)
             stats['shops_processed'] = len(completed_ids)
             stats['therapists_inserted'] = total_inserted

@@ -39,20 +39,20 @@ def get_target_shops(cur, shop_ids=None, limit=3):
     """対象サロンを取得"""
     if shop_ids:
         cur.execute(
-            "SELECT id, name, display_name, official_url FROM shops "
+            "SELECT id, name, display_name, official_url FROM salons "
             "WHERE id = ANY(%s) AND official_url IS NOT NULL ORDER BY id",
             (shop_ids,)
         )
     else:
         cur.execute(
-            "SELECT id, name, display_name, official_url FROM shops "
+            "SELECT id, name, display_name, official_url FROM salons "
             "WHERE official_url IS NOT NULL ORDER BY id LIMIT %s",
             (limit,)
         )
     return cur.fetchall()
 
 
-def insert_therapist(cur, shop_id, t):
+def insert_therapist(cur, salon_id, t):
     """セラピスト1名をINSERT。成功時therapist_id、失敗時None"""
     t_name = t.get('name')
     if not t_name:
@@ -72,18 +72,18 @@ def insert_therapist(cur, shop_id, t):
     try:
         cur.execute("""
             INSERT INTO therapists (
-                shop_id, name, age, height,
+                salon_id, name, age, height,
                 bust, waist, hip, image_urls,
                 profile_text, source_url, status, last_scraped_at
             ) VALUES (
-                %(shop_id)s, %(name)s, %(age)s, %(height)s,
+                %(salon_id)s, %(name)s, %(age)s, %(height)s,
                 %(bust)s, %(waist)s, %(hip)s, %(image_urls)s::jsonb,
                 %(profile_text)s, %(source_url)s, 'active', now()
             )
-            ON CONFLICT (shop_id, slug) DO NOTHING
+            ON CONFLICT (salon_id, slug) DO NOTHING
             RETURNING id
         """, {
-            'shop_id': shop_id,
+            'salon_id': salon_id,
             'name': t_name,
             'age': t.get('age'),
             'height': t.get('height'),
@@ -148,13 +148,13 @@ def main():
     results = {}  # shop_id -> list of therapist data
 
     for shop in shops:
-        shop_id = shop['id']
+        salon_id = shop['id']
         therapists = scraper.scrape_salon(
             shop['official_url'],
             shop['display_name'],
             max_therapists=args.max_therapists,
         )
-        results[shop_id] = therapists
+        results[salon_id] = therapists
 
         if not therapists:
             print(f"  → セラピスト取得なし\n")
@@ -164,7 +164,7 @@ def main():
         if not args.dry_run:
             inserted = 0
             for t in therapists:
-                t_id = insert_therapist(cur, shop_id, t)
+                t_id = insert_therapist(cur, salon_id, t)
                 if t_id:
                     inserted += 1
                     print(f"      ✓ {t.get('name')} → therapist_id={t_id}")
@@ -196,7 +196,7 @@ def main():
             SELECT t.name, t.age, t.height, t.bust, t.waist, t.hip,
                    s.display_name AS shop_name
             FROM therapists t
-            JOIN shops s ON s.id = t.shop_id
+            JOIN salons s ON s.id = t.salon_id
             ORDER BY t.created_at DESC LIMIT 15
         """)
         rows = cur.fetchall()

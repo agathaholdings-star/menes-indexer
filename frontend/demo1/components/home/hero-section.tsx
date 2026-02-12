@@ -46,7 +46,7 @@ export function HeroSection() {
 
         // 店舗数とエリア数を取得
         const { count: sc } = await supabase
-          .from("shops")
+          .from("salons")
           .select("*", { count: "exact", head: true })
           .eq("is_active", true);
         if (sc !== null) setShopCount(sc);

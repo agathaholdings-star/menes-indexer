@@ -259,7 +259,7 @@ def get_target_shops(cur, limit=0):
     """official_urlを持つサロン一覧を取得"""
     query = """
         SELECT s.id, s.name, s.display_name, s.official_url
-        FROM shops s
+        FROM salons s
         WHERE s.official_url IS NOT NULL
           AND s.is_active = true
         ORDER BY s.id
@@ -271,48 +271,48 @@ def get_target_shops(cur, limit=0):
 
 
 def get_processed_shop_ids(cur):
-    """scrape_logに既存のshop_idを取得（Phase 1でheuristic処理済み）"""
+    """scrape_logに既存のsalon_idを取得（Phase 1でheuristic処理済み）"""
     cur.execute("""
-        SELECT DISTINCT shop_id FROM scrape_log
+        SELECT DISTINCT salon_id FROM scrape_log
         WHERE method = 'heuristic' AND step = 'find_list_url'
     """)
-    return {row['shop_id'] for row in cur.fetchall()}
+    return {row['salon_id'] for row in cur.fetchall()}
 
 
-def log_scrape(cur, shop_id, step, method, success, detail=None, html=None):
+def log_scrape(cur, salon_id, step, method, success, detail=None, html=None):
     """scrape_logにログ書き込み"""
     html_hash = hashlib.sha256(html.encode()).hexdigest()[:16] if html else None
     cur.execute("""
-        INSERT INTO scrape_log (shop_id, step, method, success, html_hash, detail)
+        INSERT INTO scrape_log (salon_id, step, method, success, html_hash, detail)
         VALUES (%s, %s, %s, %s, %s, %s)
-    """, (shop_id, step, method, success, html_hash, detail))
+    """, (salon_id, step, method, success, html_hash, detail))
 
 
-def update_cache(cur, shop_id, list_url, therapist_count, success):
-    """shop_scrape_cacheを更新"""
+def update_cache(cur, salon_id, list_url, therapist_count, success):
+    """salon_scrape_cacheを更新"""
     if success:
         cur.execute("""
-            INSERT INTO shop_scrape_cache
-                (shop_id, therapist_list_url, extraction_method,
+            INSERT INTO salon_scrape_cache
+                (salon_id, therapist_list_url, extraction_method,
                  last_therapist_count, fail_streak, last_scraped_at)
             VALUES (%s, %s, 'heuristic', %s, 0, now())
-            ON CONFLICT (shop_id) DO UPDATE SET
+            ON CONFLICT (salon_id) DO UPDATE SET
                 therapist_list_url = EXCLUDED.therapist_list_url,
                 extraction_method = EXCLUDED.extraction_method,
                 last_therapist_count = EXCLUDED.last_therapist_count,
                 fail_streak = 0,
                 last_scraped_at = now()
-        """, (shop_id, list_url, therapist_count))
+        """, (salon_id, list_url, therapist_count))
     else:
         cur.execute("""
-            INSERT INTO shop_scrape_cache
-                (shop_id, therapist_list_url, extraction_method,
+            INSERT INTO salon_scrape_cache
+                (salon_id, therapist_list_url, extraction_method,
                  last_therapist_count, fail_streak, last_scraped_at)
             VALUES (%s, %s, 'heuristic', 0, 1, now())
-            ON CONFLICT (shop_id) DO UPDATE SET
-                fail_streak = shop_scrape_cache.fail_streak + 1,
+            ON CONFLICT (salon_id) DO UPDATE SET
+                fail_streak = salon_scrape_cache.fail_streak + 1,
                 last_scraped_at = now()
-        """, (shop_id, list_url))
+        """, (salon_id, list_url))
 
 
 # =============================================================================
@@ -356,10 +356,10 @@ def process_shop_http(shop):
         dict with keys: shop_id, step2_ok, step3_count, detail, list_url,
                         top_html, logs (list of log entries)
     """
-    shop_id = shop['id']
+    salon_id = shop['id']
     salon_url = shop['official_url']
     result = {
-        'shop_id': shop_id,
+        'salon_id': salon_id,
         'step2_ok': False,
         'step3_count': 0,
         'detail': '',
@@ -420,17 +420,17 @@ def write_result_to_db(cur, result, dry_run=False):
     if dry_run:
         return
 
-    shop_id = result['shop_id']
+    salon_id = result['salon_id']
 
     for step, method, success, detail, html in result['logs']:
-        log_scrape(cur, shop_id, step, method, success, detail=detail, html=html)
+        log_scrape(cur, salon_id, step, method, success, detail=detail, html=html)
 
     list_url = result['list_url']
     step3_count = result['step3_count']
     if result['step2_ok']:
-        update_cache(cur, shop_id, list_url, step3_count, step3_count > 0)
+        update_cache(cur, salon_id, list_url, step3_count, step3_count > 0)
     elif list_url is None and any(not l[2] for l in result['logs']):
-        update_cache(cur, shop_id, None, 0, False)
+        update_cache(cur, salon_id, None, 0, False)
 
 
 def main():
@@ -487,7 +487,7 @@ def main():
         conn.close()
         return
 
-    # shop_id → shop名のマップ（ログ表示用）
+    # salon_id → salon名のマップ（ログ表示用）
     shop_names = {s['id']: s['display_name'] or s['name'] for s in all_shops}
 
     # 統計
@@ -510,8 +510,8 @@ def main():
 
             for future in as_completed(futures):
                 shop = futures[future]
-                shop_id = shop['id']
-                salon_name = shop_names[shop_id]
+                salon_id = shop['id']
+                salon_name = shop_names[salon_id]
 
                 try:
                     result = future.result()
@@ -537,7 +537,7 @@ def main():
                 processed_count += 1
 
                 # チェックポイント更新
-                completed_ids.add(shop_id)
+                completed_ids.add(salon_id)
                 checkpoint['completed_shop_ids'] = list(completed_ids)
                 checkpoint['stats'] = stats
 
@@ -594,11 +594,11 @@ def main():
     # Phase 2向けサマリー（LLMが必要な店舗数）
     if not args.dry_run:
         cur.execute("""
-            SELECT count(*) AS cnt FROM shops s
+            SELECT count(*) AS cnt FROM salons s
             WHERE s.official_url IS NOT NULL AND s.is_active = true
               AND NOT EXISTS (
-                  SELECT 1 FROM shop_scrape_cache c
-                  WHERE c.shop_id = s.id
+                  SELECT 1 FROM salon_scrape_cache c
+                  WHERE c.salon_id = s.id
                     AND c.extraction_method = 'heuristic'
                     AND c.last_therapist_count > 0
               )

@@ -409,7 +409,7 @@ def main():
         # 既存チェック（source_idで）
         source_id = salon.get('source_id')
         if source_id:
-            cur.execute("SELECT id FROM shops WHERE source_id = %s::uuid", (source_id,))
+            cur.execute("SELECT id FROM salons WHERE source_id = %s::uuid", (source_id,))
             existing = cur.fetchone()
             if existing:
                 shop_ids[source_id] = existing['id']
@@ -418,7 +418,7 @@ def main():
 
         # INSERT（slugはid確定後にセット）
         cur.execute("""
-            INSERT INTO shops (
+            INSERT INTO salons (
                 source_id, name, display_name, business_type,
                 access, business_hours, base_price, base_duration,
                 phone, official_url, domain, service_tags, image_url,
@@ -445,22 +445,22 @@ def main():
             'service_tags': salon.get('service_tags') or [],
             'image_url': salon.get('image_url'),
         })
-        shop_id = cur.fetchone()['id']
+        salon_id = cur.fetchone()['id']
 
         # slug = 数字ID
-        cur.execute("UPDATE shops SET slug = %s WHERE id = %s", (str(shop_id), shop_id))
+        cur.execute("UPDATE salons SET slug = %s WHERE id = %s", (str(salon_id), salon_id))
 
         if source_id:
-            shop_ids[source_id] = shop_id
+            shop_ids[source_id] = salon_id
 
-        # shop_areas
+        # salon_areas
         cur.execute("""
-            INSERT INTO shop_areas (shop_id, area_id, is_primary, display_order)
+            INSERT INTO salon_areas (salon_id, area_id, is_primary, display_order)
             VALUES (%s, %s, true, %s)
             ON CONFLICT DO NOTHING
-        """, (shop_id, TARGET_AREA['area_id'], salon.get('display_order', 0)))
+        """, (salon_id, TARGET_AREA['area_id'], salon.get('display_order', 0)))
 
-        print(f"    [NEW] {salon.get('display_name')} → shop_id={shop_id}")
+        print(f"    [NEW] {salon.get('display_name')} → salon_id={salon_id}")
 
     conn.commit()
     print(f"  ✓ {len(shop_ids)}件のサロンをINSERT")
@@ -492,9 +492,9 @@ def main():
 
     for salon in salons_for_therapist:
         source_id = salon.get('source_id')
-        shop_id = shop_ids.get(source_id)
-        if not shop_id:
-            print(f"    [SKIP] {salon.get('display_name')} - shop_idなし")
+        salon_id = shop_ids.get(source_id)
+        if not salon_id:
+            print(f"    [SKIP] {salon.get('display_name')} - salon_idなし")
             continue
 
         therapists = scraper.scrape_salon(
@@ -508,7 +508,7 @@ def main():
             continue
 
         # therapists INSERT
-        print(f"\n[4] therapists INSERT (shop_id={shop_id})...")
+        print(f"\n[4] therapists INSERT (salon_id={salon_id})...")
         for t in therapists:
             t_name = t.get('name')
             if not t_name:
@@ -530,17 +530,17 @@ def main():
             try:
                 cur.execute("""
                     INSERT INTO therapists (
-                        shop_id, name, age, height,
+                        salon_id, name, age, height,
                         bust, waist, hip, image_urls,
                         profile_text, source_url, status, last_scraped_at
                     ) VALUES (
-                        %(shop_id)s, %(name)s, %(age)s, %(height)s,
+                        %(salon_id)s, %(name)s, %(age)s, %(height)s,
                         %(bust)s, %(waist)s, %(hip)s, %(image_urls)s::jsonb,
                         %(profile_text)s, %(source_url)s, 'active', now()
                     )
                     RETURNING id
                 """, {
-                    'shop_id': shop_id,
+                    'salon_id': salon_id,
                     'name': t_name,
                     'age': t.get('age'),
                     'height': t.get('height'),
@@ -575,13 +575,13 @@ def _print_summary_from_db(conn):
     """投入結果をクエリして表示"""
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
-    cur.execute("SELECT count(*) AS cnt FROM shops")
-    print(f"\n  shops: {cur.fetchone()['cnt']}件")
+    cur.execute("SELECT count(*) AS cnt FROM salons")
+    print(f"\n  salons: {cur.fetchone()['cnt']}件")
 
     cur.execute("""
         SELECT s.name, s.display_name, s.official_url, a.name AS area_name
-        FROM shops s
-        JOIN shop_areas sa ON sa.shop_id = s.id
+        FROM salons s
+        JOIN salon_areas sa ON sa.salon_id = s.id
         JOIN areas a ON a.id = sa.area_id
         WHERE sa.area_id = %s
         ORDER BY sa.display_order
@@ -594,8 +594,8 @@ def _print_summary_from_db(conn):
     cur.execute("""
         SELECT t.name, t.age, t.height, t.bust, t.waist, t.hip, s.display_name AS shop_name
         FROM therapists t
-        JOIN shops s ON s.id = t.shop_id
-        JOIN shop_areas sa ON sa.shop_id = s.id
+        JOIN salons s ON s.id = t.salon_id
+        JOIN salon_areas sa ON sa.salon_id = s.id
         WHERE sa.area_id = %s
         ORDER BY s.display_name, t.name
     """, (TARGET_AREA['area_id'],))

@@ -58,7 +58,7 @@ interface DBTherapist {
   name: string;
   age: number | null;
   image_url: string | null;
-  shop_id: number;
+  salon_id: number;
   shop_name: string;
   shop_access: string | null;
   avg_score: number | null;
@@ -158,7 +158,7 @@ function SearchContent() {
     async function searchShops() {
       try {
         const { data } = await supabase
-          .from("shops")
+          .from("salons")
           .select("id, name, display_name, access, image_url, slug")
           .eq("is_active", true)
           .or(`name.ilike.*${initialQuery}*,display_name.ilike.*${initialQuery}*`)
@@ -245,7 +245,7 @@ function SearchContent() {
           }
         }
 
-        // 2) エリアフィルタ: shop_idを絞る
+        // 2) エリアフィルタ: salon_idを絞る
         let shopIds: number[] | null = null;
         if (selectedArea && selectedArea !== "all") {
           // 都道府県 → areas → shop_areas
@@ -263,10 +263,10 @@ function SearchContent() {
             if (areaData && areaData.length > 0) {
               const areaIds = areaData.map((a) => a.id);
               const { data: saData } = await supabase
-                .from("shop_areas")
-                .select("shop_id")
+                .from("salon_areas")
+                .select("salon_id")
                 .in("area_id", areaIds);
-              shopIds = [...new Set((saData || []).map((sa) => Number(sa.shop_id)))];
+              shopIds = [...new Set((saData || []).map((sa) => Number(sa.salon_id)))];
             } else {
               shopIds = [];
             }
@@ -280,14 +280,14 @@ function SearchContent() {
         // 3) therapists取得
         let q = supabase
           .from("therapists")
-          .select("id, name, age, image_urls, shop_id, shops(name, display_name, access)")
+          .select("id, name, age, image_urls, salon_id, salons(name, display_name, access)")
           .eq("status", "active");
 
         if (therapistIds) {
           q = q.in("id", therapistIds);
         }
         if (shopIds) {
-          q = q.in("shop_id", shopIds);
+          q = q.in("salon_id", shopIds);
         }
 
         q = q.order("created_at", { ascending: false }).limit(100);
@@ -319,14 +319,14 @@ function SearchContent() {
           setDbTherapists(
             data.map((t) => {
               const imgs = t.image_urls as string[] | null;
-              const shop = t.shops as { name: string; display_name: string | null; access: string | null } | null;
+              const shop = t.salons as { name: string; display_name: string | null; access: string | null } | null;
               const agg = reviewAggMap.get(Number(t.id));
               return {
                 id: Number(t.id),
                 name: t.name.replace(/\s*\(.*\)$/, ""),
                 age: t.age,
                 image_url: imgs?.[0] || null,
-                shop_id: Number(t.shop_id),
+                salon_id: Number(t.salon_id),
                 shop_name: shop?.display_name || shop?.name || "",
                 shop_access: shop?.access || null,
                 avg_score: agg?.avg_score || null,
