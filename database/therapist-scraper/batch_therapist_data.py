@@ -266,12 +266,13 @@ def fetch_and_extract(entry):
 def get_target_shops(cur, limit=0):
     """Phase①成功店（セラピストURL取得済み）を取得"""
     query = """
-        SELECT c.shop_id, c.therapist_list_url, c.last_therapist_count,
+        SELECT DISTINCT ON (s.official_url)
+               c.shop_id, c.therapist_list_url, c.last_therapist_count,
                s.name, s.display_name, s.official_url
         FROM shop_scrape_cache c
         JOIN shops s ON s.id = c.shop_id
         WHERE c.last_therapist_count > 0
-        ORDER BY c.shop_id
+        ORDER BY s.official_url, c.shop_id
     """
     if limit > 0:
         query += f" LIMIT {limit}"

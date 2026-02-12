@@ -346,7 +346,21 @@ def insert_salons(cur, salons, area_id):
         if not source_id:
             continue
 
-        # 既存チェック
+        # official_urlで既存チェック（source_idが違っても同一サロン）
+        official_url = salon.get('official_url')
+        if official_url:
+            cur.execute("SELECT id FROM shops WHERE official_url = %s", (official_url,))
+            existing_by_url = cur.fetchone()
+            if existing_by_url:
+                cur.execute("""
+                    INSERT INTO shop_areas (shop_id, area_id, is_primary, display_order)
+                    VALUES (%s, %s, false, %s)
+                    ON CONFLICT DO NOTHING
+                """, (existing_by_url['id'], area_id, salon.get('display_order', 0)))
+                skipped += 1
+                continue
+
+        # source_idで既存チェック
         cur.execute("SELECT id FROM shops WHERE source_id = %s::uuid", (source_id,))
         existing = cur.fetchone()
         if existing:
