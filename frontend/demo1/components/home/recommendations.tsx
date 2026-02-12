@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Radar } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { cleanTherapistName, isPlaceholderName } from "@/lib/therapist-utils";
+import { cleanTherapistName, isPlaceholderName, excludePlaceholderNames } from "@/lib/therapist-utils";
 
 interface RecommendTherapist {
   id: number;
@@ -19,16 +19,26 @@ export function Recommendations() {
 
   useEffect(() => {
     async function fetchTherapists() {
-      const { data } = await supabase
-        .from("therapists")
-        .select("id, name, image_urls, salons(name, display_name)")
-        .eq("status", "active")
+      const { data } = await excludePlaceholderNames(
+        supabase
+          .from("therapists")
+          .select("id, name, image_urls, salons(name, display_name)")
+          .eq("status", "active")
+      )
         .order("created_at", { ascending: false })
-        .limit(10);
+        .limit(500);
       if (data) {
         setTherapists(
           data
-            .filter((t) => !isPlaceholderName(t.name))
+            .filter((t) => {
+              if (isPlaceholderName(t.name)) return false;
+              const cleaned = cleanTherapistName(t.name);
+              if (cleaned.length > 15) return false;
+              const shop = t.salons as { name: string; display_name: string | null } | null;
+              if (shop && (cleaned === shop.name || cleaned === shop.display_name)) return false;
+              return true;
+            })
+            .slice(0, 10)
             .map((t) => {
               const imgs = t.image_urls as string[] | null;
               const shop = t.salons as { name: string; display_name: string | null } | null;

@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { excludePlaceholderNames } from "./therapist-utils";
 import type { Prefecture, Area, Shop } from "@/types/database";
 
 // =============================================================================
@@ -182,12 +183,13 @@ export async function getTherapistCountsBySalonIds(
   salonIds: number[]
 ): Promise<Map<number, number>> {
   if (salonIds.length === 0) return new Map();
-  const { data } = await supabase
-    .from("therapists")
-    .select("salon_id")
-    .in("salon_id", salonIds)
-    .eq("status", "active")
-    .neq("name", "THERAPISTセラピスト");
+  const { data } = await excludePlaceholderNames(
+    supabase
+      .from("therapists")
+      .select("salon_id")
+      .in("salon_id", salonIds)
+      .eq("status", "active")
+  );
   const counts = new Map<number, number>();
   if (data) {
     for (const row of data) {

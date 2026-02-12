@@ -46,7 +46,7 @@ import { therapistTypes, type User, getEffectiveTier, tierPermissions } from "@/
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth-context";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
-import { cleanTherapistName, isPlaceholderName } from "@/lib/therapist-utils";
+import { cleanTherapistName, isPlaceholderName, excludePlaceholderNames } from "@/lib/therapist-utils";
 
 interface PrefectureOption {
   id: string;
@@ -278,11 +278,13 @@ function SearchContent() {
           }
         }
 
-        // 3) therapists取得
-        let q = supabase
-          .from("therapists")
-          .select("id, name, age, image_urls, salon_id, salons(name, display_name, access)")
-          .eq("status", "active");
+        // 3) therapists取得（プレースホルダー名をSQLレベルで除外）
+        let q = excludePlaceholderNames(
+          supabase
+            .from("therapists")
+            .select("id, name, age, image_urls, salon_id, salons(name, display_name, access)")
+            .eq("status", "active")
+        );
 
         if (therapistIds) {
           q = q.in("id", therapistIds);
@@ -319,7 +321,14 @@ function SearchContent() {
 
           setDbTherapists(
             data
-              .filter((t) => !isPlaceholderName(t.name))
+              .filter((t) => {
+                if (isPlaceholderName(t.name)) return false;
+                const cleaned = cleanTherapistName(t.name);
+                if (cleaned.length > 15) return false;
+                const shop = t.salons as { name: string; display_name: string | null } | null;
+                if (shop && (cleaned === shop.name || cleaned === shop.display_name)) return false;
+                return true;
+              })
               .map((t) => {
                 const imgs = t.image_urls as string[] | null;
                 const shop = t.salons as { name: string; display_name: string | null; access: string | null } | null;

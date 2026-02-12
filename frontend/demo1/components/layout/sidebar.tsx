@@ -3,10 +3,10 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Crown, TrendingUp, Star, Building2 } from "lucide-react";
+import { Crown, TrendingUp, Building2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/lib/supabase";
-import { cleanTherapistName, isPlaceholderName } from "@/lib/therapist-utils";
+import { cleanTherapistName, isPlaceholderName, excludePlaceholderNames } from "@/lib/therapist-utils";
 
 interface SidebarShop {
   id: number;
@@ -36,18 +36,28 @@ export function Sidebar() {
             .select("id, name, display_name, slug, access")
             .eq("is_active", true)
             .limit(5),
-          supabase
-            .from("therapists")
-            .select("id, name, image_urls, salon_id, salons(name, display_name)")
-            .eq("status", "active")
+          excludePlaceholderNames(
+            supabase
+              .from("therapists")
+              .select("id, name, image_urls, salon_id, salons(name, display_name)")
+              .eq("status", "active")
+          )
             .order("created_at", { ascending: false })
-            .limit(5),
+            .limit(500),
         ]);
         if (shopRes.data) setShops(shopRes.data as SidebarShop[]);
         if (therapistRes.data) {
           setTherapists(
             therapistRes.data
-              .filter((t) => !isPlaceholderName(t.name))
+              .filter((t) => {
+                if (isPlaceholderName(t.name)) return false;
+                const cleaned = cleanTherapistName(t.name);
+                if (cleaned.length > 15) return false;
+                const shop = t.salons as { name: string; display_name: string | null } | null;
+                if (shop && (cleaned === shop.name || cleaned === shop.display_name)) return false;
+                return true;
+              })
+              .slice(0, 5)
               .map((t) => {
                 const imgs = t.image_urls as string[] | null;
                 const shop = t.salons as { name: string; display_name: string | null } | null;
