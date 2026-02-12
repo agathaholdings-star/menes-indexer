@@ -160,6 +160,7 @@ export async function getTherapistsByShopId(shopId: number) {
     .select("*")
     .eq("salon_id", shopId)
     .eq("status", "active")
+    .neq("name", "THERAPISTセラピスト")
     .order("id", { ascending: true });
   return data || [];
 }

@@ -47,12 +47,22 @@ function toFrontendShop(dbShop: DbShop): Shop {
   };
 }
 
+// 名前から年齢を抽出: "あやの(19)" → { name: "あやの", age: 19 }
+function parseNameAge(raw: string, dbAge: number | null): { name: string; age: number } {
+  const match = raw.match(/^(.+?)\((\d{2})\)$/);
+  if (match) {
+    return { name: match[1], age: dbAge || Number(match[2]) };
+  }
+  return { name: raw, age: dbAge || 0 };
+}
+
 // DBのTherapist → フロントのTherapist型
 function toFrontendTherapist(t: DbTherapist, shopName: string): Therapist {
+  const { name, age } = parseNameAge(t.name, t.age);
   return {
     id: String(t.id),
-    name: t.name,
-    age: t.age || 0,
+    name,
+    age,
     shopId: String(t.salon_id),
     shopName,
     area: "",
