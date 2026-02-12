@@ -2,24 +2,23 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Star, Lock, ChevronRight, Crown, Clock } from "lucide-react";
+import { Star, Lock, Crown, Clock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { therapistTypes, bodyTypes, serviceTypes, mockTherapists, type Review } from "@/lib/data";
+import { therapistTypes, bodyTypes, serviceTypes, type Review } from "@/lib/data";
 
 interface ReviewCardProps {
   review: Review;
   isBlurred?: boolean;
   showTherapist?: boolean;
   variant?: "default" | "detailed";
+  therapistImageUrl?: string;
 }
 
-export function ReviewCard({ review, isBlurred = false, showTherapist = true, variant = "default" }: ReviewCardProps) {
+export function ReviewCard({ review, isBlurred = false, showTherapist = true, variant = "default", therapistImageUrl }: ReviewCardProps) {
   const typeLabel = therapistTypes.find((t) => t.id === review.typeId)?.label || review.typeId;
   const bodyLabel = bodyTypes.find((b) => b.id === review.bodyType)?.label || review.bodyType;
   const serviceLabel = serviceTypes.find((s) => s.id === review.serviceType)?.label || review.serviceType;
-  const therapist = mockTherapists.find(t => t.id === review.therapistId);
 
   if (variant === "detailed") {
     return (
@@ -27,11 +26,11 @@ export function ReviewCard({ review, isBlurred = false, showTherapist = true, va
         <CardContent className="p-4">
           {/* Header with therapist info */}
           <div className="flex gap-3 mb-3">
-            {therapist && (
+            {therapistImageUrl && (
               <Link href={`/therapist/${review.therapistId}`}>
                 <div className="relative h-16 w-14 flex-shrink-0 overflow-hidden rounded-lg">
                   <Image
-                    src={therapist.images[0] || "/placeholder.svg"}
+                    src={therapistImageUrl}
                     alt={review.therapistName}
                     fill
                     className="object-cover"
@@ -53,7 +52,7 @@ export function ReviewCard({ review, isBlurred = false, showTherapist = true, va
                   </Badge>
                 )}
               </div>
-              
+
               {/* Therapist & Shop */}
               {showTherapist && (
                 <Link
@@ -66,7 +65,7 @@ export function ReviewCard({ review, isBlurred = false, showTherapist = true, va
               <p className="text-xs text-muted-foreground">
                 {review.shopName} / {review.createdAt}
               </p>
-              
+
               {/* Score */}
               <div className="flex items-center gap-1 mt-1">
                 <Star className="h-4 w-4 fill-primary text-primary" />
