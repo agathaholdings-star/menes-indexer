@@ -29,6 +29,8 @@ supabase/.temp/
 database/*_checkpoint.json
 database/therapist-scraper/*_checkpoint.json
 database/shops_dump.sql
+database/vps_dump.sql
+database/vps_therapists_dump.sql
 .playwright-mcp/
 
 # Unrelated projects
