@@ -449,6 +449,54 @@ Supabaseに格納済み（MEスクレイピングデータ）:
 - まるまるコピーではなくClaude APIでリライト（バレ防止）
 - バッチ処理で全15,690件を一括処理
 
+### 分類マスタ設計 — ✅ 決定（数字IDベース）
+
+テキストenumではなく**数字IDのマスタテーブル**方式。ラベル変更はマスタ1行更新で済む。
+
+#### looks_types（見た目タイプ）
+| id | ラベル |
+|---|---|
+| 1 | 清楚系 |
+| 2 | 素人系 |
+| 3 | ギャル系 |
+| 4 | モデル系 |
+| 5 | 妹系 |
+| 6 | 女優系 |
+| 7 | 夜職系 |
+| 8 | 熟女系 |
+
+#### body_types（体型）
+| id | ラベル |
+|---|---|
+| 1 | スレンダー |
+| 2 | 普通 |
+| 3 | グラマー |
+| 4 | ぽっちゃり |
+
+#### cup_types（おっぱい）
+| id | ラベル |
+|---|---|
+| 1 | ちょうどいい |
+| 2 | 巨乳 |
+| 3 | ちっぱい |
+| 4 | 爆乳 |
+
+#### service_levels（サービス）
+| id | ラベル |
+|---|---|
+| 1 | 健全 |
+| 2 | SKR |
+| 3 | HR |
+
+**reviewsテーブル変更点**:
+- `looks_type`(text) → `looks_type_id`(int) REFERENCES looks_types(id)
+- `body_type`(text) → `body_type_id`(int) REFERENCES body_types(id)
+- `service_level`(text) → `service_level_id`(int) REFERENCES service_levels(id)
+- `cup_type_id`(int) REFERENCES cup_types(id) を新規追加
+- 旧テキストCHECK制約は削除
+
+**cup二重管理**: `therapists.cup`（公式自称） + `reviews.cup_type_id`（口コミ体感）。口コミが溜まったら体感を優先表示。
+
 ### 決定済み事項
 
 #### 1. user_id（reviews.user_id）の扱い — ✅ 決定
@@ -458,7 +506,7 @@ Supabaseに格納済み（MEスクレイピングデータ）:
 - ユーザー投稿は従来通り `user_id` 必須（アプリ側でバリデーション）
 
 #### 2. 構造化データ — ✅ 決定
-- **全部LLMで推定**: `looks_type`, `body_type`, `service_level`, `param_*`(1-5), `score`(0-100)
+- **全部LLMで推定**: looks_type_id, body_type_id, cup_type_id, service_level_id, param_*(1-5), score(0-100)
 - 元口コミテキストから推定するプロンプトを設計する
 
 #### 3. comment系カラム — ✅ 決定
@@ -472,10 +520,16 @@ Supabaseに格納済み（MEスクレイピングデータ）:
 #### 5. created_at — ✅ 決定
 - 元のME口コミ日付からランダムに±1〜30日ずらす（MEと一致しないように）
 
+#### 6. データ移行フロー — ✅ 決定
+- MEから生データを引っ張ってきてから、こちら側でLLMリライト＆生成
+- ME DBは読み取り専用（ソースを汚さない）
+
 ### 未決事項
 - [ ] 使用モデル: Sonnet推奨（~$70）、10件くらいサンプル比較してから決める。Haiku(~$6) / Opus(~$350) も選択肢
 - [ ] リライトプロンプトの具体的な設計（文体変更＋構造化データ推定を1プロンプトにまとめるか分けるか）
 - [ ] 複数口コミからどれを選ぶかのロジック（最新？最高評点？最も情報量が多いもの？まとめ？）
+- [ ] looks_types各タイプの判定基準の明文化（LLMプロンプト用）
+- [ ] param_* 1-5の各値の意味定義
 
 **コスト見積もり（15,690件）**:
 | モデル | 見積もりコスト |
