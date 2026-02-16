@@ -1,4 +1,5 @@
-import { supabase } from "./supabase";
+import "server-only";
+import { supabaseAdmin as supabase } from "./supabase-admin";
 import { excludePlaceholderNames } from "./therapist-utils";
 import type { Prefecture, Area, Shop } from "@/types/database";
 

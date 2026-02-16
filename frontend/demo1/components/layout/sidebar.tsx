@@ -5,8 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Crown, TrendingUp, Building2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { supabase } from "@/lib/supabase";
-import { cleanTherapistName, isPlaceholderName, excludePlaceholderNames } from "@/lib/therapist-utils";
+import { cleanTherapistName, isPlaceholderName } from "@/lib/therapist-utils";
 
 interface SidebarShop {
   id: number;
@@ -30,26 +29,18 @@ export function Sidebar() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const [shopRes, therapistRes] = await Promise.all([
-          supabase
-            .from("salons")
-            .select("id, name, display_name, slug, access")
-            .eq("is_active", true)
-            .limit(5),
-          excludePlaceholderNames(
-            supabase
-              .from("therapists")
-              .select("id, name, image_urls, salon_id, salons(name, display_name)")
-              .eq("status", "active")
-          )
-            .order("created_at", { ascending: false })
-            .limit(500),
+        const [shopsRes, therapistsRes] = await Promise.all([
+          fetch("/api/salons?limit=5"),
+          fetch("/api/therapists/recommendations?limit=5"),
         ]);
-        if (shopRes.data) setShops(shopRes.data as SidebarShop[]);
-        if (therapistRes.data) {
+        const shopsData = await shopsRes.json();
+        const therapistsData = await therapistsRes.json();
+
+        if (Array.isArray(shopsData)) setShops(shopsData as SidebarShop[]);
+        if (Array.isArray(therapistsData)) {
           setTherapists(
-            therapistRes.data
-              .filter((t) => {
+            therapistsData
+              .filter((t: any) => {
                 if (isPlaceholderName(t.name)) return false;
                 const cleaned = cleanTherapistName(t.name);
                 if (cleaned.length > 15) return false;
@@ -58,7 +49,7 @@ export function Sidebar() {
                 return true;
               })
               .slice(0, 5)
-              .map((t) => {
+              .map((t: any) => {
                 const imgs = t.image_urls as string[] | null;
                 const shop = t.salons as { name: string; display_name: string | null } | null;
                 return {

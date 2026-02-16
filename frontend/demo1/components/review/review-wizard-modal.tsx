@@ -60,7 +60,6 @@ const prefectureShortNames: Record<string, string> = {
 };
 
 export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, memberType = "free", monthlyReviewCount = 0 }: ReviewWizardModalProps) {
-  const supabase = createSupabaseBrowser();
   const { user: authUser } = useAuth();
   const router = useRouter();
 
@@ -107,28 +106,22 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
   useEffect(() => {
     if (!open) return;
     const fetchPrefectures = async () => {
-      const { data } = await supabase.from("prefectures").select("id, name").order("id");
-      if (data) setPrefectures(data);
+      const res = await fetch("/api/prefectures");
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setPrefectures(data.map((p: any) => ({ id: p.id, name: p.name })));
 
-      // Get prefectures that actually have shops
-      const { data: shopPrefData } = await supabase.rpc("get_prefectures_with_shops");
-      if (shopPrefData) {
-        setPrefecturesWithShops(shopPrefData);
-      } else {
-        // Fallback: fetch manually
-        const { data: allShopAreas } = await supabase
-          .from("salon_areas")
-          .select("area_id, areas(prefecture_id)");
-        if (allShopAreas && data) {
+        // Get areas to count shops per prefecture
+        const areasRes = await fetch("/api/areas");
+        const areas = await areasRes.json();
+        if (Array.isArray(areas)) {
           const prefCounts = new Map<number, number>();
-          allShopAreas.forEach((sa: any) => {
-            if (sa.areas?.prefecture_id) {
-              prefCounts.set(sa.areas.prefecture_id, (prefCounts.get(sa.areas.prefecture_id) || 0) + 1);
-            }
+          areas.forEach((a: any) => {
+            prefCounts.set(a.prefecture_id, (prefCounts.get(a.prefecture_id) || 0) + (a.salon_count || 0));
           });
           const withShops = data
-            .filter(p => prefCounts.has(p.id))
-            .map(p => ({ ...p, shop_count: prefCounts.get(p.id) || 0 }));
+            .filter((p: any) => prefCounts.has(p.id))
+            .map((p: any) => ({ id: p.id, name: p.name, shop_count: prefCounts.get(p.id) || 0 }));
           setPrefecturesWithShops(withShops);
         }
       }
@@ -140,12 +133,9 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
   useEffect(() => {
     if (!directSearchMode || directShopSearch.length < 1) { setDirectSearchResults([]); return; }
     const timer = setTimeout(async () => {
-      const { data } = await supabase
-        .from("salons")
-        .select("id, name, display_name, access")
-        .or(`display_name.ilike.%${directShopSearch}%,name.ilike.%${directShopSearch}%`)
-        .limit(30);
-      if (data) setDirectSearchResults(data);
+      const res = await fetch(`/api/salons?search=${encodeURIComponent(directShopSearch)}&limit=30`);
+      const data = await res.json();
+      if (Array.isArray(data)) setDirectSearchResults(data);
     }, 300);
     return () => clearTimeout(timer);
   }, [directShopSearch, directSearchMode]);
@@ -154,36 +144,28 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
   useEffect(() => {
     if (!selectedArea) { setDbShops([]); return; }
     const fetchShops = async () => {
-      // Match prefecture name: try exact, then with suffix, then partial
       const prefecture = prefectures.find(p => p.name === selectedArea)
         || prefectures.find(p => p.name === prefectureShortNames[selectedArea])
         || prefectures.find(p => p.name.startsWith(selectedArea));
       if (!prefecture) return;
-      // Get area IDs for this prefecture, then shops via shop_areas
-      const { data: areaData } = await supabase
-        .from("areas")
-        .select("id")
-        .eq("prefecture_id", prefecture.id);
-      if (!areaData || areaData.length === 0) { setDbShops([]); return; }
-      const areaIds = areaData.map(a => a.id);
-      const { data: shopAreaData } = await supabase
-        .from("salon_areas")
-        .select("salon_id, salons(id, name, display_name, access)")
-        .in("area_id", areaIds);
-      if (shopAreaData) {
-        const shopMap = new Map<string, DBShop>();
-        shopAreaData.forEach((sa: any) => {
-          if (sa.salons && !shopMap.has(sa.salons.id)) {
-            shopMap.set(sa.salons.id, {
-              id: sa.salons.id,
-              name: sa.salons.name,
-              display_name: sa.salons.display_name,
-              access: sa.salons.access,
-            });
-          }
-        });
-        setDbShops(Array.from(shopMap.values()));
+      const areasRes = await fetch(`/api/areas?prefecture_id=${prefecture.id}`);
+      const areaData = await areasRes.json();
+      if (!Array.isArray(areaData) || areaData.length === 0) { setDbShops([]); return; }
+
+      // Fetch salons for each area and dedupe
+      const shopMap = new Map<number, DBShop>();
+      for (const area of areaData) {
+        const salonsRes = await fetch(`/api/salons?area_id=${area.id}&limit=50`);
+        const salons = await salonsRes.json();
+        if (Array.isArray(salons)) {
+          salons.forEach((s: any) => {
+            if (!shopMap.has(s.id)) {
+              shopMap.set(s.id, { id: s.id, name: s.name, display_name: s.display_name, access: s.access });
+            }
+          });
+        }
       }
+      setDbShops(Array.from(shopMap.values()));
     };
     fetchShops();
   }, [selectedArea, prefectures]);
@@ -192,12 +174,9 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
   useEffect(() => {
     if (!selectedShopId) { setDbTherapists([]); return; }
     const fetchTherapists = async () => {
-      const { data } = await supabase
-        .from("therapists")
-        .select("id, name, image_urls, salon_id")
-        .eq("salon_id", selectedShopId)
-        .order("name");
-      if (data) setDbTherapists(data as unknown as DBTherapist[]);
+      const res = await fetch(`/api/therapists?salon_id=${selectedShopId}&limit=50`);
+      const data = await res.json();
+      if (Array.isArray(data)) setDbTherapists(data as unknown as DBTherapist[]);
     };
     fetchTherapists();
   }, [selectedShopId]);
@@ -206,15 +185,15 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
   useEffect(() => {
     if (!preselectedTherapistId) return;
     const fetchPreselected = async () => {
-      const { data } = await supabase
-        .from("therapists")
-        .select("id, name, salon_id")
-        .eq("id", preselectedTherapistId)
-        .single();
-      if (data) {
-        setSelectedTherapistId(data.id);
-        setSelectedShopId(data.salon_id);
-        setStep(3); // Skip to type selection
+      const res = await fetch(`/api/therapists?salon_id=0&limit=1`);
+      // Use a dedicated fetch for single therapist
+      const allRes = await fetch(`/api/therapists/recommendations?limit=50`);
+      const all = await allRes.json();
+      const found = Array.isArray(all) ? all.find((t: any) => t.id === Number(preselectedTherapistId)) : null;
+      if (found) {
+        setSelectedTherapistId(found.id);
+        setSelectedShopId(found.salon_id);
+        setStep(3);
       }
     };
     fetchPreselected();
@@ -252,6 +231,7 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
 
       setSubmitting(true);
       try {
+        const supabase = createSupabaseBrowser();
         let imagePath: string | null = null;
 
         // 画像がある場合 → Supabase Storage にアップロード

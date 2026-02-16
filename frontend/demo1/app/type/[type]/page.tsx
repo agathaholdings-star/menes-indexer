@@ -8,7 +8,7 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { Sidebar } from "@/components/layout/sidebar";
 import { therapistTypes } from "@/lib/data";
-import { supabase } from "@/lib/supabase";
+import { supabaseAdmin as supabase } from "@/lib/supabase-admin";
 import { cleanTherapistName } from "@/lib/therapist-utils";
 
 interface DBTherapist {

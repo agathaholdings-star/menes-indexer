@@ -27,6 +27,9 @@ import {
   ExternalLink,
   BarChart3,
   PenSquare,
+  Monitor,
+  Smartphone,
+  Laptop,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -70,7 +73,6 @@ const mockPublicLists = [
 export default function MyPage() {
   const { user: authUser, loading: authLoading } = useAuth();
   const router = useRouter();
-  const supabase = createSupabaseBrowser();
 
   const [activeSection, setActiveSection] = useState<Section>("dashboard");
   const [memberLevel, setMemberLevel] = useState<MemberLevel>("free");
@@ -133,89 +135,28 @@ export default function MyPage() {
       return;
     }
 
-    const fetchProfile = async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("nickname, membership_type, monthly_review_count, total_review_count, view_permission_until")
-        .eq("id", authUser.id)
-        .single();
-
-      if (data) {
-        setProfile({
-          nickname: data.nickname || "名無し",
-          membership_type: data.membership_type || "free",
-          monthly_review_count: data.monthly_review_count || 0,
-          total_review_count: data.total_review_count || 0,
-          view_permission_until: data.view_permission_until,
-        });
-        setMemberLevel((data.membership_type || "free") as MemberLevel);
-        setMonthlyReviewCount(data.monthly_review_count || 0);
-        setEditNickname(data.nickname || "名無し");
+    const fetchData = async () => {
+      const res = await fetch("/api/mypage");
+      if (!res.ok) {
+        setProfileLoading(false);
+        return;
       }
+
+      const data = await res.json();
+
+      if (data.profile) {
+        setProfile(data.profile);
+        setMemberLevel((data.profile.membership_type || "free") as MemberLevel);
+        setMonthlyReviewCount(data.profile.monthly_review_count || 0);
+        setEditNickname(data.profile.nickname || "名無し");
+      }
+      setFavoriteCount(data.favoriteCount || 0);
+      setUserReviews(data.userReviews || []);
+      setSkrReviews(data.skrReviews || []);
       setProfileLoading(false);
     };
 
-    const fetchFavoriteCount = async () => {
-      const { count } = await supabase
-        .from("favorites")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", authUser.id);
-      setFavoriteCount(count || 0);
-    };
-
-    const fetchUserReviews = async () => {
-      const { data } = await supabase
-        .from("reviews")
-        .select("id, score, service_level, moderation_status, created_at, therapist_id, salon_id, therapists(name), salons(name, display_name)")
-        .eq("user_id", authUser.id)
-        .order("created_at", { ascending: false });
-      if (data) {
-        setUserReviews(
-          data.map((r: any) => ({
-            id: r.id,
-            therapist_name: r.therapists?.name || "",
-            shop_name: r.salons?.display_name || r.salons?.name || "",
-            score: r.score || 0,
-            service_level: r.service_level,
-            moderation_status: r.moderation_status,
-            created_at: r.created_at,
-          }))
-        );
-      }
-    };
-
-    const fetchSkrReviews = async () => {
-      const { data } = await supabase
-        .from("reviews")
-        .select("id, therapist_id, score, service_level, comment_service, created_at, therapists(name, image_urls), salons(name, display_name)")
-        .in("service_level", ["skr", "hr"])
-        .eq("moderation_status", "approved")
-        .order("created_at", { ascending: false })
-        .limit(20);
-      if (data) {
-        setSkrReviews(
-          data.map((r: any) => {
-            const imgs = r.therapists?.image_urls as string[] | null;
-            return {
-              id: r.id,
-              therapist_id: r.therapist_id,
-              therapist_name: r.therapists?.name || "",
-              therapist_image: imgs?.[0] || null,
-              shop_name: r.salons?.display_name || r.salons?.name || "",
-              service_level: r.service_level,
-              score: r.score || 0,
-              comment: r.comment_service || "",
-              created_at: r.created_at,
-            };
-          })
-        );
-      }
-    };
-
-    fetchProfile();
-    fetchFavoriteCount();
-    fetchUserReviews();
-    fetchSkrReviews();
+    fetchData();
   }, [authUser, authLoading]);
 
   // Loading state
@@ -515,7 +456,7 @@ export default function MyPage() {
         );
 
       case "favorites":
-        return <FavoritesSection userId={authUser?.id} favoriteLimit={permissions.favoriteLimit} />;
+        return <FavoritesSection favoriteLimit={permissions.favoriteLimit} />;
 
       case "lists":
         if (!permissions.canUseDM) {
@@ -726,7 +667,7 @@ export default function MyPage() {
         );
 
       case "notifications":
-        return <NotificationsSection userId={authUser?.id} />;
+        return <NotificationsSection />;
 
       case "settings":
         return (
@@ -759,6 +700,7 @@ export default function MyPage() {
                     onClick={async () => {
                       if (!authUser || !editNickname.trim()) return;
                       setSavingProfile(true);
+                      const supabase = createSupabaseBrowser();
                       const { error } = await supabase
                         .from("profiles")
                         .update({ nickname: editNickname.trim() })
@@ -815,6 +757,7 @@ export default function MyPage() {
                         return;
                       }
                       setSavingPassword(true);
+                      const supabase = createSupabaseBrowser();
                       const { error } = await supabase.auth.updateUser({ password: newPassword });
                       setSavingPassword(false);
                       if (error) {
@@ -870,6 +813,8 @@ export default function MyPage() {
                 ))}
               </CardContent>
             </Card>
+
+            <DeviceManagementSection />
 
             <Card className="border-destructive/50">
               <CardHeader>
@@ -1062,44 +1007,27 @@ export default function MyPage() {
   );
 }
 
-// お気に入りセクション（DB連動）
-function FavoritesSection({ userId, favoriteLimit }: { userId: string | undefined; favoriteLimit: number }) {
+// お気に入りセクション（API連動）
+function FavoritesSection({ favoriteLimit }: { favoriteLimit: number }) {
   const [favorites, setFavorites] = useState<{ id: number; name: string; age: number | null; image_url: string | null; shop_name: string }[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!userId) { setLoading(false); return; }
-    const supabase = createSupabaseBrowser();
-    supabase
-      .from("favorites")
-      .select("therapist_id, therapists(id, name, age, image_urls, salons(name, display_name))")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .then(({ data }) => {
-        if (data) {
-          setFavorites(
-            data.map((f: any) => {
-              const t = f.therapists;
-              const imgs = t?.image_urls as string[] | null;
-              const shop = t?.salons as { name: string; display_name: string | null } | null;
-              return {
-                id: t?.id || 0,
-                name: t?.name || "",
-                age: t?.age || null,
-                image_url: imgs?.[0] || null,
-                shop_name: shop?.display_name || shop?.name || "",
-              };
-            })
-          );
-        }
+    fetch("/api/favorites")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setFavorites(data);
         setLoading(false);
-      });
-  }, [userId]);
+      })
+      .catch(() => setLoading(false));
+  }, []);
 
   const removeFavorite = async (therapistId: number) => {
-    if (!userId) return;
-    const supabase = createSupabaseBrowser();
-    await supabase.from("favorites").delete().eq("user_id", userId).eq("therapist_id", therapistId);
+    await fetch("/api/favorites", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ therapist_id: therapistId }),
+    });
     setFavorites((prev) => prev.filter((f) => f.id !== therapistId));
   };
 
@@ -1152,30 +1080,23 @@ function FavoritesSection({ userId, favoriteLimit }: { userId: string | undefine
   );
 }
 
-// 通知セクション（DB連動）
-function NotificationsSection({ userId }: { userId: string | undefined }) {
+// 通知セクション（API連動）
+function NotificationsSection() {
   const [notifications, setNotifications] = useState<{ id: number; type: string; title: string; body: string | null; link: string | null; is_read: boolean; created_at: string }[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!userId) { setLoading(false); return; }
-    const supabase = createSupabaseBrowser();
-    supabase
-      .from("notifications")
-      .select("id, type, title, body, link, is_read, created_at")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(30)
-      .then(({ data }) => {
-        setNotifications((data || []) as any[]);
+    fetch("/api/notifications")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setNotifications(data);
         setLoading(false);
-      });
-  }, [userId]);
+      })
+      .catch(() => setLoading(false));
+  }, []);
 
   const markAllRead = async () => {
-    if (!userId) return;
-    const supabase = createSupabaseBrowser();
-    await supabase.from("notifications").update({ is_read: true }).eq("user_id", userId).eq("is_read", false);
+    await fetch("/api/notifications", { method: "PATCH" });
     setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
   };
 
@@ -1223,6 +1144,82 @@ function NotificationsSection({ userId }: { userId: string | undefined }) {
             ))}
           </div>
         )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function DeviceManagementSection() {
+  const [sessions, setSessions] = useState<{ id: string; device_label: string | null; ip_address: string | null; last_active_at: string; created_at: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [removing, setRemoving] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/sessions")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setSessions(data);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  const removeSession = async (id: string) => {
+    setRemoving(id);
+    await fetch(`/api/sessions/${id}`, { method: "DELETE" });
+    setSessions((prev) => prev.filter((s) => s.id !== id));
+    setRemoving(null);
+  };
+
+  if (loading) {
+    return <Card><CardContent className="p-6"><div className="animate-pulse h-24 bg-muted rounded" /></CardContent></Card>;
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg">ログイン中のデバイス</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {sessions.length === 0 ? (
+          <p className="text-sm text-muted-foreground">アクティブなセッションはありません</p>
+        ) : (
+          <div className="space-y-3">
+            {sessions.map((s) => {
+              const label = s.device_label || "不明なデバイス";
+              const isMobile = label.includes("iPhone") || label.includes("Android") || label.includes("iPad");
+              const Icon = isMobile ? Smartphone : label.includes("macOS") || label.includes("Windows") ? Laptop : Monitor;
+              const lastActive = new Date(s.last_active_at);
+              const diffMs = Date.now() - lastActive.getTime();
+              const diffMin = Math.floor(diffMs / 60000);
+              const timeAgo = diffMin < 1 ? "たった今" : diffMin < 60 ? `${diffMin}分前` : diffMin < 1440 ? `${Math.floor(diffMin / 60)}時間前` : `${Math.floor(diffMin / 1440)}日前`;
+
+              return (
+                <div key={s.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <Icon className="h-5 w-5 text-muted-foreground" />
+                    <div>
+                      <p className="font-medium text-sm">{label}</p>
+                      <p className="text-xs text-muted-foreground">最終利用: {timeAgo}</p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeSession(s.id)}
+                    disabled={removing === s.id}
+                    className="text-destructive hover:text-destructive"
+                  >
+                    {removing === s.id ? "切断中..." : "切断"}
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        <p className="text-xs text-muted-foreground mt-3">
+          最大2台のデバイスでログインできます。
+        </p>
       </CardContent>
     </Card>
   );

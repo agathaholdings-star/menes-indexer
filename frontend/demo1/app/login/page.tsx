@@ -4,7 +4,7 @@ import React, { Suspense } from "react";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Eye, EyeOff, Mail, Lock } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, Monitor, Smartphone, Laptop, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +19,18 @@ import {
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
+import {
+  generateDeviceFingerprint,
+  getDeviceLabel,
+} from "@/lib/device-fingerprint";
+
+interface DeviceSession {
+  id: string;
+  device_label: string | null;
+  ip_address: string | null;
+  last_active_at: string;
+  created_at: string;
+}
 
 export default function LoginPage() {
   return (
@@ -35,15 +47,55 @@ function LoginContent() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [deviceLimitSessions, setDeviceLimitSessions] = useState<DeviceSession[] | null>(null);
+  const [removingSession, setRemovingSession] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
 
+  const registerDevice = async (): Promise<boolean> => {
+    const fingerprint = await generateDeviceFingerprint();
+    const label = getDeviceLabel();
+
+    const res = await fetch("/api/sessions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        device_fingerprint: fingerprint,
+        device_label: label,
+      }),
+    });
+
+    if (res.ok) return true;
+
+    if (res.status === 409) {
+      const data = await res.json();
+      setDeviceLimitSessions(data.sessions || []);
+      return false;
+    }
+
+    return true; // エラー時はデバイス制限をスキップ
+  };
+
+  const handleRemoveSession = async (sessionId: string) => {
+    setRemovingSession(sessionId);
+    await fetch(`/api/sessions/${sessionId}`, { method: "DELETE" });
+
+    // 削除後に再登録を試みる
+    const success = await registerDevice();
+    if (success) {
+      router.push(redirectTo);
+      router.refresh();
+    }
+    setRemovingSession(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
+    setDeviceLimitSessions(null);
 
     const supabase = createSupabaseBrowser();
     const { error } = await supabase.auth.signInWithPassword({
@@ -57,6 +109,13 @@ function LoginContent() {
           ? "メールアドレスまたはパスワードが正しくありません"
           : error.message
       );
+      setIsLoading(false);
+      return;
+    }
+
+    // デバイス制限チェック
+    const deviceOk = await registerDevice();
+    if (!deviceOk) {
       setIsLoading(false);
       return;
     }
@@ -82,6 +141,45 @@ function LoginContent() {
               {error && (
                 <div className="mb-4 p-3 rounded-md bg-destructive/10 text-destructive text-sm">
                   {error}
+                </div>
+              )}
+
+              {deviceLimitSessions && (
+                <div className="mb-4 p-4 rounded-md border border-amber-300 bg-amber-50 dark:bg-amber-950/20">
+                  <p className="text-sm font-medium text-amber-800 dark:text-amber-200 mb-3">
+                    現在2台のデバイスでログイン中です。このデバイスでログインするには、いずれかのデバイスを切断してください。
+                  </p>
+                  <div className="space-y-2">
+                    {deviceLimitSessions.map((s) => {
+                      const label = s.device_label || "不明なデバイス";
+                      const isMobile = label.includes("iPhone") || label.includes("Android") || label.includes("iPad");
+                      const Icon = isMobile ? Smartphone : label.includes("macOS") || label.includes("Windows") ? Laptop : Monitor;
+                      const lastActive = new Date(s.last_active_at);
+                      const diffMs = Date.now() - lastActive.getTime();
+                      const diffMin = Math.floor(diffMs / 60000);
+                      const timeAgo = diffMin < 1 ? "たった今" : diffMin < 60 ? `${diffMin}分前` : diffMin < 1440 ? `${Math.floor(diffMin / 60)}時間前` : `${Math.floor(diffMin / 1440)}日前`;
+
+                      return (
+                        <div key={s.id} className="flex items-center justify-between p-2 rounded bg-white dark:bg-background border">
+                          <div className="flex items-center gap-2 text-sm">
+                            <Icon className="h-4 w-4 text-muted-foreground" />
+                            <div>
+                              <div className="font-medium">{label}</div>
+                              <div className="text-xs text-muted-foreground">最終利用: {timeAgo}</div>
+                            </div>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRemoveSession(s.id)}
+                            disabled={removingSession === s.id}
+                          >
+                            {removingSession === s.id ? "切断中..." : <X className="h-4 w-4" />}
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
 

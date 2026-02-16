@@ -6,7 +6,6 @@ import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronRight, TrendingUp } from "lucide-react";
-import { supabase } from "@/lib/supabase";
 
 interface PopularShop {
   id: number;
@@ -104,48 +103,32 @@ export function AreaPopularShops() {
     async function fetchData() {
       const results: AreaSection[] = [];
 
-      for (const pa of popularAreaSlugs) {
-        // エリア情報を取得
-        const { data: area } = await supabase
-          .from("areas")
-          .select("id, name, slug, prefecture_id")
-          .eq("slug", pa.slug)
-          .single();
+      // Fetch all areas and prefectures once
+      const [areasRes, prefsRes] = await Promise.all([
+        fetch("/api/areas"),
+        fetch("/api/prefectures"),
+      ]);
+      const allAreas = await areasRes.json();
+      const allPrefs = await prefsRes.json();
+      if (!Array.isArray(allAreas) || !Array.isArray(allPrefs)) { setLoading(false); return; }
 
+      const prefMap = new Map(allPrefs.map((p: any) => [p.id, p.slug]));
+
+      for (const pa of popularAreaSlugs) {
+        const area = allAreas.find((a: any) => a.slug === pa.slug);
         if (!area) continue;
 
-        // 都道府県slug取得
-        const { data: pref } = await supabase
-          .from("prefectures")
-          .select("slug")
-          .eq("id", area.prefecture_id)
-          .single();
+        const prefSlug = prefMap.get(area.prefecture_id);
+        if (!prefSlug) continue;
 
-        if (!pref) continue;
-
-        // shop_areasから店舗IDを取得（上位4件）
-        const { data: shopAreaRows } = await supabase
-          .from("salon_areas")
-          .select("salon_id")
-          .eq("area_id", area.id)
-          .order("display_order", { ascending: true })
-          .limit(4);
-
-        if (!shopAreaRows || shopAreaRows.length === 0) continue;
-
-        const shopIds = shopAreaRows.map((sa) => sa.salon_id);
-        const { data: shops } = await supabase
-          .from("salons")
-          .select("id, name, display_name, slug, image_url, access, description")
-          .in("id", shopIds)
-          .eq("is_active", true);
-
-        if (!shops || shops.length === 0) continue;
+        const salonsRes = await fetch(`/api/salons?area_id=${area.id}&limit=4`);
+        const shops = await salonsRes.json();
+        if (!Array.isArray(shops) || shops.length === 0) continue;
 
         results.push({
           areaName: area.name,
           areaSlug: area.slug,
-          prefSlug: pref.slug,
+          prefSlug,
           shops: shops as PopularShop[],
         });
       }

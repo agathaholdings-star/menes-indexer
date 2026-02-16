@@ -6,8 +6,7 @@ import Image from "next/image";
 import { ChevronRight, TrendingUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { supabase } from "@/lib/supabase";
-import { cleanTherapistName, isPlaceholderName, excludePlaceholderNames } from "@/lib/therapist-utils";
+import { cleanTherapistName, isPlaceholderName } from "@/lib/therapist-utils";
 
 interface PopularTherapist {
   id: number;
@@ -22,18 +21,12 @@ export function PopularTherapists() {
 
   useEffect(() => {
     async function fetchTherapists() {
-      const { data } = await excludePlaceholderNames(
-        supabase
-          .from("therapists")
-          .select("id, name, age, image_urls, salons(name, display_name)")
-          .eq("status", "active")
-      )
-        .order("created_at", { ascending: false })
-        .limit(500);
-      if (data) {
+      const res = await fetch("/api/therapists/recommendations?limit=8");
+      const data = await res.json();
+      if (Array.isArray(data)) {
         setTherapists(
           data
-            .filter((t) => {
+            .filter((t: any) => {
               if (isPlaceholderName(t.name)) return false;
               const cleaned = cleanTherapistName(t.name);
               if (cleaned.length > 15) return false;
@@ -42,7 +35,7 @@ export function PopularTherapists() {
               return true;
             })
             .slice(0, 8)
-            .map((t) => {
+            .map((t: any) => {
               const imgs = t.image_urls as string[] | null;
               const shop = t.salons as { name: string; display_name: string | null } | null;
               return {

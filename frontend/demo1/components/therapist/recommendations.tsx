@@ -6,7 +6,6 @@ import Image from "next/image";
 import { Star, Sparkles } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { createSupabaseBrowser } from "@/lib/supabase/client";
 import { isPlaceholderName } from "@/lib/therapist-utils";
 import type { Therapist } from "@/lib/data";
 
@@ -28,8 +27,6 @@ export function Recommendations({ therapist }: RecommendationsProps) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const supabase = createSupabaseBrowser();
-
     async function fetchSimilar() {
       const salonId = Number(therapist.shopId);
       if (!salonId) {
@@ -37,24 +34,13 @@ export function Recommendations({ therapist }: RecommendationsProps) {
         return;
       }
 
-      let query = supabase
-        .from("therapists")
-        .select("id, name, age, image_urls, salon_id")
-        .eq("salon_id", salonId)
-        .neq("id", Number(therapist.id))
-        .not("name", "ilike", "%プロフィール%")
-        .not("name", "ilike", "%profile%")
-        .not("name", "ilike", "%THERAPIST%")
-        .not("name", "ilike", "%セラピスト%")
-        .not("name", "ilike", "%キャスト紹介%")
-        .not("name", "ilike", "%在籍表%")
-        .not("name", "ilike", "%ランキング%")
-        .limit(12);
+      const res = await fetch(
+        `/api/therapists/recommendations?salon_id=${salonId}&exclude_id=${therapist.id}&limit=12`
+      );
+      const data = await res.json();
 
-      const { data } = await query;
-
-      if (data) {
-        const filtered = data.filter((t) => !isPlaceholderName(t.name));
+      if (Array.isArray(data)) {
+        const filtered = data.filter((t: any) => !isPlaceholderName(t.name));
         setSimilar(filtered.slice(0, 6));
       }
       setLoading(false);

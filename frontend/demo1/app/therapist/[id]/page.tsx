@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { TherapistPageClient } from "./therapist-page-client";
-import { supabase } from "@/lib/supabase";
+import { supabaseAdmin as supabase } from "@/lib/supabase-admin";
 import type { Therapist, Review } from "@/lib/data";
 import { parseNameAge } from "@/lib/therapist-utils";
 import { getShopAreaInfo } from "@/lib/supabase-data";

@@ -310,7 +310,7 @@ export type Database = {
           name: string
           official_url: string | null
           phone: string | null
-          salon_overview: string | null
+          hacks_salon_overview: string | null
           search_volume: number | null
           seo_title: string | null
           service_tags: string[] | null
@@ -336,7 +336,7 @@ export type Database = {
           name: string
           official_url?: string | null
           phone?: string | null
-          salon_overview?: string | null
+          hacks_salon_overview?: string | null
           search_volume?: number | null
           seo_title?: string | null
           service_tags?: string[] | null
@@ -362,7 +362,7 @@ export type Database = {
           name?: string
           official_url?: string | null
           phone?: string | null
-          salon_overview?: string | null
+          hacks_salon_overview?: string | null
           search_volume?: number | null
           seo_title?: string | null
           service_tags?: string[] | null

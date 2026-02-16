@@ -5,17 +5,14 @@ import Link from "next/link";
 import { ChevronRight, PenSquare } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/lib/supabase";
-
 export function LatestReviews() {
   const [reviewCount, setReviewCount] = useState<number | null>(null);
 
   useEffect(() => {
     async function checkReviews() {
-      const { count } = await supabase
-        .from("reviews")
-        .select("id", { count: "exact", head: true });
-      setReviewCount(count ?? 0);
+      const res = await fetch("/api/reviews?limit=1");
+      const json = await res.json();
+      setReviewCount(json.count ?? 0);
     }
     checkReviews();
   }, []);

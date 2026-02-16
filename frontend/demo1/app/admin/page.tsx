@@ -20,7 +20,6 @@ import {
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { useAuth } from "@/lib/auth-context";
-import { createSupabaseBrowser } from "@/lib/supabase/client";
 
 type ModerationStatus = "pending" | "approved" | "rejected";
 type ReviewFilter = ModerationStatus | "all";
@@ -77,6 +76,15 @@ const STATUS_BADGE_VARIANT: Record<ModerationStatus, "default" | "secondary" | "
   rejected: "destructive",
 };
 
+async function adminAction(action: string, params: Record<string, any> = {}) {
+  const res = await fetch("/api/admin", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action, ...params }),
+  });
+  return res.json();
+}
+
 export default function AdminPage() {
   const { user: authUser } = useAuth();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
@@ -90,150 +98,71 @@ export default function AdminPage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
 
-  // DB-based admin check
   useEffect(() => {
     if (!authUser) { setIsAdmin(false); setLoading(false); return; }
-    const supabase = createSupabaseBrowser();
-    supabase
-      .from("profiles")
-      .select("is_admin")
-      .eq("id", authUser.id)
-      .single()
-      .then(({ data }) => {
-        setIsAdmin(data?.is_admin === true);
-        if (!data?.is_admin) setLoading(false);
-      });
-  }, [authUser]);
-
-  useEffect(() => {
-    if (!isAdmin) return;
-    const supabase = createSupabaseBrowser();
 
     async function fetchData() {
-      // Stats
-      const [shopCount, therapistCount, reviewCount, userCount, pendingCount] = await Promise.all([
-        supabase.from("salons").select("id", { count: "exact", head: true }),
-        supabase.from("therapists").select("id", { count: "exact", head: true }),
-        supabase.from("reviews").select("id", { count: "exact", head: true }),
-        supabase.from("profiles").select("id", { count: "exact", head: true }),
-        supabase.from("reviews").select("id", { count: "exact", head: true }).eq("moderation_status", "pending"),
-      ]);
-      setStats({
-        shops: shopCount.count || 0,
-        therapists: therapistCount.count || 0,
-        reviews: reviewCount.count || 0,
-        users: userCount.count || 0,
-        pending: pendingCount.count || 0,
-      });
-
-      // Reviews (all statuses - admin RLS allows full access)
-      const { data: reviewData } = await supabase
-        .from("reviews")
-        .select("id, score, looks_type, body_type, service_level, moderation_status, comment_first_impression, comment_service, comment_advice, created_at, user_id, therapist_id, salon_id, verification_image_path, is_verified")
-        .order("created_at", { ascending: false })
-        .limit(100);
-
-      if (reviewData && reviewData.length > 0) {
-        const therapistIds = [...new Set(reviewData.map((r) => r.therapist_id))];
-        const { data: therapists } = await supabase
-          .from("therapists")
-          .select("id, name")
-          .in("id", therapistIds);
-        const therapistMap = new Map((therapists || []).map((t) => [t.id, t.name]));
-
-        const shopIds = [...new Set(reviewData.map((r) => r.salon_id))];
-        const { data: shops } = await supabase
-          .from("salons")
-          .select("id, display_name, name")
-          .in("id", shopIds);
-        const shopMap = new Map((shops || []).map((s) => [s.id, s.display_name || s.name]));
-
-        const userIds = [...new Set(reviewData.map((r) => r.user_id))];
-        const { data: profiles } = await supabase
-          .from("profiles")
-          .select("id, nickname")
-          .in("id", userIds);
-        const userMap = new Map((profiles || []).map((p) => [p.id, p.nickname || "名無し"]));
-
-        setReviews(
-          reviewData.map((r) => ({
-            ...r,
-            moderation_status: r.moderation_status as ModerationStatus,
-            therapist_name: therapistMap.get(r.therapist_id) || `ID:${r.therapist_id}`,
-            shop_name: shopMap.get(r.salon_id) || `ID:${r.salon_id}`,
-            user_nickname: userMap.get(r.user_id) || "不明",
-          }))
-        );
+      const res = await fetch("/api/admin");
+      if (res.status === 401 || res.status === 403) {
+        setIsAdmin(false);
+        setLoading(false);
+        return;
       }
 
-      // BBS threads (not in generated types yet)
-      const { data: threadData } = await (supabase as any)
-        .from("bbs_threads")
-        .select("id, title, category, reply_count, view_count, created_at, user_id, profiles(nickname)")
-        .order("created_at", { ascending: false })
-        .limit(50);
-      setThreads(
-        (threadData || []).map((t: any) => ({
-          ...t,
-          user_nickname: t.profiles?.nickname || "名無し",
+      const data = await res.json();
+      setIsAdmin(true);
+      setStats(data.stats);
+      setReviews(
+        (data.reviews || []).map((r: any) => ({
+          ...r,
+          moderation_status: r.moderation_status as ModerationStatus,
         }))
       );
-
-      // Users
-      const { data: userData } = await supabase
-        .from("profiles")
-        .select("id, nickname, membership_type, total_review_count, created_at")
-        .order("created_at", { ascending: false })
-        .limit(100);
-      setUsers((userData as UserRow[]) || []);
-
+      setThreads(data.threads || []);
+      setUsers((data.users as UserRow[]) || []);
       setLoading(false);
     }
 
     fetchData();
-  }, [isAdmin]);
+  }, [authUser]);
 
   const handleApprove = async (reviewId: string) => {
     setActionLoading(reviewId);
-    const supabase = createSupabaseBrowser();
-    const { error } = await supabase.rpc("approve_review", { review_id: reviewId });
-    if (!error) {
+    const result = await adminAction("approve_review", { review_id: reviewId });
+    if (result.ok) {
       setReviews((prev) =>
         prev.map((r) => (r.id === reviewId ? { ...r, moderation_status: "approved" as ModerationStatus } : r))
       );
       setStats((prev) => ({ ...prev, pending: Math.max(0, prev.pending - 1) }));
     } else {
-      console.error("Approve failed:", error);
+      console.error("Approve failed:", result.error);
     }
     setActionLoading(null);
   };
 
   const handleReject = async (reviewId: string) => {
     setActionLoading(reviewId);
-    const supabase = createSupabaseBrowser();
-    const { error } = await supabase.rpc("reject_review", { review_id: reviewId });
-    if (!error) {
+    const result = await adminAction("reject_review", { review_id: reviewId });
+    if (result.ok) {
       setReviews((prev) =>
         prev.map((r) => (r.id === reviewId ? { ...r, moderation_status: "rejected" as ModerationStatus } : r))
       );
       setStats((prev) => ({ ...prev, pending: Math.max(0, prev.pending - 1) }));
     } else {
-      console.error("Reject failed:", error);
+      console.error("Reject failed:", result.error);
     }
     setActionLoading(null);
   };
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
-    const supabase = createSupabaseBrowser();
     const { type, id } = deleteTarget;
 
     if (type === "review") {
-      await supabase.from("reviews").delete().eq("id", id as string);
+      await adminAction("delete_review", { review_id: id });
       setReviews((prev) => prev.filter((r) => r.id !== id));
     } else if (type === "thread") {
-      await (supabase as any).from("bbs_posts").delete().eq("thread_id", id);
-      await (supabase as any).from("bbs_threads").delete().eq("id", id);
+      await adminAction("delete_thread", { thread_id: id });
       setThreads((prev) => prev.filter((t) => t.id !== id));
     }
     setDeleteTarget(null);
@@ -241,31 +170,23 @@ export default function AdminPage() {
 
   const handleVerify = async (reviewId: string) => {
     setActionLoading(reviewId);
-    const supabase = createSupabaseBrowser();
-    const { error } = await supabase
-      .from("reviews")
-      .update({ is_verified: true })
-      .eq("id", reviewId);
-    if (!error) {
+    const result = await adminAction("verify_review", { review_id: reviewId });
+    if (result.ok) {
       setReviews((prev) =>
         prev.map((r) => (r.id === reviewId ? { ...r, is_verified: true } : r))
       );
     } else {
-      console.error("Verify failed:", error);
+      console.error("Verify failed:", result.error);
     }
     setActionLoading(null);
   };
 
   const handleApproveAndVerify = async (reviewId: string) => {
     setActionLoading(reviewId);
-    const supabase = createSupabaseBrowser();
-    const { error: approveError } = await supabase.rpc("approve_review", { review_id: reviewId });
-    if (!approveError) {
-      const { error: verifyError } = await supabase
-        .from("reviews")
-        .update({ is_verified: true })
-        .eq("id", reviewId);
-      if (!verifyError) {
+    const approveResult = await adminAction("approve_review", { review_id: reviewId });
+    if (approveResult.ok) {
+      const verifyResult = await adminAction("verify_review", { review_id: reviewId });
+      if (verifyResult.ok) {
         setReviews((prev) =>
           prev.map((r) =>
             r.id === reviewId ? { ...r, moderation_status: "approved" as ModerationStatus, is_verified: true } : r
@@ -274,18 +195,15 @@ export default function AdminPage() {
       }
       setStats((prev) => ({ ...prev, pending: Math.max(0, prev.pending - 1) }));
     } else {
-      console.error("Approve+Verify failed:", approveError);
+      console.error("Approve+Verify failed:", approveResult.error);
     }
     setActionLoading(null);
   };
 
   const handleShowImage = async (path: string) => {
-    const supabase = createSupabaseBrowser();
-    const { data } = await supabase.storage
-      .from("review-verifications")
-      .createSignedUrl(path, 300); // 5分間有効
-    if (data?.signedUrl) {
-      setPreviewImageUrl(data.signedUrl);
+    const result = await adminAction("get_image_url", { path });
+    if (result.url) {
+      setPreviewImageUrl(result.url);
     }
   };
 

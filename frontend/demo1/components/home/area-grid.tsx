@@ -5,7 +5,6 @@ import Link from "next/link";
 import { MapPin } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { supabase } from "@/lib/supabase";
 
 // region表示順
 const regionOrder = ["関東", "関西", "東海", "北海道・東北", "北陸・甲信越", "中国・四国", "九州・沖縄"];
@@ -31,22 +30,14 @@ export function AreaGrid() {
 
   useEffect(() => {
     async function fetchData() {
-      // 都道府県を取得
-      const { data: prefectures } = await supabase
-        .from("prefectures")
-        .select("*")
-        .order("display_order", { ascending: true });
+      const [prefsRes, areasRes] = await Promise.all([
+        fetch("/api/prefectures"),
+        fetch("/api/areas"),
+      ]);
+      const prefectures = await prefsRes.json();
+      const areas = await areasRes.json();
 
-      if (!prefectures) return;
-
-      // エリアを全件取得（salon_count > 0 のみ）
-      const { data: areas } = await supabase
-        .from("areas")
-        .select("id, prefecture_id, name, slug, salon_count")
-        .gt("salon_count", 0)
-        .order("search_volume", { ascending: false });
-
-      if (!areas) return;
+      if (!Array.isArray(prefectures) || !Array.isArray(areas)) return;
 
       // エリアをprefecture_idでグルーピング
       const areasByPref = new Map<number, AreaItem[]>();

@@ -11,7 +11,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { supabase } from "@/lib/supabase";
 
 interface PrefOption {
   label: string;
@@ -31,31 +30,22 @@ export function HeroSection() {
   useEffect(() => {
     async function fetchData() {
       try {
-        // 都道府県を取得
-        const { data: prefs } = await supabase
-          .from("prefectures")
-          .select("id, name, slug")
-          .order("display_order", { ascending: true });
+        const [prefsRes, statsRes] = await Promise.all([
+          fetch("/api/prefectures"),
+          fetch("/api/stats"),
+        ]);
+        const prefs = await prefsRes.json();
+        const stats = await statsRes.json();
 
-        if (prefs) {
+        if (Array.isArray(prefs)) {
           setPrefectures([
             defaultArea,
-            ...prefs.map((p) => ({ label: p.name, value: p.name, slug: p.slug })),
+            ...prefs.map((p: any) => ({ label: p.name, value: p.name, slug: p.slug })),
           ]);
         }
 
-        // 店舗数とエリア数を取得
-        const { count: sc } = await supabase
-          .from("salons")
-          .select("*", { count: "exact", head: true })
-          .eq("is_active", true);
-        if (sc !== null) setShopCount(sc);
-
-        const { count: ac } = await supabase
-          .from("areas")
-          .select("*", { count: "exact", head: true })
-          .gt("salon_count", 0);
-        if (ac !== null) setAreaCount(ac);
+        if (stats.shopCount != null) setShopCount(stats.shopCount);
+        if (stats.areaCount != null) setAreaCount(stats.areaCount);
       } catch (err) {
         console.error("ヒーローセクションデータ取得エラー:", err);
       }
