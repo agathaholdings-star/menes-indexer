@@ -23,6 +23,7 @@
 - **公開レベル仕上げ完了**: デバッグUI除去、mockデータ全削除、Stripe環境変数化、おすすめ実データ化
 - **データクレンジング完了**: bust→cup分離651件、元データはname_raw/bust_rawに退避保持
 - **ローカル動作確認済み**: トップページ（6,489店舗/821エリア表示）、セラピスト検索（実データ表示）OK
+- **ME口コミマッチング完了**: ME 80,458名 vs Indexer 79,639名 → **15,690名マッチ（19.5%）、口コミ48,288件**
 - **成果物**:
     - `docs/SERVICE_OVERVIEW.md`: サービス概要・ビジネスモデル
     - `docs/SYSTEM_DESIGN.md`: システム構成・DBスキーマ
@@ -37,8 +38,10 @@
     6. ~~フロントエンドとローカルSupabaseの接続~~ → ✅ 完了（pg_dump投入済み、pnpm devで実データ表示確認済み）
     7. ~~公開レベル仕上げ~~ → ✅ 完了（デバッグUI除去・mock削除・Stripe環境変数化・おすすめ実データ化）
     8. ~~ローカルSupabase最新データ同期~~ → ✅ 完了（VPS 79,639名→ローカル投入、2026-02-16）
-    9. **本番デプロイ準備** ← 次はこれ（本番Supabaseスキーマpush → Vercel環境変数 → デプロイ）
-    10. VPSのスクレイピングデータをpg_dumpで本番Supabaseに移行
+    9. ~~ME口コミマッチングアセスメント~~ → ✅ 完了（15,690名マッチ、48,288件の口コミ移行可能）
+    10. **ME口コミリライト＆初期データ投入** ← 設計一部決定済み・実装待ち（下記参照）
+    11. **本番デプロイ準備**（本番Supabaseスキーマpush → Vercel環境変数 → デプロイ）
+    12. VPSのスクレイピングデータをpg_dumpで本番Supabaseに移行
 
 ## 開発フロー方針（確定）
 
@@ -413,6 +416,83 @@ Supabaseに格納済み（MEスクレイピングデータ）:
 **CloudflareでDNS設定:**
 1. Cloudflare → ドメイン → DNS
 2. CNAME追加: `@` → `cname.vercel-dns.com`（Proxy: OFF）
+
+## ME口コミ移行計画（2026-02-16 一部決定済み）
+
+### マッチング結果（確定）
+
+`database/match_me_reviews.py` で両DB突合済み。結果: `database/match_me_reviews_result.json`
+
+| 項目 | 件数 |
+|------|------|
+| ME reviews_dataあり | 80,458名 |
+| Indexer therapists | 79,639名 |
+| **マッチ合計** | **15,690名 (19.5%)** |
+| - URL直接一致 | 12,829名 |
+| - ドメイン+名前一致 | 1,449名 |
+| - サロン名+名前一致 | 1,412名 |
+| マッチした口コミ数 | 48,288件 |
+
+### マッチング方法（3段階）
+1. **URL直接一致**: ME `therapist_db.therapist_url` = Indexer `therapists.source_url`（URL正規化後）
+2. **ドメイン+名前一致**: ME `salon_db.salon_url` ドメイン = Indexer `salons.domain` → 同サロン内で名前一致
+3. **サロン名+名前一致**: ME `salon_db.salon_name` ≈ Indexer `salons.display_name` → 名前一致
+
+### 口コミリライト＆投入
+
+**コンセプト**: マッチした15,690名に対し、MEの口コミを1件ずつClaude APIでリライト → Indexerの初期口コミとして投入。コールドスタート問題を回避する。
+
+**ビジネスロジック**: ユーザーが口コミを見るには自分も1件書く必要がある → 初期口コミがあれば「見たい→書く」ループが初日から回る
+
+**方針**:
+- 1セラピストにつき1件だけリライト投入（自然な「最初の投稿者」感）
+- まるまるコピーではなくClaude APIでリライト（バレ防止）
+- バッチ処理で全15,690件を一括処理
+
+### 決定済み事項
+
+#### 1. user_id（reviews.user_id）の扱い — ✅ 決定
+- `reviews.user_id` を `NOT NULL` → `NULL可` に変更するマイグレーション追加
+- `is_seed BOOL DEFAULT false` カラムを追加
+- `is_seed=true` の口コミはフロントで投稿者プロフィール・DMリンクを非表示にする
+- ユーザー投稿は従来通り `user_id` 必須（アプリ側でバリデーション）
+
+#### 2. 構造化データ — ✅ 決定
+- **全部LLMで推定**: `looks_type`, `body_type`, `service_level`, `param_*`(1-5), `score`(0-100)
+- 元口コミテキストから推定するプロンプトを設計する
+
+#### 3. comment系カラム — ✅ 決定
+- `comment_first_impression`, `comment_service`, `comment_advice` → LLMでリライト生成
+- `comment_service_detail`（閲覧制限あり） → LLMで推定して埋める
+
+#### 4. 口コミ選択 — ✅ ステイ（後で決める）
+- 複数口コミがある場合の選び方は実装時に決定
+- 複数口コミをまとめたものを別プロンプトで生成する予定
+
+#### 5. created_at — ✅ 決定
+- 元のME口コミ日付からランダムに±1〜30日ずらす（MEと一致しないように）
+
+### 未決事項
+- [ ] 使用モデル: Sonnet推奨（~$70）、10件くらいサンプル比較してから決める。Haiku(~$6) / Opus(~$350) も選択肢
+- [ ] リライトプロンプトの具体的な設計（文体変更＋構造化データ推定を1プロンプトにまとめるか分けるか）
+- [ ] 複数口コミからどれを選ぶかのロジック（最新？最高評点？最も情報量が多いもの？まとめ？）
+
+**コスト見積もり（15,690件）**:
+| モデル | 見積もりコスト |
+|--------|-------------|
+| Haiku 4.5 | ~$6 |
+| Sonnet 4.5 | ~$70 |
+| Opus | ~$350 |
+
+**接続先**:
+- ME Supabase: `~/Desktop/menesthe-db/.env` の `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`
+- Indexer ローカルPG: `postgresql://postgres:postgres@127.0.0.1:54322/postgres`
+
+**関連ファイル**:
+| ファイル | 内容 |
+|---------|------|
+| `database/match_me_reviews.py` | マッチングアセスメントスクリプト |
+| `database/match_me_reviews_result.json` | マッチング結果JSON |
 
 ## 競合サイト調査・エリア設計（2026-02-08 更新）
 
