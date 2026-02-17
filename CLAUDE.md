@@ -460,33 +460,35 @@ Supabaseに格納済み（MEスクレイピングデータ）:
 
 テキストenumではなく**数字IDのマスタテーブル**方式。ラベル変更はマスタ1行更新で済む。
 
-#### looks_types（見た目タイプ）
+#### looks_types（見た目タイプ）— 複数選択（int[]）
 | id | ラベル |
 |---|---|
 | 1 | 清楚系 |
 | 2 | 素人系 |
 | 3 | ギャル系 |
 | 4 | モデル系 |
-| 5 | 妹系 |
+| 5 | ロリ系 |
 | 6 | 女優系 |
 | 7 | 夜職系 |
 | 8 | 熟女系 |
 
-#### body_types（体型）
+#### body_types（体型）— 5段階
 | id | ラベル |
 |---|---|
-| 1 | スレンダー |
-| 2 | 普通 |
-| 3 | グラマー |
-| 4 | ぽっちゃり |
+| 1 | 華奢 |
+| 2 | スレンダー |
+| 3 | バランス |
+| 4 | グラマー |
+| 5 | ぽっちゃり |
 
-#### cup_types（おっぱい）
+#### cup_types（おっぱい）— 5段階
 | id | ラベル |
 |---|---|
-| 1 | ちょうどいい |
-| 2 | 巨乳 |
-| 3 | ちっぱい |
-| 4 | 爆乳 |
+| 1 | なし |
+| 2 | 控えめ |
+| 3 | 標準 |
+| 4 | 大きめ |
+| 5 | 巨乳 |
 
 #### service_levels（サービス）
 | id | ラベル |
@@ -496,7 +498,7 @@ Supabaseに格納済み（MEスクレイピングデータ）:
 | 3 | HR |
 
 **reviewsテーブル変更点**:
-- `looks_type`(text) → `looks_type_id`(int) REFERENCES looks_types(id)
+- `looks_type`(text) → `looks_type_ids`(int[]) 複数選択（1〜3個）
 - `body_type`(text) → `body_type_id`(int) REFERENCES body_types(id)
 - `service_level`(text) → `service_level_id`(int) REFERENCES service_levels(id)
 - `cup_type_id`(int) REFERENCES cup_types(id) を新規追加

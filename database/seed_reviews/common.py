@@ -83,29 +83,33 @@ def normalize_name(name: str | None) -> str | None:
 # body_type / cup_type フォールバック
 # ---------------------------------------------------------------------------
 def fallback_body_type_id(waist: int | None) -> int | None:
-    """waist(cm)からbody_type_idを推定"""
+    """waist(cm)からbody_type_idを推定（5段階）"""
     if waist is None:
         return None
-    if waist <= 56:
-        return 1  # スレンダー
-    if waist <= 62:
-        return 2  # 普通
+    if waist <= 54:
+        return 1  # 華奢
+    if waist <= 58:
+        return 2  # スレンダー
+    if waist <= 63:
+        return 3  # バランス
     if waist <= 68:
-        return 3  # グラマー
-    return 4  # ぽっちゃり
+        return 4  # グラマー
+    return 5  # ぽっちゃり
 
 
 def fallback_cup_type_id(cup: str | None) -> int | None:
-    """cupサイズ文字からcup_type_idを推定"""
+    """cupサイズ文字からcup_type_idを推定（5段階）"""
     if not cup:
         return None
     cup = cup.strip().upper()
-    if cup in ("A", "B", "C"):
-        return 3  # ちっぱい
+    if cup in ("A",):
+        return 1  # なし
+    if cup in ("B", "C"):
+        return 2  # 控えめ
     if cup in ("D", "E"):
-        return 1  # ちょうどいい
+        return 3  # 標準
     if cup in ("F", "G"):
-        return 2  # 巨乳
+        return 4  # 大きめ
     if cup >= "H":
-        return 4  # 爆乳
+        return 5  # 巨乳
     return None

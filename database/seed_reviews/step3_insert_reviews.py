@@ -30,14 +30,14 @@ BATCH_SIZE = 500
 
 # 有効な値の範囲
 VALID_LOOKS_TYPE_IDS = set(range(1, 9))    # 1-8
-VALID_BODY_TYPE_IDS = set(range(1, 5))     # 1-4
-VALID_CUP_TYPE_IDS = set(range(1, 5))      # 1-4
+VALID_BODY_TYPE_IDS = set(range(1, 6))     # 1-5
+VALID_CUP_TYPE_IDS = set(range(1, 6))      # 1-5
 VALID_SERVICE_LEVEL_IDS = set(range(1, 4)) # 1-3
 
 INSERT_SQL = """
 INSERT INTO reviews (
     user_id, therapist_id, salon_id,
-    looks_type_id, body_type_id, cup_type_id, service_level_id,
+    looks_type_ids, body_type_id, cup_type_id, service_level_id,
     param_conversation, param_distance, param_technique, param_personality,
     score,
     comment_reason, comment_first_impression, comment_style,
@@ -188,7 +188,14 @@ def main():
             continue
 
         # バリデーション
-        looks_type_id = validate_id(review.get("looks_type_id"), VALID_LOOKS_TYPE_IDS)
+        raw_looks = review.get("looks_type_ids")
+        if isinstance(raw_looks, list):
+            looks_type_ids = [v for v in raw_looks if isinstance(v, int) and v in VALID_LOOKS_TYPE_IDS]
+            looks_type_ids = looks_type_ids[:3] if looks_type_ids else None
+        elif isinstance(raw_looks, int) and raw_looks in VALID_LOOKS_TYPE_IDS:
+            looks_type_ids = [raw_looks]
+        else:
+            looks_type_ids = None
         body_type_id = validate_id(review.get("body_type_id"), VALID_BODY_TYPE_IDS)
         cup_type_id = validate_id(review.get("cup_type_id"), VALID_CUP_TYPE_IDS)
         service_level_id = validate_id(review.get("service_level_id"), VALID_SERVICE_LEVEL_IDS)
@@ -211,7 +218,7 @@ def main():
 
         params = (
             tid, sid,
-            looks_type_id, body_type_id, cup_type_id, service_level_id,
+            looks_type_ids, body_type_id, cup_type_id, service_level_id,
             param_conv, param_dist, param_tech, param_pers,
             score,
             review.get("comment_reason"),
@@ -264,7 +271,7 @@ def main():
     else:
         print("\n検証クエリ:")
         print("  SELECT count(*) FROM reviews WHERE is_seed = true;")
-        print("  SELECT looks_type_id, count(*) FROM reviews WHERE is_seed GROUP BY 1 ORDER BY 1;")
+        print("  SELECT unnest(looks_type_ids) AS lt, count(*) FROM reviews WHERE is_seed GROUP BY 1 ORDER BY 1;")
         print("  SELECT avg(score) FROM reviews WHERE is_seed;")
 
 

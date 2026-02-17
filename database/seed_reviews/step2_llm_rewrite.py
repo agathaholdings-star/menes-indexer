@@ -67,9 +67,9 @@ SYSTEM_PROMPT = """\
 ```json
 {
   "score": 80,
-  "looks_type_id": 1,
+  "looks_type_ids": [1, 4],
   "body_type_id": 2,
-  "cup_type_id": 1,
+  "cup_type_id": 3,
   "service_level_id": 2,
   "param_conversation": 4,
   "param_distance": 3,
@@ -91,9 +91,9 @@ SYSTEM_PROMPT = """\
 
 ### 数値フィールド
 - `score`: 0-100。口コミ内容から主観的に判定。90+: 絶賛, 80-89: 満足, 70-79: 普通〜やや良い, 60-69: 微妙, <60: ハズレ
-- `looks_type_id`: 1=清楚系, 2=素人系, 3=ギャル系, 4=モデル系, 5=妹系, 6=女優系, 7=夜職系, 8=熟女系
-- `body_type_id`: 1=スレンダー, 2=普通, 3=グラマー, 4=ぽっちゃり。判定不能ならnull
-- `cup_type_id`: 1=ちょうどいい, 2=巨乳, 3=ちっぱい, 4=爆乳。判定不能ならnull
+- `looks_type_ids`: **配列（1〜3個）**。当てはまるものを複数選択。1=清楚系, 2=素人系, 3=ギャル系, 4=モデル系, 5=ロリ系, 6=女優系, 7=夜職系, 8=熟女系
+- `body_type_id`: 1=華奢, 2=スレンダー, 3=バランス, 4=グラマー, 5=ぽっちゃり。判定不能ならnull
+- `cup_type_id`: 1=なし, 2=控えめ, 3=標準, 4=大きめ, 5=巨乳。判定不能ならnull
 - `service_level_id`: 1=健全, 2=SKR, 3=HR
 - `param_conversation`: 会話力 1-5
 - `param_distance`: 距離感・密着度 1-5
