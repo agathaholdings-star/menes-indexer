@@ -60,6 +60,12 @@ SYSTEM_PROMPT = """\
 
 6. **金額は元口コミに記載がある場合のみ**使用。推測禁止。
 
+7. **フィールドの生成方針**（全フィールド必須、nullは返さないこと）
+   - `comment_first_impression`, `comment_style`, `comment_service`, `comment_service_detail`: 口コミ元データの内容を元にリライトする
+   - `comment_reason`, `comment_revisit`, `comment_advice`: 口コミ投稿者の立場で自然な主観を自由に書いてよい
+   - `comment_cost`: 口コミ元データに金額情報がある場合はそれを使う。金額情報がない場合は「覚えてない」「確か○万くらいだった」「忘れちゃったけどコスパは良かった」等の曖昧な主観を生成する。具体的な架空金額（例: "15,000円でした"）の捏造は禁止
+   - `cost_total`: 口コミ元データに明確な金額がある場合のみ数値を入れる。不明な場合はnull（これは非表示の内部数値フィールドなのでバレない）
+
 ## 出力形式
 
 **必ず以下のJSON形式のみを出力してください。**他の文字やマークダウンは不要です。
@@ -76,14 +82,14 @@ SYSTEM_PROMPT = """\
   "param_technique": 4,
   "param_personality": 4,
   "cost_total": 20000,
-  "comment_reason": "Q0: きっかけ（50-100字）",
-  "comment_first_impression": "Q1: 顔の印象（50-100字）",
-  "comment_style": "Q2: スタイル（50-100字）",
-  "comment_service": "Q3: 施術の流れ（100-150字）",
-  "comment_service_detail": "Q4: どこまでいけた（50-150字）",
-  "comment_cost": "Q5: 金額（50-100字）",
-  "comment_revisit": "Q6: 再訪するか（50-100字）",
-  "comment_advice": "Q7: アドバイス（50-100字）"
+  "comment_reason": "Q0: きっかけ（50-300字）",
+  "comment_first_impression": "Q1: 顔の印象（50-300字）",
+  "comment_style": "Q2: スタイル（50-300字）",
+  "comment_service": "Q3: 施術の流れ（100-300字）",
+  "comment_service_detail": "Q4: どこまでいけた（50-300字）",
+  "comment_cost": "Q5: 金額（20-300字）",
+  "comment_revisit": "Q6: 再訪するか（50-300字）",
+  "comment_advice": "Q7: アドバイス（50-300字）"
 }
 ```
 
@@ -102,14 +108,14 @@ SYSTEM_PROMPT = """\
 - `cost_total`: トータル金額（円）。不明ならnull
 
 ### テキストフィールド
-- `comment_reason`: きっかけ。なぜこのセラピストを選んだか（50-100字）
-- `comment_first_impression`: 顔の印象（50-100字）
-- `comment_style`: スタイル・体型（50-100字）
-- `comment_service`: 施術の流れ（100-150字）
-- `comment_service_detail`: どこまでいけたか。寛容度の詳細（50-150字）
-- `comment_cost`: 金額やコスパ（50-100字）。元口コミに金額情報がなければ「特になし」
-- `comment_revisit`: 再訪意欲（50-100字）
-- `comment_advice`: 後から行く人へのアドバイス（50-100字）"""
+- `comment_reason`: きっかけ。なぜこのセラピストを選んだか（50-300字）
+- `comment_first_impression`: 顔の印象（50-300字）
+- `comment_style`: スタイル・体型（50-300字）
+- `comment_service`: 施術の流れ（100-300字）
+- `comment_service_detail`: どこまでいけたか。寛容度の詳細（50-300字）
+- `comment_cost`: 金額やコスパ（20-300字）。元口コミに金額情報がなければ曖昧な主観（「覚えてないけどコスパは良かった」等）を書く。nullや空文字は禁止
+- `comment_revisit`: 再訪意欲（50-300字）
+- `comment_advice`: 後から行く人へのアドバイス（50-300字）"""
 
 
 def build_user_prompt(match: dict) -> str:

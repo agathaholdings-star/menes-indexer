@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { therapistTypes, bodyTypes, parameterLabels } from "@/lib/data";
+import { therapistTypes, bodyTypes, cupTypes, parameterLabels } from "@/lib/data";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { useRouter } from "next/navigation";
@@ -42,7 +42,7 @@ interface ReviewWizardModalProps {
   monthlyReviewCount?: number;
 }
 
-const TOTAL_STEPS = 10;
+const TOTAL_STEPS = 11;
 
 const typeIcons: Record<string, React.ElementType> = {
   idol: Sparkles,
@@ -72,6 +72,7 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
   const [selectedTherapistId, setSelectedTherapistId] = useState<number | null>(preselectedTherapistId || null);
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [selectedBody, setSelectedBody] = useState<string | null>(null);
+  const [selectedCup, setSelectedCup] = useState<string | null>(null);
   const [selectedService, setSelectedService] = useState<string | null>(null);
   const [ratings, setRatings] = useState({
     conversation: 3,
@@ -81,9 +82,14 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
   });
   const [score, setScore] = useState(80);
   const [reviewText, setReviewText] = useState({
+    q0: "",
     q1: "",
     q2: "",
     q3: "",
+    q4: "",
+    q5: "",
+    q6: "",
+    q7: "",
   });
   const [isComplete, setIsComplete] = useState(false);
   const [showMissingReport, setShowMissingReport] = useState(false);
@@ -252,17 +258,23 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
           user_id: authUser.id,
           therapist_id: selectedTherapistId,
           salon_id: selectedShopId,
-          looks_type: selectedType,
-          body_type: selectedBody,
-          service_level: selectedService,
+          looks_type_id: Number(selectedType),
+          body_type_id: Number(selectedBody),
+          cup_type_id: Number(selectedCup),
+          service_level_id: Number(selectedService),
           param_conversation: ratings.conversation,
           param_distance: ratings.distance,
           param_technique: ratings.technique,
           param_personality: ratings.personality,
           score: score,
+          comment_reason: reviewText.q0,
           comment_first_impression: reviewText.q1,
-          comment_service: reviewText.q2,
-          comment_advice: reviewText.q3,
+          comment_style: reviewText.q2,
+          comment_service: reviewText.q3,
+          comment_service_detail: reviewText.q4,
+          comment_cost: reviewText.q5,
+          comment_revisit: reviewText.q6,
+          comment_advice: reviewText.q7,
           verification_image_path: imagePath,
         });
 
@@ -323,9 +335,14 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
     setTimeout(() => setStep(5), 300);
   };
 
+  const handleCupSelect = (cupId: string) => {
+    setSelectedCup(cupId);
+    setTimeout(() => setStep(6), 300);
+  };
+
   const handleServiceSelect = (serviceId: string) => {
     setSelectedService(serviceId);
-    setTimeout(() => setStep(6), 300);
+    setTimeout(() => setStep(7), 300);
   };
 
   const handleClose = () => {
@@ -338,10 +355,11 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
     setSelectedTherapistId(preselectedTherapistId || null);
     setSelectedType(null);
     setSelectedBody(null);
+    setSelectedCup(null);
     setSelectedService(null);
     setRatings({ conversation: 3, distance: 3, technique: 3, personality: 3 });
     setScore(80);
-    setReviewText({ q1: "", q2: "", q3: "" });
+    setReviewText({ q0: "", q1: "", q2: "", q3: "", q4: "", q5: "", q6: "", q7: "" });
     setIsComplete(false);
     setShowMissingReport(false);
     setMissingTherapistName("");
@@ -358,11 +376,12 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
       case 2: return selectedTherapistId !== null;
       case 3: return selectedType !== null;
       case 4: return selectedBody !== null;
-      case 5: return selectedService !== null;
-      case 6: return true; // Ratings are optional
-      case 7: return true; // Score always has default
-      case 8: return reviewText.q1.length >= 50 && reviewText.q2.length >= 100 && reviewText.q3.length >= 50;
-      case 9: return true; // 画像は任意なので常にtrue
+      case 5: return selectedCup !== null;
+      case 6: return selectedService !== null;
+      case 7: return true; // Ratings are optional
+      case 8: return true; // Score always has default
+      case 9: return reviewText.q0.length >= 50 && reviewText.q1.length >= 50 && reviewText.q2.length >= 50 && reviewText.q3.length >= 100 && reviewText.q4.length >= 50 && reviewText.q5.length >= 20 && reviewText.q6.length >= 50 && reviewText.q7.length >= 50;
+      case 10: return true; // 画像は任意なので常にtrue
       default: return false;
     }
   };
@@ -412,10 +431,11 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
                 setSelectedTherapistId(null);
                 setSelectedType(null);
                 setSelectedBody(null);
+                setSelectedCup(null);
                 setSelectedService(null);
                 setRatings({ conversation: 3, distance: 3, technique: 3, personality: 3 });
                 setScore(80);
-                setReviewText({ q1: "", q2: "", q3: "" });
+                setReviewText({ q0: "", q1: "", q2: "", q3: "", q4: "", q5: "", q6: "", q7: "" });
                 setIsComplete(false);
                 setShowMissingReport(false);
                 setMissingTherapistName("");
@@ -487,24 +507,27 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
                 <StepBody selectedBody={selectedBody} onSelect={handleBodySelect} />
               )}
               {step === 5 && (
-                <StepService selectedService={selectedService} onSelect={handleServiceSelect} />
+                <StepCup selectedCup={selectedCup} onSelect={handleCupSelect} />
               )}
               {step === 6 && (
+                <StepService selectedService={selectedService} onSelect={handleServiceSelect} />
+              )}
+              {step === 7 && (
                 <StepRatings
                   ratings={ratings}
                   onChangeRating={(key, value) => setRatings(prev => ({ ...prev, [key]: value }))}
                 />
               )}
-              {step === 7 && (
+              {step === 8 && (
                 <StepScore score={score} onChangeScore={setScore} />
               )}
-              {step === 8 && (
+              {step === 9 && (
                 <StepText
                   reviewText={reviewText}
                   onChange={(key, value) => setReviewText(prev => ({ ...prev, [key]: value }))}
                 />
               )}
-              {step === 9 && (
+              {step === 10 && (
                 <StepVerificationImage
                   image={verificationImage}
                   preview={verificationPreview}
@@ -944,7 +967,42 @@ function StepBody({
   );
 }
 
-// Step 5: Service Selection - 3 choices
+// Step 5: Cup Type Selection
+function StepCup({
+  selectedCup,
+  onSelect,
+}: {
+  selectedCup: string | null;
+  onSelect: (cup: string) => void;
+}) {
+  return (
+    <div>
+      <h3 className="text-base font-semibold mb-1">おっぱいは？</h3>
+      <p className="text-sm text-muted-foreground mb-4">
+        体感で最も近いものを1つ選んでください
+      </p>
+      <div className="grid grid-cols-2 gap-3">
+        {cupTypes.map((ct) => (
+          <button
+            key={ct.id}
+            type="button"
+            onClick={() => onSelect(ct.id)}
+            className={cn(
+              "flex items-center justify-center gap-2 p-4 rounded-xl border-2 transition-all",
+              selectedCup === ct.id
+                ? "border-primary bg-primary/5 ring-2 ring-primary/20"
+                : "border-border hover:border-primary/50 hover:bg-muted/50"
+            )}
+          >
+            <span className="font-medium text-sm">{ct.label}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Step 6: Service Selection - 3 choices
 function StepService({
   selectedService,
   onSelect,
@@ -1023,7 +1081,7 @@ function StepService({
   );
 }
 
-// Step 6: Ratings (optional)
+// Step 7: Ratings (optional)
 function StepRatings({
   ratings,
   onChangeRating,
@@ -1060,7 +1118,7 @@ function StepRatings({
   );
 }
 
-// Step 7: Score
+// Step 8: Score
 function StepScore({
   score,
   onChangeScore,
@@ -1095,79 +1153,54 @@ function StepScore({
   );
 }
 
-// Step 8: Text Review - 3 questions with character limits
+// Step 9: Text Review - 8 questions with character limits
 function StepText({
   reviewText,
   onChange,
 }: {
-  reviewText: { q1: string; q2: string; q3: string };
+  reviewText: { q0: string; q1: string; q2: string; q3: string; q4: string; q5: string; q6: string; q7: string };
   onChange: (key: keyof typeof reviewText, value: string) => void;
 }) {
+  const questions = [
+    { key: "q0" as const, label: "Q1. 行ったきっかけは？", placeholder: "友人の紹介で初めて行きました。仕事のストレスが溜まっていたので、癒しを求めて予約しました。口コミの評判が良かったのが決め手です。", min: 50, max: 300 },
+    { key: "q1" as const, label: "Q2. 顔の印象は？", placeholder: "写真より可愛くてびっくり！とても明るい笑顔で出迎えてくれて、初めての緊張が一気にほぐれました。雰囲気も良くて安心感がありました。", min: 50, max: 300 },
+    { key: "q2" as const, label: "Q3. スタイルはどうだった？", placeholder: "スレンダーで脚が長く、スタイル抜群でした。写真通りの印象で期待を裏切らない感じ。肌もきれいで思わず見とれてしまいました。", min: 50, max: 300 },
+    { key: "q3" as const, label: "Q4. 施術の流れは？", placeholder: "会話がとても楽しく、施術も丁寧で時間があっという間に過ぎました。技術もしっかりしていてコリがほぐれました。特にアロマの香りが良く、肩甲骨まわりの圧が絶妙で、施術後は体がとても軽くなりました。リラックスできる空間づくりも素晴らしかったです。", min: 100, max: 300 },
+    { key: "q4" as const, label: "Q5. どこまでいけた？", placeholder: "密着度が高く、ドキドキする場面もありました。サービス内容は期待以上で、リピート確定です。詳しくは実際に体験してみてください。", min: 50, max: 300 },
+    { key: "q5" as const, label: "Q6. お値段は？", placeholder: "90分コースで15,000円でした。内容を考えるとコスパは良いと思います。指名料込みでも満足度は高かったです。", min: 20, max: 300 },
+    { key: "q6" as const, label: "Q7. また行きたい？", placeholder: "絶対リピートしたいです！次回は120分コースで予約しようと思います。指名して通い続けたいと思える方でした。", min: 50, max: 300 },
+    { key: "q7" as const, label: "Q8. 後輩へのアドバイスは？", placeholder: "人気なので予約は早めがおすすめです。土日は特に取りにくいので平日がねらい目。次回は指名で予約しようと思います。", min: 50, max: 300 },
+  ];
+
   return (
     <div className="space-y-4">
       <h3 className="text-base font-semibold mb-1">最後に感想を教えて</h3>
-      <div>
-        <label htmlFor="q1" className="block text-sm font-medium mb-1">
-          Q1. 第一印象は？（50〜100字）
-        </label>
-        <Textarea
-          id="q1"
-          placeholder="写真より可愛くてびっくり！とても明るい笑顔で出迎えてくれて、初めての緊張が一気にほぐれました。雰囲気も良くて安心感がありました。"
-          value={reviewText.q1}
-          onChange={(e) => onChange("q1", e.target.value)}
-          rows={2}
-          maxLength={100}
-        />
-        <p className={cn(
-          "text-xs mt-1",
-          reviewText.q1.length < 50 ? "text-muted-foreground" : reviewText.q1.length <= 100 ? "text-green-600" : "text-destructive"
-        )}>
-          {reviewText.q1.length}/100字（最低50字）
-        </p>
-      </div>
-      <div>
-        <label htmlFor="q2" className="block text-sm font-medium mb-1">
-          Q2. サービス/施術の良かった点は？（100〜150字）
-        </label>
-        <Textarea
-          id="q2"
-          placeholder="会話がとても楽しく、施術も丁寧で時間があっという間に過ぎました。技術もしっかりしていてコリがほぐれました。特にアロマの香りが良く、肩甲骨まわりの圧が絶妙で、施術後は体がとても軽くなりました。リラックスできる空間づくりも素晴らしかったです。"
-          value={reviewText.q2}
-          onChange={(e) => onChange("q2", e.target.value)}
-          rows={3}
-          maxLength={150}
-        />
-        <p className={cn(
-          "text-xs mt-1",
-          reviewText.q2.length < 100 ? "text-muted-foreground" : reviewText.q2.length <= 150 ? "text-green-600" : "text-destructive"
-        )}>
-          {reviewText.q2.length}/150字（最低100字）
-        </p>
-      </div>
-      <div>
-        <label htmlFor="q3" className="block text-sm font-medium mb-1">
-          Q3. 気になった点・アドバイスは？（50〜100字）
-        </label>
-        <Textarea
-          id="q3"
-          placeholder="人気なので予約は早めがおすすめです。土日は特に取りにくいので平日がねらい目。次回は指名で予約しようと思います。"
-          value={reviewText.q3}
-          onChange={(e) => onChange("q3", e.target.value)}
-          rows={2}
-          maxLength={100}
-        />
-        <p className={cn(
-          "text-xs mt-1",
-          reviewText.q3.length < 50 ? "text-muted-foreground" : reviewText.q3.length <= 100 ? "text-green-600" : "text-destructive"
-        )}>
-          {reviewText.q3.length}/100字（最低50字）
-        </p>
-      </div>
+      {questions.map((q) => (
+        <div key={q.key}>
+          <label htmlFor={q.key} className="block text-sm font-medium mb-1">
+            {q.label}（{q.min}〜{q.max}字）
+          </label>
+          <Textarea
+            id={q.key}
+            placeholder={q.placeholder}
+            value={reviewText[q.key]}
+            onChange={(e) => onChange(q.key, e.target.value)}
+            rows={q.min >= 100 ? 3 : 2}
+            maxLength={q.max}
+          />
+          <p className={cn(
+            "text-xs mt-1",
+            reviewText[q.key].length < q.min ? "text-muted-foreground" : reviewText[q.key].length <= q.max ? "text-green-600" : "text-destructive"
+          )}>
+            {reviewText[q.key].length}/{q.max}字（最低{q.min}字）
+          </p>
+        </div>
+      ))}
     </div>
   );
 }
 
-// Step 9: Verification Image Upload (optional)
+// Step 10: Verification Image Upload (optional)
 function StepVerificationImage({
   image,
   preview,
