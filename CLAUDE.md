@@ -460,7 +460,7 @@ Supabaseに格納済み（MEスクレイピングデータ）:
 
 テキストenumではなく**数字IDのマスタテーブル**方式。ラベル変更はマスタ1行更新で済む。
 
-#### looks_types（見た目タイプ）— 複数選択（int[]）
+#### looks_types（見た目タイプ）— 単一選択
 | id | ラベル |
 |---|---|
 | 1 | 清楚系 |
@@ -498,7 +498,7 @@ Supabaseに格納済み（MEスクレイピングデータ）:
 | 3 | HR |
 
 **reviewsテーブル変更点**:
-- `looks_type`(text) → `looks_type_ids`(int[]) 複数選択（1〜3個）
+- `looks_type`(text) → `looks_type_id`(int) REFERENCES looks_types(id)
 - `body_type`(text) → `body_type_id`(int) REFERENCES body_types(id)
 - `service_level`(text) → `service_level_id`(int) REFERENCES service_levels(id)
 - `cup_type_id`(int) REFERENCES cup_types(id) を新規追加
