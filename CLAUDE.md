@@ -25,6 +25,8 @@
 - **ローカル動作確認済み**: トップページ（6,489店舗/821エリア表示）、セラピスト検索（実データ表示）OK
 - **ME口コミマッチング完了**: ME 80,458名 vs Indexer 79,639名 → **15,690名マッチ（19.5%）、口コミ48,288件**
 - **ME口コミリライトパイプライン実装完了**: 3ステップ構成（Step1:ME抽出→Step2:LLMリライト→Step3:DB投入）、DBマイグレーション（設問3→8問拡張）適用済み
+- **Sonnet 100件テスト完了**: 100/100成功（34.2分、平均スコア76.3）、ローカルDB投入済み、フロント表示確認OK
+- **フロント分類IDマッピング修正済み**: DB整数ID（looks_type_id等）にフロント全体を統一
 - **成果物**:
     - `docs/SERVICE_OVERVIEW.md`: サービス概要・ビジネスモデル
     - `docs/SYSTEM_DESIGN.md`: システム構成・DBスキーマ
@@ -40,7 +42,11 @@
     7. ~~公開レベル仕上げ~~ → ✅ 完了（デバッグUI除去・mock削除・Stripe環境変数化・おすすめ実データ化）
     8. ~~ローカルSupabase最新データ同期~~ → ✅ 完了（VPS 79,639名→ローカル投入、2026-02-16）
     9. ~~ME口コミマッチングアセスメント~~ → ✅ 完了（15,690名マッチ、48,288件の口コミ移行可能）
-    10. **ME口コミリライト＆初期データ投入** ← パイプライン実装完了、実行待ち（Step1→Step2→Step3）
+    10. **ME口コミリライト＆初期データ投入** ← Sonnet 100件テスト完了、CSV目視確認後に全件(15,690件)実行へ
+        - Step1: `python3 database/seed_reviews/step1_extract_me_data.py`（全件抽出、--limit不要）
+        - Step2: `python3 database/seed_reviews/step2_llm_rewrite.py --model claude-sonnet-4-5-20250929 --workers 3 --resume`（~11時間、~$7）
+        - Step3: `python3 database/seed_reviews/step3_insert_reviews.py`
+        - 100件テスト結果: `~/Desktop/sonnet_100_reviews.csv`、ローカルDB投入済み（平均スコア76.3）
     11. **本番デプロイ準備**（本番Supabaseスキーマpush → Vercel環境変数 → デプロイ）
     12. VPSのスクレイピングデータをpg_dumpで本番Supabaseに移行
 
