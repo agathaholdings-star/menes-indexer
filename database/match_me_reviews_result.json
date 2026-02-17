@@ -1,0 +1,16 @@
+{
+  "me_therapists_with_reviews": 80458,
+  "me_with_therapist_url": 69767,
+  "indexer_therapists": 79639,
+  "indexer_with_source_url": 79639,
+  "match_url": 12829,
+  "match_domain_name": 1449,
+  "match_salon_name": 1412,
+  "total_matched": 15690,
+  "match_rate": 19.5,
+  "unmatched": 64768,
+  "reviews_from_url_match": 40593,
+  "reviews_from_domain_match": 4076,
+  "reviews_from_name_match": 3619,
+  "reviews_total_matched": 48288
+}

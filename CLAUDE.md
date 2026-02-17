@@ -7,7 +7,7 @@
 - やりとりが20往復を超えたら新チャットへの切り替えを提案すること
 - 画像を複数枚受け取った場合はコンテキスト消費が大きいことを意識すること
 
-## 現在のステータス (2026-02-16 更新)
+## 現在のステータス (2026-02-17 更新)
 
 - **設計フェーズ完了**: サービス概要、システム設計、UXフロー、v0用プロンプトを作成済み。
 - **フロントエンド公開済み**: v0.appからVercelにデプロイ → https://menes-indexer.com/
@@ -24,6 +24,7 @@
 - **データクレンジング完了**: bust→cup分離651件、元データはname_raw/bust_rawに退避保持
 - **ローカル動作確認済み**: トップページ（6,489店舗/821エリア表示）、セラピスト検索（実データ表示）OK
 - **ME口コミマッチング完了**: ME 80,458名 vs Indexer 79,639名 → **15,690名マッチ（19.5%）、口コミ48,288件**
+- **ME口コミリライトパイプライン実装完了**: 3ステップ構成（Step1:ME抽出→Step2:LLMリライト→Step3:DB投入）、DBマイグレーション（設問3→8問拡張）適用済み
 - **成果物**:
     - `docs/SERVICE_OVERVIEW.md`: サービス概要・ビジネスモデル
     - `docs/SYSTEM_DESIGN.md`: システム構成・DBスキーマ
@@ -39,7 +40,7 @@
     7. ~~公開レベル仕上げ~~ → ✅ 完了（デバッグUI除去・mock削除・Stripe環境変数化・おすすめ実データ化）
     8. ~~ローカルSupabase最新データ同期~~ → ✅ 完了（VPS 79,639名→ローカル投入、2026-02-16）
     9. ~~ME口コミマッチングアセスメント~~ → ✅ 完了（15,690名マッチ、48,288件の口コミ移行可能）
-    10. **ME口コミリライト＆初期データ投入** ← 設計一部決定済み・実装待ち（下記参照）
+    10. **ME口コミリライト＆初期データ投入** ← パイプライン実装完了、実行待ち（Step1→Step2→Step3）
     11. **本番デプロイ準備**（本番Supabaseスキーマpush → Vercel環境変数 → デプロイ）
     12. VPSのスクレイピングデータをpg_dumpで本番Supabaseに移行
 
@@ -115,7 +116,7 @@ supabase db reset  # マイグレーション+シード再実行
 supabase stop      # 停止
 ```
 
-### DBテーブル状態（2026-02-16、VPS＝ローカル同期済み）
+### DBテーブル状態（2026-02-17、設問拡張マイグレーション適用済み）
 | テーブル | 件数 | 状態 |
 |---------|------|------|
 | prefectures | 47 | シード済み |
@@ -230,6 +231,12 @@ ssh -i /Users/agatha/Downloads/indexer.pem root@220.158.18.6 "sudo -u postgres p
 │   ├── seed_areas.py          ← CSV→SQLシード生成スクリプト
 │   ├── extract_kana_from_title.py ← サロン名カナ抽出
 │   ├── batch_scrape_therapists.py ← 全サロン一括セラピストスクレイピング
+│   ├── seed_reviews/          ← ME口コミリライト＆投入パイプライン
+│   │   ├── common.py             ← 共通ユーティリティ
+│   │   ├── step1_extract_me_data.py ← ME生データ抽出
+│   │   ├── step2_llm_rewrite.py    ← LLMリライト＆構造化
+│   │   ├── step3_insert_reviews.py ← DB投入
+│   │   └── data/                  ← 中間データ（gitignore）
 │   └── therapist-scraper/     ← セラピストスクレイパー
 │       ├── therapist_scraper.py   ← LLMベーススクレイパー（従来版）
 │       ├── smart_scraper.py       ← Smart Scraper オーケストレーション
@@ -524,10 +531,43 @@ Supabaseに格納済み（MEスクレイピングデータ）:
 - MEから生データを引っ張ってきてから、こちら側でLLMリライト＆生成
 - ME DBは読み取り専用（ソースを汚さない）
 
+### 実装済みパイプライン（2026-02-17）
+
+```
+database/seed_reviews/
+├── __init__.py
+├── common.py                  # 共通: ME/Indexer接続、URL正規化、フォールバック関数
+├── step1_extract_me_data.py   # Step 1: ME生データ抽出
+├── step2_llm_rewrite.py       # Step 2: LLMリライト（Claude API）
+├── step3_insert_reviews.py    # Step 3: DB投入
+└── data/                      # 中間データ（gitignore済み）
+    ├── raw_matched_therapists.json
+    ├── rewritten_reviews.json
+    └── rewrite_checkpoint.json
+```
+
+**実行手順:**
+```bash
+# 1. DB設問拡張マイグレーション適用（✅ 済み: 20260217000004）
+supabase db reset
+
+# 2. ME生データ抽出
+python database/seed_reviews/step1_extract_me_data.py --limit 10  # テスト
+python database/seed_reviews/step1_extract_me_data.py              # 全件
+
+# 3. LLMリライト（サンプル比較 → 本番）
+python database/seed_reviews/step2_llm_rewrite.py --sample 10 --model claude-haiku-4-5-20251001
+python database/seed_reviews/step2_llm_rewrite.py --sample 10 --model claude-sonnet-4-5-20250514
+python database/seed_reviews/step2_llm_rewrite.py --model <選択モデル> --workers 3 --resume
+
+# 4. DB投入
+python database/seed_reviews/step3_insert_reviews.py --dry-run   # 確認
+python database/seed_reviews/step3_insert_reviews.py              # 本番
+```
+
 ### 未決事項
 - [ ] 使用モデル: Sonnet推奨（~$70）、10件くらいサンプル比較してから決める。Haiku(~$6) / Opus(~$350) も選択肢
-- [ ] リライトプロンプトの具体的な設計（文体変更＋構造化データ推定を1プロンプトにまとめるか分けるか）
-- [ ] 複数口コミからどれを選ぶかのロジック（最新？最高評点？最も情報量が多いもの？まとめ？）
+- [ ] 複数口コミからどれを選ぶかのロジック → 現在は全口コミまとめてLLMに渡す方式で実装済み
 - [ ] looks_types各タイプの判定基準の明文化（LLMプロンプト用）
 - [ ] param_* 1-5の各値の意味定義
 
