@@ -26,6 +26,7 @@ export async function GET(req: NextRequest) {
   const limit = Math.min(parseInt(searchParams.get("limit") || "50", 10), 50);
   const areaSlug = searchParams.get("area_slug");
   const district = searchParams.get("district");
+  const ids = searchParams.get("ids"); // カンマ区切りのセラピストID
 
   // Fetch therapists for a specific salon
   if (salonId) {
@@ -80,6 +81,13 @@ export async function GET(req: NextRequest) {
 
   if (shopIds) {
     q = q.in("salon_id", shopIds);
+  }
+
+  if (ids) {
+    const idList = ids.split(",").map(Number).filter(Boolean);
+    if (idList.length > 0) {
+      q = q.in("id", idList);
+    }
   }
 
   q = q.order("created_at", { ascending: false }).limit(limit);

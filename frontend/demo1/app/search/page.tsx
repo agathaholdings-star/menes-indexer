@@ -186,7 +186,7 @@ function SearchContent() {
         const reviewAggMap = new Map<number, { avg_score: number; count: number; looks: Set<string>; bodies: Set<string>; services: Set<string> }>();
 
         if (needsReviewFilter) {
-          const revRes = await fetch("/api/reviews?limit=50");
+          const revRes = await fetch("/api/reviews?limit=10000");
           const revJson = await revRes.json();
           const revData = revJson.data;
           if (Array.isArray(revData)) {
@@ -235,6 +235,9 @@ function SearchContent() {
             params.set("district", selectedDistrict);
           }
         }
+        if (therapistIds && therapistIds.length > 0) {
+          params.set("ids", therapistIds.join(","));
+        }
         params.set("limit", "50");
 
         const therapistRes = await fetch(`/api/therapists?${params.toString()}`);
@@ -243,7 +246,7 @@ function SearchContent() {
         if (Array.isArray(data)) {
           // レビュー集計データがない場合は取得
           if (!needsReviewFilter) {
-            const allRevRes = await fetch("/api/reviews?limit=50");
+            const allRevRes = await fetch("/api/reviews?limit=10000");
             const allRevJson = await allRevRes.json();
             if (Array.isArray(allRevJson.data)) {
               for (const r of allRevJson.data) {
