@@ -198,9 +198,9 @@ function SearchContent() {
               const agg = reviewAggMap.get(tid)!;
               agg.count++;
               agg.avg_score += (r.score || 0);
-              if (r.looks_type) agg.looks.add(r.looks_type);
-              if (r.body_type) agg.bodies.add(r.body_type);
-              if (r.service_level) agg.services.add(r.service_level);
+              if (r.looks_type_id) agg.looks.add(String(r.looks_type_id));
+              if (r.body_type_id) agg.bodies.add(String(r.body_type_id));
+              if (r.service_level_id) agg.services.add(String(r.service_level_id));
             }
 
             for (const [, agg] of reviewAggMap) {
@@ -254,9 +254,9 @@ function SearchContent() {
                 const agg = reviewAggMap.get(tid)!;
                 agg.count++;
                 agg.avg_score += (r.score || 0);
-                if (r.looks_type) agg.looks.add(r.looks_type);
-                if (r.body_type) agg.bodies.add(r.body_type);
-                if (r.service_level) agg.services.add(r.service_level);
+                if (r.looks_type_id) agg.looks.add(String(r.looks_type_id));
+                if (r.body_type_id) agg.bodies.add(String(r.body_type_id));
+                if (r.service_level_id) agg.services.add(String(r.service_level_id));
               }
               for (const [, agg] of reviewAggMap) {
                 agg.avg_score = Math.round(agg.avg_score / agg.count);

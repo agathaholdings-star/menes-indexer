@@ -7,7 +7,7 @@ export async function GET(req: NextRequest) {
 
   const { data, count } = await supabaseAdmin
     .from("reviews")
-    .select("id, therapist_id, looks_type, body_type, service_level, score", {
+    .select("id, therapist_id, looks_type_id, body_type_id, service_level_id, score", {
       count: "exact",
     })
     .order("created_at", { ascending: false })

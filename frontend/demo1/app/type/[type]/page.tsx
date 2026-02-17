@@ -34,7 +34,7 @@ export default async function TypePage({
   const { data: reviewData } = await supabase
     .from("reviews")
     .select("therapist_id")
-    .eq("looks_type", type);
+    .eq("looks_type_id", Number(type));
 
   let typeTherapists: DBTherapist[] = [];
 
