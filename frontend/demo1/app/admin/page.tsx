@@ -27,9 +27,9 @@ type ReviewFilter = ModerationStatus | "all";
 interface ReviewRow {
   id: string;
   score: number | null;
-  looks_type: string | null;
-  body_type: string | null;
-  service_level: string | null;
+  looks_type_id: number | null;
+  body_type_id: number | null;
+  service_level_id: number | null;
   moderation_status: ModerationStatus;
   comment_first_impression: string | null;
   comment_service: string | null;
@@ -337,11 +337,11 @@ export default function AdminPage() {
                     {/* Tags */}
                     <div className="flex items-center gap-2 mb-3 flex-wrap">
                       <Badge>{r.score ?? 0}点</Badge>
-                      {r.looks_type && <Badge variant="secondary">{r.looks_type}</Badge>}
-                      {r.body_type && <Badge variant="secondary">{r.body_type}</Badge>}
-                      {r.service_level && (
-                        <Badge variant={r.service_level === "hr" ? "destructive" : "secondary"}>
-                          {r.service_level.toUpperCase()}
+                      {r.looks_type_id && <Badge variant="secondary">{r.looks_type_id}</Badge>}
+                      {r.body_type_id && <Badge variant="secondary">{r.body_type_id}</Badge>}
+                      {r.service_level_id && (
+                        <Badge variant={String(r.service_level_id) === "3" ? "destructive" : "secondary"}>
+                          {String(r.service_level_id) === "1" ? "健全" : String(r.service_level_id) === "2" ? "SKR" : "HR"}
                         </Badge>
                       )}
                       {r.is_verified && (

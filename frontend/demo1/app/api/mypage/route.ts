@@ -39,13 +39,13 @@ export async function GET() {
       .eq("user_id", user.id),
     supabaseAdmin
       .from("reviews")
-      .select("id, score, service_level, moderation_status, created_at, therapist_id, salon_id, therapists(name), salons(name, display_name)")
+      .select("id, score, service_level_id, moderation_status, created_at, therapist_id, salon_id, therapists(name), salons(name, display_name)")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false }),
     supabaseAdmin
       .from("reviews")
-      .select("id, therapist_id, score, service_level, comment_service, created_at, therapists(name, image_urls), salons(name, display_name)")
-      .in("service_level", ["skr", "hr"])
+      .select("id, therapist_id, score, service_level_id, comment_service, created_at, therapists(name, image_urls), salons(name, display_name)")
+      .in("service_level_id", [2, 3])
       .eq("moderation_status", "approved")
       .order("created_at", { ascending: false })
       .limit(20),
@@ -59,7 +59,7 @@ export async function GET() {
     therapist_name: r.therapists?.name || "",
     shop_name: r.salons?.display_name || r.salons?.name || "",
     score: r.score || 0,
-    service_level: r.service_level,
+    service_level_id: r.service_level_id,
     moderation_status: r.moderation_status,
     created_at: r.created_at,
   }));
@@ -72,7 +72,7 @@ export async function GET() {
       therapist_name: r.therapists?.name || "",
       therapist_image: imgs?.[0] || null,
       shop_name: r.salons?.display_name || r.salons?.name || "",
-      service_level: r.service_level,
+      service_level_id: r.service_level_id,
       score: r.score || 0,
       comment: r.comment_service || "",
       created_at: r.created_at,

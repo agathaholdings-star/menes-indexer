@@ -1,28 +1,33 @@
-// タイプ定義
+// タイプ定義（DB looks_types マスタ準拠）
 export const therapistTypes = [
-  { id: "idol", label: "王道アイドル系", icon: "Sparkles", description: "愛嬌抜群" },
-  { id: "seiso", label: "清楚なお姉さん系", icon: "Heart", description: "癒やし" },
-  { id: "gal", label: "イマドキなギャル系", icon: "Zap", description: "ノリが良い" },
-  { id: "model", label: "モデル・美女系", icon: "Crown", description: "高嶺の花" },
-  { id: "imouto", label: "元気なフレッシュ系", icon: "Smile", description: "明るい" },
-  { id: "yoen", label: "大人のお姉さん系", icon: "Flame", description: "落ち着いた雰囲気" },
+  { id: "1", label: "清楚系", icon: "Heart", description: "癒やし" },
+  { id: "2", label: "素人系", icon: "Smile", description: "自然体" },
+  { id: "3", label: "ギャル系", icon: "Zap", description: "ノリが良い" },
+  { id: "4", label: "モデル系", icon: "Crown", description: "高嶺の花" },
+  { id: "5", label: "ロリ系", icon: "Sparkles", description: "フレッシュ" },
+  { id: "6", label: "女優系", icon: "Flame", description: "華がある" },
+  { id: "7", label: "夜職系", icon: "Moon", description: "色気" },
+  { id: "8", label: "熟女系", icon: "Wine", description: "大人の魅力" },
 ] as const;
 
 export type TherapistType = typeof therapistTypes[number];
 
+// DB body_types マスタ準拠（5段階）
 export const bodyTypes = [
-  { id: "slender", label: "スレンダー" },
-  { id: "normal", label: "普通" },
-  { id: "glamour", label: "グラマー（巨乳）" },
-  { id: "chubby", label: "ぽっちゃり" },
+  { id: "1", label: "華奢" },
+  { id: "2", label: "スレンダー" },
+  { id: "3", label: "バランス" },
+  { id: "4", label: "グラマー" },
+  { id: "5", label: "ぽっちゃり" },
 ] as const;
 
 export type BodyType = typeof bodyTypes[number];
 
+// DB service_levels マスタ準拠
 export const serviceTypes = [
-  { id: "kenzen", label: "健全", icon: "Leaf", description: "マッサージ重視" },
-  { id: "skr", label: "SKR", icon: "Sparkles", description: "きのこ" },
-  { id: "hr", label: "HR", icon: "Flame", description: "ハート" },
+  { id: "1", label: "健全", icon: "Leaf", description: "マッサージ重視" },
+  { id: "2", label: "SKR", icon: "Sparkles", description: "きのこ" },
+  { id: "3", label: "HR", icon: "Flame", description: "ハート" },
 ] as const;
 
 export const parameterLabels = [

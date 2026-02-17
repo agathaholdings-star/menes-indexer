@@ -15,10 +15,10 @@ import {
 type MembershipLevel = "free" | "standard" | "vip";
 
 const vipFilters = [
-  { id: "kenzen", label: "健全", emoji: "🧘" },
+  { id: "1", label: "健全", emoji: "🧘" },
   { id: "dokidoki", label: "ドキドキ", emoji: "💓" },
-  { id: "skr", label: "SKR", emoji: "🍄" },
-  { id: "hr", label: "HR", emoji: "💎" },
+  { id: "2", label: "SKR", emoji: "🍄" },
+  { id: "3", label: "HR", emoji: "💎" },
 ];
 
 export function VipFilter() {

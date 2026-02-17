@@ -962,10 +962,10 @@ function StepService({
         {/* 健全 */}
         <button
           type="button"
-          onClick={() => onSelect("kenzen")}
+          onClick={() => onSelect("1")}
           className={cn(
             "flex items-center gap-4 p-4 rounded-xl border-2 transition-all",
-            selectedService === "kenzen"
+            selectedService === "1"
               ? "border-primary bg-primary/5 ring-2 ring-primary/20"
               : "border-border hover:border-primary/50 hover:bg-muted/50"
           )}
@@ -982,10 +982,10 @@ function StepService({
         {/* SKR */}
         <button
           type="button"
-          onClick={() => onSelect("skr")}
+          onClick={() => onSelect("2")}
           className={cn(
             "flex items-center gap-4 p-4 rounded-xl border-2 transition-all",
-            selectedService === "skr"
+            selectedService === "2"
               ? "border-primary bg-primary/5 ring-2 ring-primary/20"
               : "border-border hover:border-primary/50 hover:bg-muted/50"
           )}
@@ -1002,10 +1002,10 @@ function StepService({
         {/* HR */}
         <button
           type="button"
-          onClick={() => onSelect("hr")}
+          onClick={() => onSelect("3")}
           className={cn(
             "flex items-center gap-4 p-4 rounded-xl border-2 transition-all",
-            selectedService === "hr"
+            selectedService === "3"
               ? "border-primary bg-primary/5 ring-2 ring-primary/20"
               : "border-border hover:border-primary/50 hover:bg-muted/50"
           )}

@@ -111,7 +111,7 @@ export default function MyPage() {
     therapist_name: string;
     shop_name: string;
     score: number;
-    service_level: string | null;
+    service_level_id: number | null;
     moderation_status: string;
     created_at: string;
   }[]>([]);
@@ -121,7 +121,7 @@ export default function MyPage() {
     therapist_name: string;
     therapist_image: string | null;
     shop_name: string;
-    service_level: string;
+    service_level_id: number;
     score: number;
     comment: string;
     created_at: string;
@@ -646,8 +646,8 @@ export default function MyPage() {
                           <Link href={`/therapist/${review.therapist_id}`} className="font-medium hover:text-primary">
                             {review.therapist_name}
                           </Link>
-                          <Badge className={review.service_level === "hr" ? "bg-gradient-to-r from-purple-500 to-purple-400" : "bg-gradient-to-r from-orange-500 to-orange-400"}>
-                            {review.service_level === "hr" ? "HR" : "SKR"}
+                          <Badge className={String(review.service_level_id) === "3" ? "bg-gradient-to-r from-purple-500 to-purple-400" : "bg-gradient-to-r from-orange-500 to-orange-400"}>
+                            {String(review.service_level_id) === "3" ? "HR" : "SKR"}
                           </Badge>
                           <Badge className="bg-primary text-primary-foreground">{review.score}点</Badge>
                         </div>

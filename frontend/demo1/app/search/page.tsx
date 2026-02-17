@@ -215,8 +215,8 @@ function SearchContent() {
                 const minScore = parseInt(scoreFilter);
                 if (agg.avg_score < minScore) continue;
               }
-              if (skrFilter && !agg.services.has("skr") && !agg.services.has("hr")) continue;
-              if (hrFilter && !agg.services.has("hr")) continue;
+              if (skrFilter && !agg.services.has("2") && !agg.services.has("3")) continue;
+              if (hrFilter && !agg.services.has("3")) continue;
               therapistIds.push(tid);
             }
 
@@ -336,10 +336,11 @@ function SearchContent() {
   const canSeeHRBadge = permissions.canUseHRFilter;
 
   const styleOptions = [
-    { id: "slender", label: "スレンダー" },
-    { id: "normal", label: "普通" },
-    { id: "glamour", label: "グラマー" },
-    { id: "chubby", label: "ぽっちゃり" },
+    { id: "1", label: "華奢" },
+    { id: "2", label: "スレンダー" },
+    { id: "3", label: "バランス" },
+    { id: "4", label: "グラマー" },
+    { id: "5", label: "ぽっちゃり" },
   ];
 
   const currentArea = areas.find((a) => a.id === selectedArea);
@@ -738,12 +739,12 @@ function SearchContent() {
                                   {therapist.avg_score}
                                 </Badge>
                               )}
-                              {canSeeSKRBadge && therapist.service_levels.includes("skr") && (
+                              {canSeeSKRBadge && therapist.service_levels.includes("2") && (
                                 <Badge className="text-xs bg-orange-100 text-orange-700">
                                   <Flame className="h-3 w-3 mr-0.5" />SKR
                                 </Badge>
                               )}
-                              {canSeeHRBadge && therapist.service_levels.includes("hr") && (
+                              {canSeeHRBadge && therapist.service_levels.includes("3") && (
                                 <Badge className="text-xs bg-purple-100 text-purple-700">
                                   <Gem className="h-3 w-3 mr-0.5" />HR
                                 </Badge>
