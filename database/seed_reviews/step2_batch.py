@@ -74,12 +74,16 @@ def cmd_submit(args):
 
     print(f"  対象: {len(matches)}名")
 
-    # リクエスト組み立て + マッピング
+    # リクエスト組み立て + マッピング（重複therapist_idスキップ）
     requests = []
     mapping = {}
+    seen_tids = set()
 
     for match in matches:
         tid = match["indexer_therapist_id"]
+        if tid in seen_tids:
+            continue
+        seen_tids.add(tid)
         custom_id = f"t_{tid}"
         persona = pick_persona()
         user_prompt = build_user_prompt(match, persona)
