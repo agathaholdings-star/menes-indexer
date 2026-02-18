@@ -60,6 +60,19 @@ export default async function TherapistPage({ params }: TherapistPageProps) {
   const { name: parsedName, age: parsedAge } = parseNameAge(dbTherapist.name, dbTherapist.age);
   const areaInfo = await getShopAreaInfo(dbTherapist.salon_id);
 
+  // レビューをDBから取得
+  const { data: dbReviews } = await supabase
+    .from("reviews")
+    .select("*")
+    .eq("therapist_id", Number(id))
+    .eq("moderation_status", "approved")
+    .order("created_at", { ascending: false });
+
+  const reviewCount = (dbReviews || []).length;
+  const averageScore = reviewCount > 0
+    ? Math.round((dbReviews || []).reduce((sum: number, r: any) => sum + (r.score || 0), 0) / reviewCount)
+    : 0;
+
   const therapist: Therapist = {
     id: String(dbTherapist.id),
     name: parsedName,
@@ -84,17 +97,10 @@ export default async function TherapistPage({ params }: TherapistPageProps) {
     types: [],
     bodyType: "",
     parameters: { conversation: 0, distance: 0, technique: 0, personality: 0 },
-    reviewCount: 0,
-    averageScore: 0,
+    reviewCount,
+    averageScore,
     rating: 0,
   };
-
-  // レビューはDBから取得（現在0件）
-  const { data: dbReviews } = await supabase
-    .from("reviews")
-    .select("*")
-    .eq("therapist_id", Number(id))
-    .order("created_at", { ascending: false });
 
   const reviews: Review[] = (dbReviews || []).map((r: any) => ({
     id: r.id,
@@ -112,9 +118,14 @@ export default async function TherapistPage({ params }: TherapistPageProps) {
       personality: r.param_personality || 3,
     },
     tags: [r.looks_type_id ? String(r.looks_type_id) : "", r.body_type_id ? String(r.body_type_id) : ""].filter(Boolean),
-    q1FirstImpression: r.comment_first_impression || "",
-    q2Service: r.comment_service || "",
-    q3Notes: r.comment_advice || "",
+    commentReason: r.comment_reason || "",
+    commentFirstImpression: r.comment_first_impression || "",
+    commentStyle: r.comment_style || "",
+    commentService: r.comment_service || "",
+    commentServiceDetail: r.comment_service_detail || "",
+    commentCost: r.comment_cost || "",
+    commentRevisit: r.comment_revisit || "",
+    commentAdvice: r.comment_advice || "",
     createdAt: new Date(r.created_at).toLocaleDateString("ja-JP"),
     userId: r.user_id || "",
   }));
