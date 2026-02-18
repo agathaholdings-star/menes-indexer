@@ -34,6 +34,10 @@ from anthropic import Anthropic
 
 from extract_kana_from_title import fetch_title, extract_kana_from_title, extract_kana_with_llm
 
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'therapist-scraper'))
+from html_cache_utils import HtmlCache
+_cache = HtmlCache(base_dir=os.path.join(os.path.dirname(__file__), 'therapist-scraper', 'html_cache'))
+
 # .env読み込み
 load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
 
@@ -160,6 +164,7 @@ def scrape_area_page(data_source_url):
     if not resp:
         return []
 
+    _cache.save("area", data_source_url.strip('/').replace('/', '_'), resp.text)
     soup = BeautifulSoup(resp.text, 'html.parser')
     salons = []
     rank = 0
@@ -230,6 +235,7 @@ def scrape_salon_detail(source_id, data_source_url):
         resp = fetch_with_retry(url, delay=DETAIL_DELAY)
         if not resp:
             return None, None
+        _cache.save("salon", source_id, resp.text)
         soup = BeautifulSoup(resp.text, 'html.parser')
 
         for link in soup.select('a[rel*="nofollow"]'):

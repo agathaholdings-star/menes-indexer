@@ -30,6 +30,9 @@ from anthropic import Anthropic
 
 load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
 
+from html_cache_utils import HtmlCache
+_cache = HtmlCache()
+
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
                   "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
@@ -447,6 +450,7 @@ JSON形式で出力（該当なしのフィールドはnull）:
             t_html = fetch_page(entry['url'])
             if not t_html:
                 continue
+            _cache.save("therapist", f"{salon_url.split('//')[1].split('/')[0]}_{i}", t_html)
 
             data = self.extract_therapist_data(entry['url'], t_html)
             if data:

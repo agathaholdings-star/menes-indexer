@@ -38,21 +38,43 @@ export function isPlaceholderName(name: string): boolean {
   return PLACEHOLDER_PATTERNS.some((p) => p.test(trimmed));
 }
 
-/** Parse "あやの(19)" → { name: "あやの", age: 19 }. Falls back to dbAge. */
+/** Parse "あやの(19)" → { name: "あやの", age: 19 }. Falls back to dbAge.
+ *  Also strips catchphrases, NEW FACE, romaji brackets, and age brackets
+ *  as defensive fallback for DB cleansing misses. */
 export function parseNameAge(
   raw: string,
   dbAge: number | null
 ): { name: string; age: number } {
-  const match = raw.match(/^(.+?)\((\d{2})\)$/);
-  if (match) {
-    return { name: match[1], age: dbAge || Number(match[2]) };
+  let name = raw;
+  // 1. キャッチコピー除去（～/〜以降）
+  name = name.replace(/[～〜].+$/, "");
+  // 2. NEW FACE除去
+  name = name.replace(/\s*(?:NEW\s*FACE|NEWFACE|新人)\s*/gi, "");
+  // 3. ローマ字括弧除去
+  name = name.replace(/\s*\([A-Za-z\s]+\)\s*$/, "");
+  // 4. 年齢括弧除去 (24歳) or (24)
+  const ageMatch = name.match(/[（(](\d{2})歳?[）)]$/);
+  if (ageMatch) {
+    name = name.replace(/\s*[（(]\d{2}歳?[）)]$/, "");
   }
-  return { name: raw, age: dbAge || 0 };
+  name = name.trim();
+  // 5. 従来の (XX) パターン（全角なし）
+  const simpleMatch = name.match(/^(.+?)\((\d{2})\)$/);
+  if (simpleMatch) {
+    return { name: simpleMatch[1].trim(), age: dbAge || Number(simpleMatch[2]) };
+  }
+  return { name: name || raw, age: dbAge || (ageMatch ? Number(ageMatch[1]) : 0) };
 }
 
-/** Remove trailing parenthetical (age) from name for display */
+/** Remove trailing parenthetical (age) and other noise from name for display */
 export function cleanTherapistName(raw: string): string {
-  return raw.replace(/\s*\(\d{2}\)$/, "").trim();
+  let name = raw;
+  name = name.replace(/[～〜].+$/, "");
+  name = name.replace(/\s*(?:NEW\s*FACE|NEWFACE|新人)\s*/gi, "");
+  name = name.replace(/\s*\([A-Za-z\s]+\)\s*$/, "");
+  name = name.replace(/\s*[（(]\d{2}歳?[）)]$/, "");
+  name = name.replace(/\s*\(\d{2}\)$/, "");
+  return name.trim();
 }
 
 /**

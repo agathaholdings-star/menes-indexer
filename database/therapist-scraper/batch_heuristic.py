@@ -37,6 +37,9 @@ from dotenv import load_dotenv
 # .env読み込み
 load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
 
+from html_cache_utils import HtmlCache
+_cache = HtmlCache()
+
 # --- 設定 ---
 DB_DSN = "postgresql://postgres:postgres@127.0.0.1:54322/postgres"
 
@@ -376,6 +379,7 @@ def process_shop_http(shop):
         result['logs'].append(('fetch_top', 'heuristic', False, reason, None))
         return result
 
+    _cache.save("salon", salon_id, html)
     result['top_html'] = html
 
     # Step 2: 一覧URL特定
@@ -396,6 +400,7 @@ def process_shop_http(shop):
             result['detail'] = reason
             result['logs'].append(('fetch_list', 'heuristic', False, reason, None))
             return result
+        _cache.save("salon_list", salon_id, list_html)
     else:
         list_html = html
 

@@ -21,6 +21,7 @@ from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
 
 from therapist_scraper import TherapistScraper, fetch_page, REQUEST_DELAY, HEADERS
+from html_cache_utils import HtmlCache
 from cms_fingerprinter import CMSFingerprinter
 from rule_extractor import RuleExtractor
 from pattern_validator import PatternValidator
@@ -38,6 +39,7 @@ class SmartScraper:
             db_conn: psycopg2 connection（ローカルSupabase）
         """
         self.db_conn = db_conn
+        self._cache = HtmlCache()
         self.llm_scraper = TherapistScraper()
         self.rule_extractor = RuleExtractor()
         self.validator = PatternValidator()
@@ -569,6 +571,8 @@ class SmartScraper:
             self.stats['errors'] += 1
             return []
 
+        self._cache.save("salon", salon_id, html)
+
         # === キャッシュ確認 ===
         cache = self._get_cache(salon_id)
         cached_list_url = cache['therapist_list_url'] if cache else None
@@ -658,6 +662,7 @@ class SmartScraper:
                 self._update_cache(salon_id, pattern_id, list_url, step2_method, 0, False)
                 self.stats['errors'] += 1
                 return []
+            self._cache.save("salon_list", salon_id, list_html)
         else:
             list_html = html
 

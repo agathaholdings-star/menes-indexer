@@ -42,6 +42,8 @@ load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
 sys.path.insert(0, os.path.dirname(__file__))
 from therapist_scraper import TherapistScraper, fetch_page, HEADERS
 from pattern_validator import PatternValidator
+from html_cache_utils import HtmlCache
+_cache = HtmlCache()
 
 # --- 設定 ---
 DB_DSN = "postgresql://postgres:postgres@127.0.0.1:54322/postgres"
@@ -242,6 +244,7 @@ def fetch_and_extract(entry):
         if not html:
             return entry, None, None
 
+        _cache.save("therapist", entry['url'].rstrip('/').split('/')[-1], html)
         data = extract_therapist_data_heuristic(html, entry['url'])
 
         # ヒューリスティックで取れたらリスト画像をフォールバック

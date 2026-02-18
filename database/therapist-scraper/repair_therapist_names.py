@@ -35,6 +35,7 @@ load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
 # 既存スクレイパーからインポート
 sys.path.insert(0, os.path.dirname(__file__))
 from therapist_scraper import fetch_page, clean_html_for_llm
+from html_cache_utils import HtmlCache
 
 # ---------------------------------------------------------------------------
 # 設定
@@ -43,10 +44,10 @@ DB_DSN = os.environ.get(
     "DATABASE_URL",
     "postgresql://postgres:postgres@127.0.0.1:54322/postgres",
 )
-CACHE_DIR = os.path.join(os.path.dirname(__file__), "html_cache")
 CHECKPOINT_PATH = os.path.join(
     os.path.dirname(__file__), "repair_names_checkpoint.json"
 )
+_cache = HtmlCache()
 CHECKPOINT_INTERVAL = 50
 REQUEST_DELAY = 0.3
 LLM_MODEL = "claude-haiku-4-5-20251001"
@@ -58,31 +59,6 @@ logging.basicConfig(
     datefmt="%H:%M:%S",
 )
 log = logging.getLogger(__name__)
-
-# ---------------------------------------------------------------------------
-# HTMLキャッシュ (gzip圧縮)
-# ---------------------------------------------------------------------------
-
-def cache_path(therapist_id: int) -> str:
-    return os.path.join(CACHE_DIR, f"{therapist_id}.html.gz")
-
-
-def load_cached_html(therapist_id: int) -> str | None:
-    path = cache_path(therapist_id)
-    if not os.path.exists(path):
-        return None
-    try:
-        with gzip.open(path, "rt", encoding="utf-8") as f:
-            return f.read()
-    except Exception:
-        return None
-
-
-def save_cached_html(therapist_id: int, html: str) -> None:
-    os.makedirs(CACHE_DIR, exist_ok=True)
-    with gzip.open(cache_path(therapist_id), "wt", encoding="utf-8") as f:
-        f.write(html)
-
 
 # ---------------------------------------------------------------------------
 # チェックポイント
@@ -330,12 +306,12 @@ def process_one(row: dict) -> dict:
     }
 
     # HTMLキャッシュ確認
-    html = load_cached_html(tid)
+    html = _cache.load("therapist", tid)
     if html is None:
         time.sleep(REQUEST_DELAY)
         html = fetch_page(url)
         if html:
-            save_cached_html(tid, html)
+            _cache.save("therapist", tid, html)
         else:
             result["error"] = "fetch_failed"
             return result
