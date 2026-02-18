@@ -113,6 +113,9 @@ EXCLUDE_KEYWORDS = [
     "スケジュール", "出勤", "新人", "ランキング",
     "プロフィール", "PROFILE", "profile", "Profile",
     "THERAPIST", "therapist", "Therapist",
+    "twitter", "Twitter", "ツイッター", "Instagram", "インスタ",
+    "LINE", "予約フォーム", "お問い合わせ", "電話",
+    "メンズエステ", "公式サイト", "公式HP",
 ]
 
 # CSSクラス/IDに名前が入っている可能性が高い要素
@@ -340,7 +343,10 @@ def main():
         FROM therapists t
         JOIN salons s ON s.id = t.salon_id
         WHERE (t.name = s.name OR t.name = s.display_name
-               OR t.name ~* 'プロフィール|PROFILE|profile')
+               OR t.name ~* 'プロフィール|PROFILE|profile'
+               OR t.name ~* 'twitter|ツイッター'
+               OR (length(s.display_name) >= 3 AND t.name LIKE '%%' || s.display_name || '%%')
+               OR (length(s.name) >= 3 AND t.name LIKE '%%' || s.name || '%%'))
           AND t.source_url IS NOT NULL AND t.source_url != ''
         ORDER BY t.id
     """)
