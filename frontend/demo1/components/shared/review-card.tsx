@@ -92,17 +92,17 @@ export function ReviewCard({ review, isBlurred = false, showTherapist = true, va
               </div>
             )}
             <div className="bg-muted/30 p-3 rounded-lg">
-              <p className="mb-1 text-xs font-medium text-muted-foreground">第一印象</p>
-              <p className="text-sm">{review.q1FirstImpression}</p>
+              <p className="mb-1 text-xs font-medium text-muted-foreground">顔の印象</p>
+              <p className="text-sm">{review.commentFirstImpression}</p>
             </div>
             <div className="bg-muted/30 p-3 rounded-lg">
-              <p className="mb-1 text-xs font-medium text-muted-foreground">施術・接客</p>
-              <p className="text-sm">{review.q2Service}</p>
+              <p className="mb-1 text-xs font-medium text-muted-foreground">施術の流れ</p>
+              <p className="text-sm">{review.commentService}</p>
             </div>
-            {review.q3Notes && (
+            {review.commentAdvice && (
               <div className="bg-muted/30 p-3 rounded-lg">
-                <p className="mb-1 text-xs font-medium text-muted-foreground">注意点</p>
-                <p className="text-sm">{review.q3Notes}</p>
+                <p className="mb-1 text-xs font-medium text-muted-foreground">アドバイス</p>
+                <p className="text-sm">{review.commentAdvice}</p>
               </div>
             )}
           </div>
@@ -151,17 +151,17 @@ export function ReviewCard({ review, isBlurred = false, showTherapist = true, va
             </div>
           )}
           <div>
-            <p className="mb-1 text-xs font-medium text-muted-foreground">第一印象</p>
-            <p className="text-sm">{review.q1FirstImpression}</p>
+            <p className="mb-1 text-xs font-medium text-muted-foreground">顔の印象</p>
+            <p className="text-sm">{review.commentFirstImpression}</p>
           </div>
           <div>
-            <p className="mb-1 text-xs font-medium text-muted-foreground">施術・接客</p>
-            <p className="text-sm">{review.q2Service}</p>
+            <p className="mb-1 text-xs font-medium text-muted-foreground">施術の流れ</p>
+            <p className="text-sm">{review.commentService}</p>
           </div>
-          {review.q3Notes && (
+          {review.commentAdvice && (
             <div>
-              <p className="mb-1 text-xs font-medium text-muted-foreground">注意点</p>
-              <p className="text-sm">{review.q3Notes}</p>
+              <p className="mb-1 text-xs font-medium text-muted-foreground">アドバイス</p>
+              <p className="text-sm">{review.commentAdvice}</p>
             </div>
           )}
         </div>

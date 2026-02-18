@@ -305,7 +305,7 @@ function ReviewCard({
           <div className="relative">
             {/* Teaser text - visible */}
             <p className="text-sm leading-relaxed mb-2">
-              {review.q1FirstImpression.slice(0, 50)}...
+              {review.commentFirstImpression.slice(0, 50)}...
             </p>
 
             {/* Blurred/masked content with gradient fade */}
@@ -354,10 +354,49 @@ function ReviewCard({
         ) : (
           /* Full content for unlocked reviews */
           <div className="space-y-3 text-sm">
-            <p className="leading-relaxed">{review.q1FirstImpression}</p>
-            <p className="leading-relaxed">{review.q2Service}</p>
-            {review.q3Notes && (
-              <p className="text-muted-foreground leading-relaxed">{review.q3Notes}</p>
+            {review.commentReason && (
+              <div>
+                <p className="font-medium text-xs text-muted-foreground mb-1">きっかけ</p>
+                <p className="leading-relaxed">{review.commentReason}</p>
+              </div>
+            )}
+            <div>
+              <p className="font-medium text-xs text-muted-foreground mb-1">顔の印象</p>
+              <p className="leading-relaxed">{review.commentFirstImpression}</p>
+            </div>
+            {review.commentStyle && (
+              <div>
+                <p className="font-medium text-xs text-muted-foreground mb-1">スタイル</p>
+                <p className="leading-relaxed">{review.commentStyle}</p>
+              </div>
+            )}
+            <div>
+              <p className="font-medium text-xs text-muted-foreground mb-1">施術の流れ</p>
+              <p className="leading-relaxed">{review.commentService}</p>
+            </div>
+            {review.commentServiceDetail && (
+              <div>
+                <p className="font-medium text-xs text-muted-foreground mb-1">どこまでいけた</p>
+                <p className="leading-relaxed">{review.commentServiceDetail}</p>
+              </div>
+            )}
+            {review.commentCost && (
+              <div>
+                <p className="font-medium text-xs text-muted-foreground mb-1">お値段</p>
+                <p className="leading-relaxed">{review.commentCost}</p>
+              </div>
+            )}
+            {review.commentRevisit && (
+              <div>
+                <p className="font-medium text-xs text-muted-foreground mb-1">また行きたい？</p>
+                <p className="leading-relaxed">{review.commentRevisit}</p>
+              </div>
+            )}
+            {review.commentAdvice && (
+              <div>
+                <p className="font-medium text-xs text-muted-foreground mb-1">アドバイス</p>
+                <p className="leading-relaxed text-muted-foreground">{review.commentAdvice}</p>
+              </div>
             )}
           </div>
         )}

@@ -56,7 +56,7 @@ export async function GET() {
   const { data: reviews } = await supabaseAdmin
     .from("reviews")
     .select(
-      "id, score, looks_type, body_type, service_level, moderation_status, comment_first_impression, comment_service, comment_advice, created_at, user_id, therapist_id, salon_id, verification_image_path, is_verified"
+      "id, score, looks_type_id, body_type_id, service_level_id, moderation_status, comment_first_impression, comment_service, comment_advice, created_at, user_id, therapist_id, salon_id, verification_image_path, is_verified"
     )
     .order("created_at", { ascending: false })
     .limit(100);

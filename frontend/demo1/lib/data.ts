@@ -23,6 +23,17 @@ export const bodyTypes = [
 
 export type BodyType = typeof bodyTypes[number];
 
+// DB cup_types マスタ準拠（5段階）
+export const cupTypes = [
+  { id: "1", label: "なし" },
+  { id: "2", label: "控えめ" },
+  { id: "3", label: "標準" },
+  { id: "4", label: "大きめ" },
+  { id: "5", label: "巨乳" },
+] as const;
+
+export type CupType = typeof cupTypes[number];
+
 // DB service_levels マスタ準拠
 export const serviceTypes = [
   { id: "1", label: "健全", icon: "Leaf", description: "マッサージ重視" },
@@ -147,9 +158,14 @@ export interface Review {
     personality: number;
   };
   tags: string[];
-  q1FirstImpression: string;
-  q2Service: string;
-  q3Notes: string;
+  commentReason: string;
+  commentFirstImpression: string;
+  commentStyle: string;
+  commentService: string;
+  commentServiceDetail: string;
+  commentCost: string;
+  commentRevisit: string;
+  commentAdvice: string;
   createdAt: string;
   userId: string;
   userName?: string;

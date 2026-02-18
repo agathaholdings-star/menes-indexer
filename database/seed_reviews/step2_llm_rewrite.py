@@ -16,6 +16,7 @@ Usage:
 import argparse
 import json
 import os
+import random
 import signal
 import sys
 import time
@@ -36,6 +37,90 @@ CHECKPOINT_PATH = os.path.join(DATA_DIR, "rewrite_checkpoint.json")
 CHECKPOINT_INTERVAL = 10  # 何件ごとにチェックポイント保存
 
 # ---------------------------------------------------------------------------
+# ペルソナ定義（文体分散用）
+# ---------------------------------------------------------------------------
+PERSONAS = [
+    {
+        "name": "ベテラン分析型",
+        "weight": 25,
+        "instruction": (
+            "あなたは30代後半〜40代のメンエス常連。通い歴5年以上のベテラン。\n"
+            "語尾: 「〜だ」「〜である」「〜だろう」「〜と思われる」「〜と言える」\n"
+            "特徴:\n"
+            "- 落ち着いた長文で、施術の流れを時系列に沿って丁寧に記述する\n"
+            "- 「まず」「次に」「最終的に」等の接続詞で構成を整理する\n"
+            "- 業界用語を自然に使い、他店との比較視点も入れる\n"
+            "- 感嘆符（！）は控えめに。使っても1つの口コミで1〜2回まで\n"
+            "- 「結論から言えば」「総合的に判断すると」のような分析的表現を好む"
+        ),
+    },
+    {
+        "name": "興奮実況型",
+        "weight": 25,
+        "instruction": (
+            "あなたは20代後半〜30代前半。テンション高めで感情をストレートに出すタイプ。\n"
+            "語尾: タメ口。「〜だった！」「〜すぎる」「〜でしょ」「〜じゃん」\n"
+            "特徴:\n"
+            "- 「マジで」「やばい」「堪らん」「最高かよ」等の感嘆表現を多用\n"
+            "- 感嘆符（！）を積極的に使う。短い感動表現を連続させる\n"
+            "- 「もうね、」「いやこれ、」「で、」等の口語的な接続で臨場感を出す\n"
+            "- 文が短めでテンポがいい。長い説明より感覚的な表現を優先\n"
+            "- 「これはリピ確定」「次も絶対指名する」等の断言口調"
+        ),
+    },
+    {
+        "name": "丁寧レポート型",
+        "weight": 20,
+        "instruction": (
+            "あなたは30代の社会人。普段からレビューを丁寧に書くタイプ。\n"
+            "語尾: 「〜でした」「〜と思います」「〜かもしれません」「〜ですね」\n"
+            "特徴:\n"
+            "- です・ます調ベース。敬語だが堅すぎず、親しみやすい\n"
+            "- 初心者にもわかるように補足説明を入れる\n"
+            "- 「個人的には」「あくまで主観ですが」等の前置きを使う\n"
+            "- 感嘆符は控えめ。「良かったです」「満足でした」等の穏やかな表現\n"
+            "- 良い点・気になった点をバランスよく書く傾向"
+        ),
+    },
+    {
+        "name": "カジュアル評論型",
+        "weight": 20,
+        "instruction": (
+            "あなたは20代後半。SNS世代で、短文・改行多めの書き方。\n"
+            "語尾: 「〜だった」「〜かな」「〜かも」「〜って感じ」「〜だけど」\n"
+            "特徴:\n"
+            "- やや投げやりなトーン。「まあまあ」「悪くない」「ぼちぼち」等\n"
+            "- 短い文を改行で区切るリズム。一文が長くならない\n"
+            "- 「正直」「ぶっちゃけ」をたまに使うが多用はしない\n"
+            "- 褒めるときも「普通にいい」「割とアリ」等のクールな表現\n"
+            "- 「〜ってのはある」「〜なのはデカい」等の若者言葉混じり"
+        ),
+    },
+    {
+        "name": "淡々クール型",
+        "weight": 10,
+        "instruction": (
+            "あなたは40代。感情を表に出さず、事実ベースで淡々と書くタイプ。\n"
+            "語尾: 「〜だ」「〜だった」「〜である」。シンプルな断定調\n"
+            "特徴:\n"
+            "- 感嘆符（！）は一切使わない。句点（。）で終わる\n"
+            "- 「可もなく不可もなく」「悪くはない」「及第点」等の抑えた評価\n"
+            "- 主観的な感動表現を避け、客観的な事実描写を中心にする\n"
+            "- 「〜と感じた」「〜という印象」等、一歩引いた表現\n"
+            "- 文章量は少なめ。必要十分な情報だけを簡潔に書く"
+        ),
+    },
+]
+
+PERSONA_WEIGHTS = [p["weight"] for p in PERSONAS]
+
+
+def pick_persona() -> dict:
+    """重み付きランダムでペルソナを1つ選択"""
+    return random.choices(PERSONAS, weights=PERSONA_WEIGHTS, k=1)[0]
+
+
+# ---------------------------------------------------------------------------
 # プロンプト
 # ---------------------------------------------------------------------------
 SYSTEM_PROMPT = """\
@@ -44,9 +129,8 @@ SYSTEM_PROMPT = """\
 
 ## ルール
 
-1. **一人称視点、カジュアル口語体**で書く
-   - 「めっちゃ」「マジで」「正直」「〜って感じ」「ぶっちゃけ」など自然な話し言葉
-   - 「です・ます」調ではなく「だ・である」調
+1. **一人称視点**で書く。文体・語尾・トーンはユーザーメッセージ末尾の【文体指示】に厳密に従うこと。
+   指示された語尾以外は使わない。指示されたトーンと特徴を忠実に再現する。
 
 2. **固有名詞（芸能人名等）は全面禁止** → 一般表現に言い換え
    - ❌「櫻坂にいそう」→ ✅「アイドルっぽい雰囲気」
@@ -118,7 +202,7 @@ SYSTEM_PROMPT = """\
 - `comment_advice`: 後から行く人へのアドバイス（50-300字）"""
 
 
-def build_user_prompt(match: dict) -> str:
+def build_user_prompt(match: dict, persona: dict) -> str:
     """セラピスト1人分のユーザープロンプトを組み立てる"""
     name = match.get("me_therapist_name", "不明")
     salon = match.get("me_salon_name") or match.get("indexer_salon_name") or "不明"
@@ -144,7 +228,10 @@ def build_user_prompt(match: dict) -> str:
 口コミ（{count}件）:
 {reviews_text}---
 
-上記の口コミ全てを読み込み、1件の新しい口コミとしてリライトしてください。JSON形式のみ出力してください。"""
+上記の口コミ全てを読み込み、1件の新しい口コミとしてリライトしてください。JSON形式のみ出力してください。
+
+【文体指示】
+{persona['instruction']}"""
 
 
 # ---------------------------------------------------------------------------
@@ -152,7 +239,8 @@ def build_user_prompt(match: dict) -> str:
 # ---------------------------------------------------------------------------
 def call_claude(client, model: str, match: dict, max_retries: int = 3) -> dict | None:
     """1セラピスト分のAPIコールを実行。リトライ付き。"""
-    user_prompt = build_user_prompt(match)
+    persona = pick_persona()
+    user_prompt = build_user_prompt(match, persona)
 
     for attempt in range(max_retries):
         try:
@@ -193,6 +281,9 @@ def call_claude(client, model: str, match: dict, max_retries: int = 3) -> dict |
                 result["cup_type_id"] = fallback_cup_type_id(
                     match.get("indexer_cup")
                 )
+
+            # ペルソナ名を記録（デバッグ・分布確認用）
+            result["_persona"] = persona["name"]
 
             return result
 
@@ -454,6 +545,16 @@ def main():
     if results:
         avg_score = sum(r.get("score", 0) for r in results) / len(results)
         print(f"  平均スコア: {avg_score:.1f}")
+
+        # ペルソナ分布
+        persona_counts = {}
+        for r in results:
+            p = r.get("_persona", "不明")
+            persona_counts[p] = persona_counts.get(p, 0) + 1
+        print("  ペルソナ分布:")
+        for name, count in sorted(persona_counts.items(), key=lambda x: -x[1]):
+            pct = count / len(results) * 100
+            print(f"    {name}: {count}件 ({pct:.0f}%)")
     print(f"\n出力: {OUTPUT_PATH}")
 
 

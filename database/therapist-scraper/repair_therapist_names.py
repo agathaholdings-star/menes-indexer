@@ -107,16 +107,35 @@ def save_checkpoint(done_ids: set) -> None:
 
 # 名前として除外するキーワード
 EXCLUDE_KEYWORDS = [
+    # ナビゲーション・ページ要素
     "メニュー", "料金", "アクセス", "ブログ", "予約", "HOME",
     "トップ", "TOP", "セラピスト", "キャスト", "スタッフ",
     "一覧", "ニュース", "お知らせ", "ギャラリー",
     "スケジュール", "出勤", "新人", "ランキング",
+    "SCHEDULE", "Schedule", "schedule",
+    # プロフィール関連
     "プロフィール", "PROFILE", "profile", "Profile",
     "THERAPIST", "therapist", "Therapist",
+    # SNS・外部リンク
     "twitter", "Twitter", "ツイッター", "Instagram", "インスタ",
-    "LINE", "予約フォーム", "お問い合わせ", "電話",
+    "LINE", "SNS", "SNSSNS",
+    # 問い合わせ・フォーム
+    "予約フォーム", "お問い合わせ", "電話",
+    # 店舗・サイト関連
     "メンズエステ", "公式サイト", "公式HP",
+    "店長コメント", "店長",
+    # フォームラベル・UI要素
+    "名前", "REVIEW", "レビュー", "募集",
+    "オススメ", "おすすめ", "RECOMMEND",
+    # その他ジャンクテキスト
+    "コメント", "お気に入り", "写メ日記", "ログイン",
 ]
+
+# 完全一致で除外する値（部分一致だと正当な名前を誤爆するもの）
+EXCLUDE_EXACT = {
+    "名前", "SNSSNS", "SNS", "SCHEDULE", "REVIEW", "REVIEWレビュー",
+    "店長コメント", "募集", "あなたにオススメの女の子",
+}
 
 # CSSクラス/IDに名前が入っている可能性が高い要素
 NAME_CSS_SELECTORS = [
@@ -132,10 +151,25 @@ NAME_CSS_SELECTORS = [
 ]
 
 
+def clean_extracted_name(text: str) -> str:
+    """抽出された名前をクリーニング"""
+    text = text.strip()
+    # "(XX)" 形式の年齢を除去: "松本 (18)" → "松本"
+    text = re.sub(r"\s*[\(（]\d{1,2}[\)）]\s*$", "", text)
+    # "(次回..." などのスケジュール情報を除去
+    text = re.sub(r"\s*[\(（]次回.*$", "", text)
+    # 【】内のサロン名を除去: "水川あすみ【アロマメゾン】" → "水川あすみ"
+    text = re.sub(r"【[^】]+】$", "", text)
+    return text.strip()
+
+
 def is_valid_name(text: str, salon_name: str, salon_display: str) -> bool:
     """名前として妥当かチェック"""
     text = text.strip()
     if not text or len(text) < 1 or len(text) > 20:
+        return False
+    # 完全一致除外
+    if text in EXCLUDE_EXACT:
         return False
     # サロン名と一致 → 拒否
     if text == salon_name or text == salon_display:
@@ -152,8 +186,8 @@ def is_valid_name(text: str, salon_name: str, salon_display: str) -> bool:
     # URLっぽい
     if text.startswith("http") or "/" in text:
         return False
-    # 数字だけ
-    if re.fullmatch(r"[\d\s]+", text):
+    # 数字だけ or 括弧+数字だけ
+    if re.fullmatch(r"[\d\s\(\)（）]+", text):
         return False
     return True
 
@@ -170,14 +204,14 @@ def extract_name_heuristic(html: str, url: str, salon_name: str,
         except Exception:
             continue
         if el:
-            text = el.get_text(strip=True)
+            text = clean_extracted_name(el.get_text(strip=True))
             if is_valid_name(text, salon_name, salon_display):
                 return text
 
     # 2. H1/H2（サロン名を明示除外）
     for tag in ["h1", "h2"]:
         for el in soup.find_all(tag):
-            text = el.get_text(strip=True)
+            text = clean_extracted_name(el.get_text(strip=True))
             if is_valid_name(text, salon_name, salon_display):
                 return text
 
@@ -188,12 +222,13 @@ def extract_name_heuristic(html: str, url: str, salon_name: str,
         # デリミタで分割して最初の部分を試行
         for delim in ["|", "｜", "-", "–", "—", "/"]:
             if delim in og_text:
-                candidate = og_text.split(delim)[0].strip()
+                candidate = clean_extracted_name(og_text.split(delim)[0].strip())
                 if is_valid_name(candidate, salon_name, salon_display):
                     return candidate
         # デリミタなしでも試行
-        if is_valid_name(og_text, salon_name, salon_display):
-            return og_text
+        cleaned_og = clean_extracted_name(og_text)
+        if is_valid_name(cleaned_og, salon_name, salon_display):
+            return cleaned_og
 
     # 4. titleタグ（デリミタ分割、サロン名除外）
     title_el = soup.find("title")
@@ -201,7 +236,7 @@ def extract_name_heuristic(html: str, url: str, salon_name: str,
         title_text = title_el.get_text(strip=True)
         for delim in ["|", "｜", "-", "–", "—", "/"]:
             if delim in title_text:
-                candidate = title_text.split(delim)[0].strip()
+                candidate = clean_extracted_name(title_text.split(delim)[0].strip())
                 if is_valid_name(candidate, salon_name, salon_display):
                     return candidate
 
@@ -259,6 +294,8 @@ URL: {url}
         result = result.split("\n")[0].strip()
         # 余計な記号除去
         result = re.sub(r"^[「『\"']+|[」』\"']+$", "", result).strip()
+        # 名前クリーニング
+        result = clean_extracted_name(result)
 
         if is_valid_name(result, salon_name, salon_display):
             return result
@@ -345,6 +382,9 @@ def main():
         WHERE (t.name = s.name OR t.name = s.display_name
                OR t.name ~* 'プロフィール|PROFILE|profile'
                OR t.name ~* 'twitter|ツイッター'
+               OR t.name IN ('SNSSNS', 'SCHEDULE', '店長コメント', '名前',
+                             'REVIEWレビュー', 'あなたにオススメの女の子', '募集（50）')
+               OR t.name ~ '^\\(.+\\)$'
                OR (length(s.display_name) >= 3 AND t.name LIKE '%%' || s.display_name || '%%')
                OR (length(s.name) >= 3 AND t.name LIKE '%%' || s.name || '%%'))
           AND t.source_url IS NOT NULL AND t.source_url != ''

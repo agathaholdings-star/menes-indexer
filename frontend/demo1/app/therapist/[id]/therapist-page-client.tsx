@@ -251,6 +251,9 @@ export function TherapistPageClient({ therapist, reviews, areaName, prefName }: 
                 reviews={reviews}
                 isLocked={isLocked}
                 onWriteReview={() => setIsReviewModalOpen(true)}
+                therapistName={therapist.name}
+                therapistAge={therapist.age}
+                therapistImage={therapist.images[0] || "/placeholder.svg"}
               />
 
               {/* Recommendations */}
