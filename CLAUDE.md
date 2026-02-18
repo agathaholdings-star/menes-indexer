@@ -9,7 +9,7 @@
 - 画像を複数枚受け取った場合はコンテキスト消費が大きいことを意識すること
 - スクレイピング時は必ずHTMLをgzip圧縮でローカル保存すること（`html_cache/{id}.html.gz`）。抽出ロジック改善時に再fetchなしで再処理可能にするため。
 
-## 現在のステータス (2026-02-18 更新)
+## 現在のステータス (2026-02-18 夜 更新)
 
 - **設計フェーズ完了**: サービス概要、システム設計、UXフロー、v0用プロンプトを作成済み。
 - **フロントエンド公開済み**: v0.appからVercelにデプロイ → https://menes-indexer.com/
@@ -20,7 +20,7 @@
 - **ヒューリスティック優先抽出 実装完了**: 全7,684店スキャン済み（Step2: 86.5%, Step3: 48%）
 - **ヒューリスティックv2**: flat HTML構造+共通サブパス検出で+1,227店改善
 - **shops→salonsリネーム完了**: DB・Python(8ファイル)・フロント(16ファイル)・CLAUDE.md一括リネーム。VPS本番DBも実行済み
-- **Phase②完了**: VPSセラピストスクレイピング完走 → **79,639名**取得済み
+- **Phase②完了**: VPSセラピストスクレイピング完走 → **79,639名**取得済み → Phase③で**95,340名**に拡大
 - **ローカルSupabase最新同期済み**: VPSからpg_dumpで79,639名をローカルに投入（2026-02-16）
 - **公開レベル仕上げ完了**: デバッグUI除去、mockデータ全削除、Stripe環境変数化、おすすめ実データ化
 - **データクレンジング完了**: bust→cup分離651件、元データはname_raw/bust_rawに退避保持
@@ -33,7 +33,11 @@
 - **フロント口コミ表示修正済み**: セラピスト詳細ページでDB口コミ・スコア・件数を動的表示（ハードコード0を修正）
 - **フロント口コミ設問8問対応完了**: Review型を旧3問(q1/q2/q3)→新8問(commentReason〜commentAdvice)に更新
 - **フロント分類IDマッピング修正済み**: DB整数ID（looks_type_id等）にフロント全体を統一
-- **🎯 ローカル本番相当到達（2026-02-18）**: データ（6,489店舗/79,639名/14,880口コミ）＋フロント全機能がローカルで動作。以降はUX改善・目視確認フェーズへ
+- **データクレンジングv2完了（2026-02-18）**: 名前クレンジング5,144件（年齢混入3,137/NEW FACE 627/ローマ字69/キャッチコピー925）＋source_url重複789件削除。`clean_therapist_names.py`で実行
+- **HTMLキャッシュ統一化完了（2026-02-18）**: `html_cache_utils.py`共通モジュール作成。全7スクレイピングスクリプトにgzip保存を統合。カテゴリ別（therapist/salon/salon_list/area）に自動分類
+- **フロント名前パース強化済み（2026-02-18）**: `parseNameAge()`/`cleanTherapistName()`に4パターン除去追加（キャッチコピー/NEW FACE/ローマ字括弧/年齢括弧）。DB修正漏れの防御層
+- **Phase③完了（2026-02-18）**: VPS 5並列ワーカーで未取得3,603店をLLMスクレイピング → **+15,701名**取得（79,639→95,340名）。3,511サロンにセラピスト紐付き済み（54.1%）。残り2,977店はサイトダウン/セラピスト非公開
+- **🎯 ローカル本番相当到達（2026-02-18）**: データ（6,489店舗/95,340名/14,880口コミ）＋フロント全機能がローカルで動作。以降はUX改善・目視確認フェーズへ
 - **成果物**:
     - `docs/SERVICE_OVERVIEW.md`: サービス概要・ビジネスモデル
     - `docs/SYSTEM_DESIGN.md`: システム構成・DBスキーマ
@@ -44,7 +48,7 @@
     2. ~~Smart Scraper実装~~ → ✅ 完了（16サロン成功/303名取得テスト済み）
     3. ~~ヒューリスティック優先抽出~~ → ✅ 完了（batch_heuristic.py + smart_scraper.py改修）
     4. ~~shops→salonsリネーム~~ → ✅ 完了（DB・コード・VPS全対応）
-    5. ~~セラピスト本番スクレイピング~~ → ✅ Phase②完走（79,639名）、Phase③(~3,976店)は未実施
+    5. ~~セラピスト本番スクレイピング~~ → ✅ Phase②完走（79,639名）＋Phase③完走（+15,701名=**95,340名**、3,511サロン紐付き）
     6. ~~フロントエンドとローカルSupabaseの接続~~ → ✅ 完了（pg_dump投入済み、pnpm devで実データ表示確認済み）
     7. ~~公開レベル仕上げ~~ → ✅ 完了（デバッグUI除去・mock削除・Stripe環境変数化・おすすめ実データ化）
     8. ~~ローカルSupabase最新データ同期~~ → ✅ 完了（VPS 79,639名→ローカル投入、2026-02-16）
@@ -72,11 +76,30 @@
     10d. ~~フロント口コミ設問8問対応~~ → ✅ 完了（2026-02-18）
         - 目的: DBスキーマ拡張（3設問→8設問）にフロントを追従させるため
         - Review型、review-card、review-listを新フィールド（commentReason〜commentAdvice）に更新
-    11. **ローカルUX改善フェーズ** ← 🔄 現在ここ（2026-02-18〜）
+    10e. **名前クレンジングv2＋HTMLキャッシュ統一** → ✅ 完了（2026-02-18）
+        - 目的: 目視レビューで発見した6件の表示問題を修正＋プロジェクトルール「HTMLをgzip保存」を全スクリプトに統一
+        - `html_cache_utils.py`: 共通gzipキャッシュモジュール新規作成（save/load/exists、カテゴリ別サブディレクトリ）
+        - `clean_therapist_names.py`: 4パターン名前クレンジング（5,144件更新）＋source_url重複解消（789件削除）
+        - 全7スクレイピングスクリプトにcache.save()統合
+        - `repair_therapist_names.py`を共通モジュールに移行
+        - `therapist-utils.ts`: parseNameAge/cleanTherapistNameに防御パターン追加
+    10f. ~~Phase③ セラピスト未取得店LLMスクレイピング~~ → ✅ 完了（2026-02-18）
+        - 目的: Phase②で取れなかった3,603店にSmartScraperのフルパイプラインでLLM再挑戦。サロン詳細ページでセラピスト0名だった問題（リンダスパ等）を解消するため
+        - 5並列tmux (p3w1-p3w5)、ID範囲分割（W1:0-1899, W2:1899-3791, W3:3791-4918, W4:4918-6091, W5:6091-∞）
+        - `batch_scrape_therapists.py`に`--start-id`/`--end-id`フラグ追加で並列化対応
+        - `--failed-only`クエリをsalon_scrape_cache参照→`NOT IN (SELECT DISTINCT salon_id FROM therapists)`に変更
+        - **結果: +15,701名取得（79,639→95,340名）、3,511サロン紐付き（54.1%）**
+        - W1: 4,785名/6h28m, W2: 4,600名/6h06m, W3: 1,531名/3h01m, W4: 1,442名/2h29m, W5: ~3,343名(停止)
+        - 残り2,977サロンはサイトダウン/fetch不可/セラピスト非公開（回収不可能）
+        - 次ステップ: pg_dumpでVPS→ローカル同期が必要
+    11. **ローカルSupabase再同期** ← 次にやること
+        - VPS therapists 95,340名をpg_dumpでローカルに同期（現在ローカルは79,639名のまま）
+        - Phase③で取得した+15,701名 + 名前クレンジング/重複解消の反映
+    12. **ローカルUX改善フェーズ** ← 🔄 現在ここ（2026-02-18〜）
         - ローカル環境を触りながらUI/UXの改善点を洗い出し・修正
         - データ品質の目視確認・微調整
-    12. **本番デプロイ準備**（本番Supabaseスキーマpush → Vercel環境変数 → デプロイ）
-    13. VPSのスクレイピングデータをpg_dumpで本番Supabaseに移行
+    13. **本番デプロイ準備**（本番Supabaseスキーマpush → Vercel環境変数 → デプロイ）
+    14. VPSのスクレイピングデータをpg_dumpで本番Supabaseに移行
 
 ## 開発フロー方針（確定）
 
@@ -157,7 +180,7 @@ supabase stop      # 停止
 | areas | 821 | シード済み（スラッグ重複解決済み） |
 | salons | 6,489 | official_urlベースでデデュプ済み（1サロン=1行） |
 | salon_areas | 11,648 | salons連動（複数エリア掲載含む） |
-| therapists | 79,639 | Phase②完走。名前修復済み（~14,988件修復、2026-02-18） |
+| therapists | 95,340 | Phase②+③完走（VPS）。名前修復済み（~14,988件修復）。ローカルは79,639のまま（要pg_dump同期） |
 | cms_patterns | 2 | シード済み（upfu8_cms, estama） |
 | salon_scrape_cache | 6,481 | デデュプ済み |
 | scrape_log | 0 | - |
@@ -279,6 +302,8 @@ ssh -i /Users/agatha/Downloads/indexer.pem root@220.158.18.6 "sudo -u postgres p
 │       ├── rule_miner.py          ← パターン自動学習
 │       ├── pattern_validator.py   ← 抽出品質検証
 │       ├── batch_heuristic.py     ← Phase①: ヒューリスティック全店スキャン
+│       ├── html_cache_utils.py    ← 共通HTMLキャッシュモジュール（gzip圧縮、カテゴリ別）
+│       ├── clean_therapist_names.py ← 名前クレンジング＋source_url重複解消
 │       ├── cms_patterns_seed.json ← 初期CMSパターン2件
 │       └── seed_cms_patterns.py   ← シード投入スクリプト
 ├── docs/                  ← ドキュメント
@@ -725,8 +750,8 @@ Level 3: /sapporo/asahikawa-city/all/   ← 263市（市単位に絞り込んだ
 | ステップ | スクリプト | 状態 | 実行場所 |
 |---------|----------|------|---------|
 | ① 全店スキャン | `batch_heuristic.py` | ✅ 完了（28分） | ローカル |
-| ② 成功店データ取得 | `batch_therapist_data.py` | 🔄 VPS稼働中 | VPS (tmux phase2) |
-| ③ 失敗店LLM再挑戦 | `batch_scrape_therapists.py --failed-only` | ⏳ 待ち | VPS |
+| ② 成功店データ取得 | `batch_therapist_data.py` | ✅ 完了（79,639名） | VPS |
+| ③ 失敗店LLM再挑戦 | `batch_scrape_therapists.py --failed-only` | ✅ 完了（+15,701名=95,340名） | VPS (5並列) |
 
 ### ヒューリスティックスキャン結果
 
@@ -743,32 +768,29 @@ Level 3: /sapporo/asahikawa-city/all/   ← 263市（市単位に絞り込んだ
 - 共通サブパス検出（/staff/ → /prof/profXX/）対応
 - **+1,227店改善** → Phase②対象: 2,481 → 3,708店（48%）
 
-### 失敗パターン分析（Phase③対象 ~3,976店）
+### Phase③実行結果（2026-02-18、3,603店対象）
 
-| パターン | 件数 | LLM改善見込み |
-|----------|------|-------------|
-| extract_urls失敗（一覧URLはあるがURL抽出不可） | 2,939 | 高い |
-| fetch失敗（サイト死亡/403/タイムアウト） | 681 | 低い（スキップ推奨） |
-| find_list_url失敗（一覧URL自体不明） | 346 | 中 |
-| fetch_list失敗（一覧ページだけ404） | 8 | 低い |
+5並列tmux（ID範囲分割）で実行。`--start-id`/`--end-id`フラグで分割。
+
+| ワーカー | ID範囲 | 取得セラピスト | 所要時間 | エラー |
+|---------|--------|-------------|---------|--------|
+| W1 (p3w1) | 0-1899 | 4,785名 | 6h28m | 268 |
+| W2 (p3w2) | 1899-3791 | 4,600名 | 6h06m | 296 |
+| W3 (p3w3) | 3791-4918 | 1,531名 | 3h01m | 490 |
+| W4 (p3w4) | 4918-6091 | 1,442名 | 2h29m | 519 |
+| W5 (p3w5) | 6091-∞ | ~3,343名 | (停止) | - |
+| **合計** | - | **+15,701名** | - | - |
+
+残り2,977サロンはサイトダウン/セラピスト非公開で回収不可能。
 
 ### VPS操作コマンド
 
 ```bash
-# Phase②進捗確認
-ssh -i ~/Downloads/indexer.pem root@220.158.18.6 "tail -20 /opt/scraper/batch_therapist_data.log"
-
-# Phase②tmux接続
-ssh -i ~/Downloads/indexer.pem root@220.158.18.6 -t "tmux attach -t phase2"
-
-# Phase②完了後 → 追加1,227店分も処理（--resumeで自動）
-ssh -i ~/Downloads/indexer.pem root@220.158.18.6 "cd /opt/scraper && tmux new-session -d -s phase2 'python3 batch_therapist_data.py --resume --workers 5 2>&1 | tee -a batch_therapist_data.log'"
-
-# Phase③開始（②と並行可能）
-ssh -i ~/Downloads/indexer.pem root@220.158.18.6 "cd /opt/scraper && tmux new-session -d -s phase3 'python3 batch_scrape_therapists.py --failed-only --resume 2>&1 | tee batch_therapist_phase3.log'"
-
 # DB状況確認
 ssh -i ~/Downloads/indexer.pem root@220.158.18.6 "sudo -u postgres psql -d menethe -c 'SELECT count(*) FROM therapists;'"
+
+# pg_dumpでローカル同期
+ssh -i ~/Downloads/indexer.pem root@220.158.18.6 "sudo -u postgres pg_dump -d menethe --data-only -t therapists" > therapists_dump.sql
 ```
 
 ## Smart Scraper（自己学習型セラピストスクレイパー）✅ 実装済み (2026-02-10)

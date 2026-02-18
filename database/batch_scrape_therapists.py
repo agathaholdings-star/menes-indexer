@@ -84,20 +84,18 @@ def save_checkpoint(checkpoint):
 # DB操作
 # =============================================================================
 
-def get_target_shops(cur, limit=0, failed_only=False):
+def get_target_shops(cur, limit=0, failed_only=False, start_id=0, end_id=0):
     """official_urlを持つサロン一覧を取得"""
     if failed_only:
-        # Phase③: ヒューリスティックでセラピストURL取得できなかった店舗のみ
+        # Phase③: セラピスト未取得の店舗のみ
         query = """
             SELECT s.id, s.name, s.display_name, s.official_url, s.domain
             FROM salons s
             WHERE s.official_url IS NOT NULL
               AND s.is_active = true
               AND s.id NOT IN (
-                SELECT salon_id FROM salon_scrape_cache
-                WHERE last_therapist_count > 0
+                SELECT DISTINCT salon_id FROM therapists
               )
-            ORDER BY s.id
         """
     else:
         query = """
@@ -105,8 +103,12 @@ def get_target_shops(cur, limit=0, failed_only=False):
             FROM salons s
             WHERE s.official_url IS NOT NULL
               AND s.is_active = true
-            ORDER BY s.id
         """
+    if start_id > 0:
+        query += f" AND s.id >= {start_id}"
+    if end_id > 0:
+        query += f" AND s.id < {end_id}"
+    query += " ORDER BY s.id"
     if limit > 0:
         query += f" LIMIT {limit}"
     cur.execute(query)
@@ -183,7 +185,11 @@ def main():
     parser.add_argument('--llm-only', action='store_true',
                        help='LLMのみ使用（従来のTherapistScraper動作）')
     parser.add_argument('--failed-only', action='store_true',
-                       help='Phase③: ヒューリスティック失敗分のみ対象')
+                       help='Phase③: セラピスト未取得分のみ対象')
+    parser.add_argument('--start-id', type=int, default=0,
+                       help='処理対象の開始salon ID（含む）')
+    parser.add_argument('--end-id', type=int, default=0,
+                       help='処理対象の終了salon ID（含まない）')
     args = parser.parse_args()
 
     log.info("=" * 60)
@@ -201,7 +207,8 @@ def main():
         sys.exit(1)
 
     # --- 対象サロン取得 ---
-    all_shops = get_target_shops(cur, limit=args.limit, failed_only=args.failed_only)
+    all_shops = get_target_shops(cur, limit=args.limit, failed_only=args.failed_only,
+                                 start_id=args.start_id, end_id=args.end_id)
     if args.failed_only:
         log.info(f"Phase③対象（ヒューリスティック失敗分）: {len(all_shops)}件")
     else:
