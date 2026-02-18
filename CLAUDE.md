@@ -28,7 +28,7 @@
 - **ME口コミマッチング完了**: ME 80,458名 vs Indexer 79,639名 → **15,690名マッチ（19.5%）、口コミ48,288件**
 - **ME口コミリライトパイプライン実装完了**: 3ステップ構成（Step1:ME抽出→Step2:LLMリライト→Step3:DB投入）、DBマイグレーション（設問3→8問拡張）適用済み
 - **Sonnet 100件テスト完了**: 100/100成功（34.2分、平均スコア76.3）、ローカルDB投入済み、フロント表示確認OK
-- **口コミBatch API投入済み**: 14,971件をSonnet Batch APIに投入（2026-02-18）。24時間以内に結果返却予定。~$35
+- **口コミseed投入完了**: Batch APIで14,971件リライト→14,879件DB投入（2026-02-18）。平均スコア73.7、~$35
 - **セラピスト名修復完了**: 10,795件対象→10,299件修復（成功率95.4%）。fetch失敗474件はサイト死亡。HTMLキャッシュ保存済み
 - **フロント分類IDマッピング修正済み**: DB整数ID（looks_type_id等）にフロント全体を統一
 - **成果物**:
@@ -46,15 +46,12 @@
     7. ~~公開レベル仕上げ~~ → ✅ 完了（デバッグUI除去・mock削除・Stripe環境変数化・おすすめ実データ化）
     8. ~~ローカルSupabase最新データ同期~~ → ✅ 完了（VPS 79,639名→ローカル投入、2026-02-16）
     9. ~~ME口コミマッチングアセスメント~~ → ✅ 完了（15,690名マッチ、48,288件の口コミ移行可能）
-    10. **ME口コミリライト＆初期データ投入** ← 🔄 Batch API投入済み（2026-02-18）
+    10. ~~ME口コミリライト＆初期データ投入~~ → ✅ 完了（2026-02-18）
         - Step1: ✅ 全件抽出完了（15,816名マッチ、48,519件口コミ）
-        - Step2: ✅ **Batch API投入済み**（14,971件、重複除去後）。`step2_batch.py`で投入
-          - バッチ1: `msgbatch_01HQA1FJbNNt7qJcBnuSBbNW`（10,000件）
-          - バッチ2: `msgbatch_01CFZAVEUfzEhXsyx3voH9MP`（4,971件）
-          - 結果は24時間以内。確認: `python database/seed_reviews/step2_batch.py status`
-          - 取得: `python database/seed_reviews/step2_batch.py download` → `rewritten_reviews.json`
-        - Step3: 未実行。download後に `python database/seed_reviews/step3_insert_reviews.py`
+        - Step2: ✅ Batch APIで14,971件リライト完了（Sonnet、JSONパース失敗92件のみ）
+        - Step3: ✅ **14,879件DB投入完了**（平均スコア73.7、エラー0件）
         - コスト: Sonnet Batch API ~$35（通常APIの50%オフ）
+        - 目的: コールドスタート解消。公開初日から「口コミ見たい→自分も書く」ループを回すため
     10b. ~~セラピスト名修復~~ → ✅ 完了（2026-02-18）
         - `repair_therapist_names.py`: source_urlからHTML再取得→名前抽出→DB UPDATE
         - 結果: 10,299/10,795件修復（ヒューリスティック8,887+LLM1,412）、成功率95.4%
@@ -147,7 +144,7 @@ supabase stop      # 停止
 | cms_patterns | 2 | シード済み（upfu8_cms, estama） |
 | salon_scrape_cache | 6,481 | デデュプ済み |
 | scrape_log | 0 | - |
-| reviews | 0 | サービス開始後 |
+| reviews | 14,880 | seed口コミ14,879件投入済み（2026-02-18） |
 | profiles | 0 | サービス開始後 |
 | user_rewards | 0 | サービス開始後 |
 
