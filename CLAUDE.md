@@ -8,7 +8,7 @@
 - 画像を複数枚受け取った場合はコンテキスト消費が大きいことを意識すること
 - スクレイピング時は必ずHTMLをgzip圧縮でローカル保存すること（`html_cache/{id}.html.gz`）。抽出ロジック改善時に再fetchなしで再処理可能にするため。
 
-## 現在のステータス (2026-02-17 更新)
+## 現在のステータス (2026-02-18 更新)
 
 - **設計フェーズ完了**: サービス概要、システム設計、UXフロー、v0用プロンプトを作成済み。
 - **フロントエンド公開済み**: v0.appからVercelにデプロイ → https://menes-indexer.com/
@@ -27,6 +27,8 @@
 - **ME口コミマッチング完了**: ME 80,458名 vs Indexer 79,639名 → **15,690名マッチ（19.5%）、口コミ48,288件**
 - **ME口コミリライトパイプライン実装完了**: 3ステップ構成（Step1:ME抽出→Step2:LLMリライト→Step3:DB投入）、DBマイグレーション（設問3→8問拡張）適用済み
 - **Sonnet 100件テスト完了**: 100/100成功（34.2分、平均スコア76.3）、ローカルDB投入済み、フロント表示確認OK
+- **口コミBatch API投入済み**: 14,971件をSonnet Batch APIに投入（2026-02-18）。24時間以内に結果返却予定。~$35
+- **セラピスト名修復実行中**: 10,795件対象（PROFILE/プロフィール系+サロン名混入）。HTMLキャッシュ保存しつつ修復中
 - **フロント分類IDマッピング修正済み**: DB整数ID（looks_type_id等）にフロント全体を統一
 - **成果物**:
     - `docs/SERVICE_OVERVIEW.md`: サービス概要・ビジネスモデル
@@ -43,11 +45,20 @@
     7. ~~公開レベル仕上げ~~ → ✅ 完了（デバッグUI除去・mock削除・Stripe環境変数化・おすすめ実データ化）
     8. ~~ローカルSupabase最新データ同期~~ → ✅ 完了（VPS 79,639名→ローカル投入、2026-02-16）
     9. ~~ME口コミマッチングアセスメント~~ → ✅ 完了（15,690名マッチ、48,288件の口コミ移行可能）
-    10. **ME口コミリライト＆初期データ投入** ← Sonnet 100件テスト完了、CSV目視確認後に全件(15,690件)実行へ
-        - Step1: `python3 database/seed_reviews/step1_extract_me_data.py`（全件抽出、--limit不要）
-        - Step2: `python3 database/seed_reviews/step2_llm_rewrite.py --model claude-sonnet-4-5-20250929 --workers 3 --resume`（~11時間、~$7）
-        - Step3: `python3 database/seed_reviews/step3_insert_reviews.py`
-        - 100件テスト結果: `~/Desktop/sonnet_100_reviews.csv`、ローカルDB投入済み（平均スコア76.3）
+    10. **ME口コミリライト＆初期データ投入** ← 🔄 Batch API投入済み（2026-02-18）
+        - Step1: ✅ 全件抽出完了（15,816名マッチ、48,519件口コミ）
+        - Step2: ✅ **Batch API投入済み**（14,971件、重複除去後）。`step2_batch.py`で投入
+          - バッチ1: `msgbatch_01HQA1FJbNNt7qJcBnuSBbNW`（10,000件）
+          - バッチ2: `msgbatch_01CFZAVEUfzEhXsyx3voH9MP`（4,971件）
+          - 結果は24時間以内。確認: `python database/seed_reviews/step2_batch.py status`
+          - 取得: `python database/seed_reviews/step2_batch.py download` → `rewritten_reviews.json`
+        - Step3: 未実行。download後に `python database/seed_reviews/step3_insert_reviews.py`
+        - コスト: Sonnet Batch API ~$35（通常APIの50%オフ）
+    10b. **セラピスト名修復** ← 🔄 実行中（2026-02-18）
+        - `repair_therapist_names.py`: source_urlからHTML再取得→名前抽出→DB UPDATE
+        - 対象: 10,795件（PROFILE/プロフィール系 + サロン名=セラピスト名）
+        - HTMLはgzip圧縮で`html_cache/`に保存済み（再処理可能）
+        - チェックポイント・レジューム対応: `python3 database/therapist-scraper/repair_therapist_names.py --resume`
     11. **本番デプロイ準備**（本番Supabaseスキーマpush → Vercel環境変数 → デプロイ）
     12. VPSのスクレイピングデータをpg_dumpで本番Supabaseに移行
 
