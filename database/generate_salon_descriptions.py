@@ -50,9 +50,10 @@ PROGRESS_PATH = os.path.join(DATA_DIR, "progress.json")
 FAILED_PATH = os.path.join(DATA_DIR, "failed_salons.json")
 BATCH_STATE_PATH = os.path.join(DATA_DIR, "batch_state.json")
 
-INDEXER_DSN = "postgresql://postgres:postgres@127.0.0.1:54322/postgres"
+load_dotenv(ENV_PATH)
+INDEXER_DSN = os.environ.get("DATABASE_URL", "postgresql://postgres:postgres@127.0.0.1:54322/postgres")
 MAX_BATCH_SIZE = 10_000
-DEFAULT_MODEL = "claude-sonnet-4-5-20250514"
+DEFAULT_MODEL = "claude-sonnet-4-20250514"
 
 # ---------------------------------------------------------------------------
 # ユーティリティ
@@ -150,7 +151,6 @@ def collect_research_for_salon(salon: dict, auth_string: str) -> tuple[str | Non
     """
     display_name = salon["display_name"]
     official_url = salon.get("official_url")
-    area_name = salon.get("area_name", "")
 
     research_parts = []
 
@@ -162,8 +162,6 @@ def collect_research_for_salon(salon: dict, auth_string: str) -> tuple[str | Non
 
     # 2. DataForSEO SERP検索
     query = f"{display_name} メンエス 口コミ"
-    if area_name:
-        query = f"{display_name} メンエス {area_name} 口コミ"
 
     results, error = search_dataforseo(query, auth_string)
     if error:
@@ -205,16 +203,13 @@ def build_user_prompt(salon: dict) -> str:
         "",
         f'上記を参考に、「{display_name}ってどんなサロン？」という疑問に答える紹介文を書いてください。',
         "",
-        "以下の2つをJSON形式で出力してください。",
+        "250〜350文字の紹介文を1つ、JSON形式で出力してください。",
         "",
-        '1. "description": 一覧カード用の紹介文（150〜200文字）',
-        "   - サロンの個性・コンセプトを一文で掴めるように",
-        "",
-        '2. "salon_overview": 詳細ページ用の紹介文（350〜450文字）',
-        "   - サロンの特徴・雰囲気",
-        "   - セラピスト全体の傾向",
-        "   - 口コミで評価されているポイント",
-        "   - こんな人に向いている",
+        "【含める内容】",
+        "- サロンの特徴・雰囲気・コンセプト",
+        "- セラピスト全体の傾向",
+        "- 口コミで評価されているポイント",
+        "- こんな人に向いている",
         "",
         "【絶対禁止】",
         "- 最寄り駅・アクセス情報（UIに表示済み）",
@@ -230,7 +225,7 @@ def build_user_prompt(salon: dict) -> str:
         "- 検索情報にないことは書かない",
         "",
         '【出力形式】JSONのみ',
-        '{"description": "...", "salon_overview": "..."}',
+        '{"description": "..."}',
     ]
     return "\n".join(lines)
 
@@ -255,7 +250,7 @@ def parse_json_response(text: str) -> dict | None:
 
     try:
         result = json.loads(text)
-        if "description" in result and "salon_overview" in result:
+        if "description" in result:
             return result
     except json.JSONDecodeError:
         pass
@@ -266,37 +261,22 @@ def parse_json_response(text: str) -> dict | None:
 # DB クエリ
 # ---------------------------------------------------------------------------
 
-# collect/submit用: 全サロン（description有無問わず — 初期投入のゴミを上書きするため）
+# collect/submit用: 全サロン
 SALON_QUERY_ALL = """
-SELECT
-    s.id,
-    s.display_name,
-    s.official_url,
-    a.name AS area_name
-FROM salons s
-LEFT JOIN salon_areas sa ON sa.salon_id = s.id
-LEFT JOIN areas a ON a.id = sa.area_id
-WHERE s.is_active = true
-  AND s.display_name IS NOT NULL
-GROUP BY s.id, s.display_name, s.official_url, a.name
-ORDER BY s.id
+SELECT id, display_name, official_url
+FROM salons
+WHERE is_active = true
+  AND display_name IS NOT NULL
+ORDER BY id
 """
 
-# --sample用: 口コミ多い順でN件
+# --sample用: N件
 SALON_QUERY_TOP_N = """
-SELECT
-    s.id,
-    s.display_name,
-    s.official_url,
-    a.name AS area_name
-FROM salons s
-LEFT JOIN salon_areas sa ON sa.salon_id = s.id
-LEFT JOIN areas a ON a.id = sa.area_id
-LEFT JOIN salon_review_stats sv ON sv.salon_id = s.id
-WHERE s.is_active = true
-  AND s.display_name IS NOT NULL
-GROUP BY s.id, s.display_name, s.official_url, a.name, sv.review_count
-ORDER BY COALESCE(sv.review_count, 0) DESC, s.id
+SELECT id, display_name, official_url
+FROM salons
+WHERE is_active = true
+  AND display_name IS NOT NULL
+ORDER BY id
 LIMIT %s
 """
 
@@ -389,11 +369,8 @@ def cmd_sample(args):
 
             if result:
                 desc = result["description"]
-                overview = result["salon_overview"]
                 print(f"\n  ▼ description ({len(desc)}字):")
                 print(f"    {desc}")
-                print(f"\n  ▼ salon_overview ({len(overview)}字):")
-                print(f"    {overview}")
                 print(f"\n  入力トークン: {response.usage.input_tokens}, 出力トークン: {response.usage.output_tokens}")
             else:
                 print(f"  ✗ JSONパース失敗")
@@ -491,7 +468,6 @@ def cmd_collect(args):
                     record = {
                         "salon_id": sid,
                         "display_name": salon["display_name"],
-                        "area_name": salon.get("area_name", ""),
                         "research_text": research_text,
                     }
                     f.write(json.dumps(record, ensure_ascii=False) + "\n")
@@ -716,9 +692,10 @@ def cmd_download(args):
 
     updated = 0
     for r in results:
+        desc = r["description"]
         cur.execute(
             "UPDATE salons SET description = %s, salon_overview = %s WHERE id = %s",
-            (r["description"], r["salon_overview"], r["salon_id"]),
+            (desc, desc, r["salon_id"]),
         )
         updated += cur.rowcount
 
@@ -735,9 +712,7 @@ def cmd_download(args):
 
     # 文字数統計
     desc_lens = [len(r["description"]) for r in results]
-    overview_lens = [len(r["salon_overview"]) for r in results]
     print(f"\n  description文字数: 平均{sum(desc_lens)/len(desc_lens):.0f}字 (min={min(desc_lens)}, max={max(desc_lens)})")
-    print(f"  salon_overview文字数: 平均{sum(overview_lens)/len(overview_lens):.0f}字 (min={min(overview_lens)}, max={max(overview_lens)})")
 
 
 # ---------------------------------------------------------------------------

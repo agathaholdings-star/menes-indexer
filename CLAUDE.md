@@ -126,6 +126,28 @@
             - SIGINT graceful shutdown、`--dry-run`、`--batch-size`コミット間隔
         - `batch_therapist_data.py`: `insert_therapist()`に`cup`/`blood_type`カラム追加
         - マイグレーション `20260219000003`: `therapists`に`blood_type`カラム追加
+- **サロン紹介文バッチ生成 VPS collect実行中（2026-02-19 17:42〜）**:
+    - **目的**: 6,489サロンの紹介文（description/salon_overview）をSERP検索+スクレイピング→Sonnet Batch APIで生成。エリアページの一覧カード・サロン詳細ページで表示する
+    - **スクリプト改修内容**:
+        - DSNを環境変数`DATABASE_URL`対応（VPS/ローカル自動切り替え）
+        - `description`と`salon_overview`を300字1本に統一（2フィールドに同じ値を書き込み）
+        - SQLクエリからsalon_areas JOINを除去（salon_areasの多対多で11,648行に膨張していた → 6,489行に修正）
+        - SERP検索クエリからarea_nameを除去（`{display_name} メンエス 口コミ`で検索）
+    - **VPS稼働状況**: tmux `desc`セッションで実行中
+        - 情報源: 公式サイト1ページ + SERP上位5ページ = 最大6ソース/サロン
+        - 1サロンあたり8,000〜12,600字の参考情報を収集
+        - ETA: ~22時間（hw1-hw5と同時実行のため若干遅い）
+    - **監視コマンド**:
+        ```bash
+        ssh -i ~/Downloads/indexer.pem root@220.158.18.6 "tail -5 /opt/scraper/desc_collect.log"
+        ssh -i ~/Downloads/indexer.pem root@220.158.18.6 "wc -l /opt/scraper/salon_descriptions_data/research_data.jsonl"
+        ```
+    - **collect完了後の手順**:
+        1. `python3 generate_salon_descriptions.py submit` → Sonnet Batch API投入（~$15）
+        2. `python3 generate_salon_descriptions.py status` → バッチ状態確認
+        3. `python3 generate_salon_descriptions.py download` → 結果取得＆DB書き込み
+        4. VPSからCSVダンプ → ローカル同期
+    - **コスト**: DataForSEO ~$13 + Sonnet Batch ~$15 = **~$28**
 - **成果物**:
     - `docs/SERVICE_OVERVIEW.md`: サービス概要・ビジネスモデル
     - `docs/SYSTEM_DESIGN.md`: システム構成・DBスキーマ
