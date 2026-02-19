@@ -22,7 +22,6 @@ import time
 import sqlite3
 import csv
 import argparse
-import requests
 from bs4 import BeautifulSoup, Comment
 from urllib.parse import urljoin, urlparse
 from dotenv import load_dotenv
@@ -33,10 +32,7 @@ load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
 from html_cache_utils import HtmlCache
 _cache = HtmlCache()
 
-HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                  "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-}
+from fetch_utils import fetch_page, HEADERS  # noqa: E402 — 共通fetchモジュール
 
 REQUEST_DELAY = 0.5  # リクエスト間隔（秒）
 LLM_MODEL = "claude-haiku-4-5-20251001"
@@ -45,33 +41,6 @@ LLM_MODEL = "claude-haiku-4-5-20251001"
 # =============================================================================
 # HTML処理
 # =============================================================================
-
-def fetch_page(url, timeout=15):
-    """ページを取得"""
-    try:
-        resp = requests.get(url, headers=HEADERS, timeout=timeout, allow_redirects=True)
-        resp.raise_for_status()
-        # エンコーディング判定: Content-Type → meta charset → apparent_encoding
-        # apparent_encoding はUTF-8サイトをWindows-1254等と誤判定することがあるため
-        # サーバー指定やHTMLのmeta charsetを優先する
-        if resp.encoding and resp.encoding.lower().replace('-', '') != 'iso88591':
-            # サーバーが明示的に指定（ISO-8859-1はrequestsのデフォルトなので無視）
-            pass
-        else:
-            # サーバー未指定 → HTMLのmeta charsetを確認
-            head = resp.content[:2048].lower()
-            if b'charset=utf-8' in head or b'charset="utf-8"' in head:
-                resp.encoding = 'utf-8'
-            elif b'charset=shift_jis' in head or b'charset=sjis' in head:
-                resp.encoding = 'shift_jis'
-            elif b'charset=euc-jp' in head:
-                resp.encoding = 'euc-jp'
-            else:
-                resp.encoding = resp.apparent_encoding
-        return resp.text
-    except Exception as e:
-        print(f"    ⚠ fetch失敗: {url} ({e})")
-        return None
 
 
 def clean_html_for_llm(html, base_url, max_chars=15000):

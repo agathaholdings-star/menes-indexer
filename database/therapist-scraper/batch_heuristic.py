@@ -38,15 +38,12 @@ from dotenv import load_dotenv
 load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
 
 from html_cache_utils import HtmlCache
+from fetch_utils import fetch_page_with_status, HEADERS
 _cache = HtmlCache()
 
 # --- 設定 ---
 DB_DSN = "postgresql://postgres:postgres@127.0.0.1:54322/postgres"
 
-HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                  "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-}
 REQUEST_DELAY = 0.3  # ヒューリスティックはLLMなしなので短めに
 
 CHECKPOINT_FILE = os.path.join(os.path.dirname(__file__), 'batch_heuristic_checkpoint.json')
@@ -64,40 +61,9 @@ logging.basicConfig(
 log = logging.getLogger(__name__)
 
 
-# =============================================================================
-# HTTP
-# =============================================================================
-
-def _detect_encoding(resp):
-    """エンコーディング判定: Content-Type → meta charset → apparent_encoding"""
-    if resp.encoding and resp.encoding.lower().replace('-', '') != 'iso88591':
-        return
-    head = resp.content[:2048].lower()
-    if b'charset=utf-8' in head or b'charset="utf-8"' in head:
-        resp.encoding = 'utf-8'
-    elif b'charset=shift_jis' in head or b'charset=sjis' in head:
-        resp.encoding = 'shift_jis'
-    elif b'charset=euc-jp' in head:
-        resp.encoding = 'euc-jp'
-    else:
-        resp.encoding = resp.apparent_encoding
-
-
-def fetch_page(url, timeout=15):
-    """ページを取得"""
-    try:
-        resp = requests.get(url, headers=HEADERS, timeout=timeout, allow_redirects=True)
-        resp.raise_for_status()
-        _detect_encoding(resp)
-        return resp.text, resp.status_code
-    except requests.exceptions.HTTPError as e:
-        return None, getattr(e.response, 'status_code', 0)
-    except requests.exceptions.Timeout:
-        return None, -1  # timeout
-    except requests.exceptions.ConnectionError:
-        return None, -2  # DNS/connection error
-    except Exception:
-        return None, -3  # other
+# fetch_page, fetch_page_with_status は fetch_utils から import 済み
+# fetch_page_with_status を batch_heuristic では fetch_page として使う
+fetch_page = fetch_page_with_status
 
 
 # =============================================================================

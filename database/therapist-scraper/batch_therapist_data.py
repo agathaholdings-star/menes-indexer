@@ -40,7 +40,9 @@ load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
 
 # スクレイパーをimport（LLMフォールバック用）
 sys.path.insert(0, os.path.dirname(__file__))
-from therapist_scraper import TherapistScraper, fetch_page, HEADERS
+from therapist_scraper import TherapistScraper
+from fetch_utils import fetch_page, HEADERS
+from name_extractor import extract_name as extract_name_smart
 from pattern_validator import PatternValidator
 from html_cache_utils import HtmlCache
 _cache = HtmlCache()
@@ -149,38 +151,23 @@ def extract_therapist_urls_heuristic(html, list_url):
 # セラピストデータ抽出（ヒューリスティック）
 # =============================================================================
 
-def extract_therapist_data_heuristic(html, url):
+def extract_therapist_data_heuristic(html, url, salon_name="", salon_display="",
+                                      learned_selector=None):
     """
     個別ページHTMLからセラピストデータを正規表現で抽出（LLM不要）
+
+    名前抽出は name_extractor モジュールを使用（CSSセレクタ/H1/H2/og:title/title）。
 
     Returns:
         dict or None
     """
     soup = BeautifulSoup(html, 'html.parser')
 
-    # 名前抽出: h1/h2タグ、またはtitleタグ
-    name = None
-    for tag in ['h1', 'h2']:
-        el = soup.find(tag)
-        if el:
-            text = el.get_text(strip=True)
-            # 短すぎない、長すぎない（名前らしい）
-            if 1 <= len(text) <= 20 and not any(kw in text for kw in
-                    ['メニュー', '料金', 'アクセス', 'ブログ', '予約', 'HOME']):
-                name = text
-                break
-
-    if not name:
-        # titleタグからサロン名を除去して名前を試行
-        title = soup.find('title')
-        if title:
-            title_text = title.get_text(strip=True)
-            # "名前 | サロン名" パターン
-            m = re.match(r'^([^\|｜\-\–\—]+)', title_text)
-            if m:
-                candidate = m.group(1).strip()
-                if 1 <= len(candidate) <= 15:
-                    name = candidate
+    # 名前抽出: name_extractor を使用（ヒューリスティックのみ、LLMなし）
+    name_result = extract_name_smart(
+        html, salon_name=salon_name, salon_display=salon_display,
+        url=url, learned_selector=learned_selector, use_llm=False)
+    name = name_result["name"] if name_result else None
 
     if not name:
         return None
@@ -236,6 +223,8 @@ def fetch_and_extract(entry):
     """
     セラピスト1名分: ページfetch + データ抽出（スレッドセーフ）
 
+    entry に salon_name, salon_display キーがあればname_extractorに渡す。
+
     Returns:
         (entry, data_dict_or_None, html_or_None)
     """
@@ -245,7 +234,10 @@ def fetch_and_extract(entry):
             return entry, None, None
 
         _cache.save("therapist", entry['url'].rstrip('/').split('/')[-1], html)
-        data = extract_therapist_data_heuristic(html, entry['url'])
+        data = extract_therapist_data_heuristic(
+            html, entry['url'],
+            salon_name=entry.get('salon_name', ''),
+            salon_display=entry.get('salon_display', ''))
 
         # ヒューリスティックで取れたらリスト画像をフォールバック
         if data:
@@ -397,6 +389,7 @@ def process_shop(shop, cur, llm_scraper, workers, dry_run=False):
     salon_id = shop['salon_id']
     list_url = shop['therapist_list_url']
     salon_name = shop['display_name'] or shop['name']
+    salon_raw_name = shop['name'] or ''
 
     # 一覧ページを再取得してセラピストURLを抽出
     list_html = fetch_page(list_url)
@@ -406,6 +399,11 @@ def process_shop(shop, cur, llm_scraper, workers, dry_run=False):
     entries = extract_therapist_urls_heuristic(list_html, list_url)
     if not entries:
         return 0, 0, 0
+
+    # name_extractor 用にサロン名情報をentry に付与
+    for e in entries:
+        e['salon_name'] = salon_raw_name
+        e['salon_display'] = salon_name
 
     total_urls = len(entries)
     inserted = 0

@@ -9,7 +9,7 @@
 - 画像を複数枚受け取った場合はコンテキスト消費が大きいことを意識すること
 - スクレイピング時は必ずHTMLをgzip圧縮でローカル保存すること（`html_cache/{id}.html.gz`）。抽出ロジック改善時に再fetchなしで再処理可能にするため。
 
-## 現在のステータス (2026-02-18 夜 更新)
+## 現在のステータス (2026-02-19 更新)
 
 - **設計フェーズ完了**: サービス概要、システム設計、UXフロー、v0用プロンプトを作成済み。
 - **フロントエンド公開済み**: v0.appからVercelにデプロイ → https://menes-indexer.com/
@@ -39,6 +39,19 @@
 - **Phase③完了（2026-02-18）**: VPS 5並列ワーカーで未取得3,603店をLLMスクレイピング → **+15,701名**取得（79,639→95,340名）。3,511サロンにセラピスト紐付き済み（54.1%）。残り2,977店はサイトダウン/セラピスト非公開
 - **ローカルSupabase再同期完了（2026-02-18）**: VPS Phase③データをpg_dumpでローカルに投入。名前クレンジング404件＋重複削除1,964件を適用 → ローカル**92,587名/3,506サロン**
 - **🎯 ローカル本番相当到達（2026-02-18）**: データ（6,489店舗/92,587名/14,880口コミ）＋フロント全機能がローカルで動作。以降はUX改善・目視確認フェーズへ
+- **スクレイピング精度改善基盤 構築完了（2026-02-19）**: 名前抽出品質の根本改善 + 運用ツール整備
+    - **背景と課題**: Phase②のセラピスト名抽出は h1/h2 テキスト直取りのみで、サロン名除外なし・キーワードフィルタなしだったため、`repair_therapist_names.py` で事後修復14,988件を強いられた。また `fetch_page()` が3箇所に重複定義されており、HTTPS→HTTPフォールバックもなくHTTP-onlyサイトを取りこぼしていた
+    - **目的**: (1) セラピスト名抽出の品質を抽出時点で確保する仕組みを作る (2) fetch共通化でメンテコストを下げる (3) 月次再スクレイピングに向けた運用基盤を整備する
+    - **Plan A: fetch共通化 & 診断CLI**
+        - `fetch_utils.py`: 共通fetchモジュール新規作成。`fetch_page()` / `fetch_page_with_status()` を一元管理。HTTPS→HTTPフォールバック（SSL/ConnectionError時にhttps→httpを自動試行）搭載。6ファイルのimport変更済み（therapist_scraper/smart_scraper/batch_heuristic/batch_therapist_data/repair_therapist_names/rule_extractor）
+        - `salon_diagnose.py`: 診断CLIツール。5サブコマンド（diagnose/test-extract/rescrape/list-failed/list-patterns）
+    - **Plan B: Haiku名前抽出 & 学習ループ**
+        - `name_extractor.py`: `repair_therapist_names.py` の実績あるロジック（108キーワード除外、27CSSセレクタ候補、サロン名比較）を再利用可能モジュール化。ヒューリスティック→Haiku LLMフォールバック。成功時に `source` フィールド（どのCSS要素から取れたか）を返し、学習データとしてDB保存可能に
+        - `test_haiku_name_extract.py`: 20件サンプルテスト。Before/After比較テーブル＋コスト計測（92,587件適用時の推定費用算出）
+        - `batch_therapist_data.py` Step4 改修: 名前抽出を `name_extractor.extract_name()` に置換。サロン名をentry経由で渡す形に変更
+        - `classify_failures.py`: 2,977失敗サロンの理由分類（domain_dead/site_down/page_404/ssl_error/no_therapist_page/no_therapist_urls/empty_page/other）
+        - マイグレーション `20260219000002`: `salon_scrape_cache` に `name_css_selector`（学習済みセレクタ保存用）と `fail_reason`（失敗理由分類用）カラム追加
+    - **次のアクション**: `test_haiku_name_extract.py --count 20` を実行して精度・コスト確認 → Go/No-Go判断 → 全件適用 or プロンプト調整
 - **成果物**:
     - `docs/SERVICE_OVERVIEW.md`: サービス概要・ビジネスモデル
     - `docs/SYSTEM_DESIGN.md`: システム構成・DBスキーマ
@@ -98,9 +111,13 @@
         - VPSからID>85460の新規15,701件をCSVダンプ→ローカルCOPY投入
         - 名前クレンジング404件＋source_url重複1,964件削除を適用
         - 最終: ローカル**92,587名/3,506サロン**
-    12. **ローカルUX改善フェーズ** ← 🔄 現在ここ（2026-02-18〜）
+    12. **ローカルUX改善フェーズ** ← 🔄 継続中（2026-02-18〜）
         - ローカル環境を触りながらUI/UXの改善点を洗い出し・修正
         - データ品質の目視確認・微調整
+    12b. **スクレイピング精度改善** ← 🔄 基盤完了・テスト待ち（2026-02-19）
+        - `test_haiku_name_extract.py --count 20` でGo/No-Go判断
+        - OKなら全92,587件に適用（推定コスト: ヒューリスティック率次第、Haiku $数ドル程度）
+        - `classify_failures.py` で2,977失敗サロンを分類 → 回収可能なものを`rescrape`
     13. **本番デプロイ準備**（本番Supabaseスキーマpush → Vercel環境変数 → デプロイ）
     14. VPSのスクレイピングデータをpg_dumpで本番Supabaseに移行
 
@@ -305,8 +322,13 @@ ssh -i /Users/agatha/Downloads/indexer.pem root@220.158.18.6 "sudo -u postgres p
 │       ├── rule_miner.py          ← パターン自動学習
 │       ├── pattern_validator.py   ← 抽出品質検証
 │       ├── batch_heuristic.py     ← Phase①: ヒューリスティック全店スキャン
+│       ├── fetch_utils.py         ← 共通fetchモジュール（HTTPS→HTTPフォールバック付き）
+│       ├── name_extractor.py      ← 名前抽出モジュール（ヒューリスティック+Haiku LLM+学習）
 │       ├── html_cache_utils.py    ← 共通HTMLキャッシュモジュール（gzip圧縮、カテゴリ別）
 │       ├── clean_therapist_names.py ← 名前クレンジング＋source_url重複解消
+│       ├── classify_failures.py   ← 失敗サロン理由分類スクリプト
+│       ├── salon_diagnose.py      ← 診断CLIツール（diagnose/test-extract/rescrape/list-failed/list-patterns）
+│       ├── test_haiku_name_extract.py ← Haiku名前抽出サンプルテスト
 │       ├── cms_patterns_seed.json ← 初期CMSパターン2件
 │       └── seed_cms_patterns.py   ← シード投入スクリプト
 ├── docs/                  ← ドキュメント

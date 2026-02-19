@@ -34,7 +34,8 @@ load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
 
 # 既存スクレイパーからインポート
 sys.path.insert(0, os.path.dirname(__file__))
-from therapist_scraper import fetch_page, clean_html_for_llm
+from fetch_utils import fetch_page
+from therapist_scraper import clean_html_for_llm
 from html_cache_utils import HtmlCache
 
 # ---------------------------------------------------------------------------

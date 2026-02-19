@@ -20,12 +20,9 @@ import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
 
-log = logging.getLogger(__name__)
+from fetch_utils import HEADERS
 
-HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                  "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-}
+log = logging.getLogger(__name__)
 
 
 class RuleExtractor:

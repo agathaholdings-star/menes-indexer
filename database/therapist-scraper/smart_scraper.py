@@ -20,7 +20,8 @@ import psycopg2.extras
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
 
-from therapist_scraper import TherapistScraper, fetch_page, REQUEST_DELAY, HEADERS
+from therapist_scraper import TherapistScraper, REQUEST_DELAY
+from fetch_utils import fetch_page, HEADERS
 from html_cache_utils import HtmlCache
 from cms_fingerprinter import CMSFingerprinter
 from rule_extractor import RuleExtractor
