@@ -39,6 +39,37 @@
 - **Phase③完了（2026-02-18）**: VPS 5並列ワーカーで未取得3,603店をLLMスクレイピング → **+15,701名**取得（79,639→95,340名）。3,511サロンにセラピスト紐付き済み（54.1%）。残り2,977店はサイトダウン/セラピスト非公開
 - **ローカルSupabase再同期完了（2026-02-18）**: VPS Phase③データをpg_dumpでローカルに投入。名前クレンジング404件＋重複削除1,964件を適用 → ローカル**92,587名/3,506サロン**
 - **🎯 ローカル本番相当到達（2026-02-18）**: データ（6,489店舗/92,587名/14,880口コミ）＋フロント全機能がローカルで動作。以降はUX改善・目視確認フェーズへ
+- **セラピスト情報Haiku一括抽出 VPS本番実行中（2026-02-19 16:33〜）**:
+    - **VPS稼働状況**: 5並列tmux (hw1-hw5) で95,340件に対してHaiku抽出実行中
+        - W1: `--start-id 0 --end-id 20000` (hw1, haiku_w1.log)
+        - W2: `--start-id 20000 --end-id 40000` (hw2, haiku_w2.log)
+        - W3: `--start-id 40000 --end-id 60000` (hw3, haiku_w3.log)
+        - W4: `--start-id 60000 --end-id 80000` (hw4, haiku_w4.log)
+        - W5: `--start-id 80000 --end-id 999999` (hw5, haiku_w5.log)
+        - 推定コスト: ~$241（Haiku 4.5）、推定所要時間: ~16時間
+    - **監視コマンド**:
+        ```bash
+        # ログ確認
+        ssh -i ~/Downloads/indexer.pem root@220.158.18.6 "tail -5 /opt/scraper/haiku_w1.log"
+        # 全ワーカー状況
+        ssh -i ~/Downloads/indexer.pem root@220.158.18.6 "for i in 1 2 3 4 5; do echo \"=== W\$i ===\"; tail -1 /opt/scraper/haiku_w\$i.log; done"
+        # DB確認
+        ssh -i ~/Downloads/indexer.pem root@220.158.18.6 "sudo -u postgres psql -d menethe -c \"SELECT status, count(*) FROM therapists GROUP BY status;\""
+        # tmuxセッション確認
+        ssh -i ~/Downloads/indexer.pem root@220.158.18.6 "tmux list-sessions"
+        # 特定ワーカーに接続
+        ssh -i ~/Downloads/indexer.pem root@220.158.18.6 -t "tmux attach -t hw1"
+        ```
+    - **完了後の手順**:
+        1. DB確認: `SELECT status, count(*) FROM therapists GROUP BY status;`
+        2. VPSからpg_dumpでローカルに同期
+        3. ローカルで目視確認
+    - **スクリプト仕様（最終版）**:
+        - 常にfetch（キャッシュは保険用、判定には使わない）
+        - fetch失敗 / Haiku name取得不可 → `status='retired'`（ゴミデータを残さない）
+        - ドメインシャッフル + 1秒delay（同一サーバーへの連続アクセス防止）
+        - チェックポイント: `batch_extract_existing_checkpoint_{start}_{end}.json`
+        - SIGINT graceful shutdown対応
 - **セラピスト情報Haiku一括抽出 設計・テスト完了（2026-02-19）**:
     - **背景と課題**:
         - Phase②の名前抽出はh1/h2テキスト直取りのみで品質が低く、`repair_therapist_names.py`で事後修復14,988件を強いられた
@@ -151,15 +182,13 @@
     12. **ローカルUX改善フェーズ** ← 🔄 継続中（2026-02-18〜）
         - ローカル環境を触りながらUI/UXの改善点を洗い出し・修正
         - データ品質の目視確認・微調整
-    12b. **セラピスト情報Haiku一括抽出** ← 🔄 バッチ実装完了・VPS本番実行待ち（2026-02-19）
-        - テスト完了: v2→v3→v4と段階検証 → **v4（全フィールド一括JSON抽出）採用決定**
-        - 方式: 全ページHTML+候補テキスト→Haiku→JSON（name/age/cup/3size/profile_text）→DB UPDATE
-        - ✅ `batch_extract_therapist_info.py` 実装完了: `--existing`(UPDATE) / `--new`(INSERT) 2モード、VPS並列対応、チェックポイント/リジューム、SIGINT graceful shutdown
-        - ✅ マイグレーション `20260219000003`: `blood_type`カラム追加
-        - ✅ `batch_therapist_data.py`: `insert_therapist()`に`cup`/`blood_type`追加
-        - 本番手順: (1)VPSにスクリプト配置 (2)5並列tmuxで`--existing --start-id X --end-id Y` (3)DB確認
-        - 推定コスト: **~$241**（Haiku 4.5）、再fetch: ~8時間（VPS並列で短縮可）
-        - `classify_failures.py` で2,977失敗サロンを分類
+    12b. **セラピスト情報Haiku一括抽出** ← 🔄 VPS本番実行中（2026-02-19 16:33〜）
+        - **5並列tmux (hw1-hw5) で95,340件に対して実行中**
+        - 方式: 常にfetch → HTMLキャッシュ保存 → Haiku全フィールドJSON抽出 → DB UPDATE
+        - fetch失敗/name取得不可 → `status='retired'`（ゴミデータを残さない）
+        - ドメインシャッフル + 1秒delay（サーバー負荷分散）
+        - 推定コスト: **~$241**（Haiku 4.5）、推定: ~16時間
+        - 完了後: pg_dumpでVPS→ローカル同期 → 目視確認
     13. **本番デプロイ準備**（本番Supabaseスキーマpush → Vercel環境変数 → デプロイ）
     14. VPSのスクレイピングデータをpg_dumpで本番Supabaseに移行
 
