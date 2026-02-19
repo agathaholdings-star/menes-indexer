@@ -1,33 +1,48 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-セラピスト名前抽出モジュール（学習機能付き）
+セラピスト情報抽出モジュール（Haiku LLM）
 
-repair_therapist_names.py の実績ある抽出ロジックを再利用可能なモジュールに切り出し。
-ヒューリスティック（CSSセレクタ/H1/H2/og:title/title）→ Haiku LLMフォールバック。
+セラピスト個別ページのHTMLから、名前・年齢・スリーサイズ・紹介文等を
+1回のHaiku API呼び出しで一括抽出する。
 
-成功時にどのCSS要素から取れたかを返す（source フィールド）。
-これをDBに保存すれば次回同じサロンはヒューリスティックで取れる。
+方針:
+- 常にHaiku LLMで抽出（ヒューリスティック分岐なし）
+- 全ページHTML + 候補テキストをプロンプトに投入
+- コスト: ~$125 / 92,587件（Haiku 4.5、全ページ版）
 
 Usage:
-    from name_extractor import extract_name
+    from name_extractor import extract_therapist_info
 
-    result = extract_name(html, salon_name="アロマメゾン", salon_display="アロマメゾン")
+    result = extract_therapist_info(html, salon_name="アロマメゾン", url="https://...")
     # result = {
     #     "name": "水川あすみ",
-    #     "source": "css:.cast-name h2",
-    #     "method": "heuristic",
-    #     "confidence": 0.95,
-    #     "candidates": [...]
+    #     "age": 23,
+    #     "height": 158,
+    #     "cup": "D",
+    #     "bust": 86,
+    #     "waist": 57,
+    #     "hip": 85,
+    #     "blood_type": "O",
+    #     "profile_text": "スレンダーな美人系で...",
+    #     "input_tokens": 1600,
+    #     "output_tokens": 150,
     # }
 """
 
+import json
 import logging
 import re
 
 from bs4 import BeautifulSoup
 
 log = logging.getLogger(__name__)
+
+# clean_html_for_llm は therapist_scraper.py から借用
+try:
+    from therapist_scraper import clean_html_for_llm
+except ImportError:
+    clean_html_for_llm = None
 
 # ---------------------------------------------------------------------------
 # 除外キーワード
@@ -217,19 +232,8 @@ def _get_anthropic_client():
     return _anthropic_client
 
 
-def _extract_llm(html: str, url: str, salon_name: str,
-                  salon_display: str, model: str = "claude-haiku-4-5-20251001") -> dict | None:
-    """
-    Haiku LLMで名前を抽出。
-
-    Returns:
-        {"name": str, "source": "llm", "method": "haiku", "confidence": 0.60,
-         "input_tokens": int, "output_tokens": int} or None
-    """
-    from therapist_scraper import clean_html_for_llm
-    cleaned = clean_html_for_llm(html, url, max_chars=5000)
-
-    # ページから候補テキストを事前抽出してプロンプトに含める
+def _collect_candidates(html: str) -> dict:
+    """ページ内の候補テキストを収集してプロンプト材料にする"""
     soup = BeautifulSoup(html, "html.parser")
     h1_text = ""
     h1_el = soup.find("h1")
@@ -258,7 +262,21 @@ def _extract_llm(html: str, url: str, salon_name: str,
                     css_candidates.append(f"{selector}: {t}")
         except Exception:
             pass
-    css_text = "\n".join(css_candidates) if css_candidates else "(なし)"
+
+    return {
+        "h1": h1_text,
+        "h2": h2_text,
+        "og_title": og_title,
+        "title": title_text,
+        "css": css_candidates,
+    }
+
+
+def _extract_llm_name_only(html: str, url: str, salon_name: str,
+                           salon_display: str, model: str = "claude-haiku-4-5-20251001") -> dict | None:
+    """名前のみ抽出（後方互換用）"""
+    cands = _collect_candidates(html)
+    css_text = "\n".join(cands["css"]) if cands["css"] else "(なし)"
 
     prompt = f"""このメンズエステセラピストのプロフィールページから、セラピストの名前だけを抽出してください。
 
@@ -266,17 +284,29 @@ def _extract_llm(html: str, url: str, salon_name: str,
 ※サロン名（「{salon_name}」「{salon_display}」）は名前ではありません。絶対に返さないでください。
 
 ページ内の候補テキスト:
-- H1: {h1_text}
-- H2: {h2_text}
-- og:title: {og_title}
-- title: {title_text}
+- H1: {cands["h1"]}
+- H2: {cands["h2"]}
+- og:title: {cands["og_title"]}
+- title: {cands["title"]}
 - CSSセレクタ候補:
 {css_text}
 
-ルール:
-- カタカナ・ひらがな・漢字の人名のみ出力
-- 年齢・キャッチコピー・肩書きは除去（例: "高橋里奈 業界初経験 23歳" → "高橋里奈"）
+## ルール
+- セラピスト個人の名前だけを1つ出力
+- 年齢・キャッチコピー・肩書き・「NEW FACE」等の装飾は全て除去
 - 該当なしなら "NONE"
+
+## 正しい出力例
+入力: "PROFILEみみのプロフィール" → みみ
+入力: "白石りおNEW FACE" → 白石りお
+入力: "高橋里奈 業界初経験 23歳" → 高橋里奈
+入力: "REO(23歳)" → REO
+入力: "PROFILE琴吹（ことぶき）" → 琴吹
+入力: "まゆ(25歳) | 透明感96％" → まゆ
+入力: "Mio（ミオ） - ドットエム公式" → Mio
+入力: "神のエステ ランキング 巣鴨店" → NONE（これはサロン名）
+入力: "セラピストプロフィール" → NONE（これはページタイトル）
+入力: "メニュー・料金" → NONE（これはナビゲーション）
 
 セラピスト名:"""
 
@@ -303,7 +333,7 @@ def _extract_llm(html: str, url: str, salon_name: str,
                 "name": result_text,
                 "source": "llm",
                 "method": "haiku",
-                "confidence": 0.60,
+                "confidence": 0.90,
                 "input_tokens": input_tokens,
                 "output_tokens": output_tokens,
             }
@@ -314,7 +344,181 @@ def _extract_llm(html: str, url: str, salon_name: str,
 
 
 # ---------------------------------------------------------------------------
-# メイン API
+# 全フィールド抽出（メインAPI）
+# ---------------------------------------------------------------------------
+
+def extract_therapist_info(html: str, salon_name: str = "", salon_display: str = "",
+                           url: str = "",
+                           model: str = "claude-haiku-4-5-20251001") -> dict | None:
+    """
+    セラピスト個別ページHTMLから全フィールドを1回のHaiku呼び出しで抽出。
+
+    抽出フィールド: name, age, height, cup, bust, waist, hip,
+                   blood_type, profile_text
+
+    Args:
+        html: ページHTML（フルページ）
+        salon_name: サロン名（除外用）
+        salon_display: サロン表示名（除外用）
+        url: ページURL
+        model: LLMモデル名
+
+    Returns:
+        {
+            "name": "水川あすみ",
+            "age": 23,
+            "height": 158,
+            "cup": "D",
+            "bust": 86,
+            "waist": 57,
+            "hip": 85,
+            "blood_type": "O",
+            "profile_text": "スレンダーな美人系で...",
+            "input_tokens": 1600,
+            "output_tokens": 150,
+        }
+        or None (抽出失敗)
+    """
+    # ページ全体を軽量化
+    if clean_html_for_llm:
+        cleaned = clean_html_for_llm(html, url, max_chars=5000)
+    else:
+        cleaned = html[:5000]
+
+    # 候補テキストも収集
+    cands = _collect_candidates(html)
+    css_text = "\n".join(cands["css"]) if cands["css"] else "(なし)"
+
+    prompt = f"""このメンズエステセラピストのプロフィールページから情報を抽出してJSON形式で返してください。
+
+サロン名: {salon_name}
+※サロン名（「{salon_name}」「{salon_display}」）はセラピストの名前ではありません。
+
+ページ内の候補テキスト:
+- H1: {cands["h1"]}
+- H2: {cands["h2"]}
+- og:title: {cands["og_title"]}
+- title: {cands["title"]}
+- CSSセレクタ候補:
+{css_text}
+
+ページ全体（軽量化済み）:
+{cleaned}
+
+## 抽出ルール
+
+### name（必須）
+- セラピスト個人の名前だけ。年齢・キャッチコピー・肩書き・「NEW FACE」等の装飾は全て除去
+- 正しい出力例:
+  "PROFILEみみのプロフィール" → "みみ"
+  "白石りおNEW FACE" → "白石りお"
+  "REO(23歳)" → "REO"
+  "神のエステ ランキング 巣鴨店" → null（これはサロン名）
+
+### age, height, bust, waist, hip
+- 数値のみ（単位不要）。ページに記載がなければnull
+
+### cup
+- アルファベット1文字（A〜K）。ページに記載がなければnull
+
+### blood_type
+- A, B, O, AB のいずれか。ページに記載がなければnull
+
+### profile_text
+- セラピストの紹介文（お店からの紹介文、本人の自己紹介、いずれでもOK）
+- コース説明・料金・出勤スケジュール・ナビゲーションは含めない
+- 200文字以内に要約。ページに紹介文がなければnull
+
+## 出力形式
+JSONのみ出力。余計なテキストは不要。
+```json
+{{"name":"名前","age":23,"height":158,"cup":"D","bust":86,"waist":57,"hip":85,"blood_type":"O","profile_text":"紹介文..."}}
+```"""
+
+    try:
+        client = _get_anthropic_client()
+        resp = client.messages.create(
+            model=model,
+            max_tokens=500,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        result_text = resp.content[0].text.strip()
+        input_tokens = resp.usage.input_tokens
+        output_tokens = resp.usage.output_tokens
+
+        # JSON抽出（```json...``` ブロックにも対応）
+        json_match = re.search(r"```json\s*(.*?)\s*```", result_text, re.DOTALL)
+        if json_match:
+            result_text = json_match.group(1)
+        # { で始まるJSONを探す
+        json_start = result_text.find("{")
+        json_end = result_text.rfind("}") + 1
+        if json_start >= 0 and json_end > json_start:
+            result_text = result_text[json_start:json_end]
+
+        data = json.loads(result_text)
+
+        # name バリデーション
+        name = data.get("name")
+        if name:
+            name = str(name).strip()
+            name = re.sub(r"^[「『\"']+|[」』\"']+$", "", name).strip()
+            name = clean_extracted_name(name)
+            if not is_valid_name(name, salon_name, salon_display):
+                name = None
+        data["name"] = name
+
+        # 数値フィールドのクリーニング
+        for field in ["age", "height", "bust", "waist", "hip"]:
+            val = data.get(field)
+            if val is not None:
+                try:
+                    data[field] = int(val)
+                except (ValueError, TypeError):
+                    data[field] = None
+
+        # cup クリーニング
+        cup = data.get("cup")
+        if cup:
+            cup = str(cup).strip().upper()
+            if len(cup) == 1 and cup in "ABCDEFGHIJK":
+                data["cup"] = cup
+            else:
+                data["cup"] = None
+
+        # blood_type クリーニング
+        bt = data.get("blood_type")
+        if bt:
+            bt = str(bt).strip().upper()
+            if bt in ("A", "B", "O", "AB"):
+                data["blood_type"] = bt
+            else:
+                data["blood_type"] = None
+
+        # profile_text クリーニング
+        pt = data.get("profile_text")
+        if pt:
+            pt = str(pt).strip()
+            if len(pt) < 5:
+                data["profile_text"] = None
+            else:
+                data["profile_text"] = pt
+
+        data["input_tokens"] = input_tokens
+        data["output_tokens"] = output_tokens
+
+        return data
+
+    except json.JSONDecodeError as e:
+        log.warning(f"JSON parse error: {e} | raw: {result_text[:200]}")
+        return None
+    except Exception as e:
+        log.warning(f"LLM extraction error: {e}")
+        return None
+
+
+# ---------------------------------------------------------------------------
+# 後方互換API（名前のみ）
 # ---------------------------------------------------------------------------
 
 def extract_name(html: str, salon_name: str = "", salon_display: str = "",
@@ -322,43 +526,12 @@ def extract_name(html: str, salon_name: str = "", salon_display: str = "",
                  use_llm: bool = True,
                  llm_model: str = "claude-haiku-4-5-20251001") -> dict | None:
     """
-    セラピスト個別ページHTMLから名前を抽出する。
-
-    ヒューリスティック（CSSセレクタ/H1/H2/og:title/title）で試行し、
-    失敗した場合はHaiku LLMにフォールバックする。
-
-    Args:
-        html: ページHTML
-        salon_name: サロン名（除外用）
-        salon_display: サロン表示名（除外用）
-        url: ページURL（LLMフォールバック用）
-        learned_selector: 学習済みCSSセレクタ（最優先で試行）
-        use_llm: LLMフォールバックを使うか
-        llm_model: LLMモデル名
-
-    Returns:
-        {
-            "name": "水川あすみ",
-            "source": "css:.cast-name h2" | "h1" | "og:title" | "title" | "llm" | "learned:...",
-            "method": "heuristic" | "haiku",
-            "confidence": 0.95,
-            "input_tokens": int (LLM使用時のみ),
-            "output_tokens": int (LLM使用時のみ),
-        }
-        or None (抽出失敗)
+    名前のみ抽出（後方互換）。新規コードは extract_therapist_info() を使うこと。
     """
-    soup = BeautifulSoup(html, "html.parser")
-
-    # 1. ヒューリスティック
-    result = _extract_heuristic(soup, salon_name, salon_display, learned_selector)
-    if result:
-        return result
-
-    # 2. LLMフォールバック
     if use_llm:
-        return _extract_llm(html, url, salon_name, salon_display, model=llm_model)
-
-    return None
+        return _extract_llm_name_only(html, url, salon_name, salon_display, model=llm_model)
+    soup = BeautifulSoup(html, "html.parser")
+    return _extract_heuristic(soup, salon_name, salon_display, learned_selector)
 
 
 def get_candidates(html: str, salon_name: str = "", salon_display: str = "") -> list[dict]:

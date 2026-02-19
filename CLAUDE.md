@@ -39,19 +39,50 @@
 - **Phase③完了（2026-02-18）**: VPS 5並列ワーカーで未取得3,603店をLLMスクレイピング → **+15,701名**取得（79,639→95,340名）。3,511サロンにセラピスト紐付き済み（54.1%）。残り2,977店はサイトダウン/セラピスト非公開
 - **ローカルSupabase再同期完了（2026-02-18）**: VPS Phase③データをpg_dumpでローカルに投入。名前クレンジング404件＋重複削除1,964件を適用 → ローカル**92,587名/3,506サロン**
 - **🎯 ローカル本番相当到達（2026-02-18）**: データ（6,489店舗/92,587名/14,880口コミ）＋フロント全機能がローカルで動作。以降はUX改善・目視確認フェーズへ
-- **スクレイピング精度改善基盤 構築完了（2026-02-19）**: 名前抽出品質の根本改善 + 運用ツール整備
-    - **背景と課題**: Phase②のセラピスト名抽出は h1/h2 テキスト直取りのみで、サロン名除外なし・キーワードフィルタなしだったため、`repair_therapist_names.py` で事後修復14,988件を強いられた。また `fetch_page()` が3箇所に重複定義されており、HTTPS→HTTPフォールバックもなくHTTP-onlyサイトを取りこぼしていた
-    - **目的**: (1) セラピスト名抽出の品質を抽出時点で確保する仕組みを作る (2) fetch共通化でメンテコストを下げる (3) 月次再スクレイピングに向けた運用基盤を整備する
-    - **Plan A: fetch共通化 & 診断CLI**
-        - `fetch_utils.py`: 共通fetchモジュール新規作成。`fetch_page()` / `fetch_page_with_status()` を一元管理。HTTPS→HTTPフォールバック（SSL/ConnectionError時にhttps→httpを自動試行）搭載。6ファイルのimport変更済み（therapist_scraper/smart_scraper/batch_heuristic/batch_therapist_data/repair_therapist_names/rule_extractor）
-        - `salon_diagnose.py`: 診断CLIツール。5サブコマンド（diagnose/test-extract/rescrape/list-failed/list-patterns）
-    - **Plan B: Haiku名前抽出 & 学習ループ**
-        - `name_extractor.py`: `repair_therapist_names.py` の実績あるロジック（108キーワード除外、27CSSセレクタ候補、サロン名比較）を再利用可能モジュール化。ヒューリスティック→Haiku LLMフォールバック。成功時に `source` フィールド（どのCSS要素から取れたか）を返し、学習データとしてDB保存可能に
-        - `test_haiku_name_extract.py`: 20件サンプルテスト。Before/After比較テーブル＋コスト計測（92,587件適用時の推定費用算出）
-        - `batch_therapist_data.py` Step4 改修: 名前抽出を `name_extractor.extract_name()` に置換。サロン名をentry経由で渡す形に変更
-        - `classify_failures.py`: 2,977失敗サロンの理由分類（domain_dead/site_down/page_404/ssl_error/no_therapist_page/no_therapist_urls/empty_page/other）
-        - マイグレーション `20260219000002`: `salon_scrape_cache` に `name_css_selector`（学習済みセレクタ保存用）と `fail_reason`（失敗理由分類用）カラム追加
-    - **次のアクション**: `test_haiku_name_extract.py --count 20` を実行して精度・コスト確認 → Go/No-Go判断 → 全件適用 or プロンプト調整
+- **セラピスト情報Haiku一括抽出 設計・テスト完了（2026-02-19）**:
+    - **背景と課題**:
+        - Phase②の名前抽出はh1/h2テキスト直取りのみで品質が低く、`repair_therapist_names.py`で事後修復14,988件を強いられた
+        - cup/profile_textなど空欄カラムが多い（cupは大半がNone、profile_textは44%が空）
+        - `fetch_page()`が3箇所に重複定義、HTTPS→HTTPフォールバックもなかった
+        - Phase②③（VPS実行）でセラピスト個別ページのHTMLキャッシュを保存していなかった（`html_cache_utils.py`統合が間に合わず）。ローカルにはrepair時の40件のみ
+    - **目的**: 92,587件のセラピストデータを、1回のHaiku API呼び出しで名前・年齢・スリーサイズ・カップ・紹介文を一括抽出し、DB品質を根本改善する
+    - **設計方針の変遷と最終決定**:
+        1. 当初案: ヒューリスティック優先→LLMフォールバック（コスト節約重視）
+        2. テストで判明: ヒューリスティックは`白石りおNEW FACE`、`みみ(20歳)`等の除去パターンがモグラ叩きになる
+        3. 方針転換: **常にHaiku LLM、ヒューリスティック分岐なし**（品質 > コスト）
+        4. v2テスト（候補テキストのみ→Haiku）: 13/20成功。推定~$30/全件
+        5. v3テスト（全ページHTML+候補→Haiku）: **17/20成功**。+4件回収。推定~$125/全件
+        6. v4テスト（全フィールド一括JSON抽出）: 5/5成功。name+age+cup+3サイズ+profile_text全取得。推定**~$241/全件**
+        7. **最終決定: v4（全フィールド一括抽出）を採用**。1回のAPI呼び出しで全カラムを埋める。$241は名前修復+空欄埋めの価値に十分見合う
+    - **実装済みモジュール**:
+        - `fetch_utils.py`: 共通fetchモジュール。HTTPS→HTTPフォールバック。6ファイルのimport統一済み
+        - `name_extractor.py`: メインAPI `extract_therapist_info()` — 全ページHTML+候補テキストをHaikuに渡し、JSON形式で全フィールド返却。バリデーション（名前除外キーワード108個、サロン名比較、数値型変換、cup/blood_type正規化）内蔵。後方互換の `extract_name()` も維持
+        - `salon_diagnose.py`: 診断CLIツール（diagnose/test-extract/rescrape/list-failed/list-patterns）
+        - `classify_failures.py`: 失敗サロン理由分類（domain_dead/site_down/page_404等8分類）
+        - マイグレーション `20260219000002`: `salon_scrape_cache`に`name_css_selector`+`fail_reason`追加
+    - **テストスクリプト（検証用、read-only）**:
+        - `test_haiku_name_extract.py`: 名前のみ抽出テスト（v2検証用）
+        - `test_fullpage_compare.py`: 全ページ版名前抽出テスト（v3検証用）
+        - `test_fullinfo_extract.py`: 全フィールド一括抽出テスト（v4検証用）
+    - **テスト結果サマリ**:
+        | バージョン | 方式 | 成功率 | 推定コスト(92,587件) | 備考 |
+        |-----------|------|--------|---------------------|------|
+        | v2 | 候補テキストのみ→Haiku（名前だけ） | 13/20 (65%) | ~$30 | 失敗7件はHTML情報不足 |
+        | v3 | 全ページHTML+候補→Haiku（名前だけ） | 17/20 (85%) | ~$125 | v2失敗の4件を回収 |
+        | v4 | 全ページ→Haiku（全フィールドJSON） | 5/5 (100%) | ~$241 | name+age+cup+3size+profile全取得 |
+    - **v4テスト詳細（5件）**:
+        - name: 全5件正しく抽出（DB壊れてた4件が修正）
+        - age/height: DB既存値と完全一致（正規表現で取れてた値と同じ）
+        - cup: DBでは全部Noneだったのが全5件で抽出成功（E,C,E,D,C）
+        - bust/waist/hip: ページに記載ある分は取得（記載なしはnull）
+        - profile_text: DBでは全部空だったのが全5件で紹介文取得
+    - **本番実行の手順（次ステップ）**:
+        1. VPSで92,587件のsource_urlを再fetch → `html_cache/therapist/{id}.html.gz`に保存（~8時間、並列で短縮可）
+        2. キャッシュ済みHTMLに対してHaiku一括抽出 → 結果をDB UPDATE（name/age/height/cup/bust/waist/hip/blood_type/profile_text）
+        3. 推定コスト: **~$241**（Haiku 4.5）
+        4. `classify_failures.py`で2,977失敗サロンを分類
+    - **本番実行スクリプト（未実装・次に作るもの）**:
+        - `batch_extract_therapist_info.py`: 全件一括抽出バッチ。VPS並列実行対応（`--start-id`/`--end-id`）。フロー: DB読み→fetch(キャッシュ優先)→Haiku抽出→DB UPDATE。チェックポイント/リジューム機能付き
 - **成果物**:
     - `docs/SERVICE_OVERVIEW.md`: サービス概要・ビジネスモデル
     - `docs/SYSTEM_DESIGN.md`: システム構成・DBスキーマ
@@ -114,10 +145,13 @@
     12. **ローカルUX改善フェーズ** ← 🔄 継続中（2026-02-18〜）
         - ローカル環境を触りながらUI/UXの改善点を洗い出し・修正
         - データ品質の目視確認・微調整
-    12b. **スクレイピング精度改善** ← 🔄 基盤完了・テスト待ち（2026-02-19）
-        - `test_haiku_name_extract.py --count 20` でGo/No-Go判断
-        - OKなら全92,587件に適用（推定コスト: ヒューリスティック率次第、Haiku $数ドル程度）
-        - `classify_failures.py` で2,977失敗サロンを分類 → 回収可能なものを`rescrape`
+    12b. **セラピスト情報Haiku一括抽出** ← 🔄 テスト完了・本番バッチ実装待ち（2026-02-19）
+        - テスト完了: v2→v3→v4と段階検証 → **v4（全フィールド一括JSON抽出）採用決定**
+        - 方式: 全ページHTML+候補テキスト→Haiku→JSON（name/age/cup/3size/profile_text）→DB UPDATE
+        - 次に実装: `batch_extract_therapist_info.py`（VPS並列対応バッチ）
+        - 本番手順: (1)VPSで92,587件を再fetch+キャッシュ保存 (2)Haiku一括抽出 (3)DB UPDATE
+        - 推定コスト: **~$241**（Haiku 4.5）、再fetch: ~8時間（VPS並列で短縮可）
+        - `classify_failures.py` で2,977失敗サロンを分類
     13. **本番デプロイ準備**（本番Supabaseスキーマpush → Vercel環境変数 → デプロイ）
     14. VPSのスクレイピングデータをpg_dumpで本番Supabaseに移行
 
@@ -323,12 +357,14 @@ ssh -i /Users/agatha/Downloads/indexer.pem root@220.158.18.6 "sudo -u postgres p
 │       ├── pattern_validator.py   ← 抽出品質検証
 │       ├── batch_heuristic.py     ← Phase①: ヒューリスティック全店スキャン
 │       ├── fetch_utils.py         ← 共通fetchモジュール（HTTPS→HTTPフォールバック付き）
-│       ├── name_extractor.py      ← 名前抽出モジュール（ヒューリスティック+Haiku LLM+学習）
+│       ├── name_extractor.py      ← セラピスト情報抽出モジュール（全フィールドHaiku一括抽出）
 │       ├── html_cache_utils.py    ← 共通HTMLキャッシュモジュール（gzip圧縮、カテゴリ別）
 │       ├── clean_therapist_names.py ← 名前クレンジング＋source_url重複解消
 │       ├── classify_failures.py   ← 失敗サロン理由分類スクリプト
 │       ├── salon_diagnose.py      ← 診断CLIツール（diagnose/test-extract/rescrape/list-failed/list-patterns）
-│       ├── test_haiku_name_extract.py ← Haiku名前抽出サンプルテスト
+│       ├── test_haiku_name_extract.py ← Haiku名前抽出テスト（v2検証用）
+│       ├── test_fullpage_compare.py   ← 全ページ版名前抽出テスト（v3検証用）
+│       ├── test_fullinfo_extract.py   ← 全フィールド一括抽出テスト（v4検証用）
 │       ├── cms_patterns_seed.json ← 初期CMSパターン2件
 │       └── seed_cms_patterns.py   ← シード投入スクリプト
 ├── docs/                  ← ドキュメント
