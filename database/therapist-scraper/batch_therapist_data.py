@@ -313,12 +313,14 @@ def insert_therapist(cur, salon_id, data):
         cur.execute("""
             INSERT INTO therapists (
                 salon_id, name, age, height,
-                bust, waist, hip, image_urls,
-                profile_text, source_url, status, last_scraped_at
+                bust, waist, hip, cup, blood_type,
+                image_urls, profile_text, source_url,
+                status, last_scraped_at
             ) VALUES (
                 %(salon_id)s, %(name)s, %(age)s, %(height)s,
-                %(bust)s, %(waist)s, %(hip)s, %(image_urls)s::jsonb,
-                %(profile_text)s, %(source_url)s, 'active', now()
+                %(bust)s, %(waist)s, %(hip)s, %(cup)s, %(blood_type)s,
+                %(image_urls)s::jsonb, %(profile_text)s, %(source_url)s,
+                'active', now()
             )
             ON CONFLICT (salon_id, slug) DO NOTHING
             RETURNING id
@@ -330,6 +332,8 @@ def insert_therapist(cur, salon_id, data):
             'bust': bust_val,
             'waist': _safe_int(data.get('waist')),
             'hip': _safe_int(data.get('hip')),
+            'cup': data.get('cup'),
+            'blood_type': data.get('blood_type'),
             'image_urls': json.dumps(image_urls, ensure_ascii=False),
             'profile_text': data.get('profile_text'),
             'source_url': data.get('source_url'),

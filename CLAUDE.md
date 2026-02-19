@@ -81,8 +81,14 @@
         2. キャッシュ済みHTMLに対してHaiku一括抽出 → 結果をDB UPDATE（name/age/height/cup/bust/waist/hip/blood_type/profile_text）
         3. 推定コスト: **~$241**（Haiku 4.5）
         4. `classify_failures.py`で2,977失敗サロンを分類
-    - **本番実行スクリプト（未実装・次に作るもの）**:
-        - `batch_extract_therapist_info.py`: 全件一括抽出バッチ。VPS並列実行対応（`--start-id`/`--end-id`）。フロー: DB読み→fetch(キャッシュ優先)→Haiku抽出→DB UPDATE。チェックポイント/リジューム機能付き
+    - **本番実行スクリプト（✅ 実装完了 2026-02-19）**:
+        - `batch_extract_therapist_info.py`: 2モード対応バッチ
+            - `--existing`: 既存92,587件を再抽出（UPDATE）。Haikuがnull返却のフィールドは既存値維持
+            - `--new`: 新着セラピストを発見・追加（INSERT）。一覧ページdiff→Haiku抽出→INSERT
+            - VPS並列対応: `--start-id`/`--end-id` でID範囲分割、`--resume`でチェックポイント再開
+            - SIGINT graceful shutdown、`--dry-run`、`--batch-size`コミット間隔
+        - `batch_therapist_data.py`: `insert_therapist()`に`cup`/`blood_type`カラム追加
+        - マイグレーション `20260219000003`: `therapists`に`blood_type`カラム追加
 - **成果物**:
     - `docs/SERVICE_OVERVIEW.md`: サービス概要・ビジネスモデル
     - `docs/SYSTEM_DESIGN.md`: システム構成・DBスキーマ
@@ -145,11 +151,13 @@
     12. **ローカルUX改善フェーズ** ← 🔄 継続中（2026-02-18〜）
         - ローカル環境を触りながらUI/UXの改善点を洗い出し・修正
         - データ品質の目視確認・微調整
-    12b. **セラピスト情報Haiku一括抽出** ← 🔄 テスト完了・本番バッチ実装待ち（2026-02-19）
+    12b. **セラピスト情報Haiku一括抽出** ← 🔄 バッチ実装完了・VPS本番実行待ち（2026-02-19）
         - テスト完了: v2→v3→v4と段階検証 → **v4（全フィールド一括JSON抽出）採用決定**
         - 方式: 全ページHTML+候補テキスト→Haiku→JSON（name/age/cup/3size/profile_text）→DB UPDATE
-        - 次に実装: `batch_extract_therapist_info.py`（VPS並列対応バッチ）
-        - 本番手順: (1)VPSで92,587件を再fetch+キャッシュ保存 (2)Haiku一括抽出 (3)DB UPDATE
+        - ✅ `batch_extract_therapist_info.py` 実装完了: `--existing`(UPDATE) / `--new`(INSERT) 2モード、VPS並列対応、チェックポイント/リジューム、SIGINT graceful shutdown
+        - ✅ マイグレーション `20260219000003`: `blood_type`カラム追加
+        - ✅ `batch_therapist_data.py`: `insert_therapist()`に`cup`/`blood_type`追加
+        - 本番手順: (1)VPSにスクリプト配置 (2)5並列tmuxで`--existing --start-id X --end-id Y` (3)DB確認
         - 推定コスト: **~$241**（Haiku 4.5）、再fetch: ~8時間（VPS並列で短縮可）
         - `classify_failures.py` で2,977失敗サロンを分類
     13. **本番デプロイ準備**（本番Supabaseスキーマpush → Vercel環境変数 → デプロイ）
@@ -359,6 +367,7 @@ ssh -i /Users/agatha/Downloads/indexer.pem root@220.158.18.6 "sudo -u postgres p
 │       ├── fetch_utils.py         ← 共通fetchモジュール（HTTPS→HTTPフォールバック付き）
 │       ├── name_extractor.py      ← セラピスト情報抽出モジュール（全フィールドHaiku一括抽出）
 │       ├── html_cache_utils.py    ← 共通HTMLキャッシュモジュール（gzip圧縮、カテゴリ別）
+│       ├── batch_extract_therapist_info.py ← Haiku一括抽出バッチ（--existing/--new）
 │       ├── clean_therapist_names.py ← 名前クレンジング＋source_url重複解消
 │       ├── classify_failures.py   ← 失敗サロン理由分類スクリプト
 │       ├── salon_diagnose.py      ← 診断CLIツール（diagnose/test-extract/rescrape/list-failed/list-patterns）
