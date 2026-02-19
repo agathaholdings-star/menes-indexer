@@ -106,6 +106,8 @@ export interface Shop {
   thumbnail: string;
   images: string[];
   courses: { name: string; duration: string; price: string }[];
+  rank?: number;
+  rankingScore?: number;
 }
 
 export interface Therapist {

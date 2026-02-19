@@ -199,3 +199,59 @@ export async function getTherapistCountsBySalonIds(
   }
   return counts;
 }
+
+// =============================================================================
+// ランキング
+// =============================================================================
+
+export interface SalonRankingStats {
+  salon_id: number;
+  review_count: number;
+  avg_score: number;
+  bayesian_score: number;
+  therapist_count: number;
+  ranking_score: number;
+  latest_review_at: string | null;
+}
+
+/** エリア内サロンをランキングスコア順で取得 */
+export async function getRankedSalonsByArea(
+  areaId: number,
+  limit = 200
+): Promise<SalonRankingStats[]> {
+  const { data, error } = await supabase.rpc("get_ranked_salons_by_area", {
+    p_area_id: areaId,
+    p_limit: limit,
+  });
+  if (error) {
+    console.error("getRankedSalonsByArea error:", error);
+    return [];
+  }
+  return (data as SalonRankingStats[]) || [];
+}
+
+/** 指定サロンIDの口コミ統計をバッチ取得 */
+export async function getSalonReviewStatsBatch(
+  salonIds: number[]
+): Promise<Map<number, { review_count: number; avg_score: number; therapist_count: number }>> {
+  const result = new Map<number, { review_count: number; avg_score: number; therapist_count: number }>();
+  if (salonIds.length === 0) return result;
+
+  const { data, error } = await supabase.rpc("get_salon_review_stats_batch", {
+    p_salon_ids: salonIds,
+  });
+  if (error) {
+    console.error("getSalonReviewStatsBatch error:", error);
+    return result;
+  }
+  if (data) {
+    for (const row of data as { salon_id: number; review_count: number; avg_score: number; therapist_count: number }[]) {
+      result.set(row.salon_id, {
+        review_count: row.review_count,
+        avg_score: Number(row.avg_score),
+        therapist_count: row.therapist_count,
+      });
+    }
+  }
+  return result;
+}
