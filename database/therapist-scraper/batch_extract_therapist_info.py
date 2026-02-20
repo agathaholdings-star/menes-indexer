@@ -171,7 +171,7 @@ def fetch_and_extract_one(therapist_id, source_url, salon_name, salon_display):
 
 UPDATE_FIELDS = [
     'name', 'age', 'height', 'cup', 'bust', 'waist', 'hip',
-    'blood_type', 'profile_text',
+    'blood_type', 'profile_text', 'image_urls',
 ]
 
 
@@ -182,6 +182,12 @@ def update_therapist(cur, therapist_id, data):
 
     for field in UPDATE_FIELDS:
         val = data.get(field)
+        if field == 'image_urls':
+            # image_urls: 空配列は既存値維持（スキップ）
+            if isinstance(val, list) and len(val) > 0:
+                set_parts.append("image_urls = %(image_urls)s::jsonb")
+                params['image_urls'] = json.dumps(val, ensure_ascii=False)
+            continue
         if val is not None:
             set_parts.append(f"{field} = %({field})s")
             # bust は text 型

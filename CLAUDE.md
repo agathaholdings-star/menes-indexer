@@ -217,7 +217,36 @@
         - ドメインシャッフル + 1秒delay（サーバー負荷分散）
         - 推定コスト: **~$241**（Haiku 4.5）、推定: ~16時間
         - 完了後: pg_dumpでVPS→ローカル同期 → 目視確認
-    13. **本番デプロイ準備**（本番Supabaseスキーマpush → Vercel環境変数 → デプロイ）
+    12c. **スクレイピング課題＋インフラ懸念の洗い出し** → 📝 記録済み・検討中（2026-02-20）
+        - 画像URL抽出精度（🔴→🟢対応中）: Haiku画像パイプラインで解決予定（12d参照）
+        - 画像の外部直リンク（🔴→🟢対応中）: Supabase Storageに移行予定（12d参照）
+        - 定期バッチへの画像DL統合（🔴→🟢対応中）: `--new`モードで自動統合（12d参照）
+        - 取り漏れデータ（🟡）: SNSリンク、趣味、得意施術、コース料金表、サロン写真、指名料
+        - Supabase長期依存リスク（🟡）: 7年運営での単一障害点。GCP移行は本番デプロイ前の今がコスト最小
+        - 詳細は「未解決課題」セクション参照。実装は別タスク
+    12d. **セラピスト画像パイプライン** ← 🔄 実装完了・VPS実行待ち（2026-02-21）
+        - **背景**: Phase②③のimage_urlsがゴミデータ（spacer/itemList.png/バナー画像混入）。3サロン9件テストで全件修正成功
+        - **2プログラム構成**:
+            1. **Haiku画像パス抽出**: `name_extractor.py`の`extract_therapist_info()`に画像判定を統合。1回のAPI呼び出しで10フィールド（name/age/cup/3size/profile_text/image_urls）を一括抽出
+                - `collect_image_candidates()`: img src/data-src/srcset/CSS background-imageを構造化収集
+                - Haiku判定ルール: セラピスト本人写真のみ/プレースホルダー・ロゴ・ナビ除外/最大5枚
+                - 空配列時は既存値維持（UPDATEスキップ）
+            2. **画像DL→Supabase Storage**: `batch_download_images.py`新規作成
+                - 外部URL → requests.get → Supabase Storage `therapist-images`バケット → DB URL差し替え
+                - パス: `{salon_id}/{therapist_id}/{001|002|003}.{ext}`
+                - 並列DL対応（default 10 workers）、チェックポイント、SIGINT、--dry-run
+                - DL失敗時は元URL維持（壊さない）
+        - **マイグレーション**: `20260221000001_therapist_images_bucket.sql` — therapist-imagesバケット作成（public読み取り、service_role書き込み）
+        - **テスト結果**: 3サロン9件で9/9正しい画像URL抽出（$0.02）
+        - **推定コスト・時間**:
+            - プログラム1（Haiku抽出）: ~$224、~20時間（VPS 5並列）
+            - プログラム2（画像DL+Storage）: ~$0（Supabase Storage無料枠内）、~3-6時間（10-20並列）
+        - **VPS実行手順**:
+            1. ローカル→VPSにscp（name_extractor.py, batch_extract_therapist_info.py）
+            2. VPS 5並列tmux hw1-hw5で`--existing`バッチ実行
+            3. pg_dump→ローカル同期→目視確認
+            4. `batch_download_images.py`でStorage保存バッチ実行
+    13. **本番デプロイ準備**（本番Supabaseスキーマpush → Vercel環境変数 → デプロイ） ※12cのインフラ方針決定後
     14. VPSのスクレイピングデータをpg_dumpで本番Supabaseに移行
 
 ## 開発フロー方針（確定）
@@ -424,7 +453,8 @@ ssh -i /Users/agatha/Downloads/indexer.pem root@220.158.18.6 "sudo -u postgres p
 │       ├── fetch_utils.py         ← 共通fetchモジュール（HTTPS→HTTPフォールバック付き）
 │       ├── name_extractor.py      ← セラピスト情報抽出モジュール（全フィールドHaiku一括抽出）
 │       ├── html_cache_utils.py    ← 共通HTMLキャッシュモジュール（gzip圧縮、カテゴリ別）
-│       ├── batch_extract_therapist_info.py ← Haiku一括抽出バッチ（--existing/--new）
+│       ├── batch_extract_therapist_info.py ← Haiku一括抽出バッチ（--existing/--new、画像URL抽出対応）
+│       ├── batch_download_images.py ← 画像DL→Supabase Storage保存→URL差し替え
 │       ├── clean_therapist_names.py ← 名前クレンジング＋source_url重複解消
 │       ├── classify_failures.py   ← 失敗サロン理由分類スクリプト
 │       ├── salon_diagnose.py      ← 診断CLIツール（diagnose/test-extract/rescrape/list-failed/list-patterns）
@@ -996,6 +1026,58 @@ python database/therapist-scraper/seed_cms_patterns.py
 
 `salon_scrape_cache`テーブルに一覧URLをキャッシュ。2回目以降はLLM不要で直行。
 CMS判定で`/therapist/`等のパターンもルールベースで発見可能（estama系で動作確認済み）。
+
+### 🟢 セラピスト画像URL抽出精度の問題（対応中 — 12d参照）
+
+- **現状**: `extract_therapist_info()`にHaiku画像判定を統合済み。3サロン9件テストで9/9正しい画像URL抽出成功
+- **方式**: `collect_image_candidates()`で全img/data-src/srcset/CSS bg-imageを構造化収集 → Haikuが本人写真のみ選別（最大5枚）
+- **次ステップ**: VPS 5並列で95,340件バッチ実行（~$224、~20時間）
+
+### 🟢 セラピスト画像の外部直リンク問題（対応中 — 12d参照）
+
+- **方針決定**: Supabase Storage（therapist-imagesバケット、public）を採用
+- **実装済み**: `batch_download_images.py` — 外部URL→DL→Storage upload→DB URL差し替え
+    - パス: `{salon_id}/{therapist_id}/{001|002|003}.{ext}`
+    - 並列DL（default 10 workers）、チェックポイント、SIGINT shutdown
+    - DL失敗時は元URL維持（壊さない）
+- **マイグレーション**: `20260221000001_therapist_images_bucket.sql`
+- **規模**: ~19.5万枚、1枚平均200KBとして約39GB
+- **次ステップ**: プログラム1（Haiku画像パス抽出）完了後にバッチ実行（~3-6時間、10-20並列）
+
+### 🟢 定期スクレイピングへの画像DL統合（対応中 — 12d参照）
+
+- **方式**: `extract_therapist_info()`に画像抽出を統合したため、`--new`モードで新規セラピスト発見時に自動的にimage_urlsが取れる
+- **未対応**:
+    - 既存セラピスト更新時の画像変更検知 → 差分DL → ストレージ更新
+    - 退職セラピスト: 画像の削除 or アーカイブポリシー策定
+
+### 🟡 スクレイピング取り漏れデータ（将来対応）
+
+- **現状**: Haiku一括抽出で name/age/cup/3サイズ/profile_text は取得済みだが、以下が未取得
+- **未取得項目**:
+    - SNSリンク（Twitter/Instagram）— セラピスト個別ページに記載あるケースが多い
+    - 趣味・特技 — プロフィール欄に記載あり
+    - 得意施術・メニュー — サロンによってはセラピスト単位で記載
+    - コース料金表 — サロン単位ではなくセラピスト個別料金のケースがある
+    - サロン複数写真 — 外観・内装・施術室の写真（現在はセラピスト写真のみ）
+    - 指名料 — セラピスト単位で異なるケースがある
+- **対処方針**: キャッシュ済みHTMLから追加抽出可能。優先度に応じてHaikuプロンプト拡張
+- **優先度**: 本番公開後、ユーザーフィードバックを見て優先度決定
+
+### 🟡 Supabase長期依存リスク（要検討）
+
+- **背景**: 7年運営を見据えた場合、DB+Auth+Storage全部をSupabaseに依存する単一障害点リスク
+- **懸念点**:
+    - 10万〜15万件の画像規模（39GB→将来100GB超）でのストレージコスト・パフォーマンス
+    - Supabaseの料金改定・サービス終了リスク（スタートアップ依存）
+    - Auth/Storage/Realtimeが密結合 → 部分移行が困難
+    - PostgreSQL自体は移行可能だが、Supabase固有機能（RLS、Auth hooks等）の移行コスト
+- **代替案**:
+    - GCP（Cloud SQL + Cloud Storage + Firebase Auth）— エンタープライズグレード、長期安定
+    - AWS（RDS + S3 + Cognito）— 最大シェア、実績豊富
+    - セルフホスト（VPS + PostgreSQL + MinIO）— 最安だが運用負荷大
+- **判断タイミング**: 本番デプロイ前の今が移行コスト最小。公開後はデータ移行・ダウンタイムが発生
+- **優先度**: 本番デプロイ準備（ステップ13）の前に方針決定が望ましい
 
 ### 新規店舗URLの自動発見
 esthe-ranking.jpをメインソースとして採用決定。

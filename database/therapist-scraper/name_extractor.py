@@ -33,6 +33,7 @@ Usage:
 import json
 import logging
 import re
+from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
 
@@ -272,6 +273,70 @@ def _collect_candidates(html: str) -> dict:
     }
 
 
+def collect_image_candidates(html: str, base_url: str) -> list[dict]:
+    """
+    HTMLから全画像候補を構造化抽出。
+
+    <img> タグの src/data-src/data-lazy-src/data-original/srcset と
+    CSS background-image を収集し、各候補にURL/alt/class/親要素情報を付与する。
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    candidates = []
+    seen_urls = set()
+
+    for img in soup.find_all("img"):
+        src = (img.get("src") or img.get("data-src") or img.get("data-lazy-src")
+               or img.get("data-original") or "")
+        if not src and img.get("srcset"):
+            src = img["srcset"].split(",")[0].split()[0]
+        if not src or src.startswith("data:"):
+            continue
+
+        full_url = urljoin(base_url, src)
+        if full_url in seen_urls:
+            continue
+        seen_urls.add(full_url)
+
+        parent = img.parent
+        parent_info = ""
+        if parent:
+            p_class = " ".join(parent.get("class", []))
+            p_id = parent.get("id", "")
+            parent_info = f"<{parent.name} class='{p_class}' id='{p_id}'>"
+
+        gp_info = ""
+        if parent and parent.parent:
+            gp = parent.parent
+            gp_class = " ".join(gp.get("class", []))
+            gp_id = gp.get("id", "")
+            gp_info = f"<{gp.name} class='{gp_class}' id='{gp_id}'>"
+
+        candidates.append({
+            "url": full_url,
+            "alt": img.get("alt", ""),
+            "class": " ".join(img.get("class", [])),
+            "width": img.get("width", ""),
+            "height": img.get("height", ""),
+            "parent": parent_info,
+            "grandparent": gp_info,
+        })
+
+    for el in soup.find_all(style=re.compile(r"background-image")):
+        match = re.search(r"url\(['\"]?(.*?)['\"]?\)", el.get("style", ""))
+        if match:
+            bg_url = urljoin(base_url, match.group(1))
+            if bg_url not in seen_urls:
+                seen_urls.add(bg_url)
+                candidates.append({
+                    "url": bg_url, "alt": "(CSS bg)",
+                    "class": " ".join(el.get("class", [])),
+                    "width": "", "height": "",
+                    "parent": f"<{el.name}>", "grandparent": "",
+                })
+
+    return candidates
+
+
 def _extract_llm_name_only(html: str, url: str, salon_name: str,
                            salon_display: str, model: str = "claude-haiku-4-5-20251001") -> dict | None:
     """名前のみ抽出（後方互換用）"""
@@ -354,7 +419,7 @@ def extract_therapist_info(html: str, salon_name: str = "", salon_display: str =
     セラピスト個別ページHTMLから全フィールドを1回のHaiku呼び出しで抽出。
 
     抽出フィールド: name, age, height, cup, bust, waist, hip,
-                   blood_type, profile_text
+                   blood_type, profile_text, image_urls
 
     Args:
         html: ページHTML（フルページ）
@@ -374,6 +439,7 @@ def extract_therapist_info(html: str, salon_name: str = "", salon_display: str =
             "hip": 85,
             "blood_type": "O",
             "profile_text": "スレンダーな美人系で...",
+            "image_urls": ["https://example.com/photo1.jpg"],
             "input_tokens": 1600,
             "output_tokens": 150,
         }
@@ -388,6 +454,27 @@ def extract_therapist_info(html: str, salon_name: str = "", salon_display: str =
     # 候補テキストも収集
     cands = _collect_candidates(html)
     css_text = "\n".join(cands["css"]) if cands["css"] else "(なし)"
+
+    # 画像候補を収集
+    image_cands = collect_image_candidates(html, url)
+    if image_cands:
+        img_lines = []
+        for i, c in enumerate(image_cands):
+            line = f"[{i}] {c['url']}"
+            if c["alt"]:
+                line += f" alt=\"{c['alt']}\""
+            if c["class"]:
+                line += f" class=\"{c['class']}\""
+            if c["width"] or c["height"]:
+                line += f" {c['width']}x{c['height']}"
+            if c["parent"]:
+                line += f" {c['parent']}"
+            img_lines.append(line)
+        image_section = f"""
+## 画像候補（{len(image_cands)}件）
+{chr(10).join(img_lines)}"""
+    else:
+        image_section = "\n## 画像候補\nなし"
 
     prompt = f"""このメンズエステセラピストのプロフィールページから情報を抽出してJSON形式で返してください。
 
@@ -404,6 +491,7 @@ def extract_therapist_info(html: str, salon_name: str = "", salon_display: str =
 
 ページ全体（軽量化済み）:
 {cleaned}
+{image_section}
 
 ## 抽出ルール
 
@@ -429,17 +517,24 @@ def extract_therapist_info(html: str, salon_name: str = "", salon_display: str =
 - コース説明・料金・出勤スケジュール・ナビゲーションは含めない
 - 200文字以内に要約。ページに紹介文がなければnull
 
+### image_urls
+- セラピスト本人の写真URLのみ選ぶ（顔写真・全身写真・施術写真）
+- 除外: ロゴ、バナー、ナビ画像、矢印、ボタン、SNSアイコン、プレースホルダー（spacer/noimage/coming_soon/loading）、他セラピストの写真、背景・装飾、極小画像
+- URLパスのキーワード（cast/girl/therapist/staff/photo/profile + 個人ID）を判断材料にする
+- 親要素class（profile/cast/detail等）も判断材料
+- 最大5枚。該当なしなら空配列[]
+
 ## 出力形式
 JSONのみ出力。余計なテキストは不要。
 ```json
-{{"name":"名前","age":23,"height":158,"cup":"D","bust":86,"waist":57,"hip":85,"blood_type":"O","profile_text":"紹介文..."}}
+{{"name":"名前","age":23,"height":158,"cup":"D","bust":86,"waist":57,"hip":85,"blood_type":"O","profile_text":"紹介文...","image_urls":["URL1","URL2"]}}
 ```"""
 
     try:
         client = _get_anthropic_client()
         resp = client.messages.create(
             model=model,
-            max_tokens=500,
+            max_tokens=800,
             messages=[{"role": "user", "content": prompt}],
         )
         result_text = resp.content[0].text.strip()
@@ -503,6 +598,20 @@ JSONのみ出力。余計なテキストは不要。
                 data["profile_text"] = None
             else:
                 data["profile_text"] = pt
+
+        # image_urls バリデーション
+        imgs = data.get("image_urls")
+        if isinstance(imgs, list):
+            # 絶対パス化 + 最大5枚
+            validated = []
+            for img_url in imgs[:5]:
+                if isinstance(img_url, str) and img_url.strip():
+                    abs_url = urljoin(url, img_url.strip())
+                    if abs_url.startswith(("http://", "https://")):
+                        validated.append(abs_url)
+            data["image_urls"] = validated
+        else:
+            data["image_urls"] = []
 
         data["input_tokens"] = input_tokens
         data["output_tokens"] = output_tokens
