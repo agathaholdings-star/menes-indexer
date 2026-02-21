@@ -1,11 +1,18 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-セラピスト情報 Haiku 一括抽出バッチ
+セラピスト情報 Haiku 一括抽出バッチ（統一パイプライン）
 
 2つのモード:
-  --existing  既存92,587件を再抽出してUPDATE（一回きりの品質修復）
-  --new       新着セラピストを発見・追加してINSERT（月次）
+  --existing  既存レコードを再抽出してUPDATE（一回きりの品質修復）
+  --new       全サロン対象の差分スクレイピング（月次定期実行推奨）
+
+--new モードは2パスで全サロンを処理:
+  パス1: therapist_list_url あり → ヒューリスティックURL抽出 → source_url diff → Haiku個別抽出
+  パス2: therapist_list_url なし → 3段階Haikuフロー（TOP→一覧→個別）
+         + 3Days CMS直接抽出 / single_page一括抽出 / Playwright fallback
+
+全フローで source_url dedup 保証（INSERT前に既存チェック）。
 
 Usage:
   # テスト（5件、DB書き込みなし）
@@ -17,14 +24,18 @@ Usage:
   # VPS並列（ID範囲分割）
   python batch_extract_therapist_info.py --existing --start-id 0 --end-id 20000 --workers 5
 
-  # 新着追加
-  python batch_extract_therapist_info.py --new --workers 5
+  # 全サロン月次差分スクレイピング（推奨）
+  python batch_extract_therapist_info.py --new
+
+  # VPS並列
+  python batch_extract_therapist_info.py --new --start-id 0 --end-id 3000
+  python batch_extract_therapist_info.py --new --start-id 3000 --end-id 6489
 
   # チェックポイントから再開
-  python batch_extract_therapist_info.py --existing --resume
+  python batch_extract_therapist_info.py --new --resume
 
 前提:
-  - supabase start 済み (127.0.0.1:54322)
+  - supabase start 済み (127.0.0.1:54322) or DATABASE_URL 環境変数
   - database/.env に ANTHROPIC_API_KEY
 """
 
@@ -56,7 +67,7 @@ from name_extractor import extract_therapist_info
 _cache = HtmlCache()
 
 # --- 設定 ---
-DB_DSN = "postgresql://postgres:postgres@127.0.0.1:54322/postgres"
+DB_DSN = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@127.0.0.1:54322/postgres")
 REQUEST_DELAY = 1.0
 
 # ログ設定
@@ -134,16 +145,15 @@ def save_checkpoint(checkpoint, path):
 
 def fetch_and_extract_one(therapist_id, source_url, salon_name, salon_display):
     """
-    1件分: 常にfetch → cache保存 → Haiku抽出
+    1件分: キャッシュ読み込み → Haiku抽出（外部fetchしない）
 
     Returns:
         (therapist_id, data_dict_or_None, error_type_or_None)
-        error_type: 'fetch_failed' | 'extract_failed' | 'no_name' | None
+        error_type: 'cache_miss' | 'extract_failed' | 'no_name' | None
     """
-    html = fetch_page(source_url)
+    html = _cache.load("therapist", therapist_id)
     if not html:
-        return therapist_id, None, 'fetch_failed'
-    _cache.save("therapist", therapist_id, html)
+        return therapist_id, None, 'cache_miss'
 
     try:
         data = extract_therapist_info(
@@ -281,12 +291,12 @@ def run_existing(args):
         t_id = row['id']
         source_url = row['source_url']
 
-        # fetch + extract（メインスレッド — Haiku APIコールがボトルネック）
+        # キャッシュ読み込み + Haiku抽出
         _, data, err = fetch_and_extract_one(
             t_id, source_url,
             row['salon_name'], row['salon_display'])
 
-        if err in ('fetch_failed', 'extract_failed', 'no_name'):
+        if err in ('cache_miss', 'extract_failed', 'no_name'):
             stats[err] = stats.get(err, 0) + 1
             # 情報取れない → retired化
             if not args.dry_run:
@@ -341,8 +351,6 @@ def run_existing(args):
             save_checkpoint(checkpoint, cp_path)
             batch_count = 0
 
-        time.sleep(REQUEST_DELAY)
-
     # 最終コミット
     if not args.dry_run:
         conn.commit()
@@ -382,10 +390,22 @@ def _safe_int(val):
 
 
 def insert_therapist_new(cur, salon_id, data):
-    """新規セラピストをINSERT。SAVEPOINT付き。Returns id or None."""
+    """新規セラピストをINSERT。SAVEPOINT付き。Returns id or None.
+
+    source_url が既に同一サロンに存在する場合はスキップ（重複防止）。
+    """
     t_name = data.get('name')
     if not t_name:
         return None
+
+    # source_url 重複チェック（同一サロン内）
+    source_url = data.get('source_url')
+    if source_url:
+        cur.execute(
+            "SELECT id FROM therapists WHERE salon_id = %s AND source_url = %s LIMIT 1",
+            (salon_id, source_url))
+        if cur.fetchone():
+            return None  # 既存 → スキップ
 
     bust_val = data.get('bust')
     if bust_val is not None:
@@ -443,11 +463,393 @@ def insert_therapist_new(cur, salon_id, data):
         return None
 
 
-def run_new(args):
-    """--new モード: 新着セラピストを発見してINSERT"""
-    # batch_therapist_data から heuristic URL抽出を借用
+def _get_existing_source_urls(cur, salon_id):
+    """サロン内の既存source_urlセットを取得"""
+    cur.execute(
+        "SELECT source_url FROM therapists WHERE salon_id = %s AND source_url IS NOT NULL",
+        (salon_id,))
+    return {r['source_url'] for r in cur.fetchall()}
+
+
+def _process_heuristic_salon(cur, salon, args, stats, _shutdown_ref):
+    """therapist_list_url ありのサロン: ヒューリスティックURL抽出 → Haiku個別抽出"""
     from batch_therapist_data import extract_therapist_urls_heuristic
 
+    salon_id = salon['salon_id']
+    list_url = salon['therapist_list_url']
+    salon_name = salon['salon_name'] or ''
+    salon_display = salon['salon_display'] or salon_name
+
+    # 一覧ページ fetch
+    list_html = fetch_page(list_url)
+    if not list_html:
+        stats['fetch_failed'] = stats.get('fetch_failed', 0) + 1
+        return 0
+
+    # セラピストURL抽出
+    entries = extract_therapist_urls_heuristic(list_html, list_url)
+    if not entries:
+        return 0
+
+    # DB既存URLと比較 → 差分のみ
+    existing_urls = _get_existing_source_urls(cur, salon_id)
+    new_entries = [e for e in entries if e['url'] not in existing_urls]
+
+    if not new_entries:
+        return 0
+
+    salon_inserted = 0
+    for entry in new_entries:
+        if _shutdown:
+            break
+
+        t_url = entry['url']
+        html = fetch_page(t_url)
+        if not html:
+            stats['fetch_failed'] = stats.get('fetch_failed', 0) + 1
+            continue
+
+        cache_key = t_url.rstrip('/').split('/')[-1]
+        _cache.save("therapist", cache_key, html)
+
+        try:
+            data = extract_therapist_info(
+                html,
+                salon_name=salon_name,
+                salon_display=salon_display,
+                url=t_url,
+            )
+        except Exception:
+            stats['extract_failed'] = stats.get('extract_failed', 0) + 1
+            continue
+
+        if data is None:
+            stats['extract_failed'] = stats.get('extract_failed', 0) + 1
+            continue
+
+        if not data.get('name'):
+            stats['skipped_no_name'] = stats.get('skipped_no_name', 0) + 1
+            continue
+
+        stats['total_input_tokens'] = stats.get('total_input_tokens', 0) + data.get('input_tokens', 0)
+        stats['total_output_tokens'] = stats.get('total_output_tokens', 0) + data.get('output_tokens', 0)
+
+        data['source_url'] = t_url
+
+        if not data.get('image_urls') and entry.get('list_image_url'):
+            data['image_urls'] = [entry['list_image_url']]
+
+        if not args.dry_run:
+            t_id = insert_therapist_new(cur, salon_id, data)
+            if t_id:
+                stats['inserted'] = stats.get('inserted', 0) + 1
+                salon_inserted += 1
+            else:
+                stats['db_error'] = stats.get('db_error', 0) + 1
+        else:
+            stats['inserted'] = stats.get('inserted', 0) + 1
+            salon_inserted += 1
+
+        time.sleep(REQUEST_DELAY)
+
+    return salon_inserted
+
+
+def _process_haiku_salon(cur, salon, args, stats, _shutdown_ref):
+    """therapist_list_url なしのサロン: 3段階Haikuフローで処理
+
+    scrape_failed_salons.py のロジックを統合:
+    Stage 1: TOPページ分析 → page_type判定
+    Stage 2: listing URL → 個別URL抽出
+    Stage 3: 個別ページ → Haiku情報抽出 → INSERT
+    + 3Days CMS直接抽出 / single_page一括抽出
+    """
+    # scrape_failed_salons.py から遅延import（循環import回避）
+    from scrape_failed_salons import (
+        fetch_page_smart, detect_3days_cms, parse_3days_data_js,
+        haiku_analyze_page, haiku_extract_single_page,
+        is_valid_therapist_url,
+    )
+
+    salon_id = salon['salon_id']
+    url = salon['official_url']
+    salon_name = salon['salon_name'] or ''
+    salon_display = salon['salon_display'] or salon_name
+
+    if not url:
+        return 0
+
+    # --- Stage 1: TOPページ分析 ---
+    html = fetch_page_smart(url, label=f"Haiku S1: ")
+    if not html:
+        stats['fetch_failed'] = stats.get('fetch_failed', 0) + 1
+        return 0
+
+    _cache.save("salon_top", salon_id, html)
+
+    # 既存source_urls（全パスで使う）
+    existing_urls = _get_existing_source_urls(cur, salon_id)
+
+    # --- 3Days CMS 直接抽出（$0）---
+    data_js_url = detect_3days_cms(html)
+    if data_js_url:
+        log.info(f"  3Days CMS detected → {data_js_url}")
+        js_text = fetch_page(data_js_url)
+        if js_text:
+            therapists = parse_3days_data_js(js_text, url, salon_name=salon_display)
+            count = 0
+            for t_data in therapists:
+                if t_data.get('source_url') in existing_urls:
+                    continue
+                if not args.dry_run:
+                    t_id = insert_therapist_new(cur, salon_id, t_data)
+                    if t_id:
+                        count += 1
+                else:
+                    count += 1
+            stats['inserted'] = stats.get('inserted', 0) + count
+            return count
+
+    # --- Haiku Stage 1 分析 ---
+    result1 = haiku_analyze_page(html, salon_display, url)
+    if not result1:
+        stats['extract_failed'] = stats.get('extract_failed', 0) + 1
+        return 0
+
+    stats['total_input_tokens'] = stats.get('total_input_tokens', 0) + result1.get('input_tokens', 0)
+    stats['total_output_tokens'] = stats.get('total_output_tokens', 0) + result1.get('output_tokens', 0)
+
+    page_type = result1['page_type']
+    log.info(f"  Stage 1: {page_type} — {result1.get('notes', '')}")
+
+    # エイジゲート → リダイレクト先で再分析
+    if page_type == 'age_gate' and result1.get('redirect_url'):
+        redirect_url = result1['redirect_url']
+        html = fetch_page(redirect_url)
+        if html:
+            _cache.save("salon_top", f"{salon_id}_redirected", html)
+            result1 = haiku_analyze_page(html, salon_display, redirect_url)
+            if result1:
+                stats['total_input_tokens'] = stats.get('total_input_tokens', 0) + result1.get('input_tokens', 0)
+                stats['total_output_tokens'] = stats.get('total_output_tokens', 0) + result1.get('output_tokens', 0)
+                page_type = result1['page_type']
+
+    individual_urls = []
+
+    # single_page でも individual_urls があれば has_individuals に補正
+    if page_type == 'single_page' and result1.get('individual_urls'):
+        from urllib.parse import urlparse as _urlparse
+        salon_domain = _urlparse(url).netloc.lower()
+        ext_urls = result1['individual_urls']
+        all_external = all(_urlparse(u).netloc.lower() != salon_domain for u in ext_urls)
+        if not all_external:
+            page_type = 'has_individuals'
+
+    if page_type == 'has_individuals':
+        individual_urls = result1.get('individual_urls', [])
+
+        # listing_url もあればマージ
+        listing_url_extra = result1.get('listing_url')
+        if listing_url_extra:
+            list_html = fetch_page_smart(listing_url_extra, label="S2 LIST(補完): ")
+            if list_html:
+                _cache.save("salon_list", salon_id, list_html)
+                # 3Days CMS チェック
+                list_data_js_url = detect_3days_cms(list_html)
+                if list_data_js_url:
+                    js_text = fetch_page(list_data_js_url)
+                    if js_text:
+                        therapists = parse_3days_data_js(js_text, listing_url_extra, salon_name=salon_display)
+                        count = 0
+                        for t_data in therapists:
+                            if t_data.get('source_url') in existing_urls:
+                                continue
+                            if not args.dry_run:
+                                t_id = insert_therapist_new(cur, salon_id, t_data)
+                                if t_id:
+                                    count += 1
+                            else:
+                                count += 1
+                        stats['inserted'] = stats.get('inserted', 0) + count
+                        return count
+                else:
+                    result2 = haiku_analyze_page(list_html, salon_display, listing_url_extra)
+                    if result2:
+                        stats['total_input_tokens'] = stats.get('total_input_tokens', 0) + result2.get('input_tokens', 0)
+                        stats['total_output_tokens'] = stats.get('total_output_tokens', 0) + result2.get('output_tokens', 0)
+                        existing_set = set(individual_urls)
+                        for u in result2.get('individual_urls', []):
+                            if u not in existing_set:
+                                individual_urls.append(u)
+                                existing_set.add(u)
+
+    elif page_type == 'listing':
+        listing_url = result1.get('listing_url')
+        if listing_url:
+            list_html = fetch_page_smart(listing_url, label="S2 LIST: ")
+            if list_html:
+                _cache.save("salon_list", salon_id, list_html)
+                # 3Days CMS チェック
+                list_data_js_url = detect_3days_cms(list_html)
+                if list_data_js_url:
+                    js_text = fetch_page(list_data_js_url)
+                    if js_text:
+                        therapists = parse_3days_data_js(js_text, listing_url, salon_name=salon_display)
+                        count = 0
+                        for t_data in therapists:
+                            if t_data.get('source_url') in existing_urls:
+                                continue
+                            if not args.dry_run:
+                                t_id = insert_therapist_new(cur, salon_id, t_data)
+                                if t_id:
+                                    count += 1
+                            else:
+                                count += 1
+                        stats['inserted'] = stats.get('inserted', 0) + count
+                        return count
+
+                result2 = haiku_analyze_page(list_html, salon_display, listing_url)
+                if result2:
+                    stats['total_input_tokens'] = stats.get('total_input_tokens', 0) + result2.get('input_tokens', 0)
+                    stats['total_output_tokens'] = stats.get('total_output_tokens', 0) + result2.get('output_tokens', 0)
+                    individual_urls = result2.get('individual_urls', [])
+
+                # 個別URLなし → single_page fallback
+                if not individual_urls and list_html:
+                    therapists = haiku_extract_single_page(list_html, salon_display, listing_url)
+                    count = 0
+                    for t_data in therapists:
+                        t_data['source_url'] = listing_url
+                        stats['total_input_tokens'] = stats.get('total_input_tokens', 0) + t_data.pop('input_tokens', 0)
+                        stats['total_output_tokens'] = stats.get('total_output_tokens', 0) + t_data.pop('output_tokens', 0)
+                        if t_data.get('source_url') in existing_urls:
+                            continue
+                        if not args.dry_run:
+                            t_id = insert_therapist_new(cur, salon_id, t_data)
+                            if t_id:
+                                count += 1
+                        else:
+                            count += 1
+                    stats['inserted'] = stats.get('inserted', 0) + count
+                    return count
+
+    elif page_type == 'single_page':
+        # TOPページ自体から一括抽出
+        therapists = haiku_extract_single_page(html, salon_display, url)
+        count = 0
+        for t_data in therapists:
+            t_data['source_url'] = url
+            stats['total_input_tokens'] = stats.get('total_input_tokens', 0) + t_data.pop('input_tokens', 0)
+            stats['total_output_tokens'] = stats.get('total_output_tokens', 0) + t_data.pop('output_tokens', 0)
+            if t_data.get('source_url') in existing_urls:
+                continue
+            if not args.dry_run:
+                t_id = insert_therapist_new(cur, salon_id, t_data)
+                if t_id:
+                    count += 1
+            else:
+                count += 1
+        stats['inserted'] = stats.get('inserted', 0) + count
+        return count
+
+    elif page_type == 'no_therapists':
+        return 0
+    else:
+        return 0
+
+    # --- individual_urls の dedup + Stage 3 ---
+    if not individual_urls:
+        return 0
+
+    # URLバリデーション
+    individual_urls = [u for u in individual_urls if is_valid_therapist_url(u)]
+
+    # source_url dedup
+    if existing_urls:
+        individual_urls = [u for u in individual_urls if u not in existing_urls]
+
+    if not individual_urls:
+        return 0
+
+    # アンカーリンク検出 → single_page fallback
+    anchor_urls = [u for u in individual_urls if '#' in u]
+    if anchor_urls and len(anchor_urls) == len(individual_urls):
+        base_url = individual_urls[0].split('#')[0]
+        all_same_base = all(u.split('#')[0] == base_url for u in individual_urls)
+        if all_same_base:
+            anchor_html = fetch_page(base_url)
+            if anchor_html:
+                _cache.save("salon_list", f"{salon_id}_anchor", anchor_html)
+                therapists = haiku_extract_single_page(anchor_html, salon_display, base_url)
+                count = 0
+                for t_data in therapists:
+                    t_data['source_url'] = base_url
+                    stats['total_input_tokens'] = stats.get('total_input_tokens', 0) + t_data.pop('input_tokens', 0)
+                    stats['total_output_tokens'] = stats.get('total_output_tokens', 0) + t_data.pop('output_tokens', 0)
+                    if not args.dry_run:
+                        t_id = insert_therapist_new(cur, salon_id, t_data)
+                        if t_id:
+                            count += 1
+                    else:
+                        count += 1
+                stats['inserted'] = stats.get('inserted', 0) + count
+                return count
+
+    # Stage 3: 個別ページ抽出
+    salon_inserted = 0
+    for t_url in individual_urls:
+        if _shutdown:
+            break
+
+        t_html = fetch_page_smart(t_url, label="S3: ")
+        if not t_html:
+            stats['fetch_failed'] = stats.get('fetch_failed', 0) + 1
+            continue
+
+        try:
+            data = extract_therapist_info(
+                t_html,
+                salon_name=salon_name,
+                salon_display=salon_display,
+                url=t_url,
+            )
+        except Exception:
+            stats['extract_failed'] = stats.get('extract_failed', 0) + 1
+            continue
+
+        if not data or not data.get('name'):
+            stats['skipped_no_name' if data else 'extract_failed'] = \
+                stats.get('skipped_no_name' if data else 'extract_failed', 0) + 1
+            continue
+
+        stats['total_input_tokens'] = stats.get('total_input_tokens', 0) + data.get('input_tokens', 0)
+        stats['total_output_tokens'] = stats.get('total_output_tokens', 0) + data.get('output_tokens', 0)
+
+        data['source_url'] = t_url
+
+        if not args.dry_run:
+            t_id = insert_therapist_new(cur, salon_id, data)
+            if t_id:
+                stats['inserted'] = stats.get('inserted', 0) + 1
+                salon_inserted += 1
+            else:
+                stats['db_error'] = stats.get('db_error', 0) + 1
+        else:
+            stats['inserted'] = stats.get('inserted', 0) + 1
+            salon_inserted += 1
+
+        time.sleep(0.5)
+
+    return salon_inserted
+
+
+def run_new(args):
+    """--new モード: 全サロン統一差分スクレイピング
+
+    2パス構成:
+    1. therapist_list_url ありのサロン → ヒューリスティックURL抽出 → Haiku個別抽出
+    2. therapist_list_url なしのサロン → 3段階Haikuフロー（TOP→一覧→個別）
+    """
     cp_path = _checkpoint_path("new", args.start_id, args.end_id)
     checkpoint = load_checkpoint(cp_path) if args.resume else _default_checkpoint()
     done_ids = set(checkpoint['done_ids'])  # done salon_ids
@@ -457,36 +859,69 @@ def run_new(args):
     conn.autocommit = False
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
-    # therapist_list_url ありのサロンを取得
-    where_parts = ["c.therapist_list_url IS NOT NULL", "c.last_therapist_count > 0"]
-    params = {}
+    # --- パス1: therapist_list_url ありのサロン ---
+    where_parts_h = ["c.therapist_list_url IS NOT NULL", "c.last_therapist_count > 0"]
+    params_h = {}
     if args.start_id is not None:
-        where_parts.append("c.salon_id >= %(start_id)s")
-        params['start_id'] = args.start_id
+        where_parts_h.append("c.salon_id >= %(start_id)s")
+        params_h['start_id'] = args.start_id
     if args.end_id is not None:
-        where_parts.append("c.salon_id < %(end_id)s")
-        params['end_id'] = args.end_id
+        where_parts_h.append("c.salon_id < %(end_id)s")
+        params_h['end_id'] = args.end_id
 
-    where_sql = " AND ".join(where_parts)
+    where_sql_h = " AND ".join(where_parts_h)
     cur.execute(f"""
         SELECT DISTINCT ON (c.salon_id)
                c.salon_id, c.therapist_list_url,
-               s.name AS salon_name, s.display_name AS salon_display
+               s.name AS salon_name, s.display_name AS salon_display,
+               s.official_url
         FROM salon_scrape_cache c
         JOIN salons s ON s.id = c.salon_id
-        WHERE {where_sql}
+        WHERE {where_sql_h}
         ORDER BY c.salon_id
-    """, params)
-    salons = cur.fetchall()
+    """, params_h)
+    heuristic_salons = cur.fetchall()
+
+    # --- パス2: therapist_list_url なしのサロン（3段階Haiku対象）---
+    where_parts_f = ["s.official_url IS NOT NULL"]
+    params_f = {}
+    if args.start_id is not None:
+        where_parts_f.append("s.id >= %(start_id)s")
+        params_f['start_id'] = args.start_id
+    if args.end_id is not None:
+        where_parts_f.append("s.id < %(end_id)s")
+        params_f['end_id'] = args.end_id
+
+    where_sql_f = " AND ".join(where_parts_f)
+    cur.execute(f"""
+        SELECT s.id AS salon_id, s.name AS salon_name,
+               s.display_name AS salon_display, s.official_url,
+               NULL::text AS therapist_list_url
+        FROM salons s
+        WHERE {where_sql_f}
+          AND s.id NOT IN (
+              SELECT DISTINCT c2.salon_id
+              FROM salon_scrape_cache c2
+              WHERE c2.therapist_list_url IS NOT NULL
+                AND c2.last_therapist_count > 0
+          )
+        ORDER BY s.id
+    """, params_f)
+    haiku_salons = cur.fetchall()
+
+    # 統合 (ヒューリスティック → Haiku の順)
+    all_salons = list(heuristic_salons) + list(haiku_salons)
 
     if args.limit:
-        salons = salons[:args.limit]
+        all_salons = all_salons[:args.limit]
 
     # 処理済みスキップ
-    salons = [s for s in salons if s['salon_id'] not in done_ids]
+    all_salons = [s for s in all_salons if s['salon_id'] not in done_ids]
 
-    total = len(salons)
-    log.info(f"--new モード: 対象サロン {total} 件")
+    total = len(all_salons)
+    heuristic_count = sum(1 for s in all_salons if s.get('therapist_list_url'))
+    haiku_count = total - heuristic_count
+    log.info(f"--new モード: 対象サロン {total} 件 (ヒューリスティック {heuristic_count} / Haiku {haiku_count})")
 
     if not total:
         log.info("処理対象が0件のため終了")
@@ -499,103 +934,28 @@ def run_new(args):
     start_time = time.time()
     batch_count = 0
 
-    for idx, salon in enumerate(salons):
+    for idx, salon in enumerate(all_salons):
         if _shutdown:
             log.info("シャットダウン — チェックポイント保存中...")
             break
 
         salon_id = salon['salon_id']
-        list_url = salon['therapist_list_url']
-        salon_name = salon['salon_name'] or ''
-        salon_display = salon['salon_display'] or salon_name
+        salon_display = salon.get('salon_display') or salon.get('salon_name') or ''
+        list_url = salon.get('therapist_list_url')
 
-        # 一覧ページ fetch
-        list_html = fetch_page(list_url)
-        if not list_html:
-            done_ids.add(salon_id)
-            stats['fetch_failed'] = stats.get('fetch_failed', 0) + 1
-            continue
-
-        # セラピストURL抽出
-        entries = extract_therapist_urls_heuristic(list_html, list_url)
-        if not entries:
-            done_ids.add(salon_id)
-            continue
-
-        # DB既存URLと比較 → 差分のみ
-        cur.execute(
-            "SELECT source_url FROM therapists WHERE salon_id = %s AND source_url IS NOT NULL",
-            (salon_id,))
-        existing_urls = {r['source_url'] for r in cur.fetchall()}
-        new_entries = [e for e in entries if e['url'] not in existing_urls]
-
-        if not new_entries:
-            done_ids.add(salon_id)
-            continue
-
-        salon_inserted = 0
-        for entry in new_entries:
-            if _shutdown:
-                break
-
-            t_url = entry['url']
-            html = fetch_page(t_url)
-            if not html:
-                stats['fetch_failed'] = stats.get('fetch_failed', 0) + 1
-                continue
-
-            # URL末尾をキーとしてキャッシュ
-            cache_key = t_url.rstrip('/').split('/')[-1]
-            _cache.save("therapist", cache_key, html)
-
-            try:
-                data = extract_therapist_info(
-                    html,
-                    salon_name=salon_name,
-                    salon_display=salon_display,
-                    url=t_url,
-                )
-            except Exception as e:
-                stats['extract_failed'] = stats.get('extract_failed', 0) + 1
-                continue
-
-            if data is None:
-                stats['extract_failed'] = stats.get('extract_failed', 0) + 1
-                continue
-
-            if not data.get('name'):
-                stats['skipped_no_name'] = stats.get('skipped_no_name', 0) + 1
-                continue
-
-            stats['total_input_tokens'] = stats.get('total_input_tokens', 0) + data.get('input_tokens', 0)
-            stats['total_output_tokens'] = stats.get('total_output_tokens', 0) + data.get('output_tokens', 0)
-
-            # source_url をデータに追加
-            data['source_url'] = t_url
-
-            # image_urls: リスト画像をフォールバック
-            if not data.get('image_urls') and entry.get('list_image_url'):
-                data['image_urls'] = [entry['list_image_url']]
-
-            if not args.dry_run:
-                t_id = insert_therapist_new(cur, salon_id, data)
-                if t_id:
-                    stats['inserted'] = stats.get('inserted', 0) + 1
-                    salon_inserted += 1
-                else:
-                    stats['db_error'] = stats.get('db_error', 0) + 1
-            else:
-                stats['inserted'] = stats.get('inserted', 0) + 1
-                salon_inserted += 1
-
-            time.sleep(REQUEST_DELAY)
+        # パス分岐
+        if list_url:
+            salon_inserted = _process_heuristic_salon(cur, salon, args, stats, _shutdown)
+        else:
+            salon_inserted = _process_haiku_salon(cur, salon, args, stats, _shutdown)
 
         done_ids.add(salon_id)
         stats['processed'] = stats.get('processed', 0) + 1
         batch_count += 1
 
         if salon_inserted > 0:
-            log.info(f"[{idx + 1}/{total}] {salon_display}: +{salon_inserted}名 (新着{len(new_entries)}件中)")
+            mode = "H" if list_url else "LLM"
+            log.info(f"[{idx + 1}/{total}] [{mode}] {salon_display}: +{salon_inserted}名")
 
         # batch-size ごとにコミット
         if batch_count >= args.batch_size:

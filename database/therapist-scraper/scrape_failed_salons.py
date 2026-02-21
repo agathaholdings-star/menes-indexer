@@ -1064,6 +1064,23 @@ def run_test(salons: list[dict], csv_path: str | None = None):
                     conn.commit()
                     continue
 
+        # --- source_url dedup: 既存セラピストのURLを除外 ---
+        cur.execute(
+            "SELECT source_url FROM therapists WHERE salon_id = %s AND source_url IS NOT NULL",
+            (sid,))
+        existing_urls = {r['source_url'] for r in cur.fetchall()}
+        if existing_urls:
+            before = len(individual_urls)
+            individual_urls = [u for u in individual_urls if u not in existing_urls]
+            log.info(f"  dedup: {len(existing_urls)}件既存 → {before}→{len(individual_urls)}件")
+
+        if not individual_urls:
+            row["status"] = "DEDUP_ALL_EXISTING"
+            row["notes"] += " (全URLが既存)"
+            results.append(row)
+            conn.commit()
+            continue
+
         # --- Stage 3: 個別ページ抽出 ---
         therapist_count = 0
         for t_url in individual_urls:
@@ -1586,8 +1603,13 @@ def cmd_stage3_prepare(args):
     total_urls = sum(len(v["urls"]) for v in salon_urls.values())
     log.info(f"Stage 3 prepare: {len(salon_urls)} サロン, {total_urls} 個別URL")
 
+    # source_url dedup 用DB接続
+    dedup_conn = psycopg2.connect(DB_DSN)
+    dedup_cur = dedup_conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
     written = 0
     fetch_failed = 0
+    dedup_skipped = 0
     metadata = {}
     paths = _stage_paths("stage3")
 
@@ -1597,6 +1619,18 @@ def cmd_stage3_prepare(args):
             salon_name = info["salon_name"]
             salon_display = info["salon_display"]
             urls = info["urls"]
+
+            # source_url dedup: 既存セラピストのURLを除外
+            dedup_cur.execute(
+                "SELECT source_url FROM therapists WHERE salon_id = %s AND source_url IS NOT NULL",
+                (int(sid),))
+            existing_urls = {r['source_url'] for r in dedup_cur.fetchall()}
+            if existing_urls:
+                before = len(urls)
+                urls = [u for u in urls if u not in existing_urls]
+                if before != len(urls):
+                    dedup_skipped += before - len(urls)
+                    log.info(f"  salon {sid}: dedup {before}→{len(urls)} URLs")
 
             for t_url in urls:
                 url_count += 1
@@ -1640,8 +1674,10 @@ def cmd_stage3_prepare(args):
     with open(paths["metadata"], "w", encoding="utf-8") as f:
         json.dump(metadata, f, ensure_ascii=False)
 
+    dedup_conn.close()
+
     file_mb = os.path.getsize(paths["requests"]) / 1024 / 1024 if written > 0 else 0
-    log.info(f"\nStage 3 prepare 完了: {written} リクエスト ({file_mb:.1f}MB), fetch失敗 {fetch_failed}")
+    log.info(f"\nStage 3 prepare 完了: {written} リクエスト ({file_mb:.1f}MB), fetch失敗 {fetch_failed}, dedup除外 {dedup_skipped}")
 
 
 # --- Stage 3: process ---

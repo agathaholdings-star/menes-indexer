@@ -9,7 +9,7 @@
 - 画像を複数枚受け取った場合はコンテキスト消費が大きいことを意識すること
 - スクレイピング時は必ずHTMLをgzip圧縮でローカル保存すること（`html_cache/{id}.html.gz`）。抽出ロジック改善時に再fetchなしで再処理可能にするため。
 
-## 現在のステータス (2026-02-19 更新)
+## 現在のステータス (2026-02-22 更新)
 
 - **設計フェーズ完了**: サービス概要、システム設計、UXフロー、v0用プロンプトを作成済み。
 - **フロントエンド公開済み**: v0.appからVercelにデプロイ → https://menes-indexer.com/
@@ -39,6 +39,21 @@
 - **Phase③完了（2026-02-18）**: VPS 5並列ワーカーで未取得3,603店をLLMスクレイピング → **+15,701名**取得（79,639→95,340名）。3,511サロンにセラピスト紐付き済み（54.1%）。残り2,977店はサイトダウン/セラピスト非公開
 - **ローカルSupabase再同期完了（2026-02-18）**: VPS Phase③データをpg_dumpでローカルに投入。名前クレンジング404件＋重複削除1,964件を適用 → ローカル**92,587名/3,506サロン**
 - **🎯 ローカル本番相当到達（2026-02-18）**: データ（6,489店舗/92,587名/14,880口コミ）＋フロント全機能がローカルで動作。以降はUX改善・目視確認フェーズへ
+- **セラピスト統一スクレイピングパイプライン実装完了（2026-02-22）**:
+    - **背景と課題**: 2スクリプト体制（`batch_extract_therapist_info.py --new` + `scrape_failed_salons.py`）で運用が煩雑。`scrape_failed_salons.py`にdedup がなく複数回実行で重複INSERT。`--new`モードはtherapist_list_urlありサロンしか処理できなかった
+    - **Phase 1: source_url dedup追加**:
+        - `insert_therapist_new()` にINSERT前のsource_url存在チェック追加（全呼び出し元で自動dedup）
+        - `scrape_failed_salons.py` の `run_test()` Stage 3前に既存URL一括除外（不要なfetch+API呼び出し回避）
+        - `cmd_stage3_prepare()` にBatch API JSONL生成前のsource_url dedup追加
+    - **Phase 2: --newモードに3段階Haikuフロー統合**:
+        - `run_new()` を2パス構成に拡張:
+            1. therapist_list_url あり → 既存ヒューリスティックURL抽出 → Haiku個別抽出
+            2. therapist_list_url なし → 3段階Haikuフロー（TOP→一覧→個別） + 3Days CMS直接抽出 + single_page一括抽出 + Playwright fallback
+        - `scrape_failed_salons.py` の関数を遅延importで再利用（循環import回避）
+        - DB_DSN を環境変数 `DATABASE_URL` 対応（VPS/ローカル自動切り替え）
+        - 全フローで source_url dedup保証
+    - **統合後の運用**: `python batch_extract_therapist_info.py --new` 1コマンドで全6,489サロンを処理可能
+    - **`scrape_failed_salons.py`**: テスト用・Batch API用として維持（非推奨化予定）
 - **セラピスト情報Haiku一括抽出 VPS本番実行中（2026-02-19 16:33〜）**:
     - **VPS稼働状況**: 5並列tmux (hw1-hw5) で95,340件に対してHaiku抽出実行中
         - W1: `--start-id 0 --end-id 20000` (hw1, haiku_w1.log)
@@ -453,8 +468,9 @@ ssh -i /Users/agatha/Downloads/indexer.pem root@220.158.18.6 "sudo -u postgres p
 │       ├── fetch_utils.py         ← 共通fetchモジュール（HTTPS→HTTPフォールバック付き）
 │       ├── name_extractor.py      ← セラピスト情報抽出モジュール（全フィールドHaiku一括抽出）
 │       ├── html_cache_utils.py    ← 共通HTMLキャッシュモジュール（gzip圧縮、カテゴリ別）
-│       ├── batch_extract_therapist_info.py ← Haiku一括抽出バッチ（--existing/--new、画像URL抽出対応）
+│       ├── batch_extract_therapist_info.py ← 統一スクレイピングパイプライン（--existing UPDATE/--new 全サロン差分INSERT、3段階Haiku+dedup統合）
 │       ├── batch_download_images.py ← 画像DL→Supabase Storage保存→URL差し替え
+│       ├── scrape_failed_salons.py    ← 失敗サロン3段階Haikuパイプライン（テスト用/Batch API用、--newに統合済み）
 │       ├── clean_therapist_names.py ← 名前クレンジング＋source_url重複解消
 │       ├── classify_failures.py   ← 失敗サロン理由分類スクリプト
 │       ├── salon_diagnose.py      ← 診断CLIツール（diagnose/test-extract/rescrape/list-failed/list-patterns）
