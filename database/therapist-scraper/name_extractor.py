@@ -77,6 +77,8 @@ EXCLUDE_KEYWORDS = [
 EXCLUDE_EXACT = {
     "名前", "SNSSNS", "SNS", "SCHEDULE", "REVIEW", "REVIEWレビュー",
     "店長コメント", "募集", "あなたにオススメの女の子",
+    "NEW", "NEWFACE", "NEW FACE",
+    "秘密",
 }
 
 # ---------------------------------------------------------------------------
@@ -111,6 +113,8 @@ def clean_extracted_name(text: str) -> str:
     text = re.sub(r"【[^】]+】$", "", text)
     # "NEW FACE" 等のプレフィックス除去
     text = re.sub(r"^(NEW\s*FACE|新人)\s*", "", text, flags=re.IGNORECASE)
+    # 末尾の敬称除去（「さん」「ちゃん」「くん」）
+    text = re.sub(r"(さん|ちゃん|くん)$", "", text)
     return text.strip()
 
 
@@ -412,50 +416,20 @@ def _extract_llm_name_only(html: str, url: str, salon_name: str,
 # 全フィールド抽出（メインAPI）
 # ---------------------------------------------------------------------------
 
-def extract_therapist_info(html: str, salon_name: str = "", salon_display: str = "",
-                           url: str = "",
-                           model: str = "claude-haiku-4-5-20251001") -> dict | None:
+def build_extract_prompt(html: str, salon_name: str = "", salon_display: str = "",
+                         url: str = "") -> str:
     """
-    セラピスト個別ページHTMLから全フィールドを1回のHaiku呼び出しで抽出。
-
-    抽出フィールド: name, age, height, cup, bust, waist, hip,
-                   blood_type, profile_text, image_urls
-
-    Args:
-        html: ページHTML（フルページ）
-        salon_name: サロン名（除外用）
-        salon_display: サロン表示名（除外用）
-        url: ページURL
-        model: LLMモデル名
-
-    Returns:
-        {
-            "name": "水川あすみ",
-            "age": 23,
-            "height": 158,
-            "cup": "D",
-            "bust": 86,
-            "waist": 57,
-            "hip": 85,
-            "blood_type": "O",
-            "profile_text": "スレンダーな美人系で...",
-            "image_urls": ["https://example.com/photo1.jpg"],
-            "input_tokens": 1600,
-            "output_tokens": 150,
-        }
-        or None (抽出失敗)
+    Haiku抽出用プロンプトを構築（APIコールなし）。
+    Batch API / 直接API両方から使える。
     """
-    # ページ全体を軽量化
     if clean_html_for_llm:
         cleaned = clean_html_for_llm(html, url, max_chars=5000)
     else:
         cleaned = html[:5000]
 
-    # 候補テキストも収集
     cands = _collect_candidates(html)
     css_text = "\n".join(cands["css"]) if cands["css"] else "(なし)"
 
-    # 画像候補を収集
     image_cands = collect_image_candidates(html, url)
     if image_cands:
         img_lines = []
@@ -476,7 +450,7 @@ def extract_therapist_info(html: str, salon_name: str = "", salon_display: str =
     else:
         image_section = "\n## 画像候補\nなし"
 
-    prompt = f"""このメンズエステセラピストのプロフィールページから情報を抽出してJSON形式で返してください。
+    return f"""このメンズエステセラピストのプロフィールページから情報を抽出してJSON形式で返してください。
 
 サロン名: {salon_name}
 ※サロン名（「{salon_name}」「{salon_display}」）はセラピストの名前ではありません。
@@ -530,28 +504,25 @@ JSONのみ出力。余計なテキストは不要。
 {{"name":"名前","age":23,"height":158,"cup":"D","bust":86,"waist":57,"hip":85,"blood_type":"O","profile_text":"紹介文...","image_urls":["URL1","URL2"]}}
 ```"""
 
+
+def parse_extract_response(result_text: str, salon_name: str = "",
+                           salon_display: str = "", url: str = "") -> dict | None:
+    """
+    Haikuレスポンステキストをパース＆バリデーション。
+    Batch API / 直接API両方から使える。
+    """
     try:
-        client = _get_anthropic_client()
-        resp = client.messages.create(
-            model=model,
-            max_tokens=800,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        result_text = resp.content[0].text.strip()
-        input_tokens = resp.usage.input_tokens
-        output_tokens = resp.usage.output_tokens
+        text = result_text.strip()
 
-        # JSON抽出（```json...``` ブロックにも対応）
-        json_match = re.search(r"```json\s*(.*?)\s*```", result_text, re.DOTALL)
+        json_match = re.search(r"```json\s*(.*?)\s*```", text, re.DOTALL)
         if json_match:
-            result_text = json_match.group(1)
-        # { で始まるJSONを探す
-        json_start = result_text.find("{")
-        json_end = result_text.rfind("}") + 1
+            text = json_match.group(1)
+        json_start = text.find("{")
+        json_end = text.rfind("}") + 1
         if json_start >= 0 and json_end > json_start:
-            result_text = result_text[json_start:json_end]
+            text = text[json_start:json_end]
 
-        data = json.loads(result_text)
+        data = json.loads(text)
 
         # name バリデーション
         name = data.get("name")
@@ -602,7 +573,6 @@ JSONのみ出力。余計なテキストは不要。
         # image_urls バリデーション
         imgs = data.get("image_urls")
         if isinstance(imgs, list):
-            # 絶対パス化 + 最大5枚
             validated = []
             for img_url in imgs[:5]:
                 if isinstance(img_url, str) and img_url.strip():
@@ -613,14 +583,45 @@ JSONのみ出力。余計なテキストは不要。
         else:
             data["image_urls"] = []
 
-        data["input_tokens"] = input_tokens
-        data["output_tokens"] = output_tokens
-
         return data
 
     except json.JSONDecodeError as e:
         log.warning(f"JSON parse error: {e} | raw: {result_text[:200]}")
         return None
+    except Exception as e:
+        log.warning(f"Parse error: {e}")
+        return None
+
+
+def extract_therapist_info(html: str, salon_name: str = "", salon_display: str = "",
+                           url: str = "",
+                           model: str = "claude-haiku-4-5-20251001") -> dict | None:
+    """
+    セラピスト個別ページHTMLから全フィールドを1回のHaiku呼び出しで抽出。
+
+    抽出フィールド: name, age, height, cup, bust, waist, hip,
+                   blood_type, profile_text, image_urls
+    """
+    prompt = build_extract_prompt(html, salon_name, salon_display, url)
+
+    try:
+        client = _get_anthropic_client()
+        resp = client.messages.create(
+            model=model,
+            max_tokens=800,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        result_text = resp.content[0].text.strip()
+        input_tokens = resp.usage.input_tokens
+        output_tokens = resp.usage.output_tokens
+
+        data = parse_extract_response(result_text, salon_name, salon_display, url)
+        if data is not None:
+            data["input_tokens"] = input_tokens
+            data["output_tokens"] = output_tokens
+
+        return data
+
     except Exception as e:
         log.warning(f"LLM extraction error: {e}")
         return None
