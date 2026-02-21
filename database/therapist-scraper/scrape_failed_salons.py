@@ -49,12 +49,19 @@ load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
 sys.path.insert(0, os.path.dirname(__file__))
 from fetch_utils import fetch_page
 from html_cache_utils import HtmlCache
-from therapist_scraper import clean_html_for_llm
+from bs4 import BeautifulSoup, Comment
 from name_extractor import (
     build_extract_prompt, parse_extract_response,
     collect_image_candidates, extract_therapist_info,
 )
 from batch_extract_therapist_info import insert_therapist_new
+
+# Playwright はオプショナル（未インストールなら従来動作）
+try:
+    from playwright_fetch import fetch_page_playwright, cleanup_browser
+    HAS_PLAYWRIGHT = True
+except ImportError:
+    HAS_PLAYWRIGHT = False
 
 _cache = HtmlCache()
 
@@ -78,12 +85,351 @@ log = logging.getLogger(__name__)
 
 
 # =============================================================================
+# Tiered Fetch: requests優先 → Playwright fallback
+# =============================================================================
+
+def is_thin_html(html: str) -> bool:
+    """
+    HTMLがJS描画前のシェル（薄いHTML）かどうか判定。
+
+    - visible text 200文字未満 → 薄い
+    - JSフレームワークシェル（#root, #app, __next）+ visible 500文字未満 → 薄い
+    """
+    from bs4 import BeautifulSoup
+
+    soup = BeautifulSoup(html, 'html.parser')
+    for tag in soup(['script', 'style', 'noscript', 'link', 'meta']):
+        tag.decompose()
+    visible_text = soup.get_text(strip=True)
+
+    if len(visible_text) < 200:
+        return True
+
+    if re.search(r'<div\s+id=["\'](?:root|app|__next)["\']>\s*</div>', html):
+        if len(visible_text) < 500:
+            return True
+
+    return False
+
+
+def fetch_page_smart(url: str, label: str = "") -> str | None:
+    """
+    requests優先 → 薄いHTMLならPlaywrightフォールバック。
+
+    Stage 1（TOP）と Stage 2（一覧）で使用。
+    Playwright未インストールなら従来の fetch_page() のみ。
+    """
+    html = fetch_page(url)
+
+    if html and not is_thin_html(html):
+        return html
+
+    if not HAS_PLAYWRIGHT:
+        if html and is_thin_html(html):
+            log.info(f"  {label}Thin HTML detected but Playwright unavailable")
+        return html
+
+    reason = "fetch failed" if not html else "thin HTML detected"
+    log.info(f"  {label}{reason} → Playwright fallback: {url}")
+    pw_html = fetch_page_playwright(url)
+    if pw_html:
+        log.info(f"  {label}Playwright OK ({len(pw_html):,} chars)")
+        return pw_html
+
+    log.info(f"  {label}Playwright also failed")
+    return html  # requests版のHTMLがあればそれを返す（Noneかもしれない）
+
+
+# =============================================================================
+# リンク抽出（clean_html_for_llmで落ちるナビゲーション対策）
+# =============================================================================
+
+def extract_page_links(html: str, base_url: str, max_links: int = 50) -> str:
+    """HTMLから内部リンク一覧を抽出。clean_html_for_llmで消えるナビを補完する。"""
+    from bs4 import BeautifulSoup
+
+    soup = BeautifulSoup(html, 'html.parser')
+    base_domain = urlparse(base_url).netloc.lower()
+
+    links = []
+    seen = set()
+    for a in soup.find_all('a', href=True):
+        href = a['href'].strip()
+        if not href or href.startswith(('javascript:', 'mailto:', 'tel:')):
+            continue
+
+        full_url = urljoin(base_url, href)
+        if full_url in seen:
+            continue
+        seen.add(full_url)
+
+        # 内部リンクのみ（外部サイトは除外）
+        link_domain = urlparse(full_url).netloc.lower()
+        if link_domain != base_domain:
+            continue
+
+        text = a.get_text(strip=True)[:60]
+        links.append(f"  {text} → {full_url}" if text else f"  {full_url}")
+
+    if not links:
+        return ""
+    return "\n## ページ内リンク一覧（内部リンクのみ）\n" + "\n".join(links[:max_links])
+
+
+# =============================================================================
+# HTML軽量化（Stage 1/2用: nav/header/footer保持版）
+# =============================================================================
+
+def clean_html_full(html: str, base_url: str, max_chars: int = 100_000) -> str:
+    """Stage 1/2用: ナビ構造保持・大容量のHTML軽量化。
+
+    clean_html_for_llm() との違い:
+    - nav/header/footer を保持（セラピスト一覧へのリンクがここにある）
+    - max_chars を100Kに拡大（情報欠落を最小化）
+    """
+    soup = BeautifulSoup(html, 'html.parser')
+
+    # script/style/noscriptのみ除去（nav/header/footerは保持！）
+    for tag in soup(['script', 'style', 'noscript', 'iframe', 'svg']):
+        tag.decompose()
+    for comment in soup.find_all(string=lambda s: isinstance(s, Comment)):
+        comment.extract()
+
+    # リンクをマークダウン形式に
+    for a in soup.find_all('a', href=True):
+        href = urljoin(base_url, a['href'])
+        text = a.get_text(strip=True)
+        if text and href.startswith('http'):
+            a.replace_with(f"[{text}]({href})")
+
+    # imgのsrcを保持
+    for img in soup.find_all('img'):
+        src = img.get('src') or img.get('data-src') or img.get('data-lazy-src') or ''
+        if src:
+            src = urljoin(base_url, src)
+            alt = img.get('alt', '')
+            img.replace_with(f"[IMG:{alt}]({src})")
+        else:
+            img.decompose()
+
+    text = soup.get_text(separator='\n')
+    lines = [line.strip() for line in text.split('\n') if line.strip()]
+    text = '\n'.join(lines)
+
+    if len(text) > max_chars:
+        text = text[:max_chars] + "\n[...truncated...]"
+    return text
+
+
+# =============================================================================
+# URLバリデーション
+# =============================================================================
+
+_STATIC_EXTENSIONS = frozenset([
+    '.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.ico',
+    '.css', '.js', '.pdf', '.zip', '.mp4', '.mp3',
+    '.woff', '.woff2', '.ttf', '.eot',
+])
+
+
+def is_valid_therapist_url(url: str, base_domain: str = "") -> bool:
+    """URLがセラピストページとして妥当かバリデーション。
+
+    画像/CSS/JS等の静的アセットURLを除外する。
+    """
+    if not url or not url.startswith('http'):
+        return False
+
+    parsed = urlparse(url)
+    path_lower = parsed.path.lower()
+
+    # 静的アセット拡張子を除外
+    for ext in _STATIC_EXTENSIONS:
+        if path_lower.endswith(ext):
+            return False
+
+    # ドメインチェック（指定時）
+    if base_domain and parsed.netloc.lower() != base_domain:
+        return False
+
+    return True
+
+
+# =============================================================================
+# 3Days CMS 検出・直接抽出（Alpine.js + S3 data.js パターン）
+# =============================================================================
+
+_3DAYS_S3_RE = re.compile(
+    r'src=["\']'
+    r'(https?://3days-cms-bucket-prod\.s3[^"\']+/data\.js)'
+    r'["\']'
+)
+
+
+def detect_3days_cms(html: str) -> str | None:
+    """3Days CMS を検出し、data.js の URL を返す。非該当なら None。
+
+    検出条件:
+    - x-data="shopData" が HTML内に存在
+    - 3days-cms-bucket-prod.s3... の data.js <script> タグ
+    """
+    if 'x-data="shopData"' not in html and "x-data='shopData'" not in html:
+        return None
+
+    m = _3DAYS_S3_RE.search(html)
+    if m:
+        return m.group(1)
+    return None
+
+
+def parse_3days_data_js(js_text: str, base_url: str, salon_name: str = "") -> list[dict]:
+    """3Days CMS の data.js から全セラピスト情報を抽出。
+
+    data.js は var shopData = {...} の JS オブジェクトリテラル。
+    therapists 配列内の各エントリから名前・年齢・身長・スリーサイズ・血液型・紹介文・画像を取得。
+    """
+    therapists = []
+
+    # therapists配列全体を抽出
+    m = re.search(r'therapists\s*:\s*\[', js_text)
+    if not m:
+        return []
+
+    # therapists配列の開始位置から閉じ括弧までを取得
+    start = m.start()
+    bracket_count = 0
+    arr_start = js_text.index('[', start)
+    for i in range(arr_start, len(js_text)):
+        if js_text[i] == '[':
+            bracket_count += 1
+        elif js_text[i] == ']':
+            bracket_count -= 1
+            if bracket_count == 0:
+                arr_text = js_text[arr_start:i+1]
+                break
+    else:
+        return []
+
+    # 各セラピストオブジェクト {} を個別に処理
+    # JSONではなくJSオブジェクトリテラルなので正規表現で抽出
+    obj_pattern = re.compile(r'\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}')
+
+    for obj_match in obj_pattern.finditer(arr_text):
+        obj_text = obj_match.group()
+
+        def extract_field(field_name: str) -> str | None:
+            # key:"value" or key:'value' or key: "value"
+            pat = re.compile(rf'{field_name}\s*:\s*["\']([^"\']*)["\']')
+            m = pat.search(obj_text)
+            return m.group(1).strip() if m else None
+
+        name = extract_field("therapistName")
+        if not name:
+            continue
+
+        # ゴミデータフィルタ（体験枠、店長、OPEN告知等）
+        _junk = name.strip()
+        if not _junk:
+            continue
+        # 絵文字で囲まれた体験/イベント枠
+        if re.search(r'[💛🔥❕✨🎉]', _junk):
+            continue
+        # 店長/オーナー/スタッフ
+        if re.search(r'(店長|オーナー|スタッフ|manager)', _junk, re.IGNORECASE):
+            continue
+        # OPEN/オープン告知
+        if re.search(r'(OPEN|オープン|開店|求人|募集)', _junk, re.IGNORECASE):
+            continue
+        # 「体験」のみ
+        if re.search(r'^体験', _junk):
+            continue
+
+        # サロン名フィルタ
+        if salon_name and name == salon_name:
+            continue
+
+        age_str = extract_field("age")
+        height_str = extract_field("height")
+        blood_type = extract_field("bloodType")
+        comment = extract_field("comment")
+        three_size = extract_field("threeSize")
+
+        # age/height を数値化
+        age = None
+        if age_str and age_str.isdigit():
+            age = int(age_str)
+            if age < 18 or age > 70:
+                age = None
+
+        height = None
+        if height_str and height_str.isdigit():
+            height = int(height_str)
+            if height < 130 or height > 200:
+                height = None
+
+        # スリーサイズ解析: "82(D)-57-84" or "85-58-86"
+        cup = None
+        bust = None
+        waist = None
+        hip = None
+        if three_size:
+            size_m = re.match(
+                r'(\d+)\(?([A-Ka-k])?\)?\s*[-/]\s*(\d+)\s*[-/]\s*(\d+)',
+                three_size,
+            )
+            if size_m:
+                bust = int(size_m.group(1))
+                if size_m.group(2):
+                    cup = size_m.group(2).upper()
+                waist = int(size_m.group(3))
+                hip = int(size_m.group(4))
+
+        # 画像URL
+        image_urls = []
+        for img_key in ["img1", "img2", "img3", "img4", "img5", "img6"]:
+            img_url = extract_field(img_key)
+            if img_url and img_url.startswith("http"):
+                image_urls.append(img_url)
+                if len(image_urls) >= 3:
+                    break
+
+        # source_url
+        therapist_url_path = extract_field("url")
+        source_url = None
+        if therapist_url_path:
+            source_url = urljoin(base_url, therapist_url_path)
+
+        # blood_type正規化
+        if blood_type:
+            blood_type = blood_type.replace("型", "").strip().upper()
+            if blood_type not in ("A", "B", "O", "AB"):
+                blood_type = None
+
+        therapists.append({
+            "name": name,
+            "age": age,
+            "height": height,
+            "cup": cup,
+            "bust": bust,
+            "waist": waist,
+            "hip": hip,
+            "blood_type": blood_type,
+            "profile_text": comment[:200] if comment else None,
+            "image_urls": image_urls,
+            "source_url": source_url or base_url,
+        })
+
+    return therapists
+
+
+# =============================================================================
 # Stage 1 プロンプト: TOPページ分析
 # =============================================================================
 
 def build_stage1_prompt(html: str, salon_name: str, url: str) -> str:
     """TOPページからセラピスト関連URLを探すプロンプト"""
-    cleaned = clean_html_for_llm(html, url, max_chars=8000)
+    cleaned = clean_html_full(html, url)
+    link_list = extract_page_links(html, url)
 
     return f"""このメンズエステサロンのウェブページを分析し、セラピスト/スタッフに関するURLを探してください。
 
@@ -92,6 +438,7 @@ URL: {url}
 
 ページ内容（軽量化済み）:
 {cleaned}
+{link_list}
 
 ## 探すべきもの
 1. セラピスト/スタッフ一覧ページのURL（別ページにある場合）
@@ -106,12 +453,20 @@ URL: {url}
 - ページ自体にセラピスト一覧が掲載されている場合は single_page
 - サロンのサイトではない/閉店/セラピスト情報が一切ない場合は no_therapists
 
+## individual_urls について
+- 画像URL（.jpg, .png等）は含めない
+
 ## page_type の判定基準
 - "listing": セラピスト一覧ページへのリンクが見つかった（listing_urlに設定）
 - "has_individuals": 個別プロフィールページへのリンクが直接見つかった（individual_urlsに設定）
 - "single_page": 現在のページ自体にセラピスト情報（名前+写真）が複数人分ある
 - "age_gate": 年齢確認ページ。実際のサイトURLを redirect_url に設定
 - "no_therapists": セラピスト情報が見つからない/サイトダウン
+
+## 重要: listing_url は常に返す
+- page_type が "has_individuals" でも、セラピスト一覧ページへのナビリンクが存在するなら listing_url に設定すること
+- トップページには「本日出勤」「おすすめ」等の一部セラピストしか載っていないことが多い。一覧ページには全員載っている
+- listing_url と individual_urls は排他ではない。両方見つかれば両方返す
 
 ## 出力: JSONのみ（余計なテキスト不要）
 {{"page_type":"listing|has_individuals|single_page|age_gate|no_therapists","listing_url":"一覧ページURL or null","individual_urls":["個別URL1","URL2"],"redirect_url":"エイジゲート先URL or null","notes":"判断理由1文"}}"""
@@ -140,7 +495,7 @@ def parse_stage1_response(result_text: str) -> dict | None:
             page_type = "no_therapists"
 
         listing_url = data.get("listing_url")
-        if listing_url and not listing_url.startswith("http"):
+        if listing_url and not is_valid_therapist_url(listing_url):
             listing_url = None
 
         individual_urls = data.get("individual_urls") or []
@@ -148,7 +503,7 @@ def parse_stage1_response(result_text: str) -> dict | None:
             individual_urls = []
         individual_urls = [
             u for u in individual_urls
-            if isinstance(u, str) and u.startswith("http")
+            if isinstance(u, str) and is_valid_therapist_url(u)
         ]
 
         redirect_url = data.get("redirect_url")
@@ -173,7 +528,7 @@ def parse_stage1_response(result_text: str) -> dict | None:
 
 def build_single_page_prompt(html: str, salon_name: str, url: str) -> str:
     """1ページに複数セラピストが掲載されているケースの抽出プロンプト"""
-    cleaned = clean_html_for_llm(html, url, max_chars=12000)
+    cleaned = clean_html_full(html, url)
 
     image_cands = collect_image_candidates(html, url)
     if image_cands:
@@ -315,6 +670,25 @@ def get_failed_salons(limit: int | None = None) -> list[dict]:
     return rows
 
 
+def get_salons_by_ids(salon_ids: list[int]) -> list[dict]:
+    """指定されたsalon_idのサロン情報を取得（セラピスト有無に関わらず）"""
+    conn = psycopg2.connect(DB_DSN)
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+    cur.execute("""
+        SELECT s.id AS salon_id, s.name AS salon_name,
+               s.display_name AS salon_display,
+               s.official_url
+        FROM salons s
+        WHERE s.id = ANY(%s)
+          AND s.official_url IS NOT NULL
+        ORDER BY s.id
+    """, (salon_ids,))
+    rows = cur.fetchall()
+    conn.close()
+    return rows
+
+
 # =============================================================================
 # Haiku API呼び出し（テストモード用）
 # =============================================================================
@@ -329,11 +703,15 @@ def haiku_analyze_page(html: str, salon_name: str, url: str) -> dict | None:
     try:
         resp = client.messages.create(
             model=MODEL,
-            max_tokens=2000,
+            max_tokens=8000,
             messages=[{"role": "user", "content": prompt}],
         )
         result_text = resp.content[0].text.strip()
-        log.debug(f"  Haiku response: {result_text[:200]}")
+        stop_reason = resp.stop_reason
+        log.debug(f"  Haiku response ({stop_reason}): {result_text[:200]}")
+
+        if stop_reason == "max_tokens":
+            log.warning(f"  Haiku max_tokens reached — response may be truncated")
 
         parsed = parse_stage1_response(result_text)
         if parsed:
@@ -349,10 +727,11 @@ def haiku_analyze_page(html: str, salon_name: str, url: str) -> dict | None:
 # --test モード: N件テスト（直接API、CSV出力）
 # =============================================================================
 
-def run_test(n: int):
-    """N件の失敗サロンをテスト（直接API呼び出し）"""
-    salons = get_failed_salons(limit=n)
-    log.info(f"テストモード: {len(salons)} サロン")
+def run_test(salons: list[dict], csv_path: str | None = None):
+    """テスト実行（直接API呼び出し）"""
+    if csv_path is None:
+        csv_path = os.path.join(SCRIPT_DIR, "failed_salons_test_result.csv")
+    log.info(f"テストモード: {len(salons)} サロン → {csv_path}")
 
     results = []
     stats = {
@@ -377,25 +756,58 @@ def run_test(n: int):
         row = {
             "salon_id": sid, "salon_name": name, "official_url": url,
             "page_type": "", "listing_url": "", "individual_count": 0,
-            "therapists_found": 0, "status": "", "notes": "",
+            "therapists_found": 0, "status": "", "fail_reason": "", "notes": "",
         }
 
         # --- Stage 1: TOPページ分析 ---
-        html = fetch_page(url)
+        html = fetch_page_smart(url, label="Stage1 TOP: ")
         if not html:
             log.info("  fetch失敗")
             stats["fetch_failed"] += 1
             row["status"] = "FETCH_FAILED"
+            row["fail_reason"] = "domain_dead"
             results.append(row)
             continue
 
         _cache.save("salon_top", sid, html)
+
+        # --- 3Days CMS 直接抽出（LLM不要、$0）---
+        data_js_url = detect_3days_cms(html)
+        if data_js_url:
+            log.info(f"  3Days CMS detected → {data_js_url}")
+            js_text = fetch_page(data_js_url)
+            if js_text:
+                therapists = parse_3days_data_js(js_text, url, salon_name=name)
+                log.info(f"  3Days CMS: {len(therapists)} 名抽出")
+
+                row["page_type"] = "3days_cms"
+                row["notes"] = f"3Days CMS direct extraction from data.js"
+                row["individual_count"] = len(therapists)
+
+                therapist_count = 0
+                for t_data in therapists:
+                    t_id = insert_therapist_new(cur, sid, t_data)
+                    if t_id:
+                        therapist_count += 1
+                        log.info(f"    → {t_data['name']} (id={t_id})")
+                    else:
+                        log.info(f"    → {t_data['name']} (INSERT失敗/重複)")
+
+                stats["therapists_inserted"] += therapist_count
+                row["therapists_found"] = therapist_count
+                row["status"] = "OK" if therapist_count > 0 else "NO_DATA"
+                results.append(row)
+                conn.commit()
+                continue
+            else:
+                log.info(f"  3Days CMS data.js fetch失敗 → Haiku fallback")
 
         result1 = haiku_analyze_page(html, name, url)
         if not result1:
             log.info("  Haiku分析失敗")
             stats["no_therapists"] += 1
             row["status"] = "ANALYZE_FAILED"
+            row["fail_reason"] = "haiku_parse_error"
             results.append(row)
             continue
 
@@ -446,6 +858,55 @@ def run_test(n: int):
             individual_urls = result1.get("individual_urls", [])
             stats["has_individuals"] += 1
 
+            # listing_url もあれば一覧ページからURLをマージ（トップは一部しか載せない）
+            listing_url_extra = result1.get("listing_url")
+            if listing_url_extra:
+                log.info(f"  has_individuals + listing_url → 一覧ページもfetch: {listing_url_extra}")
+                row["listing_url"] = listing_url_extra
+                list_html = fetch_page_smart(listing_url_extra, label="Stage2 LIST(補完): ")
+                if list_html:
+                    _cache.save("salon_list", sid, list_html)
+
+                    # 3Days CMS チェック
+                    list_data_js_url = detect_3days_cms(list_html)
+                    if list_data_js_url:
+                        log.info(f"  一覧ページ: 3Days CMS detected → {list_data_js_url}")
+                        js_text = fetch_page(list_data_js_url)
+                        if js_text:
+                            therapists = parse_3days_data_js(js_text, listing_url_extra, salon_name=name)
+                            log.info(f"  3Days CMS (一覧): {len(therapists)} 名抽出")
+                            therapist_count = 0
+                            for t_data in therapists:
+                                t_id = insert_therapist_new(cur, sid, t_data)
+                                if t_id:
+                                    therapist_count += 1
+                                    log.info(f"    → {t_data['name']} (id={t_id})")
+                            stats["therapists_inserted"] += therapist_count
+                            row["therapists_found"] = therapist_count
+                            row["individual_count"] = len(therapists)
+                            row["page_type"] = "3days_cms"
+                            row["status"] = "OK" if therapist_count > 0 else "NO_DATA"
+                            results.append(row)
+                            conn.commit()
+                            continue
+                    else:
+                        # Haiku で一覧ページから個別URL抽出
+                        result2 = haiku_analyze_page(list_html, name, listing_url_extra)
+                        if result2:
+                            stats["total_input_tokens"] += result2.get("input_tokens", 0)
+                            stats["total_output_tokens"] += result2.get("output_tokens", 0)
+                            extra_urls = result2.get("individual_urls", [])
+                            if extra_urls:
+                                # トップページURLと一覧ページURLをマージ（重複排除）
+                                existing = set(individual_urls)
+                                merged_count = 0
+                                for u in extra_urls:
+                                    if u not in existing:
+                                        individual_urls.append(u)
+                                        existing.add(u)
+                                        merged_count += 1
+                                log.info(f"  一覧ページから +{merged_count} URL追加 → 合計 {len(individual_urls)}")
+
         elif page_type == "listing":
             listing_url = result1.get("listing_url")
             row["listing_url"] = listing_url or ""
@@ -454,9 +915,37 @@ def run_test(n: int):
             if listing_url:
                 # --- Stage 2: 一覧ページ分析 ---
                 log.info(f"  Stage 2: {listing_url}")
-                list_html = fetch_page(listing_url)
+                list_html = fetch_page_smart(listing_url, label="Stage2 LIST: ")
                 if list_html:
                     _cache.save("salon_list", sid, list_html)
+
+                    # Stage 2 でも 3Days CMS チェック
+                    list_data_js_url = detect_3days_cms(list_html)
+                    if list_data_js_url:
+                        log.info(f"  Stage 2: 3Days CMS detected → {list_data_js_url}")
+                        js_text = fetch_page(list_data_js_url)
+                        if js_text:
+                            therapists = parse_3days_data_js(js_text, listing_url, salon_name=name)
+                            log.info(f"  3Days CMS (Stage 2): {len(therapists)} 名抽出")
+
+                            therapist_count = 0
+                            for t_data in therapists:
+                                t_id = insert_therapist_new(cur, sid, t_data)
+                                if t_id:
+                                    therapist_count += 1
+                                    log.info(f"    → {t_data['name']} (id={t_id})")
+                                else:
+                                    log.info(f"    → {t_data['name']} (INSERT失敗/重複)")
+
+                            stats["therapists_inserted"] += therapist_count
+                            row["therapists_found"] = therapist_count
+                            row["individual_count"] = len(therapists)
+                            row["page_type"] = "3days_cms"
+                            row["status"] = "OK" if therapist_count > 0 else "NO_DATA"
+                            results.append(row)
+                            conn.commit()
+                            continue
+
                     result2 = haiku_analyze_page(list_html, name, listing_url)
                     if result2:
                         stats["total_input_tokens"] += result2.get("input_tokens", 0)
@@ -523,12 +1012,14 @@ def run_test(n: int):
         elif page_type == "no_therapists":
             stats["no_therapists"] += 1
             row["status"] = "NO_THERAPISTS"
+            row["fail_reason"] = "no_therapist_info"
             results.append(row)
             continue
 
         else:
             stats["no_therapists"] += 1
             row["status"] = "UNKNOWN_TYPE"
+            row["fail_reason"] = "unknown_page_type"
             results.append(row)
             continue
 
@@ -536,6 +1027,7 @@ def run_test(n: int):
 
         if not individual_urls:
             row["status"] = "NO_URLS"
+            row["fail_reason"] = "no_valid_urls"
             results.append(row)
             continue
 
@@ -574,9 +1066,9 @@ def run_test(n: int):
 
         # --- Stage 3: 個別ページ抽出 ---
         therapist_count = 0
-        for t_url in individual_urls[:30]:  # 上限30名
+        for t_url in individual_urls:
             log.info(f"    Stage 3: {t_url}")
-            t_html = fetch_page(t_url)
+            t_html = fetch_page_smart(t_url, label="Stage3: ")
             if not t_html:
                 log.info(f"      fetch失敗")
                 continue
@@ -616,12 +1108,11 @@ def run_test(n: int):
     conn.close()
 
     # CSV出力
-    csv_path = os.path.join(SCRIPT_DIR, "failed_salons_test_result.csv")
     with open(csv_path, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=[
             "salon_id", "salon_name", "official_url", "page_type",
             "listing_url", "individual_count", "therapists_found",
-            "status", "notes",
+            "status", "fail_reason", "notes",
         ])
         writer.writeheader()
         writer.writerows(results)
@@ -640,6 +1131,10 @@ def run_test(n: int):
     log.info(f"  入力トークン:    {stats['total_input_tokens']:,}")
     log.info(f"  出力トークン:    {stats['total_output_tokens']:,}")
     log.info(f"  CSV: {csv_path}")
+
+    # Playwright ブラウザ解放
+    if HAS_PLAYWRIGHT:
+        cleanup_browser()
 
 
 # =============================================================================
@@ -716,8 +1211,8 @@ def cmd_stage1_prepare(args):
             name = salon["salon_display"] or salon["salon_name"] or ""
             url = salon["official_url"]
 
-            # fetch
-            html = fetch_page(url)
+            # fetch (Playwright fallback for thin HTML)
+            html = fetch_page_smart(url, label=f"[{i+1}] ")
             if not html:
                 fetch_failed += 1
                 continue
@@ -730,7 +1225,7 @@ def cmd_stage1_prepare(args):
                 "custom_id": custom_id,
                 "params": {
                     "model": MODEL,
-                    "max_tokens": 2000,
+                    "max_tokens": 8000,
                     "messages": [{"role": "user", "content": prompt}],
                 }
             }
@@ -942,7 +1437,7 @@ def cmd_stage2_prepare(args):
             name = target["salon_name"]
             url = target["url"]
 
-            html = fetch_page(url)
+            html = fetch_page_smart(url, label=f"[{i+1}] ")
             if not html:
                 fetch_failed += 1
                 continue
@@ -955,7 +1450,7 @@ def cmd_stage2_prepare(args):
                 "custom_id": custom_id,
                 "params": {
                     "model": MODEL,
-                    "max_tokens": 2000,
+                    "max_tokens": 8000,
                     "messages": [{"role": "user", "content": prompt}],
                 }
             }
@@ -1101,7 +1596,7 @@ def cmd_stage3_prepare(args):
         for sid, info in salon_urls.items():
             salon_name = info["salon_name"]
             salon_display = info["salon_display"]
-            urls = info["urls"][:30]  # 上限30
+            urls = info["urls"]
 
             for t_url in urls:
                 url_count += 1
@@ -1251,6 +1746,8 @@ def main():
 
     parser.add_argument("--test", type=int, metavar="N",
                         help="N件テスト（直接API呼び出し、CSV出力）")
+    parser.add_argument("--retest", action="store_true",
+                        help="前回のCSV結果と同じサロンを再テスト（CSV→デスクトップ出力）")
     parser.add_argument("stage", nargs="?",
                         choices=["stage1", "stage2", "stage3"],
                         help="Batch APIステージ")
@@ -1263,8 +1760,25 @@ def main():
 
     args = parser.parse_args()
 
+    if args.retest:
+        # 前回CSVからsalon_idsを読み取り、同じサロンを再テスト
+        prev_csv = os.path.join(SCRIPT_DIR, "failed_salons_test_result.csv")
+        if not os.path.exists(prev_csv):
+            log.error(f"前回の結果CSVが見つかりません: {prev_csv}")
+            sys.exit(1)
+        salon_ids = []
+        with open(prev_csv, 'r', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                salon_ids.append(int(row['salon_id']))
+        salons = get_salons_by_ids(salon_ids)
+        desktop_csv = os.path.expanduser("~/Desktop/failed_salons_retest_v4_result.csv")
+        run_test(salons, csv_path=desktop_csv)
+        return
+
     if args.test:
-        run_test(args.test)
+        salons = get_failed_salons(limit=args.test)
+        run_test(salons)
         return
 
     if not args.stage or not args.action:
