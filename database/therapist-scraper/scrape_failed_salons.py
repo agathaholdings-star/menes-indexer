@@ -255,6 +255,133 @@ def is_valid_therapist_url(url: str, base_domain: str = "") -> bool:
     return True
 
 
+def _reanchor_url(url: str, official_url: str) -> str:
+    """LLMが返したURLのドメインを公式URLのドメインで上書き。パスは保持。
+
+    LLMがドメインをハルシネーションするケース対策（sh-gzs → sh-gzz 等）。
+    外部ドメイン（ranking-deli.jp等のポータル）はそのまま返す。
+    """
+    if not url or not official_url:
+        return url
+    parsed = urlparse(url)
+    official_parsed = urlparse(official_url)
+    official_domain = official_parsed.netloc.lower()
+    url_domain = parsed.netloc.lower()
+
+    # 完全一致ならそのまま
+    if url_domain == official_domain:
+        return url
+
+    # 明らかに別サービス（ポータル等）はそのまま
+    # ベースドメイン（TLD+1）が異なればスキップ
+    def _base_domain(d):
+        parts = d.split('.')
+        return '.'.join(parts[-2:]) if len(parts) >= 2 else d
+
+    if _base_domain(url_domain) != _base_domain(official_domain):
+        return url
+
+    # 同系ドメインだがtypo → 公式ドメインで上書き
+    from urllib.parse import urlunparse
+    return urlunparse(parsed._replace(
+        scheme=official_parsed.scheme or parsed.scheme,
+        netloc=official_parsed.netloc,
+    ))
+
+
+def _reanchor_stage1_urls(result: dict, official_url: str) -> dict:
+    """Stage 1/2 レスポンス内の全URLを公式ドメインで再アンカー"""
+    if not result:
+        return result
+
+    if result.get('listing_url'):
+        result['listing_url'] = _reanchor_url(result['listing_url'], official_url)
+
+    if result.get('individual_urls'):
+        result['individual_urls'] = [
+            _reanchor_url(u, official_url) for u in result['individual_urls']
+        ]
+
+    if result.get('redirect_url'):
+        result['redirect_url'] = _reanchor_url(result['redirect_url'], official_url)
+
+    return result
+
+
+def expand_individual_urls(html: str, base_url: str, seed_urls: list[str]) -> list[str]:
+    """LLMが返したindividual_urlsをヒントに、全HTMLから同パターンのURLを追加抽出。
+
+    clean_html_full() の100K切り詰めでLLMに見えなかったURLを補完する。
+    seed_urlsのURLパスパターン（共通プレフィックス or クエリキー）を学習し、
+    全HTMLの <a href> から同パターンのURLをマージ。
+
+    例: seed = ["?castid=155", "?castid=148"] → 全HTMLから ?castid= を持つURLを全抽出
+    例: seed = ["/therapist/3102", "/therapist/3098"] → /therapist/ 以下を全抽出
+    """
+    if not seed_urls or not html:
+        return seed_urls
+
+    base_domain = urlparse(base_url).netloc.lower()
+
+    # seed URLsからパターンを推定
+    patterns = set()
+    for u in seed_urls:
+        parsed = urlparse(u)
+        # クエリパラメータパターン (e.g., ?castid=)
+        if parsed.query:
+            key = parsed.query.split('=')[0]
+            patterns.add(('query', key))
+        # パスプレフィックスパターン (e.g., /therapist/, /cast/, /profile/)
+        parts = parsed.path.rstrip('/').rsplit('/', 1)
+        if len(parts) == 2 and parts[0]:
+            patterns.add(('path', parts[0] + '/'))
+
+    if not patterns:
+        return seed_urls
+
+    # 全HTMLからリンク抽出
+    soup = BeautifulSoup(html, 'html.parser')
+    existing = set(seed_urls)
+    added = []
+
+    for a in soup.find_all('a', href=True):
+        href = a['href'].strip()
+        if not href or href.startswith(('javascript:', 'mailto:', 'tel:', '#')):
+            continue
+
+        full_url = urljoin(base_url, href)
+
+        if full_url in existing:
+            continue
+
+        # 同一ドメインのみ
+        if urlparse(full_url).netloc.lower() != base_domain:
+            continue
+
+        # 静的アセット除外
+        if not is_valid_therapist_url(full_url):
+            continue
+
+        parsed_full = urlparse(full_url)
+        matched = False
+        for ptype, pval in patterns:
+            if ptype == 'query' and parsed_full.query.startswith(pval + '='):
+                matched = True
+                break
+            if ptype == 'path' and parsed_full.path.startswith(pval):
+                matched = True
+                break
+
+        if matched:
+            added.append(full_url)
+            existing.add(full_url)
+
+    if added:
+        log.info(f"  URL補完: seed {len(seed_urls)} + 追加 {len(added)} = {len(seed_urls) + len(added)}")
+
+    return seed_urls + added
+
+
 # =============================================================================
 # 3Days CMS 検出・直接抽出（Alpine.js + S3 data.js パターン）
 # =============================================================================
@@ -811,6 +938,9 @@ def run_test(salons: list[dict], csv_path: str | None = None):
             results.append(row)
             continue
 
+        # LLMドメインハルシネーション対策: URLを公式ドメインで再アンカー
+        _reanchor_stage1_urls(result1, url)
+
         stats["total_input_tokens"] += result1.get("input_tokens", 0)
         stats["total_output_tokens"] += result1.get("output_tokens", 0)
 
@@ -828,6 +958,7 @@ def run_test(salons: list[dict], csv_path: str | None = None):
                 _cache.save("salon_top", f"{sid}_redirected", html)
                 result1 = haiku_analyze_page(html, name, redirect_url)
                 if result1:
+                    _reanchor_stage1_urls(result1, redirect_url)
                     stats["total_input_tokens"] += result1.get("input_tokens", 0)
                     stats["total_output_tokens"] += result1.get("output_tokens", 0)
                     page_type = result1["page_type"]
@@ -893,6 +1024,7 @@ def run_test(salons: list[dict], csv_path: str | None = None):
                         # Haiku で一覧ページから個別URL抽出
                         result2 = haiku_analyze_page(list_html, name, listing_url_extra)
                         if result2:
+                            _reanchor_stage1_urls(result2, listing_url_extra)
                             stats["total_input_tokens"] += result2.get("input_tokens", 0)
                             stats["total_output_tokens"] += result2.get("output_tokens", 0)
                             extra_urls = result2.get("individual_urls", [])
@@ -948,6 +1080,7 @@ def run_test(salons: list[dict], csv_path: str | None = None):
 
                     result2 = haiku_analyze_page(list_html, name, listing_url)
                     if result2:
+                        _reanchor_stage1_urls(result2, listing_url)
                         stats["total_input_tokens"] += result2.get("input_tokens", 0)
                         stats["total_output_tokens"] += result2.get("output_tokens", 0)
                         individual_urls = result2.get("individual_urls", [])
@@ -1022,6 +1155,10 @@ def run_test(salons: list[dict], csv_path: str | None = None):
             row["fail_reason"] = "unknown_page_type"
             results.append(row)
             continue
+
+        # --- URL補完: 全HTMLから同パターンのURLを追加抽出 ---
+        if individual_urls:
+            individual_urls = expand_individual_urls(html, url, individual_urls)
 
         row["individual_count"] = len(individual_urls)
 

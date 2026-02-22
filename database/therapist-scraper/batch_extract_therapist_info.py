@@ -568,7 +568,8 @@ def _process_haiku_salon(cur, salon, args, stats, _shutdown_ref):
     from scrape_failed_salons import (
         fetch_page_smart, detect_3days_cms, parse_3days_data_js,
         haiku_analyze_page, haiku_extract_single_page,
-        is_valid_therapist_url,
+        is_valid_therapist_url, _reanchor_stage1_urls,
+        expand_individual_urls,
     )
 
     salon_id = salon['salon_id']
@@ -616,6 +617,8 @@ def _process_haiku_salon(cur, salon, args, stats, _shutdown_ref):
         stats['extract_failed'] = stats.get('extract_failed', 0) + 1
         return 0
 
+    _reanchor_stage1_urls(result1, url)
+
     stats['total_input_tokens'] = stats.get('total_input_tokens', 0) + result1.get('input_tokens', 0)
     stats['total_output_tokens'] = stats.get('total_output_tokens', 0) + result1.get('output_tokens', 0)
 
@@ -630,6 +633,7 @@ def _process_haiku_salon(cur, salon, args, stats, _shutdown_ref):
             _cache.save("salon_top", f"{salon_id}_redirected", html)
             result1 = haiku_analyze_page(html, salon_display, redirect_url)
             if result1:
+                _reanchor_stage1_urls(result1, redirect_url)
                 stats['total_input_tokens'] = stats.get('total_input_tokens', 0) + result1.get('input_tokens', 0)
                 stats['total_output_tokens'] = stats.get('total_output_tokens', 0) + result1.get('output_tokens', 0)
                 page_type = result1['page_type']
@@ -675,6 +679,7 @@ def _process_haiku_salon(cur, salon, args, stats, _shutdown_ref):
                 else:
                     result2 = haiku_analyze_page(list_html, salon_display, listing_url_extra)
                     if result2:
+                        _reanchor_stage1_urls(result2, listing_url_extra)
                         stats['total_input_tokens'] = stats.get('total_input_tokens', 0) + result2.get('input_tokens', 0)
                         stats['total_output_tokens'] = stats.get('total_output_tokens', 0) + result2.get('output_tokens', 0)
                         existing_set = set(individual_urls)
@@ -710,6 +715,7 @@ def _process_haiku_salon(cur, salon, args, stats, _shutdown_ref):
 
                 result2 = haiku_analyze_page(list_html, salon_display, listing_url)
                 if result2:
+                    _reanchor_stage1_urls(result2, listing_url)
                     stats['total_input_tokens'] = stats.get('total_input_tokens', 0) + result2.get('input_tokens', 0)
                     stats['total_output_tokens'] = stats.get('total_output_tokens', 0) + result2.get('output_tokens', 0)
                     individual_urls = result2.get('individual_urls', [])
@@ -756,6 +762,10 @@ def _process_haiku_salon(cur, salon, args, stats, _shutdown_ref):
         return 0
     else:
         return 0
+
+    # --- URL補完: 全HTMLから同パターンのURLを追加抽出 ---
+    if individual_urls:
+        individual_urls = expand_individual_urls(html, url, individual_urls)
 
     # --- individual_urls の dedup + Stage 3 ---
     if not individual_urls:

@@ -52,6 +52,15 @@
         - `scrape_failed_salons.py` の関数を遅延importで再利用（循環import回避）
         - DB_DSN を環境変数 `DATABASE_URL` 対応（VPS/ローカル自動切り替え）
         - 全フローで source_url dedup保証
+    - **Fix 1: LLMドメインハルシネーション対策（URL再アンカー）**:
+        - Haiku がURLのドメインを誤って返す問題（例: `sh-gzs.tokyo` → `sh-gzz.tokyo`）
+        - `_reanchor_url()`: LLM返却URLのドメインを公式URLのTLD+1と比較し、不一致なら公式ドメインで上書き（パスは保持）
+        - `_reanchor_stage1_urls()`: Stage 1結果のlisting_url/individual_urls全体に適用
+        - 両スクリプトの全`haiku_analyze_page()`呼び出し後に適用（計9箇所）
+    - **Fix 2: HTML切り詰めによるURL取りこぼし対策**:
+        - `clean_html_full()` max_chars=100Kで巨大ページが切り詰められ、LLMが一部のURLしか見えない問題
+        - `expand_individual_urls()`: LLMが返したseed URLsからパターン（query key: `?castid=` / path prefix: `/therapist/`）を検出し、全HTMLの`<a href>`から同パターンのURLを網羅的に収集
+        - 両スクリプトのStage 3ループ前に適用。マロアリ・タッハ(27→40人)等のケースで回収率向上
     - **統合後の運用**: `python batch_extract_therapist_info.py --new` 1コマンドで全6,489サロンを処理可能
     - **`scrape_failed_salons.py`**: テスト用・Batch API用として維持（非推奨化予定）
 - **セラピスト情報Haiku一括抽出 VPS本番実行中（2026-02-19 16:33〜）**:
