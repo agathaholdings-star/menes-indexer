@@ -8,6 +8,7 @@
 - コンテキスト使用率が80%を超えたら新チャットへの切り替えを提案すること
 - 画像を複数枚受け取った場合はコンテキスト消費が大きいことを意識すること
 - スクレイピング時は必ずHTMLをgzip圧縮でローカル保存すること（`html_cache/{id}.html.gz`）。抽出ロジック改善時に再fetchなしで再処理可能にするため。
+- **セラピスト抽出の成功判定**: 成功=有効name+有効source_urlでDB保存完了、抽出のみは成功扱いしない。
 
 ## 現在のステータス (2026-02-22 更新)
 
@@ -70,45 +71,18 @@
         - `clean_html_full()` max_chars=100Kで巨大ページが切り詰められ、LLMが一部のURLしか見えない問題
         - `expand_individual_urls()`: LLMが返したseed URLsからパターン（query key: `?castid=` / path prefix: `/therapist/`）を検出し、全HTMLの`<a href>`から同パターンのURLを網羅的に収集
         - 両スクリプトのStage 3ループ前に適用。マロアリ・タッハ(27→40人)等のケースで回収率向上
-    - **統合後の運用**: `python batch_extract_therapist_info.py --new` 1コマンドで全6,489サロンを処理可能
-    - **`scrape_failed_salons.py`**: テスト用・Batch API用として維持（非推奨化予定）
-- **セラピスト情報Haiku一括抽出 VPS本番実行中（2026-02-19 16:33〜）**:
-    - **VPS稼働状況**: 5並列tmux (hw1-hw5) で95,340件に対してHaiku抽出実行中
-        - W1: `--start-id 0 --end-id 20000` (hw1, haiku_w1.log)
-        - W2: `--start-id 20000 --end-id 40000` (hw2, haiku_w2.log)
-        - W3: `--start-id 40000 --end-id 60000` (hw3, haiku_w3.log)
-        - W4: `--start-id 60000 --end-id 80000` (hw4, haiku_w4.log)
-        - W5: `--start-id 80000 --end-id 999999` (hw5, haiku_w5.log)
-        - 推定コスト: ~$241（Haiku 4.5）、推定所要時間: ~18時間（明日2/20 昼頃完了見込み）
-    - **中間報告（2026-02-19 18:20、開始から1h45m）**:
-        - 処理済み: 8,940 / 95,340件（9.4%）
-        - UPDATE成功: 8,418件（94.2%）
-        - retired化: 504件（5.6%）— fetch失敗249件 + extract失敗114件
-        - name=null: 0件（Haikuの名前抽出精度は非常に高い）
-        - 全5ワーカー正常稼働中、エラーなし
-    - **監視コマンド**:
-        ```bash
-        # ログ確認
-        ssh -i ~/Downloads/indexer.pem root@220.158.18.6 "tail -5 /opt/scraper/haiku_w1.log"
-        # 全ワーカー状況
-        ssh -i ~/Downloads/indexer.pem root@220.158.18.6 "for i in 1 2 3 4 5; do echo \"=== W\$i ===\"; tail -1 /opt/scraper/haiku_w\$i.log; done"
-        # DB確認
-        ssh -i ~/Downloads/indexer.pem root@220.158.18.6 "sudo -u postgres psql -d menethe -c \"SELECT status, count(*) FROM therapists GROUP BY status;\""
-        # tmuxセッション確認
-        ssh -i ~/Downloads/indexer.pem root@220.158.18.6 "tmux list-sessions"
-        # 特定ワーカーに接続
-        ssh -i ~/Downloads/indexer.pem root@220.158.18.6 -t "tmux attach -t hw1"
-        ```
-    - **完了後の手順**:
-        1. DB確認: `SELECT status, count(*) FROM therapists GROUP BY status;`
-        2. VPSからpg_dumpでローカルに同期
-        3. ローカルで目視確認
-    - **スクリプト仕様（最終版）**:
+    - **正規運用（確定）**: 新規/既存失敗再処理は `python batch_extract_therapist_info.py --new` を唯一の実行入口とする。1コマンドで全6,489サロンの差分セラピスト発見・抽出・INSERT
+    - **`scrape_failed_salons.py`**: ⚠️ 検証/テスト専用（非推奨）。通常運用では使わない。Batch API JSONL生成・個別サロンデバッグ用途に限定
+- **セラピスト情報Haiku一括抽出（`--existing`モード）VPS実行済み（2026-02-19〜02-20）**:
+    - 5並列tmux (hw1-hw5) で95,340件に対してHaiku抽出を実行・完了
+    - 推定コスト: ~$241（Haiku 4.5）
+    - **スクリプト仕様**:
         - 常にfetch（キャッシュは保険用、判定には使わない）
         - fetch失敗 / Haiku name取得不可 → `status='retired'`（ゴミデータを残さない）
         - ドメインシャッフル + 1秒delay（同一サーバーへの連続アクセス防止）
         - チェックポイント: `batch_extract_existing_checkpoint_{start}_{end}.json`
         - SIGINT graceful shutdown対応
+    - **完了後の手順**: DB確認 → pg_dumpでローカル同期 → 目視確認
 - **セラピスト情報Haiku一括抽出 設計・テスト完了（2026-02-19）**:
     - **背景と課題**:
         - Phase②の名前抽出はh1/h2テキスト直取りのみで品質が低く、`repair_therapist_names.py`で事後修復14,988件を強いられた
@@ -146,11 +120,9 @@
         - cup: DBでは全部Noneだったのが全5件で抽出成功（E,C,E,D,C）
         - bust/waist/hip: ページに記載ある分は取得（記載なしはnull）
         - profile_text: DBでは全部空だったのが全5件で紹介文取得
-    - **本番実行の手順（次ステップ）**:
-        1. VPSで92,587件のsource_urlを再fetch → `html_cache/therapist/{id}.html.gz`に保存（~8時間、並列で短縮可）
-        2. キャッシュ済みHTMLに対してHaiku一括抽出 → 結果をDB UPDATE（name/age/height/cup/bust/waist/hip/blood_type/profile_text）
-        3. 推定コスト: **~$241**（Haiku 4.5）
-        4. `classify_failures.py`で2,977失敗サロンを分類
+    - **本番実行（✅ VPS実行済み 2026-02-19〜02-20）**:
+        - VPS 5並列でHaiku一括抽出 → DB UPDATE完了（~$241）
+        - `classify_failures.py`で2,977失敗サロンを分類済み
     - **本番実行スクリプト（✅ 実装完了 2026-02-19）**:
         - `batch_extract_therapist_info.py`: 2モード対応バッチ
             - `--existing`: 既存92,587件を再抽出（UPDATE）。Haikuがnull返却のフィールドは既存値維持
@@ -159,23 +131,14 @@
             - SIGINT graceful shutdown、`--dry-run`、`--batch-size`コミット間隔
         - `batch_therapist_data.py`: `insert_therapist()`に`cup`/`blood_type`カラム追加
         - マイグレーション `20260219000003`: `therapists`に`blood_type`カラム追加
-- **サロン紹介文バッチ生成 VPS collect実行中（2026-02-19 17:42〜）**:
-    - **目的**: 6,489サロンの紹介文（description/salon_overview）をSERP検索+スクレイピング→Sonnet Batch APIで生成。エリアページの一覧カード・サロン詳細ページで表示する
+- **サロン紹介文バッチ生成 VPS collect実行済み（2026-02-19〜）**:
+    - **目的**: 6,489サロンの紹介文（description/salon_overview）をSERP検索+スクレイピング→Sonnet Batch APIで生成
     - **スクリプト改修内容**:
         - DSNを環境変数`DATABASE_URL`対応（VPS/ローカル自動切り替え）
         - `description`と`salon_overview`を300字1本に統一（2フィールドに同じ値を書き込み）
         - SQLクエリからsalon_areas JOINを除去（salon_areasの多対多で11,648行に膨張していた → 6,489行に修正）
         - SERP検索クエリからarea_nameを除去（`{display_name} メンエス 口コミ`で検索）
-    - **VPS稼働状況**: tmux `desc`セッションで実行中
-        - 情報源: 公式サイト1ページ + SERP上位5ページ = 最大6ソース/サロン
-        - 1サロンあたり8,000〜12,600字の参考情報を収集
-        - ETA: ~22時間（hw1-hw5と同時実行のため若干遅い）
-    - **監視コマンド**:
-        ```bash
-        ssh -i ~/Downloads/indexer.pem root@220.158.18.6 "tail -5 /opt/scraper/desc_collect.log"
-        ssh -i ~/Downloads/indexer.pem root@220.158.18.6 "wc -l /opt/scraper/salon_descriptions_data/research_data.jsonl"
-        ```
-    - **collect完了後の手順**:
+    - **Batch API投入手順**:
         1. `python3 generate_salon_descriptions.py submit` → Sonnet Batch API投入（~$15）
         2. `python3 generate_salon_descriptions.py status` → バッチ状態確認
         3. `python3 generate_salon_descriptions.py download` → 結果取得＆DB書き込み
@@ -243,13 +206,9 @@
     12. **ローカルUX改善フェーズ** ← 🔄 継続中（2026-02-18〜）
         - ローカル環境を触りながらUI/UXの改善点を洗い出し・修正
         - データ品質の目視確認・微調整
-    12b. **セラピスト情報Haiku一括抽出** ← 🔄 VPS本番実行中（2026-02-19 16:33〜）
-        - **5並列tmux (hw1-hw5) で95,340件に対して実行中**
-        - 方式: 常にfetch → HTMLキャッシュ保存 → Haiku全フィールドJSON抽出 → DB UPDATE
-        - fetch失敗/name取得不可 → `status='retired'`（ゴミデータを残さない）
-        - ドメインシャッフル + 1秒delay（サーバー負荷分散）
-        - 推定コスト: **~$241**（Haiku 4.5）、推定: ~16時間
-        - 完了後: pg_dumpでVPS→ローカル同期 → 目視確認
+    12b. ~~セラピスト情報Haiku一括抽出（`--existing`）~~ → VPS実行済み（2026-02-19〜02-20、~$241）
+        - 5並列tmux (hw1-hw5) で95,340件に対してHaiku全フィールド抽出→DB UPDATE
+        - 完了後: pg_dumpでVPS→ローカル同期 → 目視確認が必要
     12c. **スクレイピング課題＋インフラ懸念の洗い出し** → 📝 記録済み・検討中（2026-02-20）
         - 画像URL抽出精度（🔴→🟢対応中）: Haiku画像パイプラインで解決予定（12d参照）
         - 画像の外部直リンク（🔴→🟢対応中）: Supabase Storageに移行予定（12d参照）
@@ -436,20 +395,32 @@ VPS（スクレイピングBot → DB更新）
 ssh -i /Users/agatha/Downloads/indexer.pem root@220.158.18.6
 ```
 
-### スクレイピング操作
+### 現行運用コマンド
 ```bash
-# ログ確認
-ssh -i /Users/agatha/Downloads/indexer.pem root@220.158.18.6 "tail -20 /opt/scraper/batch_scrape.log"
+# 正規運用: セラピスト差分スクレイピング（VPS）
+ssh -i ~/Downloads/indexer.pem root@220.158.18.6 "cd /opt/scraper && python3 batch_extract_therapist_info.py --new"
 
-# チェックポイント確認
-ssh -i /Users/agatha/Downloads/indexer.pem root@220.158.18.6 "cat /opt/scraper/batch_scrape_checkpoint.json | python3 -m json.tool | tail -10"
+# DB状況確認
+ssh -i ~/Downloads/indexer.pem root@220.158.18.6 "sudo -u postgres psql -d menethe -c 'SELECT count(*) FROM therapists;'"
 
-# 再開（停止した場合）
-ssh -i /Users/agatha/Downloads/indexer.pem root@220.158.18.6 "cd /opt/scraper && nohup python3 batch_scrape_shops.py --resume > /dev/null 2>&1 &"
+# pg_dumpでローカル同期
+ssh -i ~/Downloads/indexer.pem root@220.158.18.6 "sudo -u postgres pg_dump -d menethe --data-only -t therapists" > therapists_dump.sql
 
 # データ取り出し（本番移行時）
-ssh -i /Users/agatha/Downloads/indexer.pem root@220.158.18.6 "sudo -u postgres pg_dump -d menethe --data-only -t salons -t salon_areas" > salons_dump.sql
+ssh -i ~/Downloads/indexer.pem root@220.158.18.6 "sudo -u postgres pg_dump -d menethe --data-only -t salons -t salon_areas" > salons_dump.sql
 ```
+
+<details><summary>過去実行ログ用コマンド（初期サロンスクレイピング時に使用、現在は不要）</summary>
+
+```bash
+# ログ確認（batch_scrape_shops.py用 — 完了済み）
+ssh -i ~/Downloads/indexer.pem root@220.158.18.6 "tail -20 /opt/scraper/batch_scrape.log"
+
+# チェックポイント確認（batch_scrape_shops.py用 — 完了済み）
+ssh -i ~/Downloads/indexer.pem root@220.158.18.6 "cat /opt/scraper/batch_scrape_checkpoint.json | python3 -m json.tool | tail -10"
+```
+
+</details>
 
 ## ディレクトリ構造
 
@@ -486,9 +457,9 @@ ssh -i /Users/agatha/Downloads/indexer.pem root@220.158.18.6 "sudo -u postgres p
 │       ├── fetch_utils.py         ← 共通fetchモジュール（HTTPS→HTTPフォールバック付き）
 │       ├── name_extractor.py      ← セラピスト情報抽出モジュール（全フィールドHaiku一括抽出）
 │       ├── html_cache_utils.py    ← 共通HTMLキャッシュモジュール（gzip圧縮、カテゴリ別）
-│       ├── batch_extract_therapist_info.py ← 統一スクレイピングパイプライン（--existing UPDATE/--new 全サロン差分INSERT、3段階Haiku+dedup統合）
+│       ├── batch_extract_therapist_info.py ← 🔑 正規運用スクリプト（--existing UPDATE/--new 差分INSERT）。通常は `--new` で実行
 │       ├── batch_download_images.py ← 画像DL→Supabase Storage保存→URL差し替え
-│       ├── scrape_failed_salons.py    ← 失敗サロン3段階Haikuパイプライン（テスト用/Batch API用、--newに統合済み）
+│       ├── scrape_failed_salons.py    ← ⚠️ 検証/テスト専用（非推奨）。通常運用は batch_extract_therapist_info.py --new を使用
 │       ├── clean_therapist_names.py ← 名前クレンジング＋source_url重複解消
 │       ├── classify_failures.py   ← 失敗サロン理由分類スクリプト
 │       ├── salon_diagnose.py      ← 診断CLIツール（diagnose/test-extract/rescrape/list-failed/list-patterns）
@@ -922,13 +893,13 @@ Level 3: /sapporo/asahikawa-city/all/   ← 263市（市単位に絞り込んだ
    → 一覧ページからURLパターンでセラピスト個別URL抽出
    → 結果: salon_scrape_cache + scrape_log に記録
 
-② VPS: 成功店のセラピストデータ取得（~30時間）  ← 🔄 稼働中 (tmux phase2)
+② VPS: 成功店のセラピストデータ取得（~30時間）  ← ✅ 完了（79,639名）
    → ①でセラピストURL取得済みの3,708店が対象
    → 個別ページのHTMLから正規表現/BeautifulSoupでデータ抽出
    → LLMはフォールバックとしてのみ使用（成功率95.5%テスト済み）
    → therapistsテーブルに投入
 
-③ VPS: 失敗店のLLM再挑戦（~15時間、~$200）  ← 待ち
+③ VPS: 失敗店のLLM再挑戦（~15時間、~$200）  ← ✅ 完了（+15,701名=95,340名）
    → ①②で取れなかった3,976店が対象
    → batch_scrape_therapists.py --failed-only で実行
    → SmartScraperのフルパイプライン（ヒューリスティック→LLMフォールバック）
@@ -974,15 +945,7 @@ Level 3: /sapporo/asahikawa-city/all/   ← 263市（市単位に絞り込んだ
 
 残り2,977サロンはサイトダウン/セラピスト非公開で回収不可能。
 
-### VPS操作コマンド
-
-```bash
-# DB状況確認
-ssh -i ~/Downloads/indexer.pem root@220.158.18.6 "sudo -u postgres psql -d menethe -c 'SELECT count(*) FROM therapists;'"
-
-# pg_dumpでローカル同期
-ssh -i ~/Downloads/indexer.pem root@220.158.18.6 "sudo -u postgres pg_dump -d menethe --data-only -t therapists" > therapists_dump.sql
-```
+※ VPS操作コマンドは「スクレイピングVPS」セクションの「現行運用コマンド」に統合済み
 
 ## Smart Scraper（自己学習型セラピストスクレイパー）✅ 実装済み (2026-02-10)
 
