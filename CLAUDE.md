@@ -5,7 +5,7 @@
 - 1タスク完了ごとに git commit を提案すること
 - コミット時は CLAUDE.md に「何をやったか」と「その目的（なぜやったか）」を必ず書くこと。別チャットでも経緯と意図が追えるようにする
 - 大きな決定・進捗があれば CLAUDE.md を更新すること
-- やりとりが20往復を超えたら新チャットへの切り替えを提案すること
+- コンテキスト使用率が80%を超えたら新チャットへの切り替えを提案すること
 - 画像を複数枚受け取った場合はコンテキスト消費が大きいことを意識すること
 - スクレイピング時は必ずHTMLをgzip圧縮でローカル保存すること（`html_cache/{id}.html.gz`）。抽出ロジック改善時に再fetchなしで再処理可能にするため。
 
@@ -39,6 +39,15 @@
 - **Phase③完了（2026-02-18）**: VPS 5並列ワーカーで未取得3,603店をLLMスクレイピング → **+15,701名**取得（79,639→95,340名）。3,511サロンにセラピスト紐付き済み（54.1%）。残り2,977店はサイトダウン/セラピスト非公開
 - **ローカルSupabase再同期完了（2026-02-18）**: VPS Phase③データをpg_dumpでローカルに投入。名前クレンジング404件＋重複削除1,964件を適用 → ローカル**92,587名/3,506サロン**
 - **🎯 ローカル本番相当到達（2026-02-18）**: データ（6,489店舗/92,587名/14,880口コミ）＋フロント全機能がローカルで動作。以降はUX改善・目視確認フェーズへ
+- **プラットフォーム別スクレイピング戦略 実装完了（2026-02-22）**:
+    - **背景**: 40件テスト（20+20）でWix（JS描画+外部URL誤返却）、.click（JS描画）、Stage 3全件失敗時のfallback不在が判明
+    - **detect_platform()追加**: ドメイン+HTMLマーカーでWix/3Days CMS/Crayon/age_gateを早期検知（4パターン）
+    - **Stage 3全件失敗→single_page fallback**: 個別ページ抽出が全滅した場合、一覧ページ自体からsingle_page一括抽出。NO_URLS時も同様にfallback
+    - **Wix外部URL除外**: Wix検知時にestama.jp等の外部ドメインURLを除外し、single_pageへ誘導
+    - **.click Playwright強制**: .clickドメインの一覧ページはPlaywright強制取得（JS描画対策）
+    - **適用箇所**: `run_test()`と`_process_haiku_salon()`の両方
+    - **次ステップ**: サロン#43（快癒工房、Wix）等で実テスト → 成功率検証
+    - **検証コマンド**: `python3 -c "import scrape_failed_salons as s; salons = s.get_salons_by_ids([43]); s.run_test(salons, csv_path='/Users/agatha/Desktop/retest_wix.csv')"`
 - **セラピスト統一スクレイピングパイプライン実装完了（2026-02-22）**:
     - **背景と課題**: 2スクリプト体制（`batch_extract_therapist_info.py --new` + `scrape_failed_salons.py`）で運用が煩雑。`scrape_failed_salons.py`にdedup がなく複数回実行で重複INSERT。`--new`モードはtherapist_list_urlありサロンしか処理できなかった
     - **Phase 1: source_url dedup追加**:
