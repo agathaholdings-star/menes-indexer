@@ -605,15 +605,15 @@ def _process_haiku_salon(cur, salon, args, stats, _shutdown_ref):
     return salon_inserted
 
 
-def run_new(args):
-    """--new モード: 全サロン統一差分スクレイピング
+def run_full(args):
+    """--full モード: 全サロン統一スクレイピング
 
     全サロンを3段階Haikuフローで処理（ヒューリスティック経路は廃止）。
     Stage 1: TOPページ → page_type判定
     Stage 2: 一覧ページ → 個別URL抽出
     Stage 3: 個別ページ → Haiku全フィールド抽出 → INSERT
     """
-    cp_path = _checkpoint_path("new", args.start_id, args.end_id)
+    cp_path = _checkpoint_path("full", args.start_id, args.end_id)
     checkpoint = load_checkpoint(cp_path) if args.resume else _default_checkpoint()
     done_ids = set(checkpoint['done_ids'])  # done salon_ids
     stats = checkpoint['stats']
@@ -649,7 +649,7 @@ def run_new(args):
     all_salons = [s for s in all_salons if s['salon_id'] not in done_ids]
 
     total = len(all_salons)
-    log.info(f"--new モード: 対象サロン {total} 件 (全件Haikuフロー)")
+    log.info(f"--full モード: 対象サロン {total} 件 (全件Haikuフロー)")
 
     if not total:
         log.info("処理対象が0件のため終了")
@@ -697,7 +697,7 @@ def run_new(args):
 
     elapsed = timedelta(seconds=int(time.time() - start_time))
     log.info(f"\n{'=' * 60}")
-    log.info(f" --new 完了 ({elapsed})")
+    log.info(f" --full 完了 ({elapsed})")
     log.info(f"{'=' * 60}")
     log.info(f"  サロン処理:    {stats.get('processed', 0)} 件")
     log.info(f"  INSERT成功:    {stats.get('inserted', 0)} 件")
@@ -752,7 +752,7 @@ def main():
         log.info(f" ID範囲: [{args.start_id} .. {args.end_id})")
     log.info("=" * 60)
 
-    run_new(args)
+    run_full(args)
 
 
 if __name__ == '__main__':
