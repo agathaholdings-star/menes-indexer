@@ -316,40 +316,18 @@ def _reanchor_stage1_urls(result: dict, official_url: str) -> dict:
     return result
 
 
-def expand_individual_urls(html: str, base_url: str, seed_urls: list[str]) -> list[str]:
-    """LLMが返したindividual_urlsをヒントに、全HTMLから同パターンのURLを追加抽出。
+_LISTING_EXCLUDE_PREFIXES = frozenset([
+    '/category/', '/tag/', '/author/', '/wp-admin/', '/wp-content/',
+    '/wp-login/', '/wp-json/', '/wp-includes/', '/page/', '/feed/',
+    '/comments/', '/trackback/', '/xmlrpc', '/sitemap', '/cdn-cgi/',
+    '/cart/', '/checkout/', '/attachment/', '/?s=',
+])
 
-    clean_html_full() の100K切り詰めでLLMに見えなかったURLを補完する。
-    seed_urlsのURLパスパターン（共通プレフィックス or クエリキー）を学習し、
-    全HTMLの <a href> から同パターンのURLをマージ。
 
-    例: seed = ["?castid=155", "?castid=148"] → 全HTMLから ?castid= を持つURLを全抽出
-    例: seed = ["/therapist/3102", "/therapist/3098"] → /therapist/ 以下を全抽出
-    """
-    if not seed_urls or not html:
-        return seed_urls
-
+def _extract_urls_from_html(html: str, base_url: str, patterns: set, existing: set) -> list[str]:
+    """HTMLから指定パターンにマッチするURLを抽出（expand/paginationで共用）"""
     base_domain = urlparse(base_url).netloc.lower()
-
-    # seed URLsからパターンを推定
-    patterns = set()
-    for u in seed_urls:
-        parsed = urlparse(u)
-        # クエリパラメータパターン (e.g., ?castid=)
-        if parsed.query:
-            key = parsed.query.split('=')[0]
-            patterns.add(('query', key))
-        # パスプレフィックスパターン (e.g., /therapist/, /cast/, /profile/)
-        parts = parsed.path.rstrip('/').rsplit('/', 1)
-        if len(parts) == 2 and parts[0]:
-            patterns.add(('path', parts[0] + '/'))
-
-    if not patterns:
-        return seed_urls
-
-    # 全HTMLからリンク抽出
     soup = BeautifulSoup(html, 'html.parser')
-    existing = set(seed_urls)
     added = []
 
     for a in soup.find_all('a', href=True):
@@ -379,15 +357,198 @@ def expand_individual_urls(html: str, base_url: str, seed_urls: list[str]) -> li
             if ptype == 'path' and parsed_full.path.startswith(pval):
                 matched = True
                 break
+            if ptype == 'all_internal':
+                # ルートレベルURL: WP構造パスを除外し全内部リンクを候補にする
+                path_lower = parsed_full.path.lower()
+                if path_lower and path_lower != '/' and not any(
+                    path_lower.startswith(ep) for ep in _LISTING_EXCLUDE_PREFIXES
+                ):
+                    matched = True
+                    break
 
         if matched:
             added.append(full_url)
             existing.add(full_url)
 
-    if added:
-        log.info(f"  URL補完: seed {len(seed_urls)} + 追加 {len(added)} = {len(seed_urls) + len(added)}")
+    return added
 
-    return seed_urls + added
+
+def _infer_url_patterns(seed_urls: list[str]) -> set:
+    """seed URLsからパス/クエリパターンを推定。
+
+    1. クエリパラメータパターン: ?castid= 等
+    2. 共通パスプレフィックス: 全seedの最長共通パス（例: /therapists/521/p.html + /therapists/126/p.html → /therapists/）
+    3. ルートレベルURL: 共通プレフィックスが / のみの場合、all_internal フラグで全内部リンクを候補にする
+    """
+    patterns = set()
+
+    # クエリパラメータパターン (e.g., ?castid=)
+    for u in seed_urls:
+        parsed = urlparse(u)
+        if parsed.query:
+            key = parsed.query.split('=')[0]
+            patterns.add(('query', key))
+
+    # パスプレフィックスパターン - 全seedの共通プレフィックスを検出
+    paths = []
+    for u in seed_urls:
+        parsed = urlparse(u)
+        path = parsed.path.rstrip('/')
+        if path:
+            paths.append(path)
+
+    if paths:
+        segments_list = [p.split('/') for p in paths]
+        min_len = min(len(s) for s in segments_list)
+
+        common_depth = 0
+        for i in range(min_len):
+            if len(set(s[i] for s in segments_list)) == 1:
+                common_depth = i + 1
+            else:
+                break
+
+        if common_depth >= 2:
+            # 共通プレフィックスあり (例: /therapists/)
+            prefix = '/'.join(segments_list[0][:common_depth]) + '/'
+            patterns.add(('path', prefix))
+        elif not patterns:
+            # queryパターンもpathパターンも見つからない → ルートレベルURL
+            # 一覧ページ内の全内部リンクを候補にする（WP構造パスは除外）
+            patterns.add(('all_internal', True))
+
+    return patterns
+
+
+def expand_individual_urls(html_list: list[str] | str, base_url: str, seed_urls: list[str]) -> list[str]:
+    """LLMが返したindividual_urlsをヒントに、全HTMLから同パターンのURLを追加抽出。
+
+    clean_html_full() の100K切り詰めでLLMに見えなかったURLを補完する。
+    seed_urlsのURLパスパターン（共通プレフィックス or クエリキー）を学習し、
+    全HTMLの <a href> から同パターンのURLをマージ。
+
+    html_list: 単一HTMLまたはHTMLのリスト（TOPページ+一覧ページ等）
+
+    例: seed = ["?castid=155", "?castid=148"] → 全HTMLから ?castid= を持つURLを全抽出
+    例: seed = ["/therapist/3102", "/therapist/3098"] → /therapist/ 以下を全抽出
+    """
+    if not seed_urls:
+        return seed_urls
+
+    # 文字列→リスト統一
+    if isinstance(html_list, str):
+        html_list = [html_list]
+    html_list = [h for h in html_list if h]
+    if not html_list:
+        return seed_urls
+
+    patterns = _infer_url_patterns(seed_urls)
+    if not patterns:
+        return seed_urls
+
+    existing = set(seed_urls)
+    all_added = []
+
+    for h in html_list:
+        added = _extract_urls_from_html(h, base_url, patterns, existing)
+        all_added.extend(added)
+
+    if all_added:
+        log.info(f"  URL補完: seed {len(seed_urls)} + 追加 {len(all_added)} = {len(seed_urls) + len(all_added)}")
+
+    return seed_urls + all_added
+
+
+def detect_pagination(html: str, listing_url: str) -> list[str]:
+    """一覧ページのページネーションを検出し、page 2以降のURLを返す。
+
+    検出パターン:
+    - /page/2/, /page/3/ ... (WordPress)
+    - ?page=2, ?page=3 ... (汎用)
+    - ?p=2, ?p=3 ...
+
+    Returns: page 2以降のURL一覧（page 1は含まない）
+    """
+    soup = BeautifulSoup(html, 'html.parser')
+    base_domain = urlparse(listing_url).netloc.lower()
+    listing_path = urlparse(listing_url).path.rstrip('/')
+
+    page_urls = set()
+
+    for a in soup.find_all('a', href=True):
+        href = a['href'].strip()
+        if not href or href.startswith(('javascript:', 'mailto:', 'tel:', '#')):
+            continue
+
+        full_url = urljoin(listing_url, href)
+        parsed = urlparse(full_url)
+
+        if parsed.netloc.lower() != base_domain:
+            continue
+
+        path = parsed.path.rstrip('/')
+
+        # WordPress: /category/therapist/page/3/
+        import re
+        wp_match = re.search(r'/page/(\d+)$', path)
+        if wp_match and int(wp_match.group(1)) >= 2:
+            # listing_pathが含まれているか確認
+            base_path = path[:wp_match.start()]
+            if base_path.rstrip('/') == listing_path or listing_path.startswith(base_path.rstrip('/')):
+                page_urls.add(full_url.split('?')[0].rstrip('/') + '/')
+                continue
+
+        # クエリパラメータ: ?page=2, ?p=2
+        if parsed.query:
+            for key in ('page', 'p', 'pg', 'paged'):
+                qmatch = re.search(rf'(?:^|&){key}=(\d+)', parsed.query)
+                if qmatch and int(qmatch.group(1)) >= 2:
+                    if parsed.path.rstrip('/') == listing_path:
+                        page_urls.add(full_url)
+                        break
+
+    # 番号順にソート
+    def page_sort_key(u):
+        import re
+        nums = re.findall(r'(\d+)', u)
+        return int(nums[-1]) if nums else 0
+
+    return sorted(page_urls, key=page_sort_key)
+
+
+def fetch_paginated_listing(listing_html: str, listing_url: str,
+                            seed_urls: list[str], salon_name: str = "") -> list[str]:
+    """一覧ページのページネーションを検出し、全ページからセラピストURLを収集。
+
+    Returns: seed_urls + 全ページネーションページから追加されたURL
+    """
+    page_urls = detect_pagination(listing_html, listing_url)
+    if not page_urls:
+        return seed_urls
+
+    log.info(f"  ページネーション検出: {len(page_urls)} ページ追加 ({page_urls[0]} ... {page_urls[-1]})")
+
+    patterns = _infer_url_patterns(seed_urls)
+    if not patterns:
+        return seed_urls
+
+    existing = set(seed_urls)
+    all_added = []
+
+    for i, page_url in enumerate(page_urls):
+        page_html = fetch_page_smart(page_url, label=f"  Page{i+2}: ")
+        if not page_html:
+            log.info(f"  Page {i+2} fetch失敗 → 終了")
+            break
+
+        added = _extract_urls_from_html(page_html, listing_url, patterns, existing)
+        all_added.extend(added)
+        log.info(f"  Page {i+2}: +{len(added)} URL")
+
+    if all_added:
+        log.info(f"  ページネーション合計: +{len(all_added)} URL → 合計 {len(seed_urls) + len(all_added)}")
+
+    return seed_urls + all_added
 
 
 # =============================================================================
@@ -1216,9 +1377,17 @@ def run_test(salons: list[dict], csv_path: str | None = None):
             listing_html = html
             listing_url_for_fallback = url
 
-        # --- URL補完: 全HTMLから同パターンのURLを追加抽出 ---
+        # --- URL補完: TOP+一覧の全HTMLから同パターンのURLを追加抽出 ---
         if individual_urls:
-            individual_urls = expand_individual_urls(html, url, individual_urls)
+            html_sources = [h for h in [html, listing_html] if h]
+            individual_urls = expand_individual_urls(html_sources, url, individual_urls)
+
+        # --- ページネーション: 一覧ページにpage 2以降があれば全ページからURL収集 ---
+        if individual_urls and listing_html and listing_url_for_fallback:
+            individual_urls = fetch_paginated_listing(
+                listing_html, listing_url_for_fallback,
+                individual_urls, salon_name=name
+            )
 
         # --- プラットフォーム検知 + Wix外部URL除外 ---
         platform = detect_platform(url, html)

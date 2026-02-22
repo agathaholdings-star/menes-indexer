@@ -569,7 +569,7 @@ def _process_haiku_salon(cur, salon, args, stats, _shutdown_ref):
         fetch_page_smart, detect_3days_cms, parse_3days_data_js,
         haiku_analyze_page, haiku_extract_single_page,
         is_valid_therapist_url, _reanchor_stage1_urls,
-        expand_individual_urls, detect_platform,
+        expand_individual_urls, detect_platform, fetch_paginated_listing,
     )
 
     salon_id = salon['salon_id']
@@ -774,9 +774,17 @@ def _process_haiku_salon(cur, salon, args, stats, _shutdown_ref):
         listing_html = html
         listing_url_for_fallback = url
 
-    # --- URL補完: 全HTMLから同パターンのURLを追加抽出 ---
+    # --- URL補完: TOP+一覧の全HTMLから同パターンのURLを追加抽出 ---
     if individual_urls:
-        individual_urls = expand_individual_urls(html, url, individual_urls)
+        html_sources = [h for h in [html, listing_html] if h]
+        individual_urls = expand_individual_urls(html_sources, url, individual_urls)
+
+    # --- ページネーション: 一覧ページにpage 2以降があれば全ページからURL収集 ---
+    if individual_urls and listing_html and listing_url_for_fallback:
+        individual_urls = fetch_paginated_listing(
+            listing_html, listing_url_for_fallback,
+            individual_urls, salon_name=salon_display
+        )
 
     # --- プラットフォーム検知 + Wix外部URL除外 ---
     platform = detect_platform(url, html)

@@ -63,7 +63,8 @@ def clean_html_for_llm(html, base_url, max_chars=15000):
 
     # imgのsrcを保持
     for img in soup.find_all('img'):
-        src = img.get('src') or img.get('srcset', '').split(',')[0].split()[0] or img.get('data-src') or img.get('data-lazy-src') or ''
+        srcset_val = img.get('srcset', '').split(',')[0].split()
+        src = img.get('src') or (srcset_val[0] if srcset_val else '') or img.get('data-src') or img.get('data-lazy-src') or ''
         if src:
             src = urljoin(base_url, src)
             alt = img.get('alt', '')
