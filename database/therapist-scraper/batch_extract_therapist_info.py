@@ -144,19 +144,27 @@ def _safe_int(val):
 def insert_therapist_new(cur, salon_id, data):
     """新規セラピストをINSERT。SAVEPOINT付き。Returns id or None.
 
-    source_url が既に同一サロンに存在する場合はスキップ（重複防止）。
+    重複判定（優先順）:
+    1. source_url あり → salon_id + source_url で判定
+    2. source_url なし → salon_id + name で判定（single_page等のフォールバック）
     """
     t_name = data.get('name')
     if not t_name:
         return None
 
-    # 重複チェック（同一サロン内: 同名セラピストが存在すればスキップ）
     source_url = data.get('source_url')
-    cur.execute(
-        "SELECT id FROM therapists WHERE salon_id = %s AND name = %s LIMIT 1",
-        (salon_id, t_name))
+
+    # 重複チェック: source_url優先、なければnameフォールバック
+    if source_url:
+        cur.execute(
+            "SELECT id FROM therapists WHERE salon_id = %s AND source_url = %s LIMIT 1",
+            (salon_id, source_url))
+    else:
+        cur.execute(
+            "SELECT id FROM therapists WHERE salon_id = %s AND name = %s LIMIT 1",
+            (salon_id, t_name))
     if cur.fetchone():
-        return None  # 同名既存 → スキップ
+        return None  # 既存 → スキップ
 
     bust_val = data.get('bust')
     if bust_val is not None:
@@ -710,6 +718,11 @@ def main():
     parser = argparse.ArgumentParser(
         description='セラピスト情報 Haiku 一括抽出バッチ')
 
+    # CLI互換: --new は受理するが無視（常にHaikuフロー）
+    parser.add_argument('--new', action='store_true',
+                        help='互換用（常にこのモードで動作するため無視される）')
+    parser.add_argument('--existing', action='store_true',
+                        help=argparse.SUPPRESS)  # 非表示（廃止済み）
     parser.add_argument('--start-id', type=int, default=None,
                         help='開始サロンID（VPS並列用）')
     parser.add_argument('--end-id', type=int, default=None,
@@ -724,6 +737,9 @@ def main():
                         help='コミット+チェックポイント間隔（default: 100）')
 
     args = parser.parse_args()
+
+    if args.existing:
+        parser.error("--existing は廃止されました。引数なし または --new で実行してください。")
 
     log.info("=" * 60)
     log.info(" セラピスト情報 Haiku 一括抽出バッチ")

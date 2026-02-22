@@ -336,13 +336,14 @@
         - **`batch_extract_therapist_info.py` 変更**:
             - `--existing`モード完全削除（`run_existing()`, `update_therapist()`, `fetch_and_extract_one()`, `UPDATE_FIELDS`）。一回きりの品質修復用で今後不要
             - ヒューリスティック経路（Pass 1: `_process_heuristic_salon()`）完全削除。旧2パス構成→全サロンHaikuフロー1本に統一
-            - CLI簡素化: `--existing`/`--new`の二択→引数なしで実行（常にHaikuフロー）
+            - CLI簡素化: `--existing`は廃止エラー、`--new`は互換用no-op、引数なしで実行可能
             - statsキー不整合修正（`no_name`→`skipped_no_name`に統一）
             - 未使用import削除（`concurrent.futures`, `random`）
         - **`name_extractor.py` 変更**:
             - `build_extract_prompt()`のname few-shot: 4個→10個に拡充
             - 元の`_extract_llm_name_only()`（テスト実績あり: 17/20成功）と同じセットに統一
             - 追加パターン: 年齢付き名前、PROFILE接頭辞、キャッチコピー、読み仮名括弧、サロン名→null、ナビゲーション→null
+        - **dedup修正（Codexレビュー指摘）**: `insert_therapist_new()`の重複判定をsource_url優先に変更。source_urlあり→salon_id+source_urlで判定、なし→salon_id+nameフォールバック。旧実装はname判定のみで、同名別人のINSERT漏れリスクがあった
         - **定期実行について**: 現時点では新規INSERT（差分追加）のみ対応。既存データのUPDATE・退店検知は定期運用設計時に別途実装予定
     12f. **Phase④完了後: ME口コミ再マッチング＆再投入**
         - Step 1: ME突合やり直し（新therapistsのsource_urlで再マッチング → 件数増加見込み）
