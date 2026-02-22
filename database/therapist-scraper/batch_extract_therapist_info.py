@@ -16,7 +16,8 @@ Usage:
   python batch_extract_therapist_info.py --limit 5 --dry-run
 
   # 本番（全サロン）
-  python batch_extract_therapist_info.py
+  python batch_extract_therapist_info.py          # 引数なし
+  python batch_extract_therapist_info.py --full   # 明示的
 
   # VPS並列（ID範囲分割）
   python batch_extract_therapist_info.py --start-id 0 --end-id 3000
@@ -718,11 +719,13 @@ def main():
     parser = argparse.ArgumentParser(
         description='セラピスト情報 Haiku 一括抽出バッチ')
 
-    # CLI互換: --new は受理するが無視（常にHaikuフロー）
+    parser.add_argument('--full', action='store_true',
+                        help='全サロン3段階Haikuフロー（デフォルト動作、明示用）')
+    # 廃止済み引数（明示エラー）
     parser.add_argument('--new', action='store_true',
-                        help='互換用（常にこのモードで動作するため無視される）')
+                        help=argparse.SUPPRESS)
     parser.add_argument('--existing', action='store_true',
-                        help=argparse.SUPPRESS)  # 非表示（廃止済み）
+                        help=argparse.SUPPRESS)
     parser.add_argument('--start-id', type=int, default=None,
                         help='開始サロンID（VPS並列用）')
     parser.add_argument('--end-id', type=int, default=None,
@@ -738,8 +741,8 @@ def main():
 
     args = parser.parse_args()
 
-    if args.existing:
-        parser.error("--existing は廃止されました。引数なし または --new で実行してください。")
+    if args.existing or args.new:
+        parser.error("--existing/--new は廃止されました。引数なし または --full で実行してください。")
 
     log.info("=" * 60)
     log.info(" セラピスト情報 Haiku 一括抽出バッチ")

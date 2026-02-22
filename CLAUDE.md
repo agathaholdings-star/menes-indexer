@@ -336,7 +336,7 @@
         - **`batch_extract_therapist_info.py` 変更**:
             - `--existing`モード完全削除（`run_existing()`, `update_therapist()`, `fetch_and_extract_one()`, `UPDATE_FIELDS`）。一回きりの品質修復用で今後不要
             - ヒューリスティック経路（Pass 1: `_process_heuristic_salon()`）完全削除。旧2パス構成→全サロンHaikuフロー1本に統一
-            - CLI簡素化: `--existing`は廃止エラー、`--new`は互換用no-op、引数なしで実行可能
+            - CLI: `--full`に名称統一（引数なし実行も`--full`扱い）。`--existing`/`--new`は廃止エラー
             - statsキー不整合修正（`no_name`→`skipped_no_name`に統一）
             - 未使用import削除（`concurrent.futures`, `random`）
         - **`name_extractor.py` 変更**:
