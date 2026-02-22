@@ -471,11 +471,18 @@ def build_extract_prompt(html: str, salon_name: str = "", salon_display: str = "
 
 ### name（必須）
 - セラピスト個人の名前だけ。年齢・キャッチコピー・肩書き・「NEW FACE」等の装飾は全て除去
+- 該当なしならnull
 - 正しい出力例:
   "PROFILEみみのプロフィール" → "みみ"
   "白石りおNEW FACE" → "白石りお"
+  "高橋里奈 業界初経験 23歳" → "高橋里奈"
   "REO(23歳)" → "REO"
+  "PROFILE琴吹（ことぶき）" → "琴吹"
+  "まゆ(25歳) | 透明感96％" → "まゆ"
+  "Mio（ミオ） - ドットエム公式" → "Mio"
   "神のエステ ランキング 巣鴨店" → null（これはサロン名）
+  "セラピストプロフィール" → null（これはページタイトル）
+  "メニュー・料金" → null（これはナビゲーション）
 
 ### age, height, bust, waist, hip
 - 数値のみ（単位不要）。ページに記載がなければnull

@@ -129,7 +129,7 @@
         ```
     - **既テスト済みサロンID**: 16, 20, 35, 41, 42, 43, 45, 47, 54, 58, 59, 65, 67, 71, 72, 73, 75, 81, 82, 102, 104, 107, 111, 112, 113, 114, 116, 117, 118, 119, 120, 132, 139, 143, 156, 238, 239, 242, 243, 246, 248, 250, 251, 252, 253, 1428, 1515, 2489, 2592, 2608, 2847, 3458, 3780, 3960, 4028, 4317, 4403, 4478, 4493, 5006, 5346, 5394, 5413, 5418, 5787, 5899, 6036, 6325, 6537, 6540, 7111, 7224, 7328
 - **セラピスト統一スクレイピングパイプライン実装完了（2026-02-22）**:
-    - **背景と課題**: 2スクリプト体制（`batch_extract_therapist_info.py --new` + `scrape_failed_salons.py`）で運用が煩雑。`scrape_failed_salons.py`にdedup がなく複数回実行で重複INSERT。`--new`モードはtherapist_list_urlありサロンしか処理できなかった
+    - **背景と課題**: 2スクリプト体制（`batch_extract_therapist_info.py` + `scrape_failed_salons.py`）で運用が煩雑。`scrape_failed_salons.py`にdedup がなく複数回実行で重複INSERT。`--new`モードはtherapist_list_urlありサロンしか処理できなかった
     - **Phase 1: source_url dedup追加**:
         - `insert_therapist_new()` にINSERT前のsource_url存在チェック追加（全呼び出し元で自動dedup）
         - `scrape_failed_salons.py` の `run_test()` Stage 3前に既存URL一括除外（不要なfetch+API呼び出し回避）
@@ -150,7 +150,7 @@
         - `clean_html_full()` max_chars=100Kで巨大ページが切り詰められ、LLMが一部のURLしか見えない問題
         - `expand_individual_urls()`: LLMが返したseed URLsからパターン（query key: `?castid=` / path prefix: `/therapist/`）を検出し、全HTMLの`<a href>`から同パターンのURLを網羅的に収集
         - 両スクリプトのStage 3ループ前に適用。マロアリ・タッハ(27→40人)等のケースで回収率向上
-    - **正規運用（確定）**: 新規/既存失敗再処理は `python batch_extract_therapist_info.py --new` を唯一の実行入口とする。1コマンドで全6,489サロンの差分セラピスト発見・抽出・INSERT
+    - **正規運用（確定）**: 新規/既存失敗再処理は `python batch_extract_therapist_info.py` を唯一の実行入口とする。1コマンドで全6,489サロンの差分セラピスト発見・抽出・INSERT
     - **`scrape_failed_salons.py`**: ⚠️ 検証/テスト専用（非推奨）。通常運用では使わない。Batch API JSONL生成・個別サロンデバッグ用途に限定
 - **セラピスト情報Haiku一括抽出（`--existing`モード）VPS実行済み（2026-02-19〜02-20）**:
     - 5並列tmux (hw1-hw5) で95,340件に対してHaiku抽出を実行・完了
@@ -317,18 +317,33 @@
             2. VPS 5並列tmux hw1-hw5で`--existing`バッチ実行
             3. pg_dump→ローカル同期→目視確認
             4. `batch_download_images.py`でStorage保存バッチ実行
-    12e. **🔴 Phase④: therapistsデータ全件再構築** ← 次に実行（2026-02-22決定）
+    12e. **🔴 Phase④: therapistsデータ全件再構築** ← 次に実行（2026-02-23決定）
         - **方針**: 既存92,587名を破棄し、新スクレイパーで全6,489サロンをゼロから再スクレイピング
         - **理由**: 既存データは5世代の継ぎ接ぎ（Phase②ヒューリスティック→Phase③LLM→名前修復→クレンジング→Haiku再抽出）。新スクレイパーで統一品質にする
         - **source-first原則**: salon_scrape_cacheもTRUNCATEし、旧キャッシュの誤判定を排除
-        - **推定コスト**: ~$260 / **推定結果**: 12万〜13万名
-        - **手順**:
-            1. VPS: pg_dump バックアップ
-            2. VPS: therapists + salon_scrape_cache TRUNCATE
-            3. VPS: `--new` 全6,489サロン実行（5並列、~30時間）
-            4. 品質検証（件数・重複・fail_reason）
-            5. pg_dump → ローカル同期
+        - **推定コスト**: ~$225 / **推定結果**: 12万〜13万名
+        - **VPSリビルド前の掃除手順**:
+            1. VPS: `pg_dump` バックアップ
+            2. VPS: `TRUNCATE therapists CASCADE; TRUNCATE salon_scrape_cache; TRUNCATE scrape_log;`
+            3. VPS: `rm -rf /opt/scraper/html_cache/ && rm -f /opt/scraper/batch_extract_*_checkpoint*.json && rm -rf /opt/scraper/batch_api_data/`
+            4. VPS: ローカルから最新スクリプトをscp
+            5. VPS: `python batch_extract_therapist_info.py` 全6,489サロン実行（3並列推奨、2GB RAM制約）
+            6. 品質検証（件数・重複・fail_reason）
+            7. pg_dump → ローカル同期
         - **画像パイプライン(12d)との関係**: 再構築後のデータにimage_urlsが含まれる（Stage 3で一括抽出）。画像DL→Storage(12d-2)は再構築完了後に実行
+    12e-1. **スクレイパー簡素化（2026-02-23）**:
+        - **背景と目的**: Phase④リビルドに向けて、スクレイパーからヒューリスティック（判断不能な正規表現ベース抽出）を完全排除し、全工程をHaiku LLMに統一する。過去の名前修復14,988件の原因がヒューリスティック抽出の品質問題だったため
+        - **`batch_extract_therapist_info.py` 変更**:
+            - `--existing`モード完全削除（`run_existing()`, `update_therapist()`, `fetch_and_extract_one()`, `UPDATE_FIELDS`）。一回きりの品質修復用で今後不要
+            - ヒューリスティック経路（Pass 1: `_process_heuristic_salon()`）完全削除。旧2パス構成→全サロンHaikuフロー1本に統一
+            - CLI簡素化: `--existing`/`--new`の二択→引数なしで実行（常にHaikuフロー）
+            - statsキー不整合修正（`no_name`→`skipped_no_name`に統一）
+            - 未使用import削除（`concurrent.futures`, `random`）
+        - **`name_extractor.py` 変更**:
+            - `build_extract_prompt()`のname few-shot: 4個→10個に拡充
+            - 元の`_extract_llm_name_only()`（テスト実績あり: 17/20成功）と同じセットに統一
+            - 追加パターン: 年齢付き名前、PROFILE接頭辞、キャッチコピー、読み仮名括弧、サロン名→null、ナビゲーション→null
+        - **定期実行について**: 現時点では新規INSERT（差分追加）のみ対応。既存データのUPDATE・退店検知は定期運用設計時に別途実装予定
     12f. **Phase④完了後: ME口コミ再マッチング＆再投入**
         - Step 1: ME突合やり直し（新therapistsのsource_urlで再マッチング → 件数増加見込み）
         - Step 2: LLMリライト（新規マッチ分のみ差分実行）
@@ -493,7 +508,7 @@ ssh -i /Users/agatha/Downloads/indexer.pem root@220.158.18.6
 ### 現行運用コマンド
 ```bash
 # 正規運用: セラピスト差分スクレイピング（VPS）
-ssh -i ~/Downloads/indexer.pem root@220.158.18.6 "cd /opt/scraper && python3 batch_extract_therapist_info.py --new"
+ssh -i ~/Downloads/indexer.pem root@220.158.18.6 "cd /opt/scraper && python3 batch_extract_therapist_info.py"
 
 # DB状況確認
 ssh -i ~/Downloads/indexer.pem root@220.158.18.6 "sudo -u postgres psql -d menethe -c 'SELECT count(*) FROM therapists;'"
@@ -552,9 +567,9 @@ ssh -i ~/Downloads/indexer.pem root@220.158.18.6 "cat /opt/scraper/batch_scrape_
 │       ├── fetch_utils.py         ← 共通fetchモジュール（HTTPS→HTTPフォールバック付き）
 │       ├── name_extractor.py      ← セラピスト情報抽出モジュール（全フィールドHaiku一括抽出）
 │       ├── html_cache_utils.py    ← 共通HTMLキャッシュモジュール（gzip圧縮、カテゴリ別）
-│       ├── batch_extract_therapist_info.py ← 🔑 正規運用スクリプト（--existing UPDATE/--new 差分INSERT）。通常は `--new` で実行
+│       ├── batch_extract_therapist_info.py ← 🔑 正規運用スクリプト（全サロン3段階Haikuフロー）。引数なしで実行
 │       ├── batch_download_images.py ← 画像DL→Supabase Storage保存→URL差し替え
-│       ├── scrape_failed_salons.py    ← ⚠️ 検証/テスト専用（非推奨）。通常運用は batch_extract_therapist_info.py --new を使用
+│       ├── scrape_failed_salons.py    ← ⚠️ 検証/テスト専用（非推奨）。通常運用は batch_extract_therapist_info.py を使用
 │       ├── clean_therapist_names.py ← 名前クレンジング＋source_url重複解消
 │       ├── classify_failures.py   ← 失敗サロン理由分類スクリプト
 │       ├── salon_diagnose.py      ← 診断CLIツール（diagnose/test-extract/rescrape/list-failed/list-patterns）
