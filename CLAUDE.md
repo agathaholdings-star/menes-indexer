@@ -88,6 +88,22 @@
     - **取れないパターン（対処不可）**: サイトダウン/404、年齢確認ゲート、JS描画で名前テキストがHTMLにない、セラピスト情報非公開
     - **合計テスト結果**: 23サロンテスト → 480名登録。VPS失敗サロン全件再実行で大幅回収が見込める
     - **変更ファイル**: `scrape_failed_salons.py`（フィルタ・URL補完・ページネーション）, `batch_extract_therapist_info.py`（dedup改善・listing_url引数追加）
+    - **VPS全件実行の検討（2026-02-22、未決定）**:
+        - 失敗サロン約2,977件だけでなく、全6,489サロンで`--new`を再実行する案
+        - **理由**: Phase②③で「成功」扱いのサロンでもURL補完・ページネーション対応で取り漏れセラピストが多数ある（例: アロマエメラルド24→118名、アロマブラッサム0→214名）
+        - **安全性**: name dedupにより既存セラピストは重複INSERTされない
+        - **推定コスト**: ~$200（Stage1 TOPページ分析 ~$97 + Stage2 一覧ページ分析 ~$45 + Stage3 個別ページ抽出 ~$75-125）
+        - **処理フロー**: TOPページfetch→Haiku分析→一覧ページfetch→Haiku分析→URL補完+ページネーション→個別ページfetch→Haiku抽出→DB INSERT。single_pageの場合はStage2/3不要で一覧ページから全員一括抽出
+        - **ステータス**: テスト追加してから判断予定
+    - **テスト用コマンド（次セッション用）**:
+        ```bash
+        cd /Users/agatha/Desktop/project/menethe-indexer/database/therapist-scraper
+        # 特定サロンIDでテスト
+        python3 -c "import scrape_failed_salons as s; salons = s.get_salons_by_ids([ID1, ID2, ...]); s.run_test(salons, csv_path='/Users/agatha/Desktop/retest_XXX.csv')"
+        # 失敗サロンからN件テスト
+        python3 -c "import scrape_failed_salons as s; salons = s.get_failed_salons(limit=10, offset=0); s.run_test(salons, csv_path='/Users/agatha/Desktop/retest_XXX.csv')"
+        ```
+    - **既テスト済みサロンID**: 16, 20, 35, 41, 42, 43, 45, 47, 54, 58, 102, 104, 111, 112, 113, 114, 116, 117, 118, 119, 139, 143, 156, 238, 239, 242, 243, 246, 248, 250, 251, 252, 253
 - **セラピスト統一スクレイピングパイプライン実装完了（2026-02-22）**:
     - **背景と課題**: 2スクリプト体制（`batch_extract_therapist_info.py --new` + `scrape_failed_salons.py`）で運用が煩雑。`scrape_failed_salons.py`にdedup がなく複数回実行で重複INSERT。`--new`モードはtherapist_list_urlありサロンしか処理できなかった
     - **Phase 1: source_url dedup追加**:
