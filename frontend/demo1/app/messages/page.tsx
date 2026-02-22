@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
-import { Send, ArrowLeft, MessageCircle, Search, Plus, Lock, Crown } from "lucide-react";
+import { Send, ArrowLeft, MessageCircle, Search, Plus, Lock, Crown, Ban, MoreVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { useAuth } from "@/lib/auth-context";
@@ -67,6 +68,7 @@ export default function MessagesPage() {
   const [userSearchQuery, setUserSearchQuery] = useState("");
   const [searchedUsers, setSearchedUsers] = useState<SearchedUser[]>([]);
   const [searching, setSearching] = useState(false);
+  const [blockedIds, setBlockedIds] = useState<Set<string>>(new Set());
 
   const { loading: authLoading } = useAuth();
 
@@ -101,6 +103,18 @@ export default function MessagesPage() {
   };
   const effectiveTier = authUser ? getEffectiveTier(tierUser) : "free";
   const permissions = tierPermissions[effectiveTier];
+
+  // ブロックリスト取得
+  useEffect(() => {
+    if (!authUser) return;
+    fetch("/api/blocks")
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setBlockedIds(new Set(data.map((b: { blocked_id: string }) => b.blocked_id)));
+        }
+      });
+  }, [authUser]);
 
   // 会話一覧取得
   useEffect(() => {
@@ -176,28 +190,53 @@ export default function MessagesPage() {
     fetchConversations();
   }, [authUser, permissions.canUseDM]);
 
-  // メッセージ取得
-  useEffect(() => {
-    if (!selectedConvId || !authUser) return;
+  // メッセージ取得関数
+  const fetchMessages = useCallback(async (convId: number, isInitial: boolean) => {
+    if (!authUser) return;
     const supabase = createSupabaseBrowser();
-
-    supabase
+    const { data } = await supabase
       .from("messages")
       .select("id, sender_id, body, is_read, created_at")
-      .eq("conversation_id", selectedConvId)
-      .order("created_at", { ascending: true })
-      .then(({ data }) => {
-        setMessages((data as Message[]) || []);
-        // 未読を既読に
-        supabase
-          .from("messages")
-          .update({ is_read: true })
-          .eq("conversation_id", selectedConvId)
-          .neq("sender_id", authUser.id)
-          .eq("is_read", false)
-          .then(() => {});
+      .eq("conversation_id", convId)
+      .order("created_at", { ascending: true });
+
+    const newMessages = (data as Message[]) || [];
+
+    if (isInitial) {
+      setMessages(newMessages);
+    } else {
+      // ポーリング: 新しいメッセージだけ追加（既存を壊さない）
+      setMessages((prev) => {
+        const existingIds = new Set(prev.map((m) => m.id));
+        const added = newMessages.filter((m) => !existingIds.has(m.id));
+        return added.length > 0 ? [...prev, ...added] : prev;
       });
-  }, [selectedConvId, authUser]);
+    }
+
+    // 未読を既読に
+    supabase
+      .from("messages")
+      .update({ is_read: true })
+      .eq("conversation_id", convId)
+      .neq("sender_id", authUser.id)
+      .eq("is_read", false)
+      .then(() => {});
+  }, [authUser]);
+
+  // 初回メッセージ取得 + 10秒ポーリング
+  useEffect(() => {
+    if (!selectedConvId || !authUser) return;
+
+    fetchMessages(selectedConvId, true);
+
+    const intervalId = setInterval(() => {
+      if (document.visibilityState === "visible") {
+        fetchMessages(selectedConvId, false);
+      }
+    }, 10000);
+
+    return () => clearInterval(intervalId);
+  }, [selectedConvId, authUser, fetchMessages]);
 
   // メッセージスクロール
   useEffect(() => {
@@ -228,6 +267,30 @@ export default function MessagesPage() {
         .eq("id", selectedConvId);
     }
     setSending(false);
+  };
+
+  // ブロック/解除
+  const handleBlock = async (userId: string) => {
+    const res = await fetch("/api/blocks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ blocked_id: userId }),
+    });
+    if (res.ok) {
+      setBlockedIds((prev) => new Set(prev).add(userId));
+      setSelectedConvId(null);
+    }
+  };
+
+  const handleUnblock = async (userId: string) => {
+    const res = await fetch("/api/blocks", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ blocked_id: userId }),
+    });
+    if (res.ok) {
+      setBlockedIds((prev) => { const next = new Set(prev); next.delete(userId); return next; });
+    }
   };
 
   // ユーザー検索
@@ -365,6 +428,12 @@ export default function MessagesPage() {
     );
   }
 
+  // ブロック済みユーザーの会話を非表示
+  const visibleConversations = conversations.filter((c) => {
+    const partnerId = c.user1_id === authUser?.id ? c.user2_id : c.user1_id;
+    return !blockedIds.has(partnerId);
+  });
+
   const selectedConv = conversations.find((c) => c.id === selectedConvId);
 
   return (
@@ -393,14 +462,14 @@ export default function MessagesPage() {
                     <div key={i} className="animate-pulse h-16 bg-muted rounded mx-4" />
                   ))}
                 </div>
-              ) : conversations.length === 0 ? (
+              ) : visibleConversations.length === 0 ? (
                 <div className="text-center py-12 px-4">
                   <MessageCircle className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
                   <p className="text-sm text-muted-foreground">まだメッセージはありません</p>
                   <p className="text-xs text-muted-foreground mt-1">「新しいメッセージ」から会話を始めましょう</p>
                 </div>
               ) : (
-                conversations.map((conv) => (
+                visibleConversations.map((conv) => (
                   <button
                     key={conv.id}
                     onClick={() => setSelectedConvId(conv.id)}
@@ -453,7 +522,26 @@ export default function MessagesPage() {
                       {selectedConv.partner_nickname[0]}
                     </AvatarFallback>
                   </Avatar>
-                  <CardTitle className="text-base">{selectedConv.partner_nickname}</CardTitle>
+                  <CardTitle className="text-base flex-1">{selectedConv.partner_nickname}</CardTitle>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="ml-auto">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        className="text-destructive focus:text-destructive cursor-pointer"
+                        onClick={() => {
+                          const partnerId = selectedConv.user1_id === authUser.id ? selectedConv.user2_id : selectedConv.user1_id;
+                          handleBlock(partnerId);
+                        }}
+                      >
+                        <Ban className="h-4 w-4 mr-2" />
+                        このユーザーをブロック
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </CardHeader>
                 <CardContent className="flex-1 overflow-y-auto p-4 space-y-3">
                   {messages.map((msg) => {

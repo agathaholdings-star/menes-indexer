@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Search,
   Menu,
@@ -61,21 +61,33 @@ export function SiteHeader() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  useEffect(() => {
+  const fetchNotifications = useCallback(async () => {
     if (!authUser) return;
     const supabase = createSupabaseBrowser();
-    supabase
+    const { data } = await supabase
       .from("notifications")
       .select("id, type, title, body, link, is_read, created_at")
       .eq("user_id", authUser.id)
       .order("created_at", { ascending: false })
-      .limit(10)
-      .then(({ data }) => {
-        const items = (data || []) as Notification[];
-        setNotifications(items);
-        setUnreadCount(items.filter((n) => !n.is_read).length);
-      });
+      .limit(10);
+    const items = (data || []) as Notification[];
+    setNotifications(items);
+    setUnreadCount(items.filter((n) => !n.is_read).length);
   }, [authUser]);
+
+  // 初回取得 + 30秒ポーリング（タブ非表示時は停止）
+  useEffect(() => {
+    if (!authUser) return;
+    fetchNotifications();
+
+    const intervalId = setInterval(() => {
+      if (document.visibilityState === "visible") {
+        fetchNotifications();
+      }
+    }, 30000);
+
+    return () => clearInterval(intervalId);
+  }, [authUser, fetchNotifications]);
 
   const markAllRead = async () => {
     if (!authUser || unreadCount === 0) return;

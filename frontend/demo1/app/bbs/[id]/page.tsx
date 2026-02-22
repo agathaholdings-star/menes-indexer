@@ -2,12 +2,14 @@
 
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
-import { ChevronRight, MessageCircle, Eye, ThumbsUp, Flag, Reply, Send, Lock, Crown } from "lucide-react";
+import { ChevronRight, MessageCircle, Eye, ThumbsUp, Flag, Reply, Send, Lock, Crown, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { useAuth } from "@/lib/auth-context";
@@ -26,6 +28,7 @@ interface DBThread {
   title: string;
   body: string;
   category: string;
+  is_vip_only: boolean;
   view_count: number;
   reply_count: number;
   created_at: string;
@@ -60,6 +63,15 @@ export default function BBSThreadPage({ params }: { params: Promise<{ id: string
   const [loading, setLoading] = useState(true);
   const [replyContent, setReplyContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [likedPostIds, setLikedPostIds] = useState<Set<number>>(new Set());
+  const [localLikeCounts, setLocalLikeCounts] = useState<Record<number, number>>({});
+
+  // 通報
+  const [reportTarget, setReportTarget] = useState<{ type: string; id: number } | null>(null);
+  const [reportReason, setReportReason] = useState("");
+  const [reportDetail, setReportDetail] = useState("");
+  const [reportSubmitting, setReportSubmitting] = useState(false);
+  const [reportDone, setReportDone] = useState(false);
 
   // ティアチェック用
   const [membershipType, setMembershipType] = useState<string>("free");
@@ -102,7 +114,7 @@ export default function BBSThreadPage({ params }: { params: Promise<{ id: string
     // スレッド取得
     supabase
       .from("bbs_threads")
-      .select("id, title, body, category, view_count, reply_count, created_at, user_id, profiles(nickname)")
+      .select("id, title, body, category, is_vip_only, view_count, reply_count, created_at, user_id, profiles(nickname)")
       .eq("id", Number(id))
       .single()
       .then(({ data }) => {
@@ -129,6 +141,75 @@ export default function BBSThreadPage({ params }: { params: Promise<{ id: string
         setLoading(false);
       });
   }, [id]);
+
+  // ユーザーのいいね済みpost IDを取得
+  useEffect(() => {
+    if (!authUser) return;
+    const supabase = createSupabaseBrowser();
+    supabase
+      .from("bbs_post_likes")
+      .select("post_id")
+      .eq("user_id", authUser.id)
+      .then(({ data }) => {
+        if (data) {
+          setLikedPostIds(new Set(data.map((d) => d.post_id)));
+        }
+      });
+  }, [authUser]);
+
+  // posts変更時にlocalLikeCountsを初期化
+  useEffect(() => {
+    const counts: Record<number, number> = {};
+    for (const p of posts) {
+      counts[p.id] = p.likes;
+    }
+    setLocalLikeCounts(counts);
+  }, [posts]);
+
+  const handleToggleLike = async (postId: number) => {
+    if (!authUser) return;
+    const supabase = createSupabaseBrowser();
+    const isLiked = likedPostIds.has(postId);
+
+    // オプティミスティック更新
+    if (isLiked) {
+      setLikedPostIds((prev) => { const next = new Set(prev); next.delete(postId); return next; });
+      setLocalLikeCounts((prev) => ({ ...prev, [postId]: Math.max((prev[postId] || 0) - 1, 0) }));
+      await supabase.from("bbs_post_likes").delete().eq("user_id", authUser.id).eq("post_id", postId);
+    } else {
+      setLikedPostIds((prev) => new Set(prev).add(postId));
+      setLocalLikeCounts((prev) => ({ ...prev, [postId]: (prev[postId] || 0) + 1 }));
+      await supabase.from("bbs_post_likes").insert({ user_id: authUser.id, post_id: postId });
+    }
+  };
+
+  const handleReport = async () => {
+    if (!reportTarget || !reportReason || !authUser) return;
+    setReportSubmitting(true);
+    try {
+      const res = await fetch("/api/reports", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          target_type: reportTarget.type,
+          target_id: reportTarget.id,
+          reason: reportReason,
+          detail: reportDetail || undefined,
+        }),
+      });
+      if (res.ok) {
+        setReportDone(true);
+        setTimeout(() => {
+          setReportTarget(null);
+          setReportReason("");
+          setReportDetail("");
+          setReportDone(false);
+        }, 2000);
+      }
+    } finally {
+      setReportSubmitting(false);
+    }
+  };
 
   const handleSubmitReply = async () => {
     if (!replyContent.trim() || !authUser) return;
@@ -209,6 +290,36 @@ export default function BBSThreadPage({ params }: { params: Promise<{ id: string
     );
   }
 
+  // VIPスレッドに非VIPユーザーがアクセスした場合のゲート
+  if (thread.is_vip_only && !permissions.canUseVIPBBS) {
+    return (
+      <div className="min-h-screen bg-background">
+        <SiteHeader />
+        <main className="container mx-auto px-4 py-12">
+          <div className="max-w-md mx-auto text-center">
+            <div className="bg-amber-50 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6">
+              <Crown className="h-10 w-10 text-amber-500" />
+            </div>
+            <h1 className="text-2xl font-bold mb-3">VIP限定スレッド</h1>
+            <p className="text-muted-foreground mb-6">
+              このスレッドはVIP会員限定です。VIPにアップグレードしてアクセスしましょう。
+            </p>
+            <Link href="/pricing">
+              <Button size="lg" className="gap-2 bg-gradient-to-r from-amber-500 to-yellow-400 text-white hover:from-amber-600 hover:to-yellow-500">
+                <Crown className="h-4 w-4" />
+                VIPにアップグレード
+              </Button>
+            </Link>
+            <div className="mt-4">
+              <Link href="/bbs" className="text-sm text-muted-foreground hover:underline">掲示板に戻る</Link>
+            </div>
+          </div>
+        </main>
+        <SiteFooter />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
@@ -226,6 +337,12 @@ export default function BBSThreadPage({ params }: { params: Promise<{ id: string
           <Card className="mb-6">
             <CardHeader>
               <div className="flex items-center gap-2 mb-2">
+                {thread.is_vip_only && (
+                  <Badge className="gap-1 text-xs bg-gradient-to-r from-amber-500 to-yellow-400 text-white border-0">
+                    <Crown className="h-3 w-3" />
+                    VIP
+                  </Badge>
+                )}
                 <Badge variant="outline">{categoryLabels[thread.category] || thread.category}</Badge>
               </div>
               <CardTitle className="text-xl">{thread.title}</CardTitle>
@@ -278,11 +395,23 @@ export default function BBSThreadPage({ params }: { params: Promise<{ id: string
                             </div>
                             <p className="text-sm whitespace-pre-wrap mb-3">{post.body}</p>
                             <div className="flex items-center gap-4">
-                              <Button variant="ghost" size="sm" className="h-8 gap-1 text-muted-foreground">
-                                <ThumbsUp className="h-4 w-4" />
-                                <span>{post.likes}</span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className={`h-8 gap-1 ${likedPostIds.has(post.id) ? "text-primary" : "text-muted-foreground"}`}
+                                onClick={() => handleToggleLike(post.id)}
+                                disabled={!authUser}
+                              >
+                                <ThumbsUp className={`h-4 w-4 ${likedPostIds.has(post.id) ? "fill-current" : ""}`} />
+                                <span>{localLikeCounts[post.id] ?? post.likes}</span>
                               </Button>
-                              <Button variant="ghost" size="sm" className="h-8 gap-1 text-muted-foreground">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 gap-1 text-muted-foreground"
+                                onClick={() => setReportTarget({ type: "bbs_post", id: post.id })}
+                                disabled={!authUser}
+                              >
                                 <Flag className="h-4 w-4" />
                                 報告
                               </Button>
@@ -333,6 +462,68 @@ export default function BBSThreadPage({ params }: { params: Promise<{ id: string
       </main>
 
       <SiteFooter />
+
+      {/* 通報ダイアログ */}
+      <Dialog open={!!reportTarget} onOpenChange={(open) => { if (!open) { setReportTarget(null); setReportReason(""); setReportDetail(""); setReportDone(false); } }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              投稿を報告
+            </DialogTitle>
+          </DialogHeader>
+          {reportDone ? (
+            <div className="text-center py-6">
+              <p className="text-sm font-medium text-green-600">報告を受け付けました。ご協力ありがとうございます。</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div>
+                <Label className="text-sm font-medium">報告理由</Label>
+                <div className="mt-2 space-y-2">
+                  {[
+                    { value: "spam", label: "スパム・宣伝" },
+                    { value: "harassment", label: "誹謗中傷・嫌がらせ" },
+                    { value: "illegal", label: "違法な内容" },
+                    { value: "personal_info", label: "個人情報の掲載" },
+                    { value: "other", label: "その他" },
+                  ].map((r) => (
+                    <label key={r.value} className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="report_reason"
+                        value={r.value}
+                        checked={reportReason === r.value}
+                        onChange={() => setReportReason(r.value)}
+                        className="text-primary focus:ring-primary"
+                      />
+                      <span className="text-sm">{r.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <Label className="text-sm font-medium">詳細（任意）</Label>
+                <Textarea
+                  value={reportDetail}
+                  onChange={(e) => setReportDetail(e.target.value)}
+                  placeholder="具体的な内容を記入してください"
+                  rows={3}
+                  className="mt-1"
+                />
+              </div>
+              <Button
+                className="w-full"
+                variant="destructive"
+                onClick={handleReport}
+                disabled={!reportReason || reportSubmitting}
+              >
+                {reportSubmitting ? "送信中..." : "報告する"}
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

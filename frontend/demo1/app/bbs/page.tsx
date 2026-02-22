@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { MessageCircle, Clock, Eye, Search, Plus, Pin, Flame, TrendingUp, Send, Lock, Crown } from "lucide-react";
+import { MessageCircle, Clock, Eye, Search, Plus, Pin, Flame, TrendingUp, Send, Lock, Crown, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,6 +24,7 @@ const categories = [
   { id: "info", label: "情報共有" },
   { id: "review", label: "体験談" },
   { id: "other", label: "雑談" },
+  { id: "vip", label: "VIP" },
 ];
 
 interface DBThread {
@@ -31,6 +32,7 @@ interface DBThread {
   title: string;
   category: string;
   is_pinned: boolean;
+  is_vip_only: boolean;
   view_count: number;
   reply_count: number;
   last_reply_at: string | null;
@@ -60,6 +62,7 @@ export default function BBSPage() {
   const [newBody, setNewBody] = useState("");
   const [newCategory, setNewCategory] = useState("other");
   const [creating, setCreating] = useState(false);
+  const [newIsVipOnly, setNewIsVipOnly] = useState(false);
 
   // ティアチェック用
   const [membershipType, setMembershipType] = useState<string>("free");
@@ -103,7 +106,7 @@ export default function BBSPage() {
     const supabase = createSupabaseBrowser();
     const { data } = await supabase
       .from("bbs_threads")
-      .select("id, title, category, is_pinned, view_count, reply_count, last_reply_at, created_at, user_id, profiles(nickname)")
+      .select("id, title, category, is_pinned, is_vip_only, view_count, reply_count, last_reply_at, created_at, user_id, profiles(nickname)")
       .order("is_pinned", { ascending: false })
       .order("last_reply_at", { ascending: false, nullsFirst: false })
       .order("created_at", { ascending: false })
@@ -115,9 +118,16 @@ export default function BBSPage() {
   useEffect(() => { fetchThreads(); }, []);
 
   const filteredThreads = threads.filter((thread) => {
-    const matchesCategory = activeCategory === "all" || thread.category === activeCategory;
     const matchesSearch = !searchQuery || thread.title.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
+    if (!matchesSearch) return false;
+
+    if (activeCategory === "vip") {
+      return thread.is_vip_only;
+    }
+    // 通常タブではVIPスレッドを非VIPユーザーには非表示
+    if (thread.is_vip_only && !permissions.canUseVIPBBS) return false;
+    const matchesCategory = activeCategory === "all" || thread.category === activeCategory;
+    return matchesCategory;
   });
 
   const handleCreateThread = async () => {
@@ -129,11 +139,13 @@ export default function BBSPage() {
       title: newTitle.trim(),
       body: newBody.trim(),
       category: newCategory,
+      is_vip_only: newIsVipOnly,
     });
     if (!error) {
       setNewTitle("");
       setNewBody("");
       setNewCategory("other");
+      setNewIsVipOnly(false);
       setShowCreateModal(false);
       fetchThreads();
     }
@@ -217,12 +229,30 @@ export default function BBSPage() {
             <Tabs value={activeCategory} onValueChange={setActiveCategory} className="mb-6">
               <TabsList className="flex flex-wrap h-auto gap-1">
                 {categories.map((category) => (
-                  <TabsTrigger key={category.id} value={category.id} className="text-sm">
+                  <TabsTrigger key={category.id} value={category.id} className={`text-sm ${category.id === "vip" ? "gap-1" : ""}`}>
+                    {category.id === "vip" && <Crown className="h-3 w-3" />}
                     {category.label}
                   </TabsTrigger>
                 ))}
               </TabsList>
             </Tabs>
+
+            {/* VIPタブ選択時に非VIPユーザーへのCTA */}
+            {activeCategory === "vip" && !permissions.canUseVIPBBS && (
+              <div className="mb-6 p-6 rounded-lg border-2 border-amber-300 bg-amber-50 text-center">
+                <Crown className="h-10 w-10 text-amber-500 mx-auto mb-3" />
+                <h3 className="font-bold text-lg mb-2">VIP掲示板</h3>
+                <p className="text-muted-foreground mb-4">
+                  VIP会員限定の掲示板です。VIPにアップグレードして限定コミュニティに参加しましょう。
+                </p>
+                <Link href="/pricing">
+                  <Button className="gap-2 bg-gradient-to-r from-amber-500 to-yellow-400 text-white hover:from-amber-600 hover:to-yellow-500">
+                    <Crown className="h-4 w-4" />
+                    VIPにアップグレード
+                  </Button>
+                </Link>
+              </div>
+            )}
 
             {loading ? (
               <div className="space-y-3">
@@ -239,6 +269,12 @@ export default function BBSPage() {
                         <div className="flex items-start gap-4">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1 flex-wrap">
+                              {thread.is_vip_only && (
+                                <Badge className="gap-1 text-xs bg-gradient-to-r from-amber-500 to-yellow-400 text-white border-0">
+                                  <Crown className="h-3 w-3" />
+                                  VIP
+                                </Badge>
+                              )}
                               {thread.is_pinned && (
                                 <Badge variant="outline" className="gap-1 text-xs">
                                   <Pin className="h-3 w-3" />
@@ -379,6 +415,18 @@ export default function BBSPage() {
                 className="mt-1"
               />
             </div>
+            {permissions.canUseVIPBBS && (
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={newIsVipOnly}
+                  onChange={(e) => setNewIsVipOnly(e.target.checked)}
+                  className="rounded border-amber-400 text-amber-500 focus:ring-amber-500"
+                />
+                <Crown className="h-4 w-4 text-amber-500" />
+                <span className="text-sm font-medium">VIP限定スレッド</span>
+              </label>
+            )}
             <Button
               className="w-full gap-2"
               onClick={handleCreateThread}
