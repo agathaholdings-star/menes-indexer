@@ -49,6 +49,40 @@
     - **適用箇所**: `run_test()`と`_process_haiku_salon()`の両方
     - **次ステップ**: サロン#43（快癒工房、Wix）等で実テスト → 成功率検証
     - **検証コマンド**: `python3 -c "import scrape_failed_salons as s; salons = s.get_salons_by_ids([43]); s.run_test(salons, csv_path='/Users/agatha/Desktop/retest_wix.csv')"`
+- **スクレイパー強化v2: URL補完+ページネーション+フィルタ+dedup改善（2026-02-22）**:
+    - **背景**: Phase②③で失敗した3,000店弱のサロンを改良スクレイパーで再取得するため。テストで非セラピストURL混入・ページネーション未対応・single_page重複問題を発見
+    - **URL補完改良** (`expand_individual_urls`):
+        - LLMが返したseed URLからパターン推定（共通パスプレフィックス or クエリキー or all_internal）→ HTML全体の`<a href>`から同パターンURLを網羅的に追加
+        - 複数HTML対応（TOP+一覧ページの両方をスキャン）
+        - `listing_url`パラメータ追加: 一覧ページURL自体を個別URLリストから除外
+    - **ページネーション対応** (`detect_pagination` + `fetch_paginated_listing`):
+        - WordPress `/page/N/` とクエリ `?page=N` パターンを自動検出
+        - 全ページをfetch → seed URLパターンで追加URL収集
+        - 例: アロマエメラルド 24名→94名（4ページ分追加取得）
+    - **非セラピストURLフィルタ強化**:
+        - `_NON_THERAPIST_FILENAMES`: `schedule.html`, `reserve.html`, `menu.html`, `blog.html`等27ファイル名を除外
+        - `_LISTING_EXCLUDE_PREFIXES`: `/reservation`, `/contact`, `/access`等10パス追加
+        - `_PAGINATION_RE`: `/page/\d+` をパス途中でも検出して除外
+        - ファイル名フィルタを`all_internal`だけでなく`path`パターンにも適用（ライベスパで検証済み）
+    - **dedup判定改善** (`insert_therapist_new`):
+        - 旧: `salon_id + source_url` → single_pageで全員同じURLになり1名しか登録できなかった
+        - 新: `salon_id + name`（同名チェック）→ 同じURLでも名前が違えばINSERT可能
+        - 例: 快癒工房（Wix） 1名→9名に改善
+    - **テスト結果（失敗サロン10件）**:
+        | サロン | タイプ | 登録 | 備考 |
+        |--------|--------|------|------|
+        | #16 ファティーン | - | 0 | サイトダウン |
+        | #20 ドットエム | single_page | 19名抽出 | 名前dedup済み |
+        | #35 マダムの手 | single_page | 18名抽出 | 名前dedup済み |
+        | #41 ワンルーム | has_individuals | 23 | profile_*.html パターン |
+        | #42 レガリス | single_page | 10名抽出 | ブログ型 |
+        | #43 快癒工房(Wix) | listing→single_page | 9 | Wix外部URL除外→fallback |
+        | #45 ライベスパ | has_individuals | 15 | フィルタ適用でゴミURL排除確認 |
+        | #47 ストレッチプラス | no_therapists | 0 | セラピスト情報なし（正常） |
+        | #54 アングリッド | single_page | 10名抽出 | ブログ型 |
+        | #58 メルメルメルト | no_therapists | 0 | 404ページ（正常） |
+    - **追加テスト（大規模サロン3件）**: アロマブラッサム0→214名、アロマモア101→130名、アロマエメラルド24→118名
+    - **変更ファイル**: `scrape_failed_salons.py`（フィルタ・URL補完・ページネーション）, `batch_extract_therapist_info.py`（dedup改善・listing_url引数追加）
 - **セラピスト統一スクレイピングパイプライン実装完了（2026-02-22）**:
     - **背景と課題**: 2スクリプト体制（`batch_extract_therapist_info.py --new` + `scrape_failed_salons.py`）で運用が煩雑。`scrape_failed_salons.py`にdedup がなく複数回実行で重複INSERT。`--new`モードはtherapist_list_urlありサロンしか処理できなかった
     - **Phase 1: source_url dedup追加**:

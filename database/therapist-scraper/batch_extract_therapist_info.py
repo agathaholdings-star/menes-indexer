@@ -398,14 +398,13 @@ def insert_therapist_new(cur, salon_id, data):
     if not t_name:
         return None
 
-    # source_url 重複チェック（同一サロン内）
+    # 重複チェック（同一サロン内: 同名セラピストが存在すればスキップ）
     source_url = data.get('source_url')
-    if source_url:
-        cur.execute(
-            "SELECT id FROM therapists WHERE salon_id = %s AND source_url = %s LIMIT 1",
-            (salon_id, source_url))
-        if cur.fetchone():
-            return None  # 既存 → スキップ
+    cur.execute(
+        "SELECT id FROM therapists WHERE salon_id = %s AND name = %s LIMIT 1",
+        (salon_id, t_name))
+    if cur.fetchone():
+        return None  # 同名既存 → スキップ
 
     bust_val = data.get('bust')
     if bust_val is not None:
@@ -777,7 +776,8 @@ def _process_haiku_salon(cur, salon, args, stats, _shutdown_ref):
     # --- URL補完: TOP+一覧の全HTMLから同パターンのURLを追加抽出 ---
     if individual_urls:
         html_sources = [h for h in [html, listing_html] if h]
-        individual_urls = expand_individual_urls(html_sources, url, individual_urls)
+        individual_urls = expand_individual_urls(html_sources, url, individual_urls,
+                                                listing_url=listing_url_for_fallback)
 
     # --- ページネーション: 一覧ページにpage 2以降があれば全ページからURL収集 ---
     if individual_urls and listing_html and listing_url_for_fallback:

@@ -321,7 +321,23 @@ _LISTING_EXCLUDE_PREFIXES = frozenset([
     '/wp-login/', '/wp-json/', '/wp-includes/', '/page/', '/feed/',
     '/comments/', '/trackback/', '/xmlrpc', '/sitemap', '/cdn-cgi/',
     '/cart/', '/checkout/', '/attachment/', '/?s=',
+    '/reservation', '/contact', '/access', '/privacy', '/terms',
+    '/inquiry', '/recruit', '/faq', '/blog/', '/news/',
 ])
+
+# all_internalモードで除外するファイル名（拡張子なしも含む）
+_NON_THERAPIST_FILENAMES = frozenset([
+    'main.html', 'rate.html', 'menu.html', 'price.html', 'access.html',
+    'about.html', 'contact.html', 'top.html', 'home.html', 'info.html',
+    'system.html', 'concept.html', 'recruit.html', 'privacy.html',
+    'itemlist.html', 'scheduleal.html', 'scheduleall.html', 'schedule.html',
+    'reservation.html', 'reserve.html', 'map.html', 'faq.html', 'news.html',
+    'index.html', 'sitemap.html', 'terms.html', 'blog.html', 'link.html',
+    'enquete.html', 'kinsi.html', 'sch.html',
+])
+
+# ページネーションパターン（パス途中でもマッチ）
+_PAGINATION_RE = re.compile(r'/page/\d+(?:/|$)')
 
 
 def _extract_urls_from_html(html: str, base_url: str, patterns: set, existing: set) -> list[str]:
@@ -349,6 +365,17 @@ def _extract_urls_from_html(html: str, base_url: str, patterns: set, existing: s
             continue
 
         parsed_full = urlparse(full_url)
+        path_lower = parsed_full.path.lower().rstrip('/')
+
+        # ページネーションURL除外（パス途中の /page/N/ もキャッチ）
+        if _PAGINATION_RE.search(parsed_full.path):
+            continue
+
+        # 非セラピストファイル名を全パターンで除外（path/all_internal共通）
+        filename = path_lower.rsplit('/', 1)[-1]
+        if filename in _NON_THERAPIST_FILENAMES:
+            continue
+
         matched = False
         for ptype, pval in patterns:
             if ptype == 'query' and parsed_full.query.startswith(pval + '='):
@@ -358,13 +385,13 @@ def _extract_urls_from_html(html: str, base_url: str, patterns: set, existing: s
                 matched = True
                 break
             if ptype == 'all_internal':
-                # ルートレベルURL: WP構造パスを除外し全内部リンクを候補にする
-                path_lower = parsed_full.path.lower()
-                if path_lower and path_lower != '/' and not any(
-                    path_lower.startswith(ep) for ep in _LISTING_EXCLUDE_PREFIXES
-                ):
-                    matched = True
-                    break
+                # ルートレベルURL: WP構造パス除外
+                if not path_lower or path_lower == '/':
+                    continue
+                if any(path_lower.startswith(ep) for ep in _LISTING_EXCLUDE_PREFIXES):
+                    continue
+                matched = True
+                break
 
         if matched:
             added.append(full_url)
@@ -420,7 +447,8 @@ def _infer_url_patterns(seed_urls: list[str]) -> set:
     return patterns
 
 
-def expand_individual_urls(html_list: list[str] | str, base_url: str, seed_urls: list[str]) -> list[str]:
+def expand_individual_urls(html_list: list[str] | str, base_url: str, seed_urls: list[str],
+                           listing_url: str | None = None) -> list[str]:
     """LLMが返したindividual_urlsをヒントに、全HTMLから同パターンのURLを追加抽出。
 
     clean_html_full() の100K切り詰めでLLMに見えなかったURLを補完する。
@@ -428,6 +456,7 @@ def expand_individual_urls(html_list: list[str] | str, base_url: str, seed_urls:
     全HTMLの <a href> から同パターンのURLをマージ。
 
     html_list: 単一HTMLまたはHTMLのリスト（TOPページ+一覧ページ等）
+    listing_url: 一覧ページURL（除外対象として使用）
 
     例: seed = ["?castid=155", "?castid=148"] → 全HTMLから ?castid= を持つURLを全抽出
     例: seed = ["/therapist/3102", "/therapist/3098"] → /therapist/ 以下を全抽出
@@ -446,7 +475,14 @@ def expand_individual_urls(html_list: list[str] | str, base_url: str, seed_urls:
     if not patterns:
         return seed_urls
 
+    # 一覧URL自体とTOPページを除外対象に含める
     existing = set(seed_urls)
+    if listing_url:
+        existing.add(listing_url.rstrip('/'))
+        existing.add(listing_url.rstrip('/') + '/')
+    # base_url（TOPページ）も除外
+    existing.add(base_url.rstrip('/'))
+    existing.add(base_url.rstrip('/') + '/')
     all_added = []
 
     for h in html_list:
@@ -1380,7 +1416,8 @@ def run_test(salons: list[dict], csv_path: str | None = None):
         # --- URL補完: TOP+一覧の全HTMLから同パターンのURLを追加抽出 ---
         if individual_urls:
             html_sources = [h for h in [html, listing_html] if h]
-            individual_urls = expand_individual_urls(html_sources, url, individual_urls)
+            individual_urls = expand_individual_urls(html_sources, url, individual_urls,
+                                                    listing_url=listing_url_for_fallback)
 
         # --- ページネーション: 一覧ページにpage 2以降があれば全ページからURL収集 ---
         if individual_urls and listing_html and listing_url_for_fallback:
