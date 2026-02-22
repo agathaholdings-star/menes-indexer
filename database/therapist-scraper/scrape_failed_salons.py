@@ -273,12 +273,20 @@ def _reanchor_url(url: str, official_url: str) -> str:
         return url
 
     # 明らかに別サービス（ポータル等）はそのまま
-    # ベースドメイン（TLD+1）が異なればスキップ
-    def _base_domain(d):
+    # TLDが異なれば確実に外部 → スキップ
+    def _tld(d):
         parts = d.split('.')
-        return '.'.join(parts[-2:]) if len(parts) >= 2 else d
+        return parts[-1] if parts else d
 
-    if _base_domain(url_domain) != _base_domain(official_domain):
+    if _tld(url_domain) != _tld(official_domain):
+        return url
+
+    # TLDが同じ場合、ドメイン全体の類似度で判定
+    # sh-gzz.tokyo vs sh-gzs.tokyo → 類似 → typo
+    # example.tokyo vs sh-gzs.tokyo → 非類似 → 外部
+    from difflib import SequenceMatcher
+    ratio = SequenceMatcher(None, url_domain, official_domain).ratio()
+    if ratio < 0.7:
         return url
 
     # 同系ドメインだがtypo → 公式ドメインで上書き
