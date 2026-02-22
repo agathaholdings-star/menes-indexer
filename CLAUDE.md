@@ -88,22 +88,46 @@
     - **取れないパターン（対処不可）**: サイトダウン/404、年齢確認ゲート、JS描画で名前テキストがHTMLにない、セラピスト情報非公開
     - **合計テスト結果**: 23サロンテスト → 480名登録。VPS失敗サロン全件再実行で大幅回収が見込める
     - **変更ファイル**: `scrape_failed_salons.py`（フィルタ・URL補完・ページネーション）, `batch_extract_therapist_info.py`（dedup改善・listing_url引数追加）
-    - **VPS全件実行の検討（2026-02-22、未決定）**:
-        - 失敗サロン約2,977件だけでなく、全6,489サロンで`--new`を再実行する案
-        - **理由**: Phase②③で「成功」扱いのサロンでもURL補完・ページネーション対応で取り漏れセラピストが多数ある（例: アロマエメラルド24→118名、アロマブラッサム0→214名）
-        - **安全性**: name dedupにより既存セラピストは重複INSERTされない
-        - **推定コスト**: ~$200（Stage1 TOPページ分析 ~$97 + Stage2 一覧ページ分析 ~$45 + Stage3 個別ページ抽出 ~$75-125）
-        - **処理フロー**: TOPページfetch→Haiku分析→一覧ページfetch→Haiku分析→URL補完+ページネーション→個別ページfetch→Haiku抽出→DB INSERT。single_pageの場合はStage2/3不要で一覧ページから全員一括抽出
-        - **ステータス**: テスト追加してから判断予定
-    - **テスト用コマンド（次セッション用）**:
+    - **batch4テスト（新規10件、#59-#120）**: 6/10成功、119名登録
+        - 桜13名、おみみん9名、アロマミント10名、レーヴスパ41名、ギニロキカク23名(3Days CMS)、シンデレラガール23名
+        - 失敗4件: 3Days CMSデータ空(エル)、セラピスト非公開(ノエル/パシャ/フロイライン)
+    - **🔑 ランダム30件本番テスト**: **30/30処理成功、499名新規登録**
+        - 既存サロン12件: dedup正常動作（重複INSERT 0件）、4件で追加セラピスト発見（クラブマリア3→45名等）
+        - 失敗サロン18件: **18/18全件取得成功**
+        - アクア中目黒158名、ルームナンバー37名、サルート27名、ディアー25名、パルスパ23名等
+    - **🔴 方針決定: therapistsデータ全件ゼロから再構築（2026-02-22）**:
+        - **背景**: 既存92,587名はPhase②（ヒューリスティック）→Phase③（LLM）→名前修復→クレンジング→Haiku再抽出と継ぎ接ぎ。新スクレイパーはURL補完・ページネーション・single_page fallback・フィルタ強化で完成度が高く、ランダム30件テストで100%成功
+        - **決定理由**:
+            1. 全データを同一スクレイパーバージョンで統一（品質の一貫性）
+            2. 旧`salon_scrape_cache`の誤判定キャッシュを排除（source-first原則）
+            3. 未公開フェーズの今がコスト最小のタイミング
+            4. 差分追加だと旧/新の表記ゆれ・重複リスクが残る
+        - **source-first原則**: 旧キャッシュ（salon_scrape_cache）を参照せず、全サロンをofficial_url起点で再探索。誤ったURL判定を再生産しない
+        - **口コミ再紐付け**: therapist_idが変わるが、MEマッチング（Step 1）からやり直すだけ。新DBでセラピスト増加により口コミ件数も14,879件→増加見込み
+        - **推定コスト**: ~$260（Stage1 ~$97 + Stage2 ~$45 + Stage3 ~$120）
+        - **推定結果**: 12万〜13万名（全件同一品質）
+    - **再構築実行プラン**:
+        1. VPS: pg_dump で現DB丸ごとバックアップ
+        2. VPS: `therapists` TRUNCATE + `salon_scrape_cache` TRUNCATE
+        3. VPS: `--new` を全6,489サロンで実行（5並列tmux、~30時間、~$260）
+        4. 品質検証: 件数・重複・fail_reason分類
+        5. pg_dump → ローカル同期
+        6. ME口コミ再マッチング（Step 1からやり直し、件数増加見込み）
+        7. 口コミLLMリライト（新規マッチ分のみ差分実行）→ DB投入
+        8. 旧バックアップは保険として保持
+    - **スクレイパーのHaiku使用箇所**:
+        - Stage 1（TOPページ構造分析）: 全6,489サロン → ~$97
+        - Stage 2（一覧ページ分析）: listing型の~3,500サロン → ~$45
+        - Stage 3（個別ページ全フィールド抽出）: ~12万ページ → ~$120
+        - single_page（1ページ全員一括抽出）: 個別URLなしの場合 → Stage 3に含む
+        - 3Days CMS: Haiku不使用（data.js直接パース、$0）
+    - **URL取りこぼし対策**: Haikuは切り詰めHTML（100KB）しか見えないが、`expand_individual_urls()`がseed URLからパターン推定→フルHTMLの全`<a href>`をスキャンして網羅収集
+    - **テスト用コマンド**:
         ```bash
         cd /Users/agatha/Desktop/project/menethe-indexer/database/therapist-scraper
-        # 特定サロンIDでテスト
         python3 -c "import scrape_failed_salons as s; salons = s.get_salons_by_ids([ID1, ID2, ...]); s.run_test(salons, csv_path='/Users/agatha/Desktop/retest_XXX.csv')"
-        # 失敗サロンからN件テスト
-        python3 -c "import scrape_failed_salons as s; salons = s.get_failed_salons(limit=10, offset=0); s.run_test(salons, csv_path='/Users/agatha/Desktop/retest_XXX.csv')"
         ```
-    - **既テスト済みサロンID**: 16, 20, 35, 41, 42, 43, 45, 47, 54, 58, 102, 104, 111, 112, 113, 114, 116, 117, 118, 119, 139, 143, 156, 238, 239, 242, 243, 246, 248, 250, 251, 252, 253
+    - **既テスト済みサロンID**: 16, 20, 35, 41, 42, 43, 45, 47, 54, 58, 59, 65, 67, 71, 72, 73, 75, 81, 82, 102, 104, 107, 111, 112, 113, 114, 116, 117, 118, 119, 120, 132, 139, 143, 156, 238, 239, 242, 243, 246, 248, 250, 251, 252, 253, 1428, 1515, 2489, 2592, 2608, 2847, 3458, 3780, 3960, 4028, 4317, 4403, 4478, 4493, 5006, 5346, 5394, 5413, 5418, 5787, 5899, 6036, 6325, 6537, 6540, 7111, 7224, 7328
 - **セラピスト統一スクレイピングパイプライン実装完了（2026-02-22）**:
     - **背景と課題**: 2スクリプト体制（`batch_extract_therapist_info.py --new` + `scrape_failed_salons.py`）で運用が煩雑。`scrape_failed_salons.py`にdedup がなく複数回実行で重複INSERT。`--new`モードはtherapist_list_urlありサロンしか処理できなかった
     - **Phase 1: source_url dedup追加**:
@@ -293,6 +317,22 @@
             2. VPS 5並列tmux hw1-hw5で`--existing`バッチ実行
             3. pg_dump→ローカル同期→目視確認
             4. `batch_download_images.py`でStorage保存バッチ実行
+    12e. **🔴 Phase④: therapistsデータ全件再構築** ← 次に実行（2026-02-22決定）
+        - **方針**: 既存92,587名を破棄し、新スクレイパーで全6,489サロンをゼロから再スクレイピング
+        - **理由**: 既存データは5世代の継ぎ接ぎ（Phase②ヒューリスティック→Phase③LLM→名前修復→クレンジング→Haiku再抽出）。新スクレイパーで統一品質にする
+        - **source-first原則**: salon_scrape_cacheもTRUNCATEし、旧キャッシュの誤判定を排除
+        - **推定コスト**: ~$260 / **推定結果**: 12万〜13万名
+        - **手順**:
+            1. VPS: pg_dump バックアップ
+            2. VPS: therapists + salon_scrape_cache TRUNCATE
+            3. VPS: `--new` 全6,489サロン実行（5並列、~30時間）
+            4. 品質検証（件数・重複・fail_reason）
+            5. pg_dump → ローカル同期
+        - **画像パイプライン(12d)との関係**: 再構築後のデータにimage_urlsが含まれる（Stage 3で一括抽出）。画像DL→Storage(12d-2)は再構築完了後に実行
+    12f. **Phase④完了後: ME口コミ再マッチング＆再投入**
+        - Step 1: ME突合やり直し（新therapistsのsource_urlで再マッチング → 件数増加見込み）
+        - Step 2: LLMリライト（新規マッチ分のみ差分実行）
+        - Step 3: DB投入
     13. **本番デプロイ準備**（本番Supabaseスキーマpush → Vercel環境変数 → デプロイ） ※12cのインフラ方針決定後
     14. VPSのスクレイピングデータをpg_dumpで本番Supabaseに移行
 
