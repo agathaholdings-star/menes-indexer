@@ -391,6 +391,42 @@ def expand_individual_urls(html: str, base_url: str, seed_urls: list[str]) -> li
 
 
 # =============================================================================
+# プラットフォーム検知
+# =============================================================================
+
+def detect_platform(url: str, html: str) -> str | None:
+    """ドメイン/HTMLマーカーからプラットフォームを早期判定。
+
+    Returns: 'wix' | '3days_cms' | 'crayon' | 'age_gate' | None
+    """
+    domain = urlparse(url).netloc.lower()
+
+    # ドメインベース
+    if 'wixsite.com' in domain:
+        return 'wix'
+    if 'crayonsite.net' in domain:
+        return 'crayon'
+
+    # HTMLベース: Wix（カスタムドメインでも検出）
+    if 'wix-code-sdk' in html or 'static.wixstatic.com' in html:
+        return 'wix'
+    if '<meta name="generator" content="Wix.com' in html:
+        return 'wix'
+
+    # 3Days CMS
+    if detect_3days_cms(html):
+        return '3days_cms'
+
+    # age gate検知（短いHTMLで年齢確認ページ）
+    if len(html) < 2000:
+        html_lower = html.lower()
+        if 'age' in html_lower or 'access denied' in html_lower:
+            return 'age_gate'
+
+    return None
+
+
+# =============================================================================
 # 3Days CMS 検出・直接抽出（Alpine.js + S3 data.js パターン）
 # =============================================================================
 
@@ -975,6 +1011,8 @@ def run_test(salons: list[dict], csv_path: str | None = None):
                     log.info(f"  再分析: {page_type}")
 
         individual_urls = []
+        listing_html = None
+        listing_url_for_fallback = None
 
         # 補正: single_pageでもindividual_urlsがあればhas_individualsに変更
         # ただし全URLが外部ドメインの場合は補正しない（予約サイト等）
@@ -1005,6 +1043,8 @@ def run_test(salons: list[dict], csv_path: str | None = None):
                 list_html = fetch_page_smart(listing_url_extra, label="Stage2 LIST(補完): ")
                 if list_html:
                     _cache.save("salon_list", sid, list_html)
+                    listing_html = list_html
+                    listing_url_for_fallback = listing_url_extra
 
                     # 3Days CMS チェック
                     list_data_js_url = detect_3days_cms(list_html)
@@ -1055,9 +1095,16 @@ def run_test(salons: list[dict], csv_path: str | None = None):
             if listing_url:
                 # --- Stage 2: 一覧ページ分析 ---
                 log.info(f"  Stage 2: {listing_url}")
-                list_html = fetch_page_smart(listing_url, label="Stage2 LIST: ")
+                # .click ドメインはPlaywright強制（JS描画が多い）
+                if HAS_PLAYWRIGHT and urlparse(listing_url).netloc.lower().endswith('.click'):
+                    log.info(f"  .click ドメイン → Playwright強制: {listing_url}")
+                    list_html = fetch_page_playwright(listing_url)
+                else:
+                    list_html = fetch_page_smart(listing_url, label="Stage2 LIST: ")
                 if list_html:
                     _cache.save("salon_list", sid, list_html)
+                    listing_html = list_html
+                    listing_url_for_fallback = listing_url
 
                     # Stage 2 でも 3Days CMS チェック
                     list_data_js_url = detect_3days_cms(list_html)
@@ -1164,15 +1211,60 @@ def run_test(salons: list[dict], csv_path: str | None = None):
             results.append(row)
             continue
 
+        # listing_html fallback: TOP page
+        if listing_html is None:
+            listing_html = html
+            listing_url_for_fallback = url
+
         # --- URL補完: 全HTMLから同パターンのURLを追加抽出 ---
         if individual_urls:
             individual_urls = expand_individual_urls(html, url, individual_urls)
 
+        # --- プラットフォーム検知 + Wix外部URL除外 ---
+        platform = detect_platform(url, html)
+        if platform == 'wix' and individual_urls:
+            salon_domain = urlparse(url).netloc.lower()
+            internal_urls = [u for u in individual_urls
+                             if urlparse(u).netloc.lower() == salon_domain
+                             or salon_domain in urlparse(u).netloc.lower()]
+            if not internal_urls:
+                log.info(f"  Wix: 外部URLのみ ({len(individual_urls)}件) → single_page fallbackへ")
+                individual_urls = []
+            else:
+                removed = len(individual_urls) - len(internal_urls)
+                if removed > 0:
+                    log.info(f"  Wix: 外部URL {removed}件除外 → {len(internal_urls)}件")
+                individual_urls = internal_urls
+
         row["individual_count"] = len(individual_urls)
 
         if not individual_urls:
-            row["status"] = "NO_URLS"
-            row["fail_reason"] = "no_valid_urls"
+            # 個別URLなし → 一覧ページからsingle_page抽出を試みる
+            if listing_html:
+                log.info("  個別URLなし → 一覧ページからsingle_page抽出")
+                therapists = haiku_extract_single_page(listing_html, name, listing_url_for_fallback)
+                log.info(f"  single_page fallback (no URLs): {len(therapists)} 名抽出")
+                therapist_count = 0
+                for t_data in therapists:
+                    t_data["source_url"] = listing_url_for_fallback
+                    stats["total_input_tokens"] += t_data.pop("input_tokens", 0)
+                    stats["total_output_tokens"] += t_data.pop("output_tokens", 0)
+                    t_id = insert_therapist_new(cur, sid, t_data)
+                    if t_id:
+                        therapist_count += 1
+                        log.info(f"    → {t_data['name']} (id={t_id})")
+                    else:
+                        log.info(f"    → {t_data['name']} (INSERT失敗/重複)")
+                stats["therapists_inserted"] += therapist_count
+                row["therapists_found"] = therapist_count
+                if therapist_count > 0:
+                    row["status"] = "OK"
+                else:
+                    row["status"] = "NO_URLS"
+                    row["fail_reason"] = "no_valid_urls"
+            else:
+                row["status"] = "NO_URLS"
+                row["fail_reason"] = "no_valid_urls"
             results.append(row)
             continue
 
@@ -1256,6 +1348,22 @@ def run_test(salons: list[dict], csv_path: str | None = None):
                 log.info(f"      抽出失敗")
 
             time.sleep(0.5)  # rate limit
+
+        # --- Stage 3 全件失敗 → 一覧ページからsingle_page fallback ---
+        if therapist_count == 0 and listing_html:
+            log.info("  Stage 3 全件失敗 → 一覧ページからsingle_page抽出")
+            therapists = haiku_extract_single_page(listing_html, name, listing_url_for_fallback)
+            log.info(f"  single_page fallback: {len(therapists)} 名抽出")
+            for t_data in therapists:
+                t_data["source_url"] = listing_url_for_fallback
+                stats["total_input_tokens"] += t_data.pop("input_tokens", 0)
+                stats["total_output_tokens"] += t_data.pop("output_tokens", 0)
+                t_id = insert_therapist_new(cur, sid, t_data)
+                if t_id:
+                    therapist_count += 1
+                    log.info(f"    → {t_data['name']} (id={t_id})")
+                else:
+                    log.info(f"    → {t_data['name']} (INSERT失敗/重複)")
 
         stats["therapists_inserted"] += therapist_count
         row["therapists_found"] = therapist_count

@@ -569,7 +569,7 @@ def _process_haiku_salon(cur, salon, args, stats, _shutdown_ref):
         fetch_page_smart, detect_3days_cms, parse_3days_data_js,
         haiku_analyze_page, haiku_extract_single_page,
         is_valid_therapist_url, _reanchor_stage1_urls,
-        expand_individual_urls,
+        expand_individual_urls, detect_platform,
     )
 
     salon_id = salon['salon_id']
@@ -639,6 +639,8 @@ def _process_haiku_salon(cur, salon, args, stats, _shutdown_ref):
                 page_type = result1['page_type']
 
     individual_urls = []
+    listing_html = None
+    listing_url_for_fallback = None
 
     # single_page でも individual_urls があれば has_individuals に補正
     if page_type == 'single_page' and result1.get('individual_urls'):
@@ -658,6 +660,8 @@ def _process_haiku_salon(cur, salon, args, stats, _shutdown_ref):
             list_html = fetch_page_smart(listing_url_extra, label="S2 LIST(補完): ")
             if list_html:
                 _cache.save("salon_list", salon_id, list_html)
+                listing_html = list_html
+                listing_url_for_fallback = listing_url_extra
                 # 3Days CMS チェック
                 list_data_js_url = detect_3days_cms(list_html)
                 if list_data_js_url:
@@ -694,6 +698,8 @@ def _process_haiku_salon(cur, salon, args, stats, _shutdown_ref):
             list_html = fetch_page_smart(listing_url, label="S2 LIST: ")
             if list_html:
                 _cache.save("salon_list", salon_id, list_html)
+                listing_html = list_html
+                listing_url_for_fallback = listing_url
                 # 3Days CMS チェック
                 list_data_js_url = detect_3days_cms(list_html)
                 if list_data_js_url:
@@ -763,12 +769,51 @@ def _process_haiku_salon(cur, salon, args, stats, _shutdown_ref):
     else:
         return 0
 
+    # listing_html fallback: TOP page
+    if listing_html is None:
+        listing_html = html
+        listing_url_for_fallback = url
+
     # --- URL補完: 全HTMLから同パターンのURLを追加抽出 ---
     if individual_urls:
         individual_urls = expand_individual_urls(html, url, individual_urls)
 
+    # --- プラットフォーム検知 + Wix外部URL除外 ---
+    platform = detect_platform(url, html)
+    if platform == 'wix' and individual_urls:
+        salon_domain = urlparse(url).netloc.lower()
+        internal_urls = [u for u in individual_urls
+                         if urlparse(u).netloc.lower() == salon_domain
+                         or salon_domain in urlparse(u).netloc.lower()]
+        if not internal_urls:
+            log.info(f"  Wix: 外部URLのみ ({len(individual_urls)}件) → single_page fallbackへ")
+            individual_urls = []
+        else:
+            removed = len(individual_urls) - len(internal_urls)
+            if removed > 0:
+                log.info(f"  Wix: 外部URL {removed}件除外 → {len(internal_urls)}件")
+            individual_urls = internal_urls
+
     # --- individual_urls の dedup + Stage 3 ---
     if not individual_urls:
+        # 個別URLなし → 一覧ページからsingle_page抽出を試みる
+        if listing_html:
+            therapists = haiku_extract_single_page(listing_html, salon_display, listing_url_for_fallback)
+            count = 0
+            for t_data in therapists:
+                t_data['source_url'] = listing_url_for_fallback
+                stats['total_input_tokens'] = stats.get('total_input_tokens', 0) + t_data.pop('input_tokens', 0)
+                stats['total_output_tokens'] = stats.get('total_output_tokens', 0) + t_data.pop('output_tokens', 0)
+                if t_data.get('source_url') in existing_urls:
+                    continue
+                if not args.dry_run:
+                    t_id = insert_therapist_new(cur, salon_id, t_data)
+                    if t_id:
+                        count += 1
+                else:
+                    count += 1
+            stats['inserted'] = stats.get('inserted', 0) + count
+            return count
         return 0
 
     # URLバリデーション
@@ -849,6 +894,28 @@ def _process_haiku_salon(cur, salon, args, stats, _shutdown_ref):
             salon_inserted += 1
 
         time.sleep(0.5)
+
+    # --- Stage 3 全件失敗 → 一覧ページからsingle_page fallback ---
+    if salon_inserted == 0 and listing_html:
+        log.info("  Stage 3 全件失敗 → 一覧ページからsingle_page抽出")
+        therapists = haiku_extract_single_page(listing_html, salon_display, listing_url_for_fallback)
+        log.info(f"  single_page fallback: {len(therapists)} 名抽出")
+        count = 0
+        for t_data in therapists:
+            t_data['source_url'] = listing_url_for_fallback
+            stats['total_input_tokens'] = stats.get('total_input_tokens', 0) + t_data.pop('input_tokens', 0)
+            stats['total_output_tokens'] = stats.get('total_output_tokens', 0) + t_data.pop('output_tokens', 0)
+            if t_data.get('source_url') in existing_urls:
+                continue
+            if not args.dry_run:
+                t_id = insert_therapist_new(cur, salon_id, t_data)
+                if t_id:
+                    count += 1
+                    salon_inserted += 1
+            else:
+                count += 1
+                salon_inserted += 1
+        stats['inserted'] = stats.get('inserted', 0) + count
 
     return salon_inserted
 
