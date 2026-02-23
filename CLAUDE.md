@@ -214,6 +214,43 @@
         - **名前品質**: 1,271名中 **0件の問題**（few-shot修正の効果確認）
         - **画像あり**: 1,242/1,271（**97.7%**）
     - **変更ファイル**: `batch_extract_therapist_info.py`（`insert_therapist_new()`のdedup判定1行修正）
+- **Codexレビュー反映＋3回目100サロンテスト＋VPS全件実行開始（2026-02-23）**:
+    - **Codexレビュー#1: single_page増分取得漏れ**: single_page/listing fallbackパス4箇所で`existing_urls`プレフィルタが`insert_therapist_new()`手前にあり、既存1名でもいると全員ブロック → 4箇所から除去、`insert_therapist_new()`の3点dedupに委譲
+    - **Codexレビュー#1: ドメイン部分一致**: 外部ドメイン除外が`salon_domain in netloc`（部分文字列一致）で緩い → `endswith('.' + salon_domain)`に変更（3箇所: batch_extract×2、scrape_failed×1）
+    - **Codexレビュー#2: 3Days CMS増分漏れ**: 3Days CMSパス3箇所にも同じ`existing_urls`プレフィルタ残存 → 除去
+    - **Codexレビュー#2: サブドメイン補正判定**: single_page→has_individuals補正のドメイン判定が完全一致のみ → `endswith('.' + salon_domain)`追加
+    - **HTMLキャッシュ完全化**: プロジェクトルール「HTMLをgzip圧縮で保存」に準拠
+        - Stage3個別ページ: `therapist/{salon_id}_{url_md5[:12]}.html.gz` で保存追加
+        - 3Days CMS data.js: `data_js/{salon_id}.html.gz` で保存追加（3箇所）
+        - 検証: dry-runでsalon #352（33名）→ `therapist/352_*.html.gz` 33件生成確認
+    - **3回目100サロン検証テスト**: dedup修正＋Codexレビュー修正後、追加で100サロンを5並列実行
+        - **結果**: 91/100サロン成功、**1,253名DB登録**
+        - **名前品質**: 1,253名中 **1件のみ**（松山ゴールドの「体験A」= サロン側の命名）
+        - **画像あり**: 1,209/1,253（**96.5%**）
+        - 画像なし44名の分析: 12サロンが該当。大半はサロン側の写真未登録（placeholder/noimage/comingsoon）
+        - 画像なしの原因パターン: オフサイド（Stage2で個別URL未発見→single_page fallback）、ルール（Jimdo srcset-only）、その他はサロン側未登録
+    - **300サロン累計テスト結果**:
+        | テスト | 成功率 | 登録数 | 画像率 | 名前問題 |
+        |--------|--------|--------|--------|---------|
+        | 1回目 | 89% | 1,319 | 99.5% | 12件→few-shot修正 |
+        | 2回目 | 82% | 1,271 | 97.7% | 0件 |
+        | 3回目 | 91% | 1,253 | 96.5% | 1件（サロン側命名） |
+    - **🚀 VPS全件実行開始（2026-02-23 15:21 JST）**:
+        - 5並列tmux (w1-w5)、ID範囲: W1(1-1538), W2(1538-3075), W3(3075-4612), W4(4612-6149), W5(6149-7686)
+        - 対象: 6,488サロン（うち279サロン12,293名は処理済み→スキップ）
+        - pg_dumpバックアップ: `/opt/scraper/backup_therapists_20260223.sql.gz` (1.7MB)
+        - 推定所要時間: **20〜24時間**（2026-02-24 昼〜夕方完了見込み）
+        - scpファイル: `batch_extract_therapist_info.py`, `name_extractor.py`, `scrape_failed_salons.py`（md5一致確認済み）
+    - **完了後の手順**:
+        1. `ssh ... "sudo -u postgres psql -d menethe -c 'SELECT count(*) FROM therapists;'"` で件数確認
+        2. 失敗サロン・画像なし・名前問題を分類
+        3. pg_dumpでローカル同期
+        4. パターン別に修正→再実行
+    - **VPS進捗確認コマンド**:
+        ```bash
+        ssh -i ~/Downloads/indexer.pem root@220.158.18.6 "for i in 1 2 3 4 5; do echo \"=== W\$i ===\"; tail -1 /opt/scraper/w\$i.log; done && sudo -u postgres psql -d menethe -t -c 'SELECT count(*) FROM therapists'"
+        ```
+    - **変更ファイル**: `batch_extract_therapist_info.py`（existing_urls除去7箇所、ドメインendswith3箇所、サブドメイン補正、キャッシュ追加4箇所、hashlib import）、`scrape_failed_salons.py`（ドメインendswith1箇所）
 - **セラピスト情報Haiku一括抽出（`--existing`モード）VPS実行済み（2026-02-19〜02-20）**:
     - 5並列tmux (hw1-hw5) で95,340件に対してHaiku抽出を実行・完了
     - 推定コスト: ~$241（Haiku 4.5）
