@@ -39,6 +39,7 @@ import sys
 import time
 import argparse
 from datetime import datetime, timedelta
+from hashlib import md5
 from urllib.parse import urlparse
 
 import psycopg2
@@ -297,6 +298,7 @@ def _process_haiku_salon(cur, salon, args, stats, _shutdown_ref):
         log.info(f"  3Days CMS detected → {data_js_url}")
         js_text = fetch_page(data_js_url)
         if js_text:
+            _cache.save("data_js", salon_id, js_text)
             therapists = parse_3days_data_js(js_text, url, salon_name=salon_display)
             count = 0
             for t_data in therapists:
@@ -368,6 +370,7 @@ def _process_haiku_salon(cur, salon, args, stats, _shutdown_ref):
                 if list_data_js_url:
                     js_text = fetch_page(list_data_js_url)
                     if js_text:
+                        _cache.save("data_js", f"{salon_id}_list", js_text)
                         therapists = parse_3days_data_js(js_text, listing_url_extra, salon_name=salon_display)
                         count = 0
                         for t_data in therapists:
@@ -405,6 +408,7 @@ def _process_haiku_salon(cur, salon, args, stats, _shutdown_ref):
                 if list_data_js_url:
                     js_text = fetch_page(list_data_js_url)
                     if js_text:
+                        _cache.save("data_js", f"{salon_id}_list2", js_text)
                         therapists = parse_3days_data_js(js_text, listing_url, salon_name=salon_display)
                         count = 0
                         for t_data in therapists:
@@ -574,6 +578,7 @@ def _process_haiku_salon(cur, salon, args, stats, _shutdown_ref):
         if not t_html:
             stats['fetch_failed'] = stats.get('fetch_failed', 0) + 1
             continue
+        _cache.save("therapist", f"{salon_id}_{md5(t_url.encode()).hexdigest()[:12]}", t_html)
 
         try:
             data = extract_therapist_info(
