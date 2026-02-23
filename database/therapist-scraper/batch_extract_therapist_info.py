@@ -434,8 +434,7 @@ def _process_haiku_salon(cur, salon, args, stats, _shutdown_ref):
                         t_data['source_url'] = listing_url
                         stats['total_input_tokens'] = stats.get('total_input_tokens', 0) + t_data.pop('input_tokens', 0)
                         stats['total_output_tokens'] = stats.get('total_output_tokens', 0) + t_data.pop('output_tokens', 0)
-                        if t_data.get('source_url') in existing_urls:
-                            continue
+                        # single_page: insert_therapist_new()の3点dedup(url+name)に委譲
                         if not args.dry_run:
                             t_id = insert_therapist_new(cur, salon_id, t_data)
                             if t_id:
@@ -453,8 +452,7 @@ def _process_haiku_salon(cur, salon, args, stats, _shutdown_ref):
             t_data['source_url'] = url
             stats['total_input_tokens'] = stats.get('total_input_tokens', 0) + t_data.pop('input_tokens', 0)
             stats['total_output_tokens'] = stats.get('total_output_tokens', 0) + t_data.pop('output_tokens', 0)
-            if t_data.get('source_url') in existing_urls:
-                continue
+            # single_page: insert_therapist_new()の3点dedup(url+name)に委譲
             if not args.dry_run:
                 t_id = insert_therapist_new(cur, salon_id, t_data)
                 if t_id:
@@ -493,7 +491,7 @@ def _process_haiku_salon(cur, salon, args, stats, _shutdown_ref):
         salon_domain = urlparse(url).netloc.lower()
         internal_urls = [u for u in individual_urls
                          if urlparse(u).netloc.lower() == salon_domain
-                         or salon_domain in urlparse(u).netloc.lower()]
+                         or urlparse(u).netloc.lower().endswith('.' + salon_domain)]
         if not internal_urls:
             log.info(f"  Wix: 外部URLのみ ({len(individual_urls)}件) → single_page fallbackへ")
             individual_urls = []
@@ -513,8 +511,7 @@ def _process_haiku_salon(cur, salon, args, stats, _shutdown_ref):
                 t_data['source_url'] = listing_url_for_fallback
                 stats['total_input_tokens'] = stats.get('total_input_tokens', 0) + t_data.pop('input_tokens', 0)
                 stats['total_output_tokens'] = stats.get('total_output_tokens', 0) + t_data.pop('output_tokens', 0)
-                if t_data.get('source_url') in existing_urls:
-                    continue
+                # single_page: insert_therapist_new()の3点dedup(url+name)に委譲
                 if not args.dry_run:
                     t_id = insert_therapist_new(cur, salon_id, t_data)
                     if t_id:
@@ -532,7 +529,7 @@ def _process_haiku_salon(cur, salon, args, stats, _shutdown_ref):
     salon_domain = urlparse(url).netloc.lower()
     individual_urls = [u for u in individual_urls
                        if urlparse(u).netloc.lower() == salon_domain
-                       or salon_domain in urlparse(u).netloc.lower()]
+                       or urlparse(u).netloc.lower().endswith('.' + salon_domain)]
 
     # source_url正規化（#除去 + URLデコード + https統一）
     individual_urls = list(dict.fromkeys(_normalize_source_url(u) for u in individual_urls))
@@ -623,8 +620,7 @@ def _process_haiku_salon(cur, salon, args, stats, _shutdown_ref):
             t_data['source_url'] = listing_url_for_fallback
             stats['total_input_tokens'] = stats.get('total_input_tokens', 0) + t_data.pop('input_tokens', 0)
             stats['total_output_tokens'] = stats.get('total_output_tokens', 0) + t_data.pop('output_tokens', 0)
-            if t_data.get('source_url') in existing_urls:
-                continue
+            # single_page: insert_therapist_new()の3点dedup(url+name)に委譲
             if not args.dry_run:
                 t_id = insert_therapist_new(cur, salon_id, t_data)
                 if t_id:

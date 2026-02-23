@@ -1430,7 +1430,7 @@ def run_test(salons: list[dict], csv_path: str | None = None):
             salon_domain = urlparse(url).netloc.lower()
             internal_urls = [u for u in individual_urls
                              if urlparse(u).netloc.lower() == salon_domain
-                             or salon_domain in urlparse(u).netloc.lower()]
+                             or urlparse(u).netloc.lower().endswith('.' + salon_domain)]
             if not internal_urls:
                 log.info(f"  Wix: 外部URLのみ ({len(individual_urls)}件) → single_page fallbackへ")
                 individual_urls = []
