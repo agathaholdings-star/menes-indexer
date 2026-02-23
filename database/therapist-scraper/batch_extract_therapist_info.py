@@ -142,12 +142,29 @@ def _safe_int(val):
         return None
 
 
+def _normalize_source_url(url: str) -> str:
+    """source_urlを正規化（dedup用）。#除去 + URLデコード + https統一"""
+    from urllib.parse import unquote, urlparse, urlunparse
+    if not url:
+        return url
+    # #アンカー除去
+    url = url.split('#')[0]
+    # URLデコード（%E5%9C%A8 → 在籍）
+    url = unquote(url)
+    # http → https に統一
+    if url.startswith('http://'):
+        url = 'https://' + url[7:]
+    # 末尾スラッシュ統一
+    return url.rstrip('/')
+
+
 def insert_therapist_new(cur, salon_id, data):
     """新規セラピストをINSERT。SAVEPOINT付き。Returns id or None.
 
-    重複判定（優先順）:
-    1. source_url あり → salon_id + source_url で判定
-    2. source_url なし → salon_id + name で判定（single_page等のフォールバック）
+    重複判定:
+    - salon_id + source_url + name の3点一致 → スキップ（真の重複）
+    - 同じsource_urlでも名前が違えばINSERT許可（single_page対応）
+    - source_urlなし → salon_id + name → スキップ
     """
     t_name = data.get('name')
     if not t_name:
@@ -155,17 +172,25 @@ def insert_therapist_new(cur, salon_id, data):
 
     source_url = data.get('source_url')
 
-    # 重複チェック: source_url優先、なければnameフォールバック
     if source_url:
+        # 保存前にsource_urlを正規化
+        source_url = _normalize_source_url(source_url)
+        data['source_url'] = source_url
+
+        # 重複チェック: source_url + name の両方が一致 → 真の重複
+        # single_pageでは全員同じsource_urlになるため、URLだけでは判定できない
         cur.execute(
-            "SELECT id FROM therapists WHERE salon_id = %s AND source_url = %s LIMIT 1",
-            (salon_id, source_url))
+            "SELECT id FROM therapists WHERE salon_id = %s AND source_url = %s AND name = %s LIMIT 1",
+            (salon_id, source_url, t_name))
+        if cur.fetchone():
+            return None
     else:
+        # source_urlなし → salon_id + name フォールバック
         cur.execute(
             "SELECT id FROM therapists WHERE salon_id = %s AND name = %s LIMIT 1",
             (salon_id, t_name))
-    if cur.fetchone():
-        return None  # 既存 → スキップ
+        if cur.fetchone():
+            return None
 
     bust_val = data.get('bust')
     if bust_val is not None:
@@ -183,12 +208,12 @@ def insert_therapist_new(cur, salon_id, data):
         cur.execute("""
             INSERT INTO therapists (
                 salon_id, name, age, height,
-                bust, waist, hip, cup, blood_type,
+                bust, waist, hip, cup,
                 image_urls, profile_text, source_url,
                 status, last_scraped_at
             ) VALUES (
                 %(salon_id)s, %(name)s, %(age)s, %(height)s,
-                %(bust)s, %(waist)s, %(hip)s, %(cup)s, %(blood_type)s,
+                %(bust)s, %(waist)s, %(hip)s, %(cup)s,
                 %(image_urls)s::jsonb, %(profile_text)s, %(source_url)s,
                 'active', now()
             )
@@ -203,7 +228,6 @@ def insert_therapist_new(cur, salon_id, data):
             'waist': _safe_int(data.get('waist')),
             'hip': _safe_int(data.get('hip')),
             'cup': data.get('cup'),
-            'blood_type': data.get('blood_type'),
             'image_urls': json.dumps(image_urls, ensure_ascii=False),
             'profile_text': data.get('profile_text'),
             'source_url': data.get('source_url'),
@@ -503,6 +527,15 @@ def _process_haiku_salon(cur, salon, args, stats, _shutdown_ref):
 
     # URLバリデーション
     individual_urls = [u for u in individual_urls if is_valid_therapist_url(u)]
+
+    # 外部ドメインURL除外（Haikuがranking-deli.jp等を返すケース対策）
+    salon_domain = urlparse(url).netloc.lower()
+    individual_urls = [u for u in individual_urls
+                       if urlparse(u).netloc.lower() == salon_domain
+                       or salon_domain in urlparse(u).netloc.lower()]
+
+    # source_url正規化（#除去 + URLデコード + https統一）
+    individual_urls = list(dict.fromkeys(_normalize_source_url(u) for u in individual_urls))
 
     # source_url dedup
     if existing_urls:

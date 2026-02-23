@@ -323,6 +323,7 @@ _LISTING_EXCLUDE_PREFIXES = frozenset([
     '/cart/', '/checkout/', '/attachment/', '/?s=',
     '/reservation', '/contact', '/access', '/privacy', '/terms',
     '/inquiry', '/recruit', '/faq', '/blog/', '/news/',
+    '/diary/', '/diary_detail/', '/diary_detail?',
 ])
 
 # all_internalモードで除外するファイル名（拡張子なしも含む）
@@ -475,14 +476,20 @@ def expand_individual_urls(html_list: list[str] | str, base_url: str, seed_urls:
     if not patterns:
         return seed_urls
 
-    # 一覧URL自体とTOPページを除外対象に含める
+    # 一覧URL自体とTOPページを除外対象に含める（http/https両方）
     existing = set(seed_urls)
-    if listing_url:
-        existing.add(listing_url.rstrip('/'))
-        existing.add(listing_url.rstrip('/') + '/')
-    # base_url（TOPページ）も除外
-    existing.add(base_url.rstrip('/'))
-    existing.add(base_url.rstrip('/') + '/')
+    for exclude_url in [listing_url, base_url]:
+        if exclude_url:
+            stripped = exclude_url.rstrip('/')
+            existing.add(stripped)
+            existing.add(stripped + '/')
+            # http/httpsの逆パターンも除外
+            if stripped.startswith('https://'):
+                existing.add(stripped.replace('https://', 'http://', 1))
+                existing.add(stripped.replace('https://', 'http://', 1) + '/')
+            elif stripped.startswith('http://'):
+                existing.add(stripped.replace('http://', 'https://', 1))
+                existing.add(stripped.replace('http://', 'https://', 1) + '/')
     all_added = []
 
     for h in html_list:
@@ -718,7 +725,6 @@ def parse_3days_data_js(js_text: str, base_url: str, salon_name: str = "") -> li
 
         age_str = extract_field("age")
         height_str = extract_field("height")
-        blood_type = extract_field("bloodType")
         comment = extract_field("comment")
         three_size = extract_field("threeSize")
 
@@ -767,12 +773,6 @@ def parse_3days_data_js(js_text: str, base_url: str, salon_name: str = "") -> li
         if therapist_url_path:
             source_url = urljoin(base_url, therapist_url_path)
 
-        # blood_type正規化
-        if blood_type:
-            blood_type = blood_type.replace("型", "").strip().upper()
-            if blood_type not in ("A", "B", "O", "AB"):
-                blood_type = None
-
         therapists.append({
             "name": name,
             "age": age,
@@ -781,7 +781,6 @@ def parse_3days_data_js(js_text: str, base_url: str, salon_name: str = "") -> li
             "bust": bust,
             "waist": waist,
             "hip": hip,
-            "blood_type": blood_type,
             "profile_text": comment[:200] if comment else None,
             "image_urls": image_urls,
             "source_url": source_url or base_url,
@@ -929,7 +928,6 @@ URL: {url}
 - height: 数値のみ。記載なしはnull
 - cup: アルファベット1文字（A〜K）。記載なしはnull
 - bust, waist, hip: 数値のみ。記載なしはnull
-- blood_type: A/B/O/AB。記載なしはnull
 - profile_text: 紹介文（200文字以内に要約）。なければnull
 - image_urls: そのセラピスト本人の写真URLのみ（最大3枚）。ロゴ・バナー・ナビ画像は除外
 
@@ -941,7 +939,7 @@ URL: {url}
 
 ## 出力: JSON配列のみ（余計なテキスト不要）
 ```json
-[{{"name":"名前1","age":23,"height":158,"cup":"D","bust":86,"waist":57,"hip":85,"blood_type":"O","profile_text":"紹介文...","image_urls":["URL1"]}},{{"name":"名前2","age":null,"height":null,"cup":null,"bust":null,"waist":null,"hip":null,"blood_type":null,"profile_text":null,"image_urls":[]}}]
+[{{"name":"名前1","age":23,"height":158,"cup":"D","bust":86,"waist":57,"hip":85,"profile_text":"紹介文...","image_urls":["URL1"]}},{{"name":"名前2","age":null,"height":null,"cup":null,"bust":null,"waist":null,"hip":null,"profile_text":null,"image_urls":[]}}]
 ```"""
 
 

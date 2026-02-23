@@ -23,7 +23,6 @@ Usage:
     #     "bust": 86,
     #     "waist": 57,
     #     "hip": 85,
-    #     "blood_type": "O",
     #     "profile_text": "スレンダーな美人系で...",
     #     "input_tokens": 1600,
     #     "output_tokens": 150,
@@ -289,7 +288,10 @@ def collect_image_candidates(html: str, base_url: str) -> list[dict]:
     seen_urls = set()
 
     for img in soup.find_all("img"):
-        src = (img.get("src") or img.get("data-src") or img.get("data-lazy-src")
+        raw_src = img.get("src") or ""
+        if raw_src.startswith("data:"):
+            raw_src = ""  # data: URIは無視してdata-srcにフォールスルー
+        src = (raw_src or img.get("data-src") or img.get("data-lazy-src")
                or img.get("data-original") or "")
         if not src and img.get("srcset"):
             src = img["srcset"].split(",")[0].split()[0]
@@ -325,7 +327,42 @@ def collect_image_candidates(html: str, base_url: str) -> list[dict]:
             "grandparent": gp_info,
         })
 
-    for el in soup.find_all(style=re.compile(r"background-image")):
+    # <a href="xxx.jpg"> — imgタグなしで画像URLがリンクにあるケース
+    _IMG_EXT_RE = re.compile(r"\.(jpe?g|png|webp|gif|avif)(\?.*)?$", re.IGNORECASE)
+    for a_tag in soup.find_all("a", href=True):
+        href = a_tag["href"]
+        if not _IMG_EXT_RE.search(href):
+            continue
+        full_url = urljoin(base_url, href)
+        if full_url in seen_urls:
+            continue
+        seen_urls.add(full_url)
+
+        # 中にimgがあり、そのsrcが既に候補に入っていればスキップ
+        # （imgのsrcが空/data-srcのみで候補に入ってない場合はaのhrefを採用）
+        child_img = a_tag.find("img")
+        if child_img:
+            child_src = (child_img.get("src") or child_img.get("data-src")
+                         or child_img.get("data-lazy-src") or "")
+            if child_src and urljoin(base_url, child_src) in seen_urls:
+                continue
+
+        parent = a_tag.parent
+        parent_info = ""
+        if parent:
+            p_class = " ".join(parent.get("class", []))
+            p_id = parent.get("id", "")
+            parent_info = f"<{parent.name} class='{p_class}' id='{p_id}'>"
+
+        candidates.append({
+            "url": full_url,
+            "alt": a_tag.get_text(strip=True)[:50] or "(a href)",
+            "class": " ".join(a_tag.get("class", [])),
+            "width": "", "height": "",
+            "parent": parent_info, "grandparent": "",
+        })
+
+    for el in soup.find_all(style=re.compile(r"background(-image)?\s*:")):
         match = re.search(r"url\(['\"]?(.*?)['\"]?\)", el.get("style", ""))
         if match:
             bg_url = urljoin(base_url, match.group(1))
@@ -373,6 +410,9 @@ def _extract_llm_name_only(html: str, url: str, salon_name: str,
 入力: "PROFILE琴吹（ことぶき）" → 琴吹
 入力: "まゆ(25歳) | 透明感96％" → まゆ
 入力: "Mio（ミオ） - ドットエム公式" → Mio
+入力: "高梨 未経験(22)" → 高梨
+入力: "生田 GOLD(25)" → 生田
+入力: "福士　体験(21)" → 福士
 入力: "神のエステ ランキング 巣鴨店" → NONE（これはサロン名）
 入力: "セラピストプロフィール" → NONE（これはページタイトル）
 入力: "メニュー・料金" → NONE（これはナビゲーション）
@@ -479,7 +519,10 @@ def build_extract_prompt(html: str, salon_name: str = "", salon_display: str = "
   "REO(23歳)" → "REO"
   "PROFILE琴吹（ことぶき）" → "琴吹"
   "まゆ(25歳) | 透明感96％" → "まゆ"
-  "Mio（ミオ） - ドットエム公式" → "Mio"
+  "Mio（ミオ） - ドットエム公式" → "ミオ"
+  "高梨 未経験(22)" → "高梨"
+  "生田 GOLD(25)" → "生田"
+  "福士　体験(21)" → "福士"
   "神のエステ ランキング 巣鴨店" → null（これはサロン名）
   "セラピストプロフィール" → null（これはページタイトル）
   "メニュー・料金" → null（これはナビゲーション）
@@ -489,9 +532,6 @@ def build_extract_prompt(html: str, salon_name: str = "", salon_display: str = "
 
 ### cup
 - アルファベット1文字（A〜K）。ページに記載がなければnull
-
-### blood_type
-- A, B, O, AB のいずれか。ページに記載がなければnull
 
 ### profile_text
 - セラピストの紹介文（お店からの紹介文、本人の自己紹介、いずれでもOK）
@@ -508,7 +548,7 @@ def build_extract_prompt(html: str, salon_name: str = "", salon_display: str = "
 ## 出力形式
 JSONのみ出力。余計なテキストは不要。
 ```json
-{{"name":"名前","age":23,"height":158,"cup":"D","bust":86,"waist":57,"hip":85,"blood_type":"O","profile_text":"紹介文...","image_urls":["URL1","URL2"]}}
+{{"name":"名前","age":23,"height":158,"cup":"D","bust":86,"waist":57,"hip":85,"profile_text":"紹介文...","image_urls":["URL1","URL2"]}}
 ```"""
 
 
@@ -559,15 +599,6 @@ def parse_extract_response(result_text: str, salon_name: str = "",
             else:
                 data["cup"] = None
 
-        # blood_type クリーニング
-        bt = data.get("blood_type")
-        if bt:
-            bt = str(bt).strip().upper()
-            if bt in ("A", "B", "O", "AB"):
-                data["blood_type"] = bt
-            else:
-                data["blood_type"] = None
-
         # profile_text クリーニング
         pt = data.get("profile_text")
         if pt:
@@ -607,7 +638,7 @@ def extract_therapist_info(html: str, salon_name: str = "", salon_display: str =
     セラピスト個別ページHTMLから全フィールドを1回のHaiku呼び出しで抽出。
 
     抽出フィールド: name, age, height, cup, bust, waist, hip,
-                   blood_type, profile_text, image_urls
+                   profile_text, image_urls
     """
     prompt = build_extract_prompt(html, salon_name, salon_display, url)
 

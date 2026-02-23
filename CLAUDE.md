@@ -10,7 +10,7 @@
 - スクレイピング時は必ずHTMLをgzip圧縮でローカル保存すること（`html_cache/{id}.html.gz`）。抽出ロジック改善時に再fetchなしで再処理可能にするため。
 - **セラピスト抽出の成功判定**: 成功=有効name+有効source_urlでDB保存完了、抽出のみは成功扱いしない。
 
-## 現在のステータス (2026-02-22 更新)
+## 現在のステータス (2026-02-23 更新)
 
 - **設計フェーズ完了**: サービス概要、システム設計、UXフロー、v0用プロンプトを作成済み。
 - **フロントエンド公開済み**: v0.appからVercelにデプロイ → https://menes-indexer.com/
@@ -24,7 +24,7 @@
 - **Phase②完了**: VPSセラピストスクレイピング完走 → **79,639名**取得済み → Phase③で**95,340名**に拡大
 - **ローカルSupabase最新同期済み**: VPSからpg_dumpで79,639名をローカルに投入（2026-02-16）
 - **公開レベル仕上げ完了**: デバッグUI除去、mockデータ全削除、Stripe環境変数化、おすすめ実データ化
-- **データクレンジング完了**: bust→cup分離651件、元データはname_raw/bust_rawに退避保持
+- **データクレンジング完了**: bust→cup分離651件
 - **ローカル動作確認済み**: トップページ（6,489店舗/821エリア表示）、セラピスト検索（実データ表示）OK
 - **ME口コミマッチング完了**: ME 80,458名 vs Indexer 79,639名 → **15,690名マッチ（19.5%）、口コミ48,288件**
 - **ME口コミリライトパイプライン実装完了**: 3ステップ構成（Step1:ME抽出→Step2:LLMリライト→Step3:DB投入）、DBマイグレーション（設問3→8問拡張）適用済み
@@ -152,6 +152,68 @@
         - 両スクリプトのStage 3ループ前に適用。マロアリ・タッハ(27→40人)等のケースで回収率向上
     - **正規運用（確定）**: 新規/既存失敗再処理は `python batch_extract_therapist_info.py` を唯一の実行入口とする。1コマンドで全6,489サロンの差分セラピスト発見・抽出・INSERT
     - **`scrape_failed_salons.py`**: ⚠️ 検証/テスト専用（非推奨）。通常運用では使わない。Batch API JSONL生成・個別サロンデバッグ用途に限定
+- **レガシーカラム削除＋画像抽出バグ修正＋重複セラピスト対策（2026-02-23）**:
+    - **レガシーカラム削除**: `name_raw`, `bust_raw`, `blood_type` をtherapistsテーブルから削除。マイグレーション `20260223000001_drop_legacy_columns.sql`。Python 6ファイルから`blood_type`参照を除去
+    - **画像抽出バグ3件修正**（`name_extractor.py` の `collect_image_candidates()`）:
+        - **Bug 1: lazy loading取りこぼし**: `<img src="data:base64..." data-src="real.jpg">` で `src` が truthy なため `data-src` が参照されなかった → `data:`プレフィックスを検出して空文字に置換し`data-src`にフォールスルー
+        - **Bug 2: CSS background shorthand**: 正規表現が`background-image:`のみマッチで`background:url(...)`を見逃していた → `background(-image)?\s*:`に拡張
+        - **Bug 3: `<a href>`画像未収集**: セラピスト写真が`<a href="photo.jpg"><img src="thumb.jpg"></a>`構造のサイトで大きい画像URLを収集できなかった → `<a href>`の画像拡張子スキャン追加（子imgとの重複排除付き）
+    - **300サロンテストで検証**: 511/12,293件（4.2%、70サロン）が画像なし → 分析の結果11/20ドメインは写真未登録（正常）、残り9ドメインが上記3バグに起因 → 修正後は全パターンで画像候補収集可能に
+    - **重複セラピスト対策**（300サロンテストで284件の重複を発見・分類・対策）:
+        - **`_normalize_source_url()`追加**: `#`フラグメント除去、URLデコード（`%E5%9C%A8%E7%B1%8D`→`在籍`）、http→https統一 → 同一ページの表記揺れを解消（anchor variants 121件、URLエンコード差異16件）
+        - **外部ドメインフィルタ**: Stage 3前にindividual_urlsのドメインをサロンドメインと照合し、Haikuがハルシネーションした外部URL（ranking-deli.jp等）を除外
+        - **diary/blog除外**: `_LISTING_EXCLUDE_PREFIXES`に`/diary/`, `/diary_detail/`を追加 → 日記URLがセラピストURLとして混入する問題を解消（14件）
+        - **listing URL除外のhttp/https対応**: `expand_individual_urls()`の除外セットにhttp/https両方のバリアントを追加 → 一覧ページ自体が個別URLリストに混入する問題を解消
+        - **dedup判定改善**: source_urlあり→正規化後のsource_urlで重複チェック、source_urlなし→salon_id+nameで重複チェック。**同名別人（同名+異なるURL/年齢）は保持**（32件は正当な別人と確認）
+    - **修正後の再テスト（10サロン）**: 画像なしだった10サロンに対してHaiku再抽出テスト実施
+        - **修正で画像取得成功**: 妻色兼美（lazy load→1枚）、ギンザラッシュ（CSS bg→5枚）、マダムガーデン（lazy load→5枚）
+        - **写真未登録（正常動作）**: ジェイディースパ228名(`noimage.jpg`)、セレスティンアロマージュ(`comingsoon.png`)、熟女スパ24名(`noimg.png`)、東京目黒高級セレブ熟女(`comingsoon.png`)、小悪魔スパ9名(3Days CMS data.jsのimg1〜img6が空)
+        - **サイト側問題**: スエルテ(HTML内URL二重化`https://https://...`)、解放区・天界のスパ(サイトダウン)
+    - **小悪魔スパ（3Days CMS）詳細検証**: Playwrightで個別ページ(id=1837)を描画→全スライダーが`noImage.png`。data.jsでも`img1:""`〜`img6:""`。写真ありのゆめか(id=1605)はdata.jsに`img1:"https://3days-cms-bucket-prod.s3..."`あり → 3Days CMS抽出パスは正しく動作、画像なしはサロン側の未登録
+    - **退行リスク評価**: ほぼゼロ。全修正が「候補を増やす」or「ゴミを弾く」方向のみ。既存の`<img src>`収集ロジック・3Days CMS抽出パスは一切変更なし。10サロン再テストで修正前に取れていたものが全て取れることを確認済み
+    - **変更ファイル**: `name_extractor.py`（画像収集3バグ修正）、`batch_extract_therapist_info.py`（dedup改善・外部ドメインフィルタ・URL正規化）、`scrape_failed_salons.py`（diary除外・listing URL http/https対応）、他3ファイルからblood_type除去
+- **名前抽出few-shot追加＋100サロン検証テスト（2026-02-23）**:
+    - **背景**: 300サロンテストの画像修正・dedup修正後、未スクレイプ100サロンで全体品質を検証
+    - **few-shot追加**（`name_extractor.py`）: グレイススパで発見したランク・経験値装飾の除去パターン3件追加
+        - `高梨 未経験(22)` → `高梨`、`生田 GOLD(25)` → `生田`、`福士　体験(21)` → `福士`
+        - `Mio（ミオ）` → `ミオ`（カナ優先）に修正
+    - **100サロン検証テスト**: 未スクレイプ6,209件からランダム100件を5並列（各20件）で実行
+        - **結果**: 89/100サロン成功、**1,319名DB登録**
+        - 失敗11件: fetch失敗6件、セラピスト非公開3件、データなし2件
+        - page_type内訳: has_individuals 64件、listing 20件、single_page 7件、no_therapists 3件
+        - セラピスト数TOP3: プレミアムスパ109名、アンバー83名、ラプソディースパ70名
+    - **品質検証結果**:
+        | 項目 | 件数 | 割合 |
+        |------|------|------|
+        | 名前あり | 1,319/1,319 | **100%** |
+        | 画像あり | 1,312/1,319 | **99.5%** |
+        | 年齢あり | 1,238/1,319 | 93.9% |
+        | カップあり | 793/1,319 | 60.1% |
+        | 紹介文あり | 1,223/1,319 | 92.7% |
+    - **画像取得率の改善**: 300サロンテスト88.5% → 100サロンテスト**99.5%**（今日の3バグ修正の効果）
+    - **名前品質**: 1,319名中12件（0.9%）に問題検出。全件グレイススパ1店舗のみ（未経験8件+GOLD 4件）。few-shot追加で再構築時に解消見込み
+    - **画像なし7名の内訳**: アリアンス3名、エニースパ2名、不明サロン1名、ミリミリスパ1名 — 全てサロン側の写真未登録
+- **single_page dedup修正＋2回目100サロン検証テスト（2026-02-23）**:
+    - **バグ発見**: 1回目100サロンテストでsingle_page/listingタイプのサロンが軒並み1名しかDB登録されていなかった
+    - **原因**: `insert_therapist_new()`のdedup判定が`salon_id + source_url`一致でスキップ。single_pageでは全員同じURLになるため2人目以降が全弾き
+    - **経緯**: 以前（2026-02-22）に`salon_id + name`に修正したが、その後の「統一パイプライン実装」でsource_url dedupを追加した際に上書きされ元に戻っていた
+    - **修正**: `salon_id + source_url + name`の3点一致チェックに変更。同じURLでも名前が違えば別人としてINSERT許可
+    - **修正検証（5サロン再スクレイプ）**:
+        | サロン | タイプ | 修正前 | 修正後 |
+        |--------|--------|--------|--------|
+        | ツリーシャドウ | listing | 1名 | **6名** |
+        | ココ１９ | single_page | 1名 | **9名** |
+        | ラブワン | listing | 1名 | **3名** |
+        | モア | single_page | 1名 | **3名** |
+        | アロマエステサロン恋(Wix) | single_page | 1名 | **4名** |
+        | **合計** | | **5名** | **25名** |
+    - **影響範囲**: 個別ページ型（大多数）はURLが全員違うため動作変化なし。single_page/listing型のみ改善。退行リスクゼロ
+    - **2回目100サロン検証テスト**: few-shot修正＋dedup修正後、追加で未スクレイプ100サロンを5並列実行
+        - **結果**: 82/100サロン成功、**1,271名DB登録**
+        - 失敗18件: fetch失敗/ドメイン死亡7件、セラピスト非公開5件、データなし6件
+        - **名前品質**: 1,271名中 **0件の問題**（few-shot修正の効果確認）
+        - **画像あり**: 1,242/1,271（**97.7%**）
+    - **変更ファイル**: `batch_extract_therapist_info.py`（`insert_therapist_new()`のdedup判定1行修正）
 - **セラピスト情報Haiku一括抽出（`--existing`モード）VPS実行済み（2026-02-19〜02-20）**:
     - 5並列tmux (hw1-hw5) で95,340件に対してHaiku抽出を実行・完了
     - 推定コスト: ~$241（Haiku 4.5）
@@ -179,7 +241,7 @@
         7. **最終決定: v4（全フィールド一括抽出）を採用**。1回のAPI呼び出しで全カラムを埋める。$241は名前修復+空欄埋めの価値に十分見合う
     - **実装済みモジュール**:
         - `fetch_utils.py`: 共通fetchモジュール。HTTPS→HTTPフォールバック。6ファイルのimport統一済み
-        - `name_extractor.py`: メインAPI `extract_therapist_info()` — 全ページHTML+候補テキストをHaikuに渡し、JSON形式で全フィールド返却。バリデーション（名前除外キーワード108個、サロン名比較、数値型変換、cup/blood_type正規化）内蔵。後方互換の `extract_name()` も維持
+        - `name_extractor.py`: メインAPI `extract_therapist_info()` — 全ページHTML+候補テキストをHaikuに渡し、JSON形式で全フィールド返却。バリデーション（名前除外キーワード108個、サロン名比較、数値型変換、cup正規化）内蔵。後方互換の `extract_name()` も維持
         - `salon_diagnose.py`: 診断CLIツール（diagnose/test-extract/rescrape/list-failed/list-patterns）
         - `classify_failures.py`: 失敗サロン理由分類（domain_dead/site_down/page_404等8分類）
         - マイグレーション `20260219000002`: `salon_scrape_cache`に`name_css_selector`+`fail_reason`追加
@@ -207,8 +269,8 @@
             - `--full`（または引数なし）: 全サロンをゼロから処理。`--existing`/`--new`は廃止
             - VPS並列対応: `--start-id`/`--end-id` でID範囲分割、`--resume`でチェックポイント再開
             - SIGINT graceful shutdown、`--dry-run`、`--batch-size`コミット間隔
-        - `batch_therapist_data.py`: `insert_therapist()`に`cup`/`blood_type`カラム追加
-        - マイグレーション `20260219000003`: `therapists`に`blood_type`カラム追加
+        - `batch_therapist_data.py`: `insert_therapist()`に`cup`カラム追加
+        - マイグレーション `20260219000003`: `therapists`に`blood_type`カラム追加（※2026-02-23に削除済み）
 - **サロン紹介文バッチ生成 VPS collect実行済み（2026-02-19〜）**:
     - **目的**: 6,489サロンの紹介文（description/salon_overview）をSERP検索+スクレイピング→Sonnet Batch APIで生成
     - **スクリプト改修内容**:
