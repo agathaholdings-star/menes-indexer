@@ -300,8 +300,7 @@ def _process_haiku_salon(cur, salon, args, stats, _shutdown_ref):
             therapists = parse_3days_data_js(js_text, url, salon_name=salon_display)
             count = 0
             for t_data in therapists:
-                if t_data.get('source_url') in existing_urls:
-                    continue
+                # 3Days CMS: 各セラピストに個別source_urlあり、insert_therapist_newのdedupに委譲
                 if not args.dry_run:
                     t_id = insert_therapist_new(cur, salon_id, t_data)
                     if t_id:
@@ -347,7 +346,9 @@ def _process_haiku_salon(cur, salon, args, stats, _shutdown_ref):
         from urllib.parse import urlparse as _urlparse
         salon_domain = _urlparse(url).netloc.lower()
         ext_urls = result1['individual_urls']
-        all_external = all(_urlparse(u).netloc.lower() != salon_domain for u in ext_urls)
+        def _is_internal(u_netloc):
+            return u_netloc == salon_domain or u_netloc.endswith('.' + salon_domain)
+        all_external = all(not _is_internal(_urlparse(u).netloc.lower()) for u in ext_urls)
         if not all_external:
             page_type = 'has_individuals'
 
@@ -370,8 +371,7 @@ def _process_haiku_salon(cur, salon, args, stats, _shutdown_ref):
                         therapists = parse_3days_data_js(js_text, listing_url_extra, salon_name=salon_display)
                         count = 0
                         for t_data in therapists:
-                            if t_data.get('source_url') in existing_urls:
-                                continue
+                            # 3Days CMS: insert_therapist_newのdedupに委譲
                             if not args.dry_run:
                                 t_id = insert_therapist_new(cur, salon_id, t_data)
                                 if t_id:
@@ -408,8 +408,7 @@ def _process_haiku_salon(cur, salon, args, stats, _shutdown_ref):
                         therapists = parse_3days_data_js(js_text, listing_url, salon_name=salon_display)
                         count = 0
                         for t_data in therapists:
-                            if t_data.get('source_url') in existing_urls:
-                                continue
+                            # 3Days CMS: insert_therapist_newのdedupに委譲
                             if not args.dry_run:
                                 t_id = insert_therapist_new(cur, salon_id, t_data)
                                 if t_id:
