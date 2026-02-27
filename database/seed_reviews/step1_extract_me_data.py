@@ -156,12 +156,12 @@ def run_matching(me_therapists, me_salons, idx_therapists, idx_salons):
     # ME salon_id → salon info
     me_salon_map = {s["salon_id"]: s for s in me_salons}
 
-    # Indexer: source_url → therapist
-    idx_by_url = {}
+    # Indexer: source_url → therapist(s)  ※複数候補をリストで保持
+    idx_by_url = defaultdict(list)
     for t in idx_therapists:
         nurl = normalize_url(t["source_url"])
         if nurl:
-            idx_by_url[nurl] = t
+            idx_by_url[nurl].append(t)
 
     # Indexer: salon_id → salon info
     idx_salon_map = {s["id"]: s for s in idx_salons}
@@ -195,43 +195,17 @@ def run_matching(me_therapists, me_salons, idx_therapists, idx_salons):
         match_method = None
         idx_t = None
 
-        # Step 1: URL直接一致
+        # URL直接一致のみ（ドメイン+名前、サロン名+名前は同名別人リスクが高いため無効化）
+        # 複数人が同じsource_urlを共有するケースも捨てる（single_pageサロン）
         me_turl = normalize_url(mt.get("therapist_url"))
         if me_turl and me_turl in idx_by_url:
-            idx_t = idx_by_url[me_turl]
-            match_method = "url"
-
-        # Step 2: ドメイン+名前一致
-        if not idx_t and me_salon and me_name:
-            me_domain = extract_domain(me_salon.get("salon_url"))
-            if me_domain and me_domain in idx_by_domain:
-                for idx_salon in idx_by_domain[me_domain]:
-                    for candidate in idx_therapists_by_salon.get(idx_salon["id"], []):
-                        if normalize_name(candidate.get("name")) == me_name:
-                            idx_t = candidate
-                            match_method = "domain_name"
-                            break
-                    if idx_t:
-                        break
-
-        # Step 3: サロン名+名前一致
-        if not idx_t and me_salon and me_name:
-            me_salon_name = me_salon.get("salon_name", "").strip()
-            if me_salon_name:
-                candidates = idx_by_salon_name.get(me_salon_name, [])
-                if not candidates:
-                    for dn, salons in idx_by_salon_name.items():
-                        if me_salon_name in dn or dn in me_salon_name:
-                            candidates.extend(salons)
-
-                for idx_salon in candidates:
-                    for candidate in idx_therapists_by_salon.get(idx_salon["id"], []):
-                        if normalize_name(candidate.get("name")) == me_name:
-                            idx_t = candidate
-                            match_method = "salon_name"
-                            break
-                    if idx_t:
-                        break
+            candidates = idx_by_url[me_turl]
+            if len(candidates) == 1:
+                idx_t = candidates[0]
+                match_method = "url"
+            else:
+                # 曖昧 → 捨てる
+                stats["url_ambiguous"] = stats.get("url_ambiguous", 0) + 1
 
         if not idx_t:
             continue
@@ -310,8 +284,7 @@ def main():
             "total_matched": len(matches),
             "total_reviews": total_reviews,
             "match_url": stats["url"],
-            "match_domain_name": stats["domain_name"],
-            "match_salon_name": stats["salon_name"],
+            "url_ambiguous_skipped": stats.get("url_ambiguous", 0),
             "me_therapists_scanned": len(me_therapists),
         },
         "matches": matches,
@@ -326,8 +299,7 @@ def main():
     print("=" * 60)
     print(f"  マッチ合計: {len(matches):,}名")
     print(f"    URL一致:        {stats['url']:>7,}名")
-    print(f"    ドメイン+名前:   {stats['domain_name']:>7,}名")
-    print(f"    サロン名+名前:   {stats['salon_name']:>7,}名")
+    print(f"    URL曖昧（捨て）: {stats.get('url_ambiguous', 0):>7,}名")
     print(f"  口コミ合計: {total_reviews:,}件")
     print(f"\n出力: {out_path}")
 
