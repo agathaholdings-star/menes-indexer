@@ -15,10 +15,9 @@ export function useTier() {
   useEffect(() => {
     if (!authUser) { setLoading(false); return; }
     const supabase = createSupabaseBrowser();
+    // RPC経由で取得（月次リセットが必要なら自動実行される）
     supabase
-      .from("profiles")
-      .select("membership_type, monthly_review_count, view_permission_until")
-      .eq("id", authUser.id)
+      .rpc("get_profile_with_reset", { p_user_id: authUser.id })
       .single()
       .then(({ data }) => {
         if (data) {

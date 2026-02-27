@@ -102,5 +102,34 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // サブスクリプション更新時: 月次レビューカウントをリセット
+  if (event.type === "invoice.payment_succeeded") {
+    const invoice = event.data.object as Stripe.Invoice;
+    const customerId = invoice.customer as string;
+
+    if (customerId && invoice.billing_reason === "subscription_cycle") {
+      // Stripe customer_id → profiles
+      const { data: profile } = await supabaseAdmin
+        .from("profiles")
+        .select("id")
+        .eq("payment_customer_id", customerId)
+        .single();
+
+      if (profile) {
+        await supabaseAdmin
+          .from("profiles")
+          .update({
+            monthly_review_count: 0,
+            monthly_review_reset_at: new Date().toISOString(),
+          })
+          .eq("id", profile.id);
+
+        console.log(
+          `[Stripe Webhook] Monthly reset for customer ${customerId} (invoice: ${invoice.id})`
+        );
+      }
+    }
+  }
+
   return NextResponse.json({ received: true });
 }
