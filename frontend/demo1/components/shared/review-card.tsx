@@ -6,6 +6,7 @@ import { Star, Lock, Crown, Clock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { therapistTypes, bodyTypes, serviceTypes, type Review } from "@/lib/data";
+import { ReviewVoteButtons } from "@/components/review/review-vote-buttons";
 
 interface ReviewCardProps {
   review: Review;
@@ -105,6 +106,15 @@ export function ReviewCard({ review, isBlurred = false, showTherapist = true, va
                 <p className="text-sm">{review.commentAdvice}</p>
               </div>
             )}
+            {!isBlurred && (
+              <div className="pt-3 border-t border-border/50">
+                <ReviewVoteButtons
+                  reviewId={review.id}
+                  initialRealCount={review.realCount || 0}
+                  initialFakeCount={review.fakeCount || 0}
+                />
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -165,6 +175,15 @@ export function ReviewCard({ review, isBlurred = false, showTherapist = true, va
             </div>
           )}
         </div>
+        {!isBlurred && (
+          <div className="pt-3 border-t border-border/50">
+            <ReviewVoteButtons
+              reviewId={review.id}
+              initialRealCount={review.realCount || 0}
+              initialFakeCount={review.fakeCount || 0}
+            />
+          </div>
+        )}
       </CardContent>
     </Card>
   );

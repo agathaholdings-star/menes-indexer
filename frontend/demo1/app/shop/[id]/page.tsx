@@ -121,6 +121,8 @@ function toFrontendReview(r: Record<string, unknown>): Review {
     commentAdvice: (r.comment_advice as string) || "",
     createdAt: (r.created_at as string) || "",
     userId: (r.user_id as string) || "",
+    realCount: (r.real_count as number) || 0,
+    fakeCount: (r.fake_count as number) || 0,
   };
 }
 

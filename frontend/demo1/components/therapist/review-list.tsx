@@ -14,6 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { therapistTypes, bodyTypes, serviceTypes, type Review } from "@/lib/data";
+import { ReviewVoteButtons } from "@/components/review/review-vote-buttons";
 
 interface ReviewListProps {
   reviews: Review[];
@@ -398,6 +399,13 @@ function ReviewCard({
                 <p className="leading-relaxed text-muted-foreground">{review.commentAdvice}</p>
               </div>
             )}
+            <div className="pt-3 border-t border-border/50">
+              <ReviewVoteButtons
+                reviewId={review.id}
+                initialRealCount={review.realCount || 0}
+                initialFakeCount={review.fakeCount || 0}
+              />
+            </div>
           </div>
         )}
       </div>

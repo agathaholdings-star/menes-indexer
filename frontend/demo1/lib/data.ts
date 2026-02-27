@@ -171,6 +171,8 @@ export interface Review {
   createdAt: string;
   userId: string;
   userName?: string;
+  realCount?: number;
+  fakeCount?: number;
 }
 
 export interface User {

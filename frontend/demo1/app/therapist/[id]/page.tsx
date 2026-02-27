@@ -128,6 +128,8 @@ export default async function TherapistPage({ params }: TherapistPageProps) {
     commentAdvice: r.comment_advice || "",
     createdAt: new Date(r.created_at).toLocaleDateString("ja-JP"),
     userId: r.user_id || "",
+    realCount: r.real_count || 0,
+    fakeCount: r.fake_count || 0,
   }));
 
   return (
