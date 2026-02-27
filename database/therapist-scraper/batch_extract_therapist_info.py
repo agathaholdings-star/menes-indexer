@@ -134,11 +134,17 @@ def save_checkpoint(checkpoint, path):
 # メイン処理
 # =============================================================================
 
-def _safe_int(val):
+def _safe_int(val, min_val=None, max_val=None):
+    """整数変換。範囲外はNone。"""
     if val is None:
         return None
     try:
-        return int(val)
+        v = int(val)
+        if min_val is not None and v < min_val:
+            return None
+        if max_val is not None and v > max_val:
+            return None
+        return v
     except (ValueError, TypeError):
         return None
 
@@ -223,8 +229,8 @@ def insert_therapist_new(cur, salon_id, data):
         """, {
             'salon_id': salon_id,
             'name': t_name,
-            'age': _safe_int(data.get('age')),
-            'height': _safe_int(data.get('height')),
+            'age': _safe_int(data.get('age'), min_val=18, max_val=70),
+            'height': _safe_int(data.get('height'), min_val=130, max_val=200),
             'bust': bust_val,
             'waist': _safe_int(data.get('waist')),
             'hip': _safe_int(data.get('hip')),
@@ -533,6 +539,15 @@ def _process_haiku_salon(cur, salon, args, stats, _shutdown_ref):
     individual_urls = [u for u in individual_urls
                        if urlparse(u).netloc.lower() == salon_domain
                        or urlparse(u).netloc.lower().endswith('.' + salon_domain)]
+
+    # ポータルサイトの非プロフィールURL除外（coupon/accessmap/system等）
+    _NON_PROFILE_PATH_KEYWORDS = (
+        '/coupon', '/accessmap', '/system', '/shopdata',
+        '/reviewlist', '/bloglist', '/recruit', '/event',
+    )
+    individual_urls = [u for u in individual_urls
+                       if not any(kw in urlparse(u).path.lower()
+                                  for kw in _NON_PROFILE_PATH_KEYWORDS)]
 
     # source_url正規化（#除去 + URLデコード + https統一）
     individual_urls = list(dict.fromkeys(_normalize_source_url(u) for u in individual_urls))
