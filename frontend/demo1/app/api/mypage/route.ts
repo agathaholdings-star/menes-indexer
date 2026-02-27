@@ -26,8 +26,8 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Fetch profile, favorites count, user reviews, SKR reviews in parallel
-  const [profileRes, favCountRes, userReviewsRes, skrReviewsRes] = await Promise.all([
+  // Fetch profile, favorites count, user reviews, SKR reviews, preference data in parallel
+  const [profileRes, favCountRes, userReviewsRes, skrReviewsRes, prefDataRes] = await Promise.all([
     supabaseAdmin
       .from("profiles")
       .select("nickname, membership_type, monthly_review_count, total_review_count, view_permission_until")
@@ -49,6 +49,12 @@ export async function GET() {
       .eq("moderation_status", "approved")
       .order("created_at", { ascending: false })
       .limit(20),
+    // 嗜好マップ用: ユーザーの承認済みレビューから集計
+    supabaseAdmin
+      .from("reviews")
+      .select("looks_type_id, body_type_id, service_level_id, param_conversation, param_distance, param_technique, param_personality")
+      .eq("user_id", user.id)
+      .eq("moderation_status", "approved"),
   ]);
 
   const profile = profileRes.data;
@@ -79,6 +85,41 @@ export async function GET() {
     };
   });
 
+  // 嗜好マップ集計
+  const prefRows = prefDataRes.data || [];
+  const totalPrefReviews = prefRows.length;
+
+  const countBy = (key: string) => {
+    const counts: Record<string, number> = {};
+    for (const r of prefRows) {
+      const v = String((r as any)[key] || "");
+      if (v) counts[v] = (counts[v] || 0) + 1;
+    }
+    return Object.entries(counts).map(([id, count]) => ({
+      id,
+      count,
+      percentage: totalPrefReviews > 0 ? Math.round((count / totalPrefReviews) * 100) : 0,
+    }));
+  };
+
+  const avgParam = (key: string) => {
+    const vals = prefRows.map((r: any) => r[key]).filter((v: any) => v != null) as number[];
+    return vals.length > 0 ? Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10 : 3;
+  };
+
+  const preferenceData = {
+    totalReviews: totalPrefReviews,
+    looksTypes: countBy("looks_type_id"),
+    bodyTypes: countBy("body_type_id"),
+    serviceTypes: countBy("service_level_id"),
+    avgParameters: {
+      conversation: avgParam("param_conversation"),
+      distance: avgParam("param_distance"),
+      technique: avgParam("param_technique"),
+      personality: avgParam("param_personality"),
+    },
+  };
+
   return NextResponse.json({
     profile: profile
       ? {
@@ -92,5 +133,6 @@ export async function GET() {
     favoriteCount,
     userReviews,
     skrReviews,
+    preferenceData,
   });
 }

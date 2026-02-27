@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Star, Lock, Crown, Clock } from "lucide-react";
+import { Star, Lock, Crown, Clock, Eye } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { therapistTypes, bodyTypes, serviceTypes, type Review } from "@/lib/data";
@@ -46,7 +46,13 @@ export function ReviewCard({ review, isBlurred = false, showTherapist = true, va
                   <Clock className="h-3 w-3" />
                   {review.createdAt}
                 </Badge>
-                {review.isPremium && (
+                {(review.viewCount || 0) > 0 && (
+                  <Badge variant="outline" className="text-xs font-normal gap-1 px-1.5 py-0 text-muted-foreground">
+                    <Eye className="h-3 w-3" />
+                    {(review.viewCount || 0).toLocaleString()}
+                  </Badge>
+                )}
+                {(review as any).isPremium && (
                   <Badge className="text-xs font-normal gap-1 px-1.5 py-0 bg-amber-500 hover:bg-amber-500">
                     <Crown className="h-3 w-3" />
                     プレミアム口コミ
@@ -137,6 +143,12 @@ export function ReviewCard({ review, isBlurred = false, showTherapist = true, va
             )}
             <p className="text-sm text-muted-foreground">
               {review.shopName} / {review.createdAt}
+              {(review.viewCount || 0) > 0 && (
+                <span className="inline-flex items-center gap-1 ml-2">
+                  <Eye className="h-3 w-3 inline" />
+                  {(review.viewCount || 0).toLocaleString()}
+                </span>
+              )}
             </p>
           </div>
           <div className="flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1">

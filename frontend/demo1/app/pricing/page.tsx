@@ -10,7 +10,18 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { useAuth } from "@/lib/auth-context";
 
-const plans = [
+const plans: Array<{
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  priceNote: string | null;
+  features: Array<{ label: string; included: boolean; highlight?: boolean }>;
+  cta: string;
+  href: string;
+  popular?: boolean;
+  tier: string;
+}> = [
   {
     id: "free",
     name: "無料会員",

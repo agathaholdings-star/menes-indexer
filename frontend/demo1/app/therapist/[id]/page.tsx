@@ -130,6 +130,7 @@ export default async function TherapistPage({ params }: TherapistPageProps) {
     userId: r.user_id || "",
     realCount: r.real_count || 0,
     fakeCount: r.fake_count || 0,
+    viewCount: r.view_count || 0,
   }));
 
   return (

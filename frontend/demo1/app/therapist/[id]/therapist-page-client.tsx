@@ -35,6 +35,15 @@ export function TherapistPageClient({ therapist, reviews, areaName, prefName }: 
   const [isFavorited, setIsFavorited] = useState(false);
   const [favLoading, setFavLoading] = useState(false);
 
+  // Track review views on page load
+  useEffect(() => {
+    if (reviews.length === 0) return;
+    const supabase = createSupabaseBrowser();
+    supabase.rpc("increment_review_views", {
+      p_review_ids: reviews.map((r) => r.id),
+    });
+  }, [reviews]);
+
   useEffect(() => {
     if (!authUser) return;
     const supabase = createSupabaseBrowser();

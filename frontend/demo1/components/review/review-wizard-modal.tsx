@@ -69,7 +69,7 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
   const [shopSearch, setShopSearch] = useState("");
   const [therapistSearch, setTherapistSearch] = useState("");
   const [selectedShopId, setSelectedShopId] = useState<number | null>(null);
-  const [selectedTherapistId, setSelectedTherapistId] = useState<number | null>(preselectedTherapistId || null);
+  const [selectedTherapistId, setSelectedTherapistId] = useState<number | null>(preselectedTherapistId != null ? Number(preselectedTherapistId) : null);
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [selectedBody, setSelectedBody] = useState<string | null>(null);
   const [selectedCup, setSelectedCup] = useState<string | null>(null);
@@ -352,7 +352,7 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
     setShopSearch("");
     setTherapistSearch("");
     setSelectedShopId(null);
-    setSelectedTherapistId(preselectedTherapistId || null);
+    setSelectedTherapistId(preselectedTherapistId != null ? Number(preselectedTherapistId) : null);
     setSelectedType(null);
     setSelectedBody(null);
     setSelectedCup(null);

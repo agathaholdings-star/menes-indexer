@@ -33,7 +33,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .gt("salon_count", 0);
 
   const areaPages: MetadataRoute.Sitemap = (areas || []).map((a) => {
-    const prefSlug = (a.prefectures as { slug: string } | null)?.slug || "";
+    const prefSlug = (a.prefectures as unknown as { slug: string } | null)?.slug || "";
     return {
       url: `${baseUrl}/area/${prefSlug}/${a.slug}`,
       changeFrequency: "weekly" as const,

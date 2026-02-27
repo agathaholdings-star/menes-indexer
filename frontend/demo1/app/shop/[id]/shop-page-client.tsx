@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Star, MapPin, Clock, ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
@@ -13,6 +13,7 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { TherapistCard } from "@/components/shared/therapist-card";
 import { ReviewCard } from "@/components/shared/review-card";
+import { createSupabaseBrowser } from "@/lib/supabase/client";
 import type { Shop, Therapist, Review } from "@/lib/data";
 
 interface ShopPageClientProps {
@@ -28,6 +29,15 @@ interface ShopPageClientProps {
 
 export function ShopPageClient({ shop, therapists, shopReviews, officialUrl, areaName, areaSlug, prefName, prefSlug }: ShopPageClientProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  // Track review views on page load
+  useEffect(() => {
+    if (shopReviews.length === 0) return;
+    const supabase = createSupabaseBrowser();
+    supabase.rpc("increment_review_views", {
+      p_review_ids: shopReviews.map((r) => r.id),
+    });
+  }, [shopReviews]);
 
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev === shop.images.length - 1 ? 0 : prev + 1));

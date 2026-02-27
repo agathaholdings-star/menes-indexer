@@ -99,6 +99,421 @@ export type Database = {
           },
         ]
       }
+      bbs_post_likes: {
+        Row: {
+          created_at: string | null
+          post_id: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          post_id: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          post_id?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bbs_post_likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "bbs_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bbs_post_likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bbs_posts: {
+        Row: {
+          body: string
+          created_at: string | null
+          id: number
+          likes: number | null
+          thread_id: number
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string | null
+          id?: never
+          likes?: number | null
+          thread_id: number
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string | null
+          id?: never
+          likes?: number | null
+          thread_id?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bbs_posts_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "bbs_threads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bbs_posts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bbs_threads: {
+        Row: {
+          body: string
+          category: string
+          created_at: string | null
+          id: number
+          is_locked: boolean | null
+          is_pinned: boolean | null
+          is_vip_only: boolean
+          last_reply_at: string | null
+          reply_count: number | null
+          title: string
+          updated_at: string | null
+          user_id: string
+          view_count: number | null
+        }
+        Insert: {
+          body: string
+          category?: string
+          created_at?: string | null
+          id?: never
+          is_locked?: boolean | null
+          is_pinned?: boolean | null
+          is_vip_only?: boolean
+          last_reply_at?: string | null
+          reply_count?: number | null
+          title: string
+          updated_at?: string | null
+          user_id: string
+          view_count?: number | null
+        }
+        Update: {
+          body?: string
+          category?: string
+          created_at?: string | null
+          id?: never
+          is_locked?: boolean | null
+          is_pinned?: boolean | null
+          is_vip_only?: boolean
+          last_reply_at?: string | null
+          reply_count?: number | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+          view_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bbs_threads_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      blocks: {
+        Row: {
+          blocked_id: string
+          blocker_id: string
+          created_at: string | null
+        }
+        Insert: {
+          blocked_id: string
+          blocker_id: string
+          created_at?: string | null
+        }
+        Update: {
+          blocked_id?: string
+          blocker_id?: string
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blocks_blocked_id_fkey"
+            columns: ["blocked_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blocks_blocker_id_fkey"
+            columns: ["blocker_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      body_types: {
+        Row: {
+          id: number
+          label: string
+        }
+        Insert: {
+          id: number
+          label: string
+        }
+        Update: {
+          id?: number
+          label?: string
+        }
+        Relationships: []
+      }
+      cms_patterns: {
+        Row: {
+          ajax_pagination: Json
+          cms_name: string
+          confidence: number
+          created_at: string | null
+          fail_count: number
+          fingerprint: Json
+          id: number
+          list_data_rules: Json
+          list_url_rules: Json
+          success_count: number
+          therapist_data_rules: Json
+          therapist_list_rules: Json
+          updated_at: string | null
+          version: number
+        }
+        Insert: {
+          ajax_pagination?: Json
+          cms_name: string
+          confidence?: number
+          created_at?: string | null
+          fail_count?: number
+          fingerprint?: Json
+          id?: never
+          list_data_rules?: Json
+          list_url_rules?: Json
+          success_count?: number
+          therapist_data_rules?: Json
+          therapist_list_rules?: Json
+          updated_at?: string | null
+          version?: number
+        }
+        Update: {
+          ajax_pagination?: Json
+          cms_name?: string
+          confidence?: number
+          created_at?: string | null
+          fail_count?: number
+          fingerprint?: Json
+          id?: never
+          list_data_rules?: Json
+          list_url_rules?: Json
+          success_count?: number
+          therapist_data_rules?: Json
+          therapist_list_rules?: Json
+          updated_at?: string | null
+          version?: number
+        }
+        Relationships: []
+      }
+      conversations: {
+        Row: {
+          created_at: string | null
+          id: number
+          last_message_at: string | null
+          user1_id: string
+          user2_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: never
+          last_message_at?: string | null
+          user1_id: string
+          user2_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: never
+          last_message_at?: string | null
+          user1_id?: string
+          user2_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_user1_id_fkey"
+            columns: ["user1_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_user2_id_fkey"
+            columns: ["user2_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cup_types: {
+        Row: {
+          id: number
+          label: string
+        }
+        Insert: {
+          id: number
+          label: string
+        }
+        Update: {
+          id?: number
+          label?: string
+        }
+        Relationships: []
+      }
+      favorites: {
+        Row: {
+          created_at: string | null
+          therapist_id: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          therapist_id: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          therapist_id?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorites_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "favorites_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      looks_types: {
+        Row: {
+          id: number
+          label: string
+        }
+        Insert: {
+          id: number
+          label: string
+        }
+        Update: {
+          id?: number
+          label?: string
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          body: string
+          conversation_id: number
+          created_at: string | null
+          id: number
+          is_read: boolean | null
+          sender_id: string
+        }
+        Insert: {
+          body: string
+          conversation_id: number
+          created_at?: string | null
+          id?: never
+          is_read?: boolean | null
+          sender_id: string
+        }
+        Update: {
+          body?: string
+          conversation_id?: number
+          created_at?: string | null
+          id?: never
+          is_read?: boolean | null
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string | null
+          id: number
+          is_read: boolean | null
+          link: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string | null
+          id?: never
+          is_read?: boolean | null
+          link?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string | null
+          id?: never
+          is_read?: boolean | null
+          link?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       prefectures: {
         Row: {
           display_order: number | null
@@ -165,76 +580,224 @@ export type Database = {
         }
         Relationships: []
       }
+      reports: {
+        Row: {
+          created_at: string | null
+          detail: string | null
+          id: number
+          reason: string
+          reporter_id: string
+          reviewed_at: string | null
+          status: string
+          target_id: string
+          target_type: string
+        }
+        Insert: {
+          created_at?: string | null
+          detail?: string | null
+          id?: never
+          reason: string
+          reporter_id: string
+          reviewed_at?: string | null
+          status?: string
+          target_id: string
+          target_type: string
+        }
+        Update: {
+          created_at?: string | null
+          detail?: string | null
+          id?: never
+          reason?: string
+          reporter_id?: string
+          reviewed_at?: string | null
+          status?: string
+          target_id?: string
+          target_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      review_votes: {
+        Row: {
+          created_at: string | null
+          review_id: string
+          updated_at: string | null
+          user_id: string
+          vote_type: string
+        }
+        Insert: {
+          created_at?: string | null
+          review_id: string
+          updated_at?: string | null
+          user_id: string
+          vote_type: string
+        }
+        Update: {
+          created_at?: string | null
+          review_id?: string
+          updated_at?: string | null
+          user_id?: string
+          vote_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_votes_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "reviews"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "review_votes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reviews: {
         Row: {
-          body_type: string | null
+          body_type_id: number | null
           comment_advice: string | null
+          comment_cost: string | null
           comment_first_impression: string | null
+          comment_reason: string | null
+          comment_revisit: string | null
           comment_service: string | null
           comment_service_detail: string | null
+          comment_style: string | null
+          cost_total: number | null
           created_at: string | null
+          cup_type_id: number | null
+          fake_count: number
           id: string
+          is_seed: boolean
           is_verified: boolean | null
-          looks_type: string | null
+          looks_type_id: number | null
           moderation_status: string
           param_conversation: number | null
           param_distance: number | null
           param_personality: number | null
           param_technique: number | null
-          score: number | null
-          service_level: string | null
+          real_count: number
           salon_id: number
+          score: number | null
+          service_level_id: number | null
           therapist_id: number
-          user_id: string
+          user_id: string | null
           verification_image_path: string | null
+          view_count: number
         }
         Insert: {
-          body_type?: string | null
+          body_type_id?: number | null
           comment_advice?: string | null
+          comment_cost?: string | null
           comment_first_impression?: string | null
+          comment_reason?: string | null
+          comment_revisit?: string | null
           comment_service?: string | null
           comment_service_detail?: string | null
+          comment_style?: string | null
+          cost_total?: number | null
           created_at?: string | null
+          cup_type_id?: number | null
+          fake_count?: number
           id?: string
+          is_seed?: boolean
           is_verified?: boolean | null
-          looks_type?: string | null
+          looks_type_id?: number | null
           moderation_status?: string
           param_conversation?: number | null
           param_distance?: number | null
           param_personality?: number | null
           param_technique?: number | null
-          score?: number | null
-          service_level?: string | null
+          real_count?: number
           salon_id: number
+          score?: number | null
+          service_level_id?: number | null
           therapist_id: number
-          user_id: string
+          user_id?: string | null
           verification_image_path?: string | null
+          view_count?: number
         }
         Update: {
-          body_type?: string | null
+          body_type_id?: number | null
           comment_advice?: string | null
+          comment_cost?: string | null
           comment_first_impression?: string | null
+          comment_reason?: string | null
+          comment_revisit?: string | null
           comment_service?: string | null
           comment_service_detail?: string | null
+          comment_style?: string | null
+          cost_total?: number | null
           created_at?: string | null
+          cup_type_id?: number | null
+          fake_count?: number
           id?: string
+          is_seed?: boolean
           is_verified?: boolean | null
-          looks_type?: string | null
+          looks_type_id?: number | null
           moderation_status?: string
           param_conversation?: number | null
           param_distance?: number | null
           param_personality?: number | null
           param_technique?: number | null
-          score?: number | null
-          service_level?: string | null
+          real_count?: number
           salon_id?: number
+          score?: number | null
+          service_level_id?: number | null
           therapist_id?: number
-          user_id?: string
+          user_id?: string | null
           verification_image_path?: string | null
+          view_count?: number
         }
         Relationships: [
           {
-            foreignKeyName: "reviews_salon_id_fkey"
+            foreignKeyName: "reviews_body_type_id_fkey"
+            columns: ["body_type_id"]
+            isOneToOne: false
+            referencedRelation: "body_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_cup_type_id_fkey"
+            columns: ["cup_type_id"]
+            isOneToOne: false
+            referencedRelation: "cup_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_looks_type_id_fkey"
+            columns: ["looks_type_id"]
+            isOneToOne: false
+            referencedRelation: "looks_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_service_level_id_fkey"
+            columns: ["service_level_id"]
+            isOneToOne: false
+            referencedRelation: "service_levels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_shop_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salon_review_stats"
+            referencedColumns: ["salon_id"]
+          },
+          {
+            foreignKeyName: "reviews_shop_id_fkey"
             columns: ["salon_id"]
             isOneToOne: false
             referencedRelation: "salons"
@@ -277,16 +840,87 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "salon_areas_area_id_fkey"
+            foreignKeyName: "shop_areas_area_id_fkey"
             columns: ["area_id"]
             isOneToOne: false
             referencedRelation: "areas"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "salon_areas_salon_id_fkey"
+            foreignKeyName: "shop_areas_shop_id_fkey"
             columns: ["salon_id"]
             isOneToOne: false
+            referencedRelation: "salon_review_stats"
+            referencedColumns: ["salon_id"]
+          },
+          {
+            foreignKeyName: "shop_areas_shop_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      salon_scrape_cache: {
+        Row: {
+          cms_pattern_id: number | null
+          created_at: string | null
+          extraction_method: string | null
+          fail_reason: string | null
+          fail_streak: number | null
+          last_scraped_at: string | null
+          last_therapist_count: number | null
+          name_css_selector: string | null
+          salon_id: number
+          therapist_list_url: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          cms_pattern_id?: number | null
+          created_at?: string | null
+          extraction_method?: string | null
+          fail_reason?: string | null
+          fail_streak?: number | null
+          last_scraped_at?: string | null
+          last_therapist_count?: number | null
+          name_css_selector?: string | null
+          salon_id: number
+          therapist_list_url?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          cms_pattern_id?: number | null
+          created_at?: string | null
+          extraction_method?: string | null
+          fail_reason?: string | null
+          fail_streak?: number | null
+          last_scraped_at?: string | null
+          last_therapist_count?: number | null
+          name_css_selector?: string | null
+          salon_id?: number
+          therapist_list_url?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_scrape_cache_cms_pattern_id_fkey"
+            columns: ["cms_pattern_id"]
+            isOneToOne: false
+            referencedRelation: "cms_patterns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shop_scrape_cache_shop_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: true
+            referencedRelation: "salon_review_stats"
+            referencedColumns: ["salon_id"]
+          },
+          {
+            foreignKeyName: "shop_scrape_cache_shop_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: true
             referencedRelation: "salons"
             referencedColumns: ["id"]
           },
@@ -299,6 +933,7 @@ export type Database = {
           base_price: number | null
           business_hours: string | null
           business_type: string | null
+          cms_fingerprint: string | null
           created_at: string | null
           description: string | null
           display_name: string | null
@@ -310,7 +945,7 @@ export type Database = {
           name: string
           official_url: string | null
           phone: string | null
-          hacks_salon_overview: string | null
+          salon_overview: string | null
           search_volume: number | null
           seo_title: string | null
           service_tags: string[] | null
@@ -325,6 +960,7 @@ export type Database = {
           base_price?: number | null
           business_hours?: string | null
           business_type?: string | null
+          cms_fingerprint?: string | null
           created_at?: string | null
           description?: string | null
           display_name?: string | null
@@ -336,7 +972,7 @@ export type Database = {
           name: string
           official_url?: string | null
           phone?: string | null
-          hacks_salon_overview?: string | null
+          salon_overview?: string | null
           search_volume?: number | null
           seo_title?: string | null
           service_tags?: string[] | null
@@ -351,6 +987,7 @@ export type Database = {
           base_price?: number | null
           business_hours?: string | null
           business_type?: string | null
+          cms_fingerprint?: string | null
           created_at?: string | null
           description?: string | null
           display_name?: string | null
@@ -362,7 +999,7 @@ export type Database = {
           name?: string
           official_url?: string | null
           phone?: string | null
-          hacks_salon_overview?: string | null
+          salon_overview?: string | null
           search_volume?: number | null
           seo_title?: string | null
           service_tags?: string[] | null
@@ -370,6 +1007,69 @@ export type Database = {
           source?: string | null
           source_id?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      scrape_log: {
+        Row: {
+          created_at: string | null
+          detail: string | null
+          html_hash: string | null
+          id: number
+          method: string
+          salon_id: number
+          step: string
+          success: boolean
+        }
+        Insert: {
+          created_at?: string | null
+          detail?: string | null
+          html_hash?: string | null
+          id?: never
+          method: string
+          salon_id: number
+          step: string
+          success?: boolean
+        }
+        Update: {
+          created_at?: string | null
+          detail?: string | null
+          html_hash?: string | null
+          id?: never
+          method?: string
+          salon_id?: number
+          step?: string
+          success?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scrape_log_shop_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salon_review_stats"
+            referencedColumns: ["salon_id"]
+          },
+          {
+            foreignKeyName: "scrape_log_shop_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_levels: {
+        Row: {
+          id: number
+          label: string
+        }
+        Insert: {
+          id: number
+          label: string
+        }
+        Update: {
+          id?: number
+          label?: string
         }
         Relationships: []
       }
@@ -436,7 +1136,14 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "therapists_salon_id_fkey"
+            foreignKeyName: "therapists_shop_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salon_review_stats"
+            referencedColumns: ["salon_id"]
+          },
+          {
+            foreignKeyName: "therapists_shop_id_fkey"
             columns: ["salon_id"]
             isOneToOne: false
             referencedRelation: "salons"
@@ -479,31 +1186,103 @@ export type Database = {
           },
         ]
       }
+      user_sessions: {
+        Row: {
+          created_at: string | null
+          device_fingerprint: string
+          device_label: string | null
+          id: string
+          ip_address: unknown
+          is_active: boolean | null
+          last_active_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          device_fingerprint: string
+          device_label?: string | null
+          id?: string
+          ip_address?: unknown
+          is_active?: boolean | null
+          last_active_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          device_fingerprint?: string
+          device_label?: string | null
+          id?: string
+          ip_address?: unknown
+          is_active?: boolean | null
+          last_active_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
-      [_ in never]: never
+      salon_review_stats: {
+        Row: {
+          avg_score: number | null
+          latest_review_at: string | null
+          review_count: number | null
+          salon_id: number | null
+          sum_score: number | null
+          therapist_count: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
-      approve_review: {
-        Args: {
-          review_id: string
-        }
-        Returns: undefined
-      }
-      get_prefectures_with_shops: {
-        Args: Record<PropertyKey, never>
+      approve_review: { Args: { review_id: string }; Returns: undefined }
+      get_profile_with_reset: {
+        Args: { p_user_id: string }
         Returns: {
-          id: number
-          name: string
-          shop_count: number
+          created_at: string
+          id: string
+          is_admin: boolean
+          membership_type: string
+          monthly_review_count: number
+          monthly_review_reset_at: string
+          nickname: string
+          total_review_count: number
+          view_permission_until: string
         }[]
       }
-      reject_review: {
-        Args: {
-          review_id: string
-        }
+      get_ranked_salons_by_area: {
+        Args: { p_area_id: number; p_limit?: number }
+        Returns: {
+          avg_score: number
+          bayesian_score: number
+          latest_review_at: string
+          ranking_score: number
+          review_count: number
+          salon_id: number
+          therapist_count: number
+        }[]
+      }
+      get_salon_review_stats_batch: {
+        Args: { p_salon_ids: number[] }
+        Returns: {
+          avg_score: number
+          review_count: number
+          salon_id: number
+          therapist_count: number
+        }[]
+      }
+      increment_review_views: {
+        Args: { p_review_ids: string[] }
         Returns: undefined
       }
+      reject_review: { Args: { review_id: string }; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
@@ -640,7 +1419,7 @@ export const Constants = {
   },
 } as const
 
-// 便利な型エイリアス
+// Custom type aliases for convenience
 export type Prefecture = Database["public"]["Tables"]["prefectures"]["Row"];
 export type Area = Database["public"]["Tables"]["areas"]["Row"];
 export type Salon = Database["public"]["Tables"]["salons"]["Row"];

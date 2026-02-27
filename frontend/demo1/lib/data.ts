@@ -173,6 +173,7 @@ export interface Review {
   userName?: string;
   realCount?: number;
   fakeCount?: number;
+  viewCount?: number;
 }
 
 export interface User {

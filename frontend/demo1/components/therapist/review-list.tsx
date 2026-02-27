@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Lock, PenLine, Star, ChevronRight, Crown, X, Eye, Users, TrendingUp, Flame, Heart, Sparkles } from "lucide-react";
+import { Lock, PenLine, Star, ChevronRight, Crown, Eye, TrendingUp, Flame, Heart, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -69,11 +69,7 @@ export function ReviewList({
               <div className="flex items-center gap-4 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <Eye className="h-3 w-3" />
-                  今日{Math.floor(Math.random() * 50) + 30}人が閲覧
-                </span>
-                <span className="flex items-center gap-1">
-                  <Users className="h-3 w-3" />
-                  {Math.floor(Math.random() * 20) + 10}人がお気に入り
+                  {reviews.reduce((sum, r) => sum + (r.viewCount || 0), 0).toLocaleString()}回閲覧
                 </span>
               </div>
               <Badge variant="outline" className="text-xs text-primary border-primary/30">
@@ -288,8 +284,14 @@ function ReviewCard({
             </span>
             <span>点数: <span className="text-primary font-bold">{review.score}</span>点</span>
           </div>
-          <div className="text-xs text-muted-foreground mt-1">
-            投稿者: <Link href="#" className="text-primary hover:underline">{review.userName}</Link>
+          <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
+            <span>投稿者: <Link href="#" className="text-primary hover:underline">{review.userName}</Link></span>
+            {(review.viewCount || 0) > 0 && (
+              <span className="flex items-center gap-1">
+                <Eye className="h-3 w-3" />
+                {(review.viewCount || 0).toLocaleString()}
+              </span>
+            )}
           </div>
         </div>
       </div>

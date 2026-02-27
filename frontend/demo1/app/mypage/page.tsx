@@ -46,6 +46,7 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { type EffectiveTier, getEffectiveTier, tierPermissions } from "@/lib/data";
 import { useAuth } from "@/lib/auth-context";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
+import { PreferenceMap } from "@/components/mypage/preference-map";
 
 type MemberLevel = "free" | "standard" | "vip";
 type Section = "dashboard" | "reviews" | "favorites" | "lists" | "messages" | "bbs" | "skr" | "notifications" | "settings";
@@ -126,6 +127,13 @@ export default function MyPage() {
     comment: string;
     created_at: string;
   }[]>([]);
+  const [preferenceData, setPreferenceData] = useState<{
+    totalReviews: number;
+    looksTypes: { id: string; count: number; percentage: number }[];
+    bodyTypes: { id: string; count: number; percentage: number }[];
+    serviceTypes: { id: string; count: number; percentage: number }[];
+    avgParameters: { conversation: number; distance: number; technique: number; personality: number };
+  } | null>(null);
 
   // Fetch profile when auth user changes
   useEffect(() => {
@@ -153,6 +161,7 @@ export default function MyPage() {
       setFavoriteCount(data.favoriteCount || 0);
       setUserReviews(data.userReviews || []);
       setSkrReviews(data.skrReviews || []);
+      if (data.preferenceData) setPreferenceData(data.preferenceData);
       setProfileLoading(false);
     };
 
@@ -322,6 +331,9 @@ export default function MyPage() {
 
             {/* 投稿数プログレスバー（Standard会員のみ） */}
             <ReviewProgressBar />
+
+            {/* 嗜好マップ */}
+            {preferenceData && <PreferenceMap data={preferenceData} />}
 
             {/* Member Benefits */}
             <Card>
