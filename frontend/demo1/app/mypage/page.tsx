@@ -22,7 +22,6 @@ import {
   Send,
   Plus,
   Share2,
-  UserPlus,
   Search,
   ExternalLink,
   BarChart3,
@@ -38,9 +37,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { type EffectiveTier, getEffectiveTier, tierPermissions } from "@/lib/data";
@@ -64,12 +73,6 @@ const sidebarItems = [
   { id: "settings", label: "設定", icon: Settings },
 ] as const;
 
-// Mock data for sections not yet fully implemented
-const mockPublicLists = [
-  { id: "1", userName: "メンエスマスター", avatar: "M", listName: "渋谷ギャル系TOP10", count: 10, followers: 234 },
-  { id: "2", userName: "癒し探求者", avatar: "Y", listName: "清楚系おすすめ", count: 8, followers: 156 },
-  { id: "3", userName: "週末リピーター", avatar: "S", listName: "コスパ最強リスト", count: 15, followers: 89 },
-];
 
 export default function MyPage() {
   const { user: authUser, loading: authLoading } = useAuth();
@@ -82,7 +85,7 @@ export default function MyPage() {
   const [selectedConversation, setSelectedConversation] = useState<string | null>("1");
   const [messageInput, setMessageInput] = useState("");
   const [bbsTab, setBbsTab] = useState("general");
-  const [listPublic, setListPublic] = useState(false);
+
 
   // Settings state
   const [editNickname, setEditNickname] = useState("");
@@ -475,66 +478,16 @@ export default function MyPage() {
           return <LockScreen title="リスト共有機能" description="他のユーザーのお気に入りリストを閲覧したり、自分のリストを公開できます。スタンダード会員（月2本投稿）以上で利用可能です。" upgradeText="スタンダード会員になる" targetLevel="standard" />;
         }
         return (
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">自分のリスト設定</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">公開ステータス</p>
-                    <p className="text-sm text-muted-foreground">他のユーザーがあなたのリストを閲覧できます</p>
-                  </div>
-                  <Switch checked={listPublic} onCheckedChange={setListPublic} />
-                </div>
-                {listPublic && (
-                  <>
-                    <div>
-                      <Label>リスト名</Label>
-                      <Input placeholder="例: 渋谷ギャル系おすすめ" className="mt-1" />
-                    </div>
-                    <Button variant="outline" className="gap-2 bg-transparent">
-                      <Share2 className="h-4 w-4" />
-                      共有URLをコピー
-                    </Button>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-lg">公開リスト一覧</CardTitle>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="リストを検索" className="pl-9 w-48" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {mockPublicLists.map((list) => (
-                    <div key={list.id} className="flex items-center gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors">
-                      <Avatar>
-                        <AvatarFallback className="bg-primary/10 text-primary">{list.avatar}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
-                        <p className="font-medium">{list.listName}</p>
-                        <p className="text-sm text-muted-foreground">{list.userName} / {list.count}人のセラピスト</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-medium">{list.followers} フォロワー</p>
-                        <div className="flex gap-2 mt-1">
-                          <Button size="sm" variant="outline" className="bg-transparent"><UserPlus className="h-4 w-4" /></Button>
-                          <Button size="sm"><ExternalLink className="h-4 w-4" /></Button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">リスト共有</CardTitle>
+            </CardHeader>
+            <CardContent className="text-center py-12">
+              <Share2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <p className="text-muted-foreground mb-2">リスト共有機能は準備中です</p>
+              <p className="text-sm text-muted-foreground">お気に入りリストの公開・共有機能を近日中にリリースします</p>
+            </CardContent>
+          </Card>
         );
 
       case "messages":
@@ -809,20 +762,11 @@ export default function MyPage() {
               <CardHeader>
                 <CardTitle className="text-lg">通知設定</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {[
-                  { label: "新着口コミ通知", description: "お気に入りセラピストに口コミが投稿された時" },
-                  { label: "DM通知", description: "新しいメッセージを受信した時" },
-                  { label: "運営からのお知らせ", description: "キャンペーンや重要なお知らせ" },
-                ].map((setting, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">{setting.label}</p>
-                      <p className="text-sm text-muted-foreground">{setting.description}</p>
-                    </div>
-                    <Switch defaultChecked />
-                  </div>
-                ))}
+              <CardContent>
+                <div className="text-center py-6">
+                  <Bell className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+                  <p className="text-muted-foreground text-sm">通知設定は現在準備中です</p>
+                </div>
               </CardContent>
             </Card>
 
@@ -834,7 +778,37 @@ export default function MyPage() {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground mb-4">退会すると全てのデータが削除され、復元できません。</p>
-                <Button variant="destructive">退会する</Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive">退会する</Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>本当に退会しますか？</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        退会すると、投稿した口コミ・お気に入り・メッセージなど全てのデータが完全に削除されます。この操作は取り消せません。
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>キャンセル</AlertDialogCancel>
+                      <AlertDialogAction
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        onClick={async () => {
+                          const res = await fetch("/api/account", { method: "DELETE" });
+                          if (res.ok) {
+                            const supabase = createSupabaseBrowser();
+                            await supabase.auth.signOut();
+                            router.push("/");
+                          } else {
+                            alert("退会処理に失敗しました。サポートにお問い合わせください。");
+                          }
+                        }}
+                      >
+                        退会する
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </CardContent>
             </Card>
           </div>

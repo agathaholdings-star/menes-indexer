@@ -13,23 +13,23 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://menes-indexer.com';
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: 'メンエスインデクサ | 次世代メンズエステ口コミ',
-    template: '%s | メンエスインデクサ',
+    default: 'メンズエステの口コミならメンエスSKR',
+    template: '%s - メンエスSKR',
   },
-  description: 'タイプで選ぶ次世代メンズエステ口コミプラットフォーム。エリア・タイプ・スタイルで理想のセラピストを発見。',
-  keywords: ['メンズエステ', '口コミ', 'メンエス', 'セラピスト', 'レビュー'],
+  description: 'メンズエステの口コミ・体験談ならメンエスSKR。エリア・タイプ・スタイルで理想のセラピストを発見。',
+  keywords: ['メンズエステ', '口コミ', 'メンエス', 'セラピスト', 'レビュー', '体験談', 'メンエスSKR'],
   openGraph: {
     type: 'website',
     locale: 'ja_JP',
-    siteName: 'メンエスインデクサ',
-    title: 'メンエスインデクサ | 次世代メンズエステ口コミ',
-    description: 'タイプで選ぶ次世代メンズエステ口コミプラットフォーム。エリア・タイプ・スタイルで理想のセラピストを発見。',
+    siteName: 'メンエスSKR',
+    title: 'メンズエステの口コミならメンエスSKR',
+    description: 'メンズエステの口コミ・体験談ならメンエスSKR。エリア・タイプ・スタイルで理想のセラピストを発見。',
     url: siteUrl,
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'メンエスインデクサ',
-    description: 'タイプで選ぶ次世代メンズエステ口コミプラットフォーム',
+    title: 'メンエスSKR',
+    description: 'メンズエステの口コミ・体験談ならメンエスSKR',
   },
   robots: {
     index: true,

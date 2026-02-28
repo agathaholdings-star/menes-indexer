@@ -40,7 +40,7 @@ import { useTier } from "@/lib/hooks/use-tier";
 
 export function SiteHeader() {
   const { user: authUser, loading: authLoading, signOut: authSignOut } = useAuth();
-  const { effectiveTier, membershipType, monthlyReviewCount: tierMonthlyReviewCount } = useTier();
+  const { effectiveTier, membershipType, monthlyReviewCount: tierMonthlyReviewCount, viewPermissionUntil } = useTier();
   const memberLevel = (membershipType || "free") as "free" | "standard" | "vip";
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -113,10 +113,17 @@ export function SiteHeader() {
 
   const nickname = authUser?.user_metadata?.nickname || authUser?.email?.split("@")[0] || "ユーザー";
 
+  // 無料閲覧残り日数を計算
+  const computeRemainingDays = () => {
+    if (!viewPermissionUntil) return 0;
+    const diff = new Date(viewPermissionUntil).getTime() - Date.now();
+    return diff > 0 ? Math.ceil(diff / (1000 * 60 * 60 * 24)) : 0;
+  };
+
   const user = {
     name: nickname,
     avatar: null,
-    remainingDays: 3,
+    remainingDays: computeRemainingDays(),
     unreadNotifications: 0,
     unreadMessages: 0,
     monthlyReviewCount: monthlyReviewCount,
@@ -152,7 +159,7 @@ export function SiteHeader() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
               <span className="text-sm font-bold text-primary-foreground">ME</span>
             </div>
-            <span className="hidden text-lg font-bold sm:inline">メンエスインデクサ</span>
+            <span className="hidden text-lg font-bold sm:inline">メンエスSKR</span>
           </Link>
 
           {/* Search Bar - Desktop */}
@@ -286,7 +293,11 @@ export function SiteHeader() {
                       {memberLevel === "free" && (
                         <div className="mt-3 p-2 rounded-md bg-muted text-sm">
                           <p className="text-muted-foreground">
-                            無料閲覧残り: <span className="text-primary font-bold">{user.remainingDays}日</span>
+                            {user.remainingDays > 0 ? (
+                              <>無料閲覧残り: <span className="text-primary font-bold">{user.remainingDays}日</span></>
+                            ) : (
+                              <>口コミを投稿すると閲覧できます</>
+                            )}
                           </p>
                         </div>
                       )}
@@ -407,7 +418,11 @@ export function SiteHeader() {
                       </div>
                       {memberLevel === "free" && (
                         <p className="text-sm text-muted-foreground mt-2">
-                          無料閲覧残り: <span className="text-primary font-bold">{user.remainingDays}日</span>
+                          {user.remainingDays > 0 ? (
+                            <>無料閲覧残り: <span className="text-primary font-bold">{user.remainingDays}日</span></>
+                          ) : (
+                            <>口コミを投稿すると閲覧できます</>
+                          )}
                         </p>
                       )}
                       {memberLevel === "standard" && (

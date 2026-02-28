@@ -15,7 +15,7 @@ export default function TokushohoPage() {
               <tbody className="divide-y">
                 <tr>
                   <th className="py-4 px-4 text-left bg-muted/50 w-1/3 font-medium">販売事業者名</th>
-                  <td className="py-4 px-4">メンエスインデクサ</td>
+                  <td className="py-4 px-4">メンエスSKR</td>
                 </tr>
                 <tr>
                   <th className="py-4 px-4 text-left bg-muted/50 font-medium">運営責任者</th>

@@ -19,8 +19,8 @@ export async function generateMetadata({
 
   const salonCount = area.salon_count || 0;
   return {
-    title: `${area.name} メンズエステ おすすめランキング | ${pref.name}`,
-    description: `${pref.name}${area.name}エリアのメンズエステおすすめ${salonCount}店舗をランキング。口コミ・評価で比較。`,
+    title: `${area.name}のおすすめメンズエステランキング`,
+    description: `${pref.name}${area.name}エリアのおすすめメンズエステ${salonCount}店舗をランキング。口コミ・評価で比較。`,
   };
 }
 

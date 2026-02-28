@@ -20,8 +20,8 @@ export async function generateMetadata({ params }: ShopPageProps): Promise<Metad
   const areaInfo = await getShopAreaInfo(dbShop.id);
   const areaText = areaInfo ? `${areaInfo.prefName}${areaInfo.areaName}` : "";
   return {
-    title: dbShop.seo_title || `${name} | ${areaText}メンズエステ`,
-    description: `${name}の店舗情報・セラピスト一覧・口コミ。${areaText}${dbShop.access ? `（${dbShop.access}）` : ""}`,
+    title: dbShop.seo_title || `${name}の口コミ体験談`,
+    description: `${name}の口コミ体験談・セラピスト一覧。${areaText}${dbShop.access ? `（${dbShop.access}）` : ""}`,
   };
 }
 

@@ -44,5 +44,5 @@ export function useTier() {
   const effectiveTier: EffectiveTier = authUser ? getEffectiveTier(tierUser) : "free";
   const permissions = tierPermissions[effectiveTier];
 
-  return { effectiveTier, permissions, loading, authUser, membershipType, monthlyReviewCount };
+  return { effectiveTier, permissions, loading, authUser, membershipType, monthlyReviewCount, viewPermissionUntil };
 }

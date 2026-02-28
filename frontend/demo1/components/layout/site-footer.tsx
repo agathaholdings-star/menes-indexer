@@ -11,10 +11,10 @@ export function SiteFooter() {
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
                 <span className="text-sm font-bold text-primary-foreground">ME</span>
               </div>
-              <span className="text-lg font-bold">メンエスインデクサ</span>
+              <span className="text-lg font-bold">メンエスSKR</span>
             </Link>
             <p className="mt-3 text-sm text-muted-foreground">
-              タイプで選ぶ次世代メンズエステ口コミプラットフォーム
+              メンズエステの口コミ・体験談サイト
             </p>
           </div>
 
@@ -103,7 +103,7 @@ export function SiteFooter() {
         <div className="mt-8 border-t pt-8 text-center text-sm text-muted-foreground">
           <p>SHIMATOMO ITALY S.R.L.S.</p>
           <p>VIA DEL LAURO 9 20121 MILANO MI ITALY</p>
-          <p className="mt-4">&copy; 2024 メンエスインデクサ. All rights reserved.</p>
+          <p className="mt-4">&copy; 2024 メンエスSKR. All rights reserved.</p>
         </div>
       </div>
     </footer>

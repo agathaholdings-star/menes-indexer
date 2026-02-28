@@ -329,7 +329,7 @@ function SearchContent() {
 
   // モーダル
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const [upgradeType, setUpgradeType] = useState<"score" | "skr" | "hr">("score");
+  const [upgradeType, setUpgradeType] = useState<"score" | "skr" | "hr" | "discovery">("score");
 
   // 権限チェック（実際のティアから判定）
   const canUseScoreFilter = permissions.canViewScores;
@@ -681,12 +681,36 @@ function SearchContent() {
             </div>
           )}
 
-          {/* 隠れた名セラピスト */}
+          {/* 隠れた名セラピスト（発見検索） */}
           {!therapistLoading && (() => {
             const hidden = dbTherapists.filter(
               (t) => t.review_count >= 1 && t.review_count <= 3 && (t.avg_score || 0) >= 85
             );
             if (hidden.length === 0) return null;
+
+            if (!permissions.canUseDiscoverySearch) {
+              return (
+                <Card className="mb-6 border-muted bg-muted/30">
+                  <CardContent className="p-6 text-center">
+                    <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
+                      <Lock className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <h3 className="font-bold mb-1 flex items-center justify-center gap-2">
+                      <Gem className="h-4 w-4 text-primary" />
+                      隠れた名セラピスト
+                      <Badge variant="secondary" className="text-xs">発見</Badge>
+                    </h3>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      まだ発見されていないダイヤの原石を見つけよう
+                    </p>
+                    <Button size="sm" onClick={() => { setUpgradeType("discovery"); setShowUpgradeModal(true); }}>
+                      解放方法を見る
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            }
+
             return (
               <Card className="mb-6 border-primary/20 bg-primary/5">
                 <CardHeader className="pb-3">
@@ -900,6 +924,7 @@ function SearchContent() {
                 {upgradeType === "score" && "点数フィルターを解放"}
                 {upgradeType === "skr" && "SKRフィルターを解放"}
                 {upgradeType === "hr" && "HRフィルターを解放"}
+                {upgradeType === "discovery" && "発見検索を解放"}
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
@@ -943,6 +968,20 @@ function SearchContent() {
                     <p className="text-2xl font-bold text-primary">
                       ¥14,980<span className="text-sm font-normal">/月</span>
                     </p>
+                  </div>
+                  <Button className="w-full" asChild>
+                    <Link href="/pricing">プランを確認</Link>
+                  </Button>
+                </>
+              )}
+              {upgradeType === "discovery" && (
+                <>
+                  <p className="text-sm text-muted-foreground">
+                    「隠れた名セラピスト」は口コミが少ないのに高評価のダイヤの原石を発見できる機能です。
+                  </p>
+                  <div className="bg-muted p-4 rounded-lg">
+                    <p className="font-medium mb-2">解放方法</p>
+                    <p className="text-sm">スタンダードプラン加入 + 月1件以上の口コミ投稿で解放されます</p>
                   </div>
                   <Button className="w-full" asChild>
                     <Link href="/pricing">プランを確認</Link>

@@ -25,9 +25,9 @@ export async function generateMetadata({ params }: TherapistPageProps): Promise<
     .eq("id", data.salon_id)
     .single();
   const shopName = shop?.display_name || shop?.name || "";
-  const desc = `${data.name}${data.age ? `（${data.age}歳）` : ""}${shopName ? ` | ${shopName}` : ""}の詳細・口コミ`;
+  const desc = `${data.name}${data.age ? `（${data.age}歳）` : ""}${shopName ? `（${shopName}）` : ""}の口コミ体験談`;
   return {
-    title: `${data.name} | ${shopName}`,
+    title: `${data.name}の口コミ体験談`,
     description: desc,
   };
 }
