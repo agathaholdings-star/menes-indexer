@@ -38,10 +38,13 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta
 from urllib.parse import urlparse
 
+import io
+
 import psycopg2
 import psycopg2.extras
 import requests
 from dotenv import load_dotenv
+from PIL import Image
 
 # .env読み込み
 load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
@@ -51,11 +54,15 @@ DB_DSN = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@127.0.0.1:543
 SUPABASE_URL = os.getenv("SUPABASE_URL", "http://127.0.0.1:54321")
 SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
 STORAGE_BUCKET = "therapist-images"
-DL_TIMEOUT = 15
+DL_TIMEOUT = int(os.getenv("DL_TIMEOUT", "15"))
 DL_HEADERS = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
                   "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 }
+
+# 画像最適化設定
+IMAGE_MAX_WIDTH = 800       # 横幅上限(px)
+IMAGE_WEBP_QUALITY = 80     # WebP品質(0-100)
 
 # ログ設定
 SCRIPT_DIR = os.path.dirname(__file__)
@@ -155,9 +162,38 @@ def _content_type_for_ext(ext: str) -> str:
     return mapping.get(ext, 'image/jpeg')
 
 
+def optimize_image(data: bytes) -> tuple[bytes | None, str]:
+    """
+    画像を最適化: リサイズ(800px幅上限) + WebP変換。
+
+    Returns:
+        (optimized_bytes | None, "image/webp")
+        デコード失敗時はNoneを返す
+    """
+    try:
+        img = Image.open(io.BytesIO(data))
+        # RGBA/P → RGBに変換（WebP保存用）
+        if img.mode in ('RGBA', 'P', 'LA'):
+            img = img.convert('RGB')
+        elif img.mode != 'RGB':
+            img = img.convert('RGB')
+        # リサイズ（横幅がMAX_WIDTHを超えた場合のみ）
+        w, h = img.size
+        if w > IMAGE_MAX_WIDTH:
+            ratio = IMAGE_MAX_WIDTH / w
+            new_h = int(h * ratio)
+            img = img.resize((IMAGE_MAX_WIDTH, new_h), Image.LANCZOS)
+        # WebPエンコード
+        buf = io.BytesIO()
+        img.save(buf, format='WEBP', quality=IMAGE_WEBP_QUALITY)
+        return buf.getvalue(), "image/webp"
+    except Exception:
+        return None, ""
+
+
 def download_image(url: str) -> tuple[bytes | None, str]:
     """
-    画像をダウンロード。
+    画像をダウンロード + 最適化(WebP変換+リサイズ)。
 
     Returns:
         (bytes | None, content_type)
@@ -178,8 +214,11 @@ def download_image(url: str) -> tuple[bytes | None, str]:
         if len(data) > 5 * 1024 * 1024:
             return None, ""
 
-        ct = resp.headers.get('Content-Type', '')
-        return data, ct
+        # 最適化: WebP変換 + リサイズ
+        optimized, ct = optimize_image(data)
+        if optimized is None:
+            return None, ""
+        return optimized, ct
     except Exception:
         return None, ""
 
@@ -234,10 +273,10 @@ def process_one_therapist(therapist_id: int, salon_id: int,
             new_urls.append(url)  # 元URL維持
             continue
 
-        # Storage パス決定
-        ext = _guess_ext(url, ct)
+        # Storage パス決定（最適化済みなので常にwebp）
+        ext = 'webp' if ct == 'image/webp' else _guess_ext(url, ct)
         storage_path = f"{salon_id}/{therapist_id}/{idx + 1:03d}.{ext}"
-        content_type = _content_type_for_ext(ext)
+        content_type = ct if ct else _content_type_for_ext(ext)
 
         # アップロード
         ok = upload_to_storage(data, storage_path, content_type)
@@ -256,15 +295,50 @@ def process_one_therapist(therapist_id: int, salon_id: int,
 # メイン処理
 # =============================================================================
 
+def _get_db_connection():
+    """DB接続を取得（autocommitモード）"""
+    conn = psycopg2.connect(DB_DSN)
+    conn.autocommit = True
+    return conn
+
+
+def _db_batch_update_urls(updates: list[tuple[int, list[str]]]):
+    """
+    バッチ単位でDB URLを一括更新。
+    毎回新しい接続を開いて即閉じる（接続タイムアウト回避）。
+    """
+    if not updates:
+        return
+    try:
+        conn = _get_db_connection()
+        with conn.cursor() as cur:
+            for therapist_id, new_urls in updates:
+                cur.execute(
+                    "UPDATE therapists SET image_urls = %s::jsonb WHERE id = %s",
+                    (json.dumps(new_urls, ensure_ascii=False), therapist_id)
+                )
+        conn.close()
+    except Exception as e:
+        log.warning(f"  DB batch update error ({len(updates)} rows): {e}")
+        # リトライ: 1件ずつ新しい接続で
+        for therapist_id, new_urls in updates:
+            try:
+                c = _get_db_connection()
+                with c.cursor() as cur:
+                    cur.execute(
+                        "UPDATE therapists SET image_urls = %s::jsonb WHERE id = %s",
+                        (json.dumps(new_urls, ensure_ascii=False), therapist_id)
+                    )
+                c.close()
+            except Exception as e2:
+                log.warning(f"  DB retry failed id={therapist_id}: {e2}")
+
+
 def run(args):
     cp_path = _checkpoint_path(args.start_id, args.end_id)
     checkpoint = load_checkpoint(cp_path) if args.resume else _default_checkpoint()
     done_ids = set(checkpoint['done_ids'])
     stats = checkpoint['stats']
-
-    conn = psycopg2.connect(DB_DSN)
-    conn.autocommit = False
-    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     # 対象取得: image_urlsが空でないactiveセラピスト
     where_parts = [
@@ -282,16 +356,16 @@ def run(args):
         params['end_id'] = args.end_id
 
     where_sql = " AND ".join(where_parts)
-    cur.execute(f"""
-        SELECT id, salon_id, image_urls
-        FROM therapists
-        WHERE {where_sql}
-        ORDER BY id
-    """, params)
-    rows = cur.fetchall()
-
-    if args.limit:
-        rows = rows[:args.limit]
+    conn = _get_db_connection()
+    with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+        cur.execute(f"""
+            SELECT id, salon_id, image_urls
+            FROM therapists
+            WHERE {where_sql}
+            ORDER BY id
+        """, params)
+        rows = cur.fetchall()
+    conn.close()  # クエリ完了後すぐ閉じる
 
     # 処理済みスキップ
     rows = [r for r in rows if r['id'] not in done_ids]
@@ -311,6 +385,10 @@ def run(args):
         filtered.append(r)
     rows = filtered
 
+    # limitは全フィルタ適用後に適用
+    if args.limit:
+        rows = rows[:args.limit]
+
     total = len(rows)
     log.info(f"対象: {total} 件 (start_id={args.start_id}, end_id={args.end_id})")
     if done_ids:
@@ -318,14 +396,12 @@ def run(args):
 
     if not total:
         log.info("処理対象が0件のため終了")
-        conn.close()
         return
 
     if not stats.get('started_at'):
         stats['started_at'] = datetime.now().isoformat()
 
     start_time = time.time()
-    batch_count = 0
 
     # 並列処理
     with ThreadPoolExecutor(max_workers=args.workers) as executor:
@@ -352,6 +428,9 @@ def run(args):
                 future = executor.submit(process_one_therapist, t_id, salon_id, imgs)
                 futures[future] = (t_id, imgs)
 
+            # バッチ内の結果を収集
+            db_updates = []  # (therapist_id, new_urls)
+
             for future in as_completed(futures):
                 if _shutdown:
                     break
@@ -369,26 +448,17 @@ def run(args):
                 stats['total_bytes'] = stats.get('total_bytes', 0) + one_stats['bytes']
                 stats['total_images'] = stats.get('total_images', 0) + len(orig_imgs)
 
-                # DB UPDATE
                 if not args.dry_run and new_urls:
-                    try:
-                        cur.execute("SAVEPOINT sp_img")
-                        cur.execute(
-                            "UPDATE therapists SET image_urls = %s::jsonb WHERE id = %s",
-                            (json.dumps(new_urls, ensure_ascii=False), t_id)
-                        )
-                        cur.execute("RELEASE SAVEPOINT sp_img")
-                    except Exception as e:
-                        cur.execute("ROLLBACK TO SAVEPOINT sp_img")
-                        log.warning(f"  DB UPDATE error id={t_id}: {e}")
+                    db_updates.append((t_id, new_urls))
 
                 done_ids.add(t_id)
                 stats['processed'] = stats.get('processed', 0) + 1
-                batch_count += 1
 
-            # バッチ完了 → コミット + チェックポイント
-            if not args.dry_run:
-                conn.commit()
+            # バッチ完了 → DB一括更新（新しい接続で開閉）
+            if db_updates:
+                _db_batch_update_urls(db_updates)
+
+            # チェックポイント保存
             checkpoint['done_ids'] = list(done_ids)
             checkpoint['stats'] = stats
             save_checkpoint(checkpoint, cp_path)
@@ -410,9 +480,7 @@ def run(args):
 
             batch_start = batch_end
 
-    # 最終コミット
-    if not args.dry_run:
-        conn.commit()
+    # 最終チェックポイント
     checkpoint['done_ids'] = list(done_ids)
     checkpoint['stats'] = stats
     save_checkpoint(checkpoint, cp_path)
@@ -430,8 +498,6 @@ def run(args):
     log.info(f"  Upload失敗:      {stats.get('upload_failed', 0)} 枚")
     log.info(f"  合計サイズ:      {mb:.1f}MB ({gb:.2f}GB)")
     log.info(f"  スキップ:        {stats.get('skipped_no_images', 0)} 件")
-
-    conn.close()
 
 
 # =============================================================================
