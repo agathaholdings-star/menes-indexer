@@ -15,7 +15,10 @@ import { ParameterRadarChart } from "@/components/therapist/radar-chart";
 import { CompositionChart } from "@/components/therapist/composition-chart";
 import { ReviewList } from "@/components/therapist/review-list";
 import { Recommendations } from "@/components/therapist/recommendations";
+import { SmartRecommendations } from "@/components/therapist/smart-recommendations";
 import { ReviewWizardModal } from "@/components/review/review-wizard-modal";
+import { CompatibilityLabel } from "@/components/therapist/compatibility-label";
+import { TransferHistory } from "@/components/therapist/transfer-history";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
 import { useTier } from "@/lib/hooks/use-tier";
 import type { Therapist, Review } from "@/lib/data";
@@ -236,8 +239,14 @@ export function TherapistPageClient({ therapist, reviews, areaName, prefName }: 
                       <ProfileTable therapist={therapist} />
                     </div>
                   </div>
+
+                  {/* Compatibility Label */}
+                  <CompatibilityLabel therapistId={therapist.id} variant="card" />
                 </CardContent>
               </Card>
+
+              {/* Transfer History */}
+              <TransferHistory therapistId={therapist.id} therapistName={therapist.name} />
 
               {/* Analysis Section */}
               <Card>
@@ -265,7 +274,10 @@ export function TherapistPageClient({ therapist, reviews, areaName, prefName }: 
                 therapistImage={therapist.images[0] || "/placeholder.svg"}
               />
 
-              {/* Recommendations */}
+              {/* Smart Recommendations (根拠付き) */}
+              <SmartRecommendations excludeSalonId={therapist.shopId} />
+
+              {/* Same-salon Recommendations */}
               <Recommendations therapist={therapist} />
             </div>
 

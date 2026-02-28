@@ -46,6 +46,7 @@ import { therapistTypes, type User, getEffectiveTier, tierPermissions } from "@/
 import { useAuth } from "@/lib/auth-context";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
 import { cleanTherapistName, isPlaceholderName } from "@/lib/therapist-utils";
+import { CompatibilityLabel } from "@/components/therapist/compatibility-label";
 
 interface PrefectureOption {
   id: string;
@@ -680,6 +681,55 @@ function SearchContent() {
             </div>
           )}
 
+          {/* 隠れた名セラピスト */}
+          {!therapistLoading && (() => {
+            const hidden = dbTherapists.filter(
+              (t) => t.review_count >= 1 && t.review_count <= 3 && (t.avg_score || 0) >= 85
+            );
+            if (hidden.length === 0) return null;
+            return (
+              <Card className="mb-6 border-primary/20 bg-primary/5">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Gem className="h-5 w-5 text-primary" />
+                    隠れた名セラピスト
+                    <Badge variant="secondary" className="text-xs">発見</Badge>
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    口コミ3件以下なのに全員が85点以上。まだ発見されていないダイヤの原石
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex gap-4 overflow-x-auto pb-2">
+                    {hidden.slice(0, 8).map((t) => (
+                      <Link key={t.id} href={`/therapist/${t.id}`} className="w-[150px] flex-shrink-0">
+                        <Card className="overflow-hidden hover:shadow-md transition-shadow">
+                          <div className="aspect-[3/4] relative bg-muted">
+                            {t.image_url ? (
+                              <Image src={t.image_url} alt={t.name} fill className="object-cover" unoptimized />
+                            ) : (
+                              <div className="h-full w-full flex items-center justify-center text-2xl text-muted-foreground">{t.name[0]}</div>
+                            )}
+                            <div className="absolute top-2 right-2">
+                              <Badge className="bg-primary/90 text-primary-foreground text-xs gap-1">
+                                <Star className="h-3 w-3 fill-current" />
+                                {t.avg_score}
+                              </Badge>
+                            </div>
+                          </div>
+                          <CardContent className="p-2">
+                            <p className="font-medium text-sm truncate">{t.name}</p>
+                            <p className="text-xs text-muted-foreground truncate">{t.shop_name}</p>
+                          </CardContent>
+                        </Card>
+                      </Link>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })()}
+
           <div className="flex gap-6">
             {/* メインコンテンツ */}
             <div className="flex-1">
@@ -754,6 +804,7 @@ function SearchContent() {
                               )}
                             </div>
                           )}
+                          <CompatibilityLabel therapistId={String(therapist.id)} variant="badge" />
                           {therapist.shop_access && (
                             <div className="flex items-center gap-1 text-xs text-muted-foreground">
                               <MapPin className="h-3 w-3" />
