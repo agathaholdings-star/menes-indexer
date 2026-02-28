@@ -19,7 +19,7 @@ export async function generateMetadata({
 
   const salonCount = area.salon_count || 0;
   return {
-    title: `${area.name} メンズエステ おすすめランキング | ${pref.name} | メンエスインデクサ`,
+    title: `${area.name} メンズエステ おすすめランキング | ${pref.name}`,
     description: `${pref.name}${area.name}エリアのメンズエステおすすめ${salonCount}店舗をランキング。口コミ・評価で比較。`,
   };
 }
@@ -87,34 +87,21 @@ export default async function ShopListPage({ params }: ShopListPageProps) {
     statsMap.set(r.salon_id, r);
   }
 
-  // ランキング順位付け（口コミありのみ）
-  let rankCounter = 1;
-  const rankMap = new Map<number, number>();
-  for (const r of rankingData) {
-    if (r.review_count > 0) {
-      rankMap.set(r.salon_id, rankCounter++);
-    }
-  }
-
-  // 口コミありサロン（ランキング順）
-  const rankedShops: Shop[] = [];
-  // 口コミなしサロン（display_order順）
-  const unrankedShops: Shop[] = [];
-
-  // ランキング順にranked shopを追加
+  // 全サロンをランキング順に1〜N位で順位付け
+  // RPCの返り値はranking_score DESC順。口コミ0件は末尾に来る
+  const shops: Shop[] = [];
+  let rank = 1;
   for (const r of rankingData) {
     const dbShop = shopMap.get(r.salon_id);
     if (!dbShop) continue;
-    if (r.review_count > 0) {
-      rankedShops.push(toFrontendShop(dbShop, r, rankMap.get(r.salon_id)));
-    }
+    shops.push(toFrontendShop(dbShop, r, rank++));
   }
 
-  // 口コミなしサロンをdisplay_order順に追加
+  // RPCに含まれなかったサロン（is_active=falseなど）を末尾に追加
+  const rankedIds = new Set(rankingData.map((r) => r.salon_id));
   for (const dbShop of dbShops) {
-    const stats = statsMap.get(dbShop.id);
-    if (!stats || stats.review_count === 0) {
-      unrankedShops.push(toFrontendShop(dbShop, stats));
+    if (!rankedIds.has(dbShop.id)) {
+      shops.push(toFrontendShop(dbShop, undefined, rank++));
     }
   }
 
@@ -124,8 +111,7 @@ export default async function ShopListPage({ params }: ShopListPageProps) {
       district={district}
       decodedPrefecture={pref.name}
       decodedDistrict={area.name}
-      shops={rankedShops}
-      unrankedShops={unrankedShops}
+      shops={shops}
       allTherapists={[]}
       therapistTypes={therapistTypes}
       bodyTypes={bodyTypes}

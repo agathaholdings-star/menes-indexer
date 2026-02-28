@@ -16,10 +16,20 @@ interface ReviewCardProps {
   therapistImageUrl?: string;
 }
 
+function formatDate(dateStr: string): string {
+  if (!dateStr) return "";
+  try {
+    return new Date(dateStr).toLocaleDateString("ja-JP", { year: "numeric", month: "long", day: "numeric" });
+  } catch {
+    return dateStr;
+  }
+}
+
 export function ReviewCard({ review, isBlurred = false, showTherapist = true, variant = "default", therapistImageUrl }: ReviewCardProps) {
   const typeLabel = therapistTypes.find((t) => t.id === review.typeId)?.label || review.typeId;
   const bodyLabel = bodyTypes.find((b) => b.id === review.bodyType)?.label || review.bodyType;
   const serviceLabel = serviceTypes.find((s) => s.id === review.serviceType)?.label || review.serviceType;
+  const formattedDate = formatDate(review.createdAt);
 
   if (variant === "detailed") {
     return (
@@ -44,7 +54,7 @@ export function ReviewCard({ review, isBlurred = false, showTherapist = true, va
               <div className="flex items-center gap-2 mb-1">
                 <Badge variant="outline" className="text-xs font-normal gap-1 px-1.5 py-0">
                   <Clock className="h-3 w-3" />
-                  {review.createdAt}
+                  {formattedDate}
                 </Badge>
                 {(review.viewCount || 0) > 0 && (
                   <Badge variant="outline" className="text-xs font-normal gap-1 px-1.5 py-0 text-muted-foreground">
@@ -70,7 +80,7 @@ export function ReviewCard({ review, isBlurred = false, showTherapist = true, va
                 </Link>
               )}
               <p className="text-xs text-muted-foreground">
-                {review.shopName} / {review.createdAt}
+                {review.shopName} / {formattedDate}
               </p>
 
               {/* Score */}
@@ -142,7 +152,7 @@ export function ReviewCard({ review, isBlurred = false, showTherapist = true, va
               </Link>
             )}
             <p className="text-sm text-muted-foreground">
-              {review.shopName} / {review.createdAt}
+              {review.shopName} / {formattedDate}
               {(review.viewCount || 0) > 0 && (
                 <span className="inline-flex items-center gap-1 ml-2">
                   <Eye className="h-3 w-3 inline" />

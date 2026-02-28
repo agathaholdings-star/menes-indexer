@@ -7,11 +7,17 @@ interface ProfileTableProps {
 }
 
 export function ProfileTable({ therapist }: ProfileTableProps) {
+  const threeSizes = [
+    therapist.profile.bust ? `B${therapist.profile.bust}` : null,
+    therapist.profile.waist ? `W${therapist.profile.waist}` : null,
+    therapist.profile.hip ? `H${therapist.profile.hip}` : null,
+  ].filter(Boolean).join(" ");
+
   const profileItems = [
     { label: "在籍店舗", value: therapist.shopName, isLink: true, href: `/shop/${therapist.shopId}` },
     { label: "年齢", value: `${therapist.age}歳` },
-    { label: "身長", value: `T${therapist.profile.height}` },
-    { label: "スリーサイズ", value: `B${therapist.profile.bust} W${therapist.profile.waist} H${therapist.profile.hip}` },
+    ...(therapist.profile.height ? [{ label: "身長", value: `T${therapist.profile.height}` }] : []),
+    ...(threeSizes ? [{ label: "スリーサイズ", value: threeSizes }] : []),
   ];
 
   return (

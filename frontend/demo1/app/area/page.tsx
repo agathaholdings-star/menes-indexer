@@ -8,7 +8,7 @@ import { getAllPrefectures } from "@/lib/supabase-data";
 import { supabaseAdmin as supabase } from "@/lib/supabase-admin";
 
 export const metadata: Metadata = {
-  title: "エリア一覧 | メンエスインデクサ",
+  title: "エリア一覧",
   description: "全国のメンズエステをエリアから探す。関東・関西・東海など7地方、821エリアのメンズエステ店舗情報を掲載。",
 };
 

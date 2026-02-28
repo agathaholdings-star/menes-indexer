@@ -17,7 +17,7 @@ export async function generateMetadata({
   const pref = await getPrefectureBySlug(prefecture);
   if (!pref) return {};
   return {
-    title: `${pref.name}のメンズエステ | メンエスインデクサ`,
+    title: `${pref.name}のメンズエステ`,
     description: `${pref.name}エリアのメンズエステ店舗・セラピスト情報を掲載。口コミやレーダーチャートで自分に合ったセラピストを見つけよう。`,
   };
 }
