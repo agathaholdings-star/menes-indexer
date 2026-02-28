@@ -4,25 +4,21 @@
 > スクレイピング運用・VPS・分類マスタ → `database/therapist-scraper/CLAUDE.md`
 > 過去の実装経緯 → `docs/DEVELOPMENT_LOG.md`
 
-## 現在のステータス (2026-02-24 更新)
+## 現在のステータス (2026-02-28 更新)
 
 | 項目 | 状態 | 数値 | 備考 |
 |------|------|------|------|
 | サロンDB | ✅ | 6,489店 | official_urlベースdedup済み |
 | エリアDB | ✅ | 821エリア | DataForSEO SV付き |
-| セラピストDB | 🔄 Phase④実行中 | 104,585名 | VPS W1/W5稼働中、他完了 |
+| セラピストDB | ✅ | 228,816名 | VPS dump → ローカルリストア済み |
 | seed口コミ | ✅ | 16,462件 | URLマッチのみ、Sonnet Batch ~$48 |
 | サロン紹介文 | ✅ | 6,489件 | SERP+Sonnet Batch生成済み |
 | フロントエンド | ✅ | 動作確認済み | Next.js + ローカルSupabase |
-| 画像パイプライン | ⏳ Phase④完了待ち | - | Haiku抽出済み、Storage DL未実行 |
+| 画像パイプライン | ✅ | 185,039人Storage済み | 35,181人は元サイト拒否、8,596人は画像なし |
 
 ## アクティブタスク
 
-1. **Phase④: therapists全件再構築** ← 🔄 VPS実行中（W1/W5残り）
-   - 完了後: 件数確認 → 品質検証 → pg_dumpローカル同期
-2. **ME口コミ再マッチング** ← Phase④完了後
-3. **画像DL→Supabase Storage** ← Phase④完了後
-4. **本番デプロイ準備** ← インフラ方針決定後
+1. **本番デプロイ準備** ← インフラ方針決定後
 5. **本番データ移行** ← VPSのpg_dumpを本番Supabaseに投入
 
 ## プロジェクト概要
