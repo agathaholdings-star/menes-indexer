@@ -4,7 +4,7 @@
 セラピスト名クレンジング & source_url重複解消
 
 名前に混入したゴミ（年齢、NEW FACE、ローマ字括弧、キャッチコピー）を
-SQLで一括除去する。元データはname_rawに退避。
+SQLで一括除去する。
 
 Usage:
   python clean_therapist_names.py --dry-run     # 確認のみ
@@ -78,7 +78,7 @@ def run_cleansing(conn, dry_run: bool):
         log.info(f"  {label}: {count}件")
 
     # 対象レコード取得（いずれかのパターンにマッチ）
-    cur.execute("SELECT id, name, name_raw FROM therapists WHERE name IS NOT NULL")
+    cur.execute("SELECT id, name FROM therapists WHERE name IS NOT NULL")
     rows = cur.fetchall()
 
     targets = []
@@ -89,7 +89,6 @@ def run_cleansing(conn, dry_run: bool):
                 'id': row['id'],
                 'old_name': row['name'],
                 'new_name': cleaned,
-                'has_name_raw': row['name_raw'] is not None,
             })
 
     log.info(f"\n合計変更対象: {len(targets)}件")
@@ -111,12 +110,6 @@ def run_cleansing(conn, dry_run: bool):
     update_cur = conn.cursor()
     updated = 0
     for t in targets:
-        # name_rawが空の場合のみ退避（既に退避済みなら上書きしない）
-        if not t['has_name_raw']:
-            update_cur.execute(
-                "UPDATE therapists SET name_raw = name WHERE id = %s AND name_raw IS NULL",
-                (t['id'],),
-            )
         update_cur.execute(
             "UPDATE therapists SET name = %s WHERE id = %s",
             (t['new_name'], t['id']),

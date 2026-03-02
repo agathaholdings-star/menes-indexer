@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
+import { TherapistImage } from "@/components/shared/therapist-image";
 import { Star, MessageSquare } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -20,12 +20,11 @@ export function TherapistCard({ therapist, showShop = true, size = "md" }: Thera
     <Link href={`/therapist/${therapist.id}`}>
       <Card className="group overflow-hidden transition-all hover:shadow-lg">
         <div className={`relative ${imageHeight} overflow-hidden`}>
-          <Image
-            src={therapist.images[0] || "/placeholder.svg"}
+          <TherapistImage
+            src={therapist.images[0]}
             alt={therapist.name}
             fill
             className="object-cover transition-transform group-hover:scale-105"
-            unoptimized
           />
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
             <div className="flex items-center gap-2 text-white">

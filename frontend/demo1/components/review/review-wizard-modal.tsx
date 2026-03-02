@@ -3,7 +3,7 @@
 import React from "react";
 import { useState, useEffect } from "react";
 import { X, ChevronLeft, ChevronRight, Check, Clock, Sparkles, Crown, Star, Heart, Smile, Flame, Leaf, Search, MapPin, AlertCircle, Camera, ImageIcon, Trash2 } from "lucide-react";
-import Image from "next/image";
+import { TherapistImage } from "@/components/shared/therapist-image";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -831,19 +831,12 @@ function StepTherapist({
                     : "hover:opacity-80"
                 )}
               >
-                {t.image_urls && t.image_urls.length > 0 ? (
-                  <Image
-                    src={t.image_urls[0]}
-                    alt={t.name}
-                    fill
-                    className="object-cover"
-                    unoptimized
-                  />
-                ) : (
-                  <div className="w-full h-full bg-muted flex items-center justify-center">
-                    <span className="text-2xl font-bold text-muted-foreground">{t.name.charAt(0)}</span>
-                  </div>
-                )}
+                <TherapistImage
+                  src={t.image_urls?.[0]}
+                  alt={t.name}
+                  fill
+                  className="object-cover"
+                />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-1.5 text-white">
                   <p className="text-xs font-medium truncate">{t.name}</p>

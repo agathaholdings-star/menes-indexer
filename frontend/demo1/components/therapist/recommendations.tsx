@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import { TherapistImage } from "@/components/shared/therapist-image";
 import { Star, Sparkles } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
@@ -75,8 +75,8 @@ export function Recommendations({ therapist }: RecommendationsProps) {
                 >
                   <Card className="h-full transition-all hover:shadow-md hover:border-primary/20 overflow-hidden">
                     <div className="relative h-40 w-full overflow-hidden">
-                      <Image
-                        src={images[0] || "/placeholder.svg"}
+                      <TherapistImage
+                        src={images[0]}
                         alt={displayName}
                         fill
                         className="object-cover transition-transform hover:scale-105"

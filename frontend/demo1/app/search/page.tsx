@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import { TherapistImage } from "@/components/shared/therapist-image";
 import { useSearchParams } from "next/navigation";
 import {
   Search,
@@ -653,12 +653,11 @@ function SearchContent() {
                       <Card className="hover:shadow-md transition-shadow">
                         <CardContent className="p-3 flex gap-3">
                           <div className="relative w-16 h-16 rounded overflow-hidden bg-muted shrink-0">
-                            <Image
-                              src={shop.image_url || "/placeholder.svg"}
+                            <TherapistImage
+                              src={shop.image_url}
                               alt={shop.display_name || shop.name}
                               fill
                               className="object-cover"
-                              unoptimized
                             />
                           </div>
                           <div className="min-w-0">
@@ -729,11 +728,7 @@ function SearchContent() {
                       <Link key={t.id} href={`/therapist/${t.id}`} className="w-[150px] flex-shrink-0">
                         <Card className="overflow-hidden hover:shadow-md transition-shadow">
                           <div className="aspect-[3/4] relative bg-muted">
-                            {t.image_url ? (
-                              <Image src={t.image_url} alt={t.name} fill className="object-cover" unoptimized />
-                            ) : (
-                              <div className="h-full w-full flex items-center justify-center text-2xl text-muted-foreground">{t.name[0]}</div>
-                            )}
+                            <TherapistImage src={t.image_url} alt={t.name} fill className="object-cover" />
                             <div className="absolute top-2 right-2">
                               <Badge className="bg-primary/90 text-primary-foreground text-xs gap-1">
                                 <Star className="h-3 w-3 fill-current" />
@@ -782,19 +777,12 @@ function SearchContent() {
                     <Link key={therapist.id} href={`/therapist/${therapist.id}`}>
                       <Card className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer h-full group">
                         <div className="aspect-[3/4] relative bg-muted">
-                          {therapist.image_url ? (
-                            <Image
-                              src={therapist.image_url}
-                              alt={therapist.name}
-                              fill
-                              className="object-cover group-hover:scale-105 transition-transform duration-300"
-                              unoptimized
-                            />
-                          ) : (
-                            <div className="h-full w-full flex items-center justify-center text-3xl text-muted-foreground">
-                              {therapist.name[0]}
-                            </div>
-                          )}
+                          <TherapistImage
+                            src={therapist.image_url}
+                            alt={therapist.name}
+                            fill
+                            className="object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
                         </div>
                         <CardContent className="p-3">
                           <div className="mb-1">
@@ -869,20 +857,13 @@ function SearchContent() {
                       {dbTherapists.slice(0, 4).map((t) => (
                         <Link key={t.id} href={`/therapist/${t.id}`}>
                           <div className="flex gap-3 p-2 rounded-lg hover:bg-muted transition-colors">
-                            {t.image_url ? (
-                              <Image
-                                src={t.image_url}
-                                alt={t.name}
-                                width={64}
-                                height={80}
-                                className="w-16 h-20 object-cover rounded"
-                                unoptimized
-                              />
-                            ) : (
-                              <div className="w-16 h-20 bg-muted rounded flex items-center justify-center text-lg text-muted-foreground">
-                                {t.name[0]}
-                              </div>
-                            )}
+                            <TherapistImage
+                              src={t.image_url}
+                              alt={t.name}
+                              width={64}
+                              height={80}
+                              className="w-16 h-20 object-cover rounded"
+                            />
                             <div className="flex-1 min-w-0">
                               <span className="font-medium text-sm truncate block">{t.name}</span>
                               <p className="text-xs text-muted-foreground truncate">

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import { TherapistImage } from "@/components/shared/therapist-image";
 import { Crown, TrendingUp, Building2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cleanTherapistName, isPlaceholderName } from "@/lib/therapist-utils";
@@ -101,19 +101,12 @@ export function Sidebar() {
                       {index + 1}
                     </span>
                     <div className="relative h-10 w-10 overflow-hidden rounded-full bg-muted">
-                      {therapist.image_url ? (
-                        <Image
-                          src={therapist.image_url}
-                          alt={therapist.name}
-                          fill
-                          className="object-cover"
-                          unoptimized
-                        />
-                      ) : (
-                        <div className="h-full w-full flex items-center justify-center text-xs text-muted-foreground">
-                          {therapist.name[0]}
-                        </div>
-                      )}
+                      <TherapistImage
+                        src={therapist.image_url}
+                        alt={therapist.name}
+                        fill
+                        className="object-cover"
+                      />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate group-hover:text-primary transition-colors">

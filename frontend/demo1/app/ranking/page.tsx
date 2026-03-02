@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import { TherapistImage } from "@/components/shared/therapist-image";
 import { Trophy, ChevronRight, Star, TrendingUp, Medal } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -150,21 +150,12 @@ export default async function RankingPage() {
 
                       {/* Image */}
                       <div className="relative w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-muted">
-                        {t.image_urls && t.image_urls.length > 0 ? (
-                          <Image
-                            src={t.image_urls[0]}
-                            alt={t.name}
-                            fill
-                            className="object-cover"
-                            unoptimized
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <span className="text-xl font-bold text-muted-foreground">
-                              {t.name.charAt(0)}
-                            </span>
-                          </div>
-                        )}
+                        <TherapistImage
+                          src={t.image_urls?.[0]}
+                          alt={t.name}
+                          fill
+                          className="object-cover"
+                        />
                       </div>
 
                       {/* Info */}

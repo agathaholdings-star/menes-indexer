@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
 import Link from "next/link";
+import { TherapistImage } from "@/components/shared/therapist-image";
 import { Share2, Heart, ChevronLeft, ChevronRight, PenSquare, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -142,12 +142,11 @@ export function TherapistPageClient({ therapist, reviews, areaName, prefName }: 
                     {/* Image Gallery */}
                     <div className="relative w-full md:w-64 flex-shrink-0">
                       <div className="relative aspect-[4/5] overflow-hidden rounded-lg bg-muted">
-                        <Image
-                          src={therapist.images[currentImageIndex] || "/placeholder.svg"}
+                        <TherapistImage
+                          src={therapist.images[currentImageIndex]}
                           alt={therapist.name}
                           fill
                           className="object-cover"
-                          unoptimized
                         />
                         {therapist.images.length > 1 && (
                           <>
@@ -185,12 +184,11 @@ export function TherapistPageClient({ therapist, reviews, areaName, prefName }: 
                               }`}
                               aria-label={`画像${index + 1}を表示`}
                             >
-                              <Image
-                                src={img || "/placeholder.svg"}
+                              <TherapistImage
+                                src={img}
                                 alt=""
                                 fill
                                 className="object-cover"
-                                unoptimized
                               />
                             </button>
                           ))}
@@ -269,9 +267,10 @@ export function TherapistPageClient({ therapist, reviews, areaName, prefName }: 
                 reviews={reviews}
                 isLocked={isLocked}
                 onWriteReview={() => setIsReviewModalOpen(true)}
+                therapistId={therapist.id}
                 therapistName={therapist.name}
                 therapistAge={therapist.age}
-                therapistImage={therapist.images[0] || "/placeholder.svg"}
+                therapistImage={therapist.images[0]}
               />
 
               {/* Smart Recommendations (根拠付き) */}

@@ -124,8 +124,7 @@ export function SiteHeader() {
     name: nickname,
     avatar: null,
     remainingDays: computeRemainingDays(),
-    unreadNotifications: 0,
-    unreadMessages: 0,
+    unreadNotifications: unreadCount,
     monthlyReviewCount: monthlyReviewCount,
   };
 
@@ -341,9 +340,6 @@ export function SiteHeader() {
                           <MessageSquare className="h-4 w-4 mr-2" />
                           メッセージ
                         </span>
-                        {user.unreadMessages > 0 && (
-                          <Badge variant="secondary" className="text-xs">{user.unreadMessages}</Badge>
-                        )}
                       </Link>
                     </DropdownMenuItem>
 
@@ -499,15 +495,10 @@ export function SiteHeader() {
                               お気に入り
                             </Link>
                           </Button>
-                          <Button variant="ghost" className="justify-between" asChild>
+                          <Button variant="ghost" className="justify-start" asChild>
                             <Link href="/mypage?tab=messages">
-                              <span className="flex items-center">
-                                <MessageSquare className="mr-2 h-4 w-4" />
-                                メッセージ
-                              </span>
-                              {user.unreadMessages > 0 && (
-                                <Badge variant="secondary" className="text-xs">{user.unreadMessages}</Badge>
-                              )}
+                              <MessageSquare className="mr-2 h-4 w-4" />
+                              メッセージ
                             </Link>
                           </Button>
                           <Button variant="ghost" className="justify-between" asChild>

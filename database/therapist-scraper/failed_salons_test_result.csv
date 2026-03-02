@@ -1,51 +1,21 @@
-salon_id,salon_name,official_url,page_type,listing_url,individual_count,therapists_found,status,notes
-16,ファティーン,https://estetic-fatine.com/,,,0,0,FETCH_FAILED,
-20,ドットエム,https://m.ap2hp.com/,single_page,,19,19,OK,提供されたモバイルページ(m.ap2hp.com)にセラピスト16名以上の情報が直接掲載されており、名前、写真、出勤スケジュール、特徴が表示されている。個別プロフィールページへのリンクは見つからず、全員が単一ページに一覧表示されている形式。
-35,マダムの手,https://madamnote.ap1hp.com/,single_page,,18,18,OK,セラピスト一覧ページへの別リンクは見当たらず、提供されたページ自体の「Therapist」セクションに16名のセラピスト情報（名前、写真、プロフィール、出勤スケジュール）が掲載されている。個別プロフィールページへの直接リンクも確認できない。
-41,ワンルーム,https://oneroom-as.com/,listing,https://oneroom-as.com/therapist.html,21,21,OK,ナビゲーションメニューに「THERAPISTセラピスト一覧」へのリンク(therapist.html)が明示されており、本日出勤セラピストの個別プロフィールページ(profile_*.html)へのリンクが複数確認できた。
-42,レガリス,https://legaliss66.livedoor.blog/,single_page,,10,10,OK,現在のページ自体にセラピスト情報が掲載されており、複数の日程で複数人のセラピスト名（ゆみちゃん、さゆきちゃん、みきちゃん、あいりちゃん、ななちゃん、じゅりちゃん、ゆきなちゃん、みやびちゃん、まいちゃん等）と写真が掲載されている。ただし個別プロフィールページへの直接リンクはなく、セラピスト一覧専用ページも見当たらない。
-43,快癒工房,https://kaiyukoubou.wixsite.com/odori,no_therapists,,0,0,NO_THERAPISTS,提供されたページ内容にはセラピスト/スタッフ一覧ページへのナビゲーションリンク、個別プロフィールページへのリンク、または現ページ内のセラピスト情報（名前や写真）が含まれていない。
-45,ライベスパ,https://libe-spa.com/sapporo/,has_individuals,,15,15,OK,トップページ自体にセラピスト/キャスト情報（ニューハーフ、男の娘）が複数人分掲載されており、各キャストの個別プロフィールページへのリンクが直接含まれている。#nhlistと#otoklistのアンカーリンクにより、ページ内で複数セクションに分かれている。
-47,ストレッチプラス,https://stretchplus.crayonsite.net/,no_therapists,,0,0,NO_THERAPISTS,提供されたページ内容にはセラピスト一覧ページ、個別プロフィールページ、またはセラピストの名前・写真等の具体的な情報が含まれていない。出勤予定は外部サイト（エステ魂）に掲載されているが、当サイト内にセラピスト情報ページへのリンクは存在しない。
-54,アングリッド,https://ungrid66.livedoor.blog/,single_page,,9,9,OK,現在のページ自体にセラピスト情報が複数人分掲載されている。さゆきちゃん、みきちゃん、ゆみちゃん、あいりちゃん、みやびちゃん、ゆきなちゃん、ななちゃん、じゅりちゃん、まいちゃんなど複数セラピストの名前と勤務予定が記載されているが、個別プロフィールページへのリンクは見つからず、セラピスト一覧専用ページのURLも提示されていない。
-58,メルメルメルト,https://estama.jp/shop/42425/,,,0,0,FETCH_FAILED,
-59,エル,https://mensesthetic-elle.site/,no_therapists,,0,0,NO_THERAPISTS,提供されたページ内容にセラピスト/スタッフ一覧ページへのリンクやセラピスト個別プロフィールページへのリンクが見つからず、セラピスト情報も掲載されていない。TODAY'S THERAPISTセクションがあるが詳細URLは提示されていない。
-65,ノエル,https://noel-sapporo.crayonsite.net/,no_therapists,,0,0,NO_THERAPISTS,提供されたページ内容にセラピスト/スタッフ一覧や個別プロフィールページへのリンクが含まれていない。ナビゲーション情報も不完全であり、セラピスト情報は確認できない。
-66,ヴィテラス,https://veteras0808.livedoor.blog/,single_page,,8,8,OK,現在のブログページ内にセラピスト一覧が掲載されており、複数のセラピスト（あいりさん、ゆみさん、さゆきさん、みきさん、まいさん、ゆきなさん、ななさん、じゃりさん）の名前と写真が複数日分記載されている。個別プロフィールページへのリンクは見つからず、セラピスト情報はこのブログ内に統合されている。
-67,桜,http://treat-arm.com/,no_therapists,,0,0,NO_THERAPISTS,提供されたページ内容にセラピスト/スタッフに関する情報、ナビゲーションリンク、またはプロフィールデータが含まれていません。
-71,おみみん,http://omimin.com/new/,listing,http://www.omimin.com/girl.php,9,9,OK,ナビゲーション内に「おみみん小町一覧」（http://www.omimin.com/girl.php）があり、これはセラピスト/キャスト一覧ページへのリンク。個別プロフィールページへの直接リンクは提供されたページ内では確認できないため、一覧ページのURLのみ特定。
-72,アロマミント,http://www.aromamint.net/,listing,http://www.aromamint.net/entry37.html,10,10,OK,更新履歴に「お勧めセラピスト情報」のリンクが存在し、セラピスト一覧ページへのアクセスが可能と判断される。個別プロフィールページへの直接リンクは提供されていない。
-73,パシャ,http://www.pasha.ecnet.jp/,no_therapists,,0,0,NO_THERAPISTS,ナビゲーションメニューにセラピスト/スタッフ関連のリンク（スタッフ、キャスト、在籍等）が見当たらず、提供されたページ内容にもセラピスト情報が掲載されていない。RECRUITリンクは採用情報であり、現在のセラピスト紹介ページではない。
-75,レーヴスパ,https://revespa.net/,has_individuals,,39,29,OK,ページ内のCASTセクションに複数セラピストの個別プロフィールへのリンク（detail.cgi?status=XXX形式）が直接記載されている。セラピスト一覧専用ページはなく、トップページのCASTセクションに統合されている。
-81,ギニロキカク,https://ginirokikaku.site/,no_therapists,,0,0,NO_THERAPISTS,提供されたページ内容にはセラピスト/スタッフ一覧ページへのリンク、個別プロフィールページへのリンク、およびセラピスト情報が含まれていない。『TODAY'S THERAPIST』セクションは本日の出勤情報を示唆するが、実際のセラピスト名や個別ページへのリンクは記載されていない。
-82,シンデレラガール,http://aroma-esthe.in.net/,no_therapists,,0,0,NO_THERAPISTS,提供されたページ内容は最小限の情報のみで、セラピスト/スタッフに関するリンク、一覧ページ、個別プロフィール、またはセラピスト情報が確認できません。
-102,ラベンダー,http://lavender.sh-gzs.tokyo/,single_page,,0,0,NO_DATA,提供されたページ内容にはセラピスト一覧ページへのリンクが記載されていません。ページ内に複数のセラピスト写真（[IMG:]タグで9枚）が掲載されていますが、個別プロフィールへのリンク情報やセラピスト名が提供されたテキストに含まれていないため、詳細URLの特定ができません。セラピスト情報は当ページに組み込まれているが、個別プロフィールページへのアクセス方法は提供データからは判定不可。
-104,アロマ エルメス,http://aromahermes.com/,has_individuals,,26,26,OK,ナビゲーションに[THERAPISTセラピスト]リンク(http://aromahermes.com/therapist)があり、ページ内に複数のセラピストの個別プロフィールリンク(therapist/{ID}形式)が掲載されている。
-111,ブルームーン,https://bluemoon.ests.jp/,listing,https://bluemoon.ests.jp/staff.html,4,4,OK,ナビゲーションメニューに「スタッフ紹介」へのリンクが明記されており、セラピスト一覧ページへのアクセスが確認できた。個別プロフィールページのURLは提供されたページ内容からは特定できない。
-112,トレンディスパ,https://www.trendy-spa.com/,has_individuals,,20,20,OK,トップページのCASTセクションに20名のセラピストの個別プロフィールページへのリンクが直接掲載されている。各セラピストの名前と年齢、出勤情報とともに/cast/detail.cgi?status=番号形式のURLが確認できた。
-113,楽園十八式,https://18siki.estheya.com/,single_page,,1,1,OK,トップページに新人セラピスト『みゆちゃん(23歳・Fカップ)』の情報が掲載されているが、セラピスト一覧ページや個別プロフィールページへの明示的なリンクが提供されたページ内容に含まれていない。ナビゲーションメニューは画像で表示されているため詳細なリンク先不明。
-114,藍花,https://aika.healrelax.info/,,,0,0,FETCH_FAILED,
-116,プルヌス,https://prunus-ch.click/,single_page,,0,0,NO_DATA,ページ内に girl/01.png と girl/02.png の画像が埋め込まれており、セラピスト写真が複数人分掲載されていると判断。ただし個別プロフィールページへのリンクやセラピスト一覧ページへの明示的なリンクは提供されたHTMLには含まれていない。
-117,ハッピー,http://palmest.xyz/,listing,http://palmest.xyz/template/tx43/img/bottom_therapist.jpg,0,0,NO_URLS,ページ内に「セラピスト」という画像リンク要素が確認されており、セラピスト一覧ページへのナビゲーション要素が存在します。ただし提供されたHTMLでは実際のリンク先URLが明示的に記載されていないため、一般的なサイト構造から推定しました。
-118,シーゼット ガールズ,https://cz-girls.click/,has_individuals,,2,0,NO_DATA,ページ内に girl/01.png と girl/02.png という2つのセラピスト画像が確認でき、現在のページ自体に複数人分のセラピスト情報が掲載されている構造と判断。
-119,日がのぼる,https://ls452.click/,single_page,,0,0,NO_DATA,ページ内容に girl/3.png と girl/2.png の画像参照があり、セラピスト/スタッフの写真が複数人分掲載されていると推定されるが、提供されたHTMLには具体的なセラピスト名やプロフィールテキストが記載されていないため、現在のページ自体にセラピスト一覧が含まれる形式と判定。
-120,フロイライン,https://fraulein-ch.click/,no_therapists,,0,0,NO_THERAPISTS,提供されたページ内容にセラピスト/スタッフ一覧ページへのリンクや個別プロフィールページへのリンクが含まれていない。スタッフ情報関連のURLが確認できない。
-124,サクラ,http://sakura.iyasi.me/,single_page,,6,6,OK,セラピスト一覧が現在のページ内に複数人分（みみ、アイ、れいな、りさ、ゆり、ルル）の名前・写真・プロフィール情報として掲載されている。個別プロフィールページへの直接リンクは見つからない。
-127,ベルエ,https://bellee-spa.com/,has_individuals,,25,25,OK,ナビゲーションメニューにセラピスト一覧ページ/therapistへのリンクあり。ページ内には25人以上のセラピストの個別プロフィールページへのリンクが掲載されている。
-129,リンダスパ,https://linda-spa.com/,has_individuals,,55,30,OK,トップページにNEWCOMER、TODAY'S SCHEDULE、RECOMMENDセクションで複数セラピストの名前・年齢・身長・プロフィール説明と個別ページリンク(/cast/ID/)が掲載されている。セラピスト一覧ページへのリンクは見つからず、個別プロフィールURLが多数直接示されている。
-132,アクア,https://www.nakameguro-aqua.com/,has_individuals,,11,11,OK,ホームページ内に複数セラピストの名前・写真・プロフィールリンクが直接掲載されている。個別プロフィールページへのリンクが11人分確認できた。
-139,アロマブラッサム,https://aroma-blossom.com/,has_individuals,,18,18,OK,ホームページのSCHEDULEセクションに18名のセラピスト個別プロフィールページへのリンクが掲載されており、各セラピストの名前と写真から個別ページURLを抽出。週間スケジュールページも存在。
-141,ポセイドン,https://aroma-poseidon.com/,single_page,,38,38,OK,トップページ自体に本日の出勤セラピスト情報（名前、年齢、身長、カップサイズ、勤務時間、写真）が複数人分掲載されているが、個別プロフィールページへのリンクは提供されたHTML内に見つからない。セラピスト名をクリックして個別ページに遷移する可能性はあるが、URLは明示されていない。
-154,ザ・ハーフ,https://thehalf-ebisu.com/,has_individuals,,13,13,OK,ページ内に新人セラピストと本日の出勤情報として複数のセラピスト個別プロフィールページへのリンクが掲載されており、セラピスト一覧ページへの「セラピスト一覧」リンクも確認できた。
-158,モモスパ,https://www.momospa.tokyo/,,,0,0,FETCH_FAILED,
-160,オーガニックスパ,https://organicspa.jp/,has_individuals,,7,27,OK,ナビゲーションメニューに「セラピスト」リンク（https://organicspa.jp/therapist/）があり、ホームページ内に出勤セラピスト7名の個別アンカーリンク（#357～#390）が記載されている。
-166,激安の殿堂！奥様ホーテ,http://okusamahote.com/,has_individuals,,9,9,OK,ナビゲーションメニューにセラピスト一覧ページ（/therapist）へのリンクがあり、トップページに複数のセラピスト個別プロフィールへのリンク（/therapist/[ID]形式）が掲載されている。
-168,ホワイトティアラ,https://white-tiara.com/,no_therapists,,0,0,NO_THERAPISTS,提供されたページ内容にはセラピスト/スタッフ一覧やプロフィールページへのリンクが含まれていない。ナビゲーションメニューやセラピスト情報が見当たらず、セラピスト関連のURLを特定できない。
-173,コマダム倶楽部,http://ebis-komadame.net/,has_individuals,,33,30,OK,トップページ自体にセラピスト情報が複数人分掲載されており、ナビゲーションに「THERAPISTセラピスト」リンク有。個別プロフィールページURLが多数検出された。
-188,小悪魔スパ トーキョー,https://mens-esthe-aroma.site/,listing,https://mens-esthe-aroma.site/therapists,0,0,NO_URLS,ページ内に「TODAY'S THERAPIST 本日の出勤情報」セクションが存在し、セラピスト一覧ページへのリンク構造が推定される。現在のページには具体的なセラピスト情報は記載されておらず、別ページでの表示が想定される。
-193,エモスパ,https://t5h.info/emospa02,age_gate,,0,0,UNKNOWN_TYPE,年齢確認（エイジゲート）ページと判定されます。確認後の実サイトURLへのアクセスが必要です。
-195,アンドルクス,https://andls-salon.com/,has_individuals,,1,0,NO_DATA,トップページに本日の出勤セラピスト『美名口もこ』の個別プロフィールページへのリンク（/moko）が確認できた。ただしページ内容が軽量化されているため、全セラピスト一覧ページの存在有無は判定不可。
-196,マロアリ・タッハ,https://tahha.tokyo/,single_page,,30,30,OK,セラピスト情報（名前・年齢・スタイル・出勤時間）が現在ページ内のSCHEDULE/出勤情報セクションに複数人分掲載されており、外部予約システム（grow-appt.com）への予約リンクが個別に設定されている。別ページの一覧は見つからないため、single_page と判定。
-214,リラクゼーション,https://kawaineco.relaxya.jp/,listing,https://kawaineco.relaxya.jp/staff.html,18,18,OK,ナビゲーションメニューに「スタッフ」リンクが存在し、staff.htmlへのURLが確認されました。ホームページ内には複数セラピストの画像（staff01-19.jpg）が掲載されていますが、個別プロフィールページへの直接リンクは提供されていません。
-218,恋人〜ベトナム嬢〜,http://nmj.sh-goy.tokyo/,listing,http://nmj.sh-goy.tokyo/?list_3/,7,7,OK,ナビゲーションメニューに「セラピスト」リンクが確認され、クエリパラメータ?list_3/がセラピスト一覧ページを指しています。個別プロフィールページへのリンクは提供されたページ内容に記載されていません。
-233,ラグジュアリーロマンス,http://luxury-romance.net/,has_individuals,,20,20,OK,メインページにセラピスト一覧セクション（#cast）があり、複数のセラピスト個別プロフィールページへのリンク（/cast/detail.cgi?status=XXX形式）が見つかった。
+salon_id,salon_name,official_url,page_type,listing_url,individual_count,therapists_found,status,fail_reason,notes
+43,快癒工房,https://kaiyukoubou.wixsite.com/odori,listing,https://kaiyukoubou.wixsite.com/odori/therapist,9,0,NO_DATA,,ナビゲーションメニューに「Therapist(セラピスト)」へのリンクが明示されており、セラピスト一覧ページが存在することが確認できます。ページ内容には個別プロフィールページへのリンクは見つかりませんでした。
+47,ストレッチプラス,https://stretchplus.crayonsite.net/,no_therapists,,0,0,NO_THERAPISTS,no_therapist_info,提供されたページにはセラピスト/スタッフの一覧ページへのリンクや個別プロフィールページへのリンクが見つかりません。ページ内には「最新情報はエステ魂にて」という外部リンク（estama.jp）のみが記載されており、当サイト内にセラピスト情報ページは存在しません。
+58,メルメルメルト,https://estama.jp/shop/42425/,no_therapists,,0,0,NO_THERAPISTS,no_therapist_info,指定されたURL（https://estama.jp/shop/42425/）は404エラーページであり、サロン「メルメルメルト」のページが存在しない。ナビゲーション内にセラピスト/スタッフ関連のリンク（スタッフ、キャスト、セラピスト一覧等）は見当たらず、セラピスト情報にアクセスできない。
+59,エル,https://mensesthetic-elle.site/,3days_cms,,0,0,NO_DATA,,3Days CMS direct extraction from data.js
+65,ノエル,https://noel-sapporo.crayonsite.net/,no_therapists,,0,0,NO_THERAPISTS,no_therapist_info,提供されたページ内容にセラピスト/スタッフ一覧ページへのナビゲーションリンクが存在せず、トップページにもセラピスト情報（名前・写真）の掲載がない。内部リンクはトップページ、Menu、Accessのみで、セラピスト関連ページへのリンクが確認できない。
+73,パシャ,http://www.pasha.ecnet.jp/,no_therapists,,0,0,NO_THERAPISTS,no_therapist_info,ナビゲーションメニューにスタッフ/セラピスト/キャスト関連のリンクが見当たらず、提供されたページ内容にセラピスト情報（名前+写真）が記載されていない。RECRUITは採用ページであり、セラピスト紹介ページではない。
+102,ラベンダー,http://lavender.sh-gzs.tokyo/,listing,http://lavender.sh-gzz.tokyo/index/staff,0,0,NO_URLS,no_valid_urls,ナビゲーションメニューに「セラピストTHEAPIST」のリンク（/index/staff）が存在。トップページには複数セラピストの写真が掲載されているが、詳細なスタッフ一覧ページへのリンクが確認できた。
+114,藍花,https://aika.healrelax.info/,age_gate,,0,0,UNKNOWN_TYPE,unknown_page_type,Access denied エラーが表示されている。年齢確認ゲートの可能性が高い。ページ内容の詳細が取得できないため、実際のセラピスト情報の確認ができませんでした。
+116,プルヌス,https://prunus-ch.click/,single_page,,0,0,NO_DATA,,トップページに girl/01.png と girl/02.png の2人分のセラピスト画像が掲載されており、内部リンクは menu.html のみで、セラピスト一覧ページや個別プロフィールページへの明示的なリンクが見つかりません。セラピスト情報はトップページに統合されているものと判断されます。
+118,シーゼット ガールズ,https://cz-girls.click/,listing,https://cz-girls.click/staff.html,0,0,NO_DATA,,ページ内リンク一覧に staff.html が存在し、ナビゲーションメニューに「スタッフ」に相当するリンクが含まれている。個別プロフィールページへの直接リンクは検出されず、girl/01.png等は画像ファイルのため除外。
+119,日がのぼる,https://ls452.click/,listing,https://ls452.click/staff.html,0,0,NO_DATA,,ページ内リンク一覧に staff.html が存在し、ナビゲーションメニューの標準的なスタッフページと判定。個別プロフィールページへの直接リンクは提供されたデータからは確認できません。
+120,フロイライン,https://fraulein-ch.click/,no_therapists,,0,0,NO_THERAPISTS,no_therapist_info,提供されたページ内容にセラピスト/スタッフ関連のリンクやセクションが見つからず、メニューページ（menu.html）のみが内部リンクとして存在するが、セラピスト一覧や個別プロフィール情報への明確なリンクが確認できません。
+193,エモスパ,https://t5h.info/emospa02,listing,https://e-spa.link/therapist/,15,15,OK,,ナビゲーションメニューに「THERAPIST」リンクがあり、ページ内に「綺瀬あかね」の個別プロフィールリンク(https://e-spa.link/therapist/3102)が見つかった。セラピスト一覧ページの存在が確認できる。
+195,アンドルクス,https://andls-salon.com/,listing,https://andls-salon.com/therapist,5,5,OK,,ナビゲーションメニューに「THERAPIST」リンクがセラピスト一覧ページとして存在し、トップページには「美名口もこ」「シイナ」の個別プロフィールページへのリンクが確認できた。
+196,マロアリ・タッハ,https://tahha.tokyo/,has_individuals,https://tahha.tokyo/#therapist,27,27,OK,,トップページにセラピスト全員の名前・写真・プロフィール情報が掲載されており、各セラピストの詳細ページへのリンク(?castid=)が見つかった。THERAPIST-セラピスト一覧-セクション内に複数セラピスト情報あり。
+214,リラクゼーション,https://kawaineco.relaxya.jp/,single_page,,1,1,OK,,トップページにセラピスト情報（リリ28歳Eカップ）が掲載されており、ナビゲーションに「スタッフ」リンク（staff.html）が存在。個別プロフィールページへの直接リンクは見つからないが、スタッフ一覧ページへのアクセスは可能。
+218,恋人〜ベトナム嬢〜,http://nmj.sh-goy.tokyo/,listing,http://nmj.sh-goy.tokyo/?list_3/,7,1,OK,,ナビゲーションメニューに「セラピスト」リンク（?list_3/）が存在。トップページには一部セラピスト情報のみで、完全な一覧ページへのリンクが確認できた。個別プロフィールページへの直接リンクは提供されたページ内容には見つからず。
+233,ラグジュアリーロマンス,http://luxury-romance.net/,has_individuals,,20,20,OK,,トップページに「Today Therapist」と「Therapist / Schedule」セクションがあり、セラピスト個別プロフィールページへのリンク20件を確認。セラピスト一覧ページへの直接リンクはなく、ナビゲーション内にも「セラピスト一覧」ページは見当たらない。
+236,泡泡,http://space.iyasi.me/,single_page,,8,1,OK,,トップページ自体にセラピスト情報（名前+写真+プロフィール）が複数人分掲載されている。ナビゲーションに staff.html へのリンクがあるため、そちらが一覧ページと考えられるが、個別プロフィールページへの直接リンクは見つからない。
+237,マーメイド,https://est-crystal.com/,has_individuals,https://est-crystal.com/staff.php,4,4,OK,,ナビゲーション内の「セラピスト」リンク（staff.php）から一覧ページへアクセス可能。トップページには4名のセラピスト（さくら、リンリン、スミレ、はる）の写真と個別プロフィールページへのリンク（profile.php?staffId=***）が存在。

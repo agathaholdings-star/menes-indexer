@@ -207,7 +207,6 @@ class RuleExtractor:
                     "bust": {"selector": ".bust", "regex": "(\\d+)"},
                     "waist": {"selector": ".waist", "regex": "(\\d+)"},
                     "hip": {"selector": ".hip", "regex": "(\\d+)"},
-                    "blood_type": {"selector": ".blood", "regex": null},
                     "images": {"selector": ".profile-img img", "attr": "src"},
                     "profile_text": {"selector": ".profile-text", "regex": null}
                 }
@@ -223,7 +222,7 @@ class RuleExtractor:
 
         # テキストフィールド抽出
         text_fields = ['name', 'age', 'height', 'bust', 'waist', 'hip',
-                        'blood_type', 'profile_text']
+                        'profile_text']
 
         for field in text_fields:
             rule = rules.get(field)

@@ -306,7 +306,6 @@ JSON形式で出力（該当なしのフィールドはnull）:
   "bust": バスト(数値),
   "waist": ウエスト(数値),
   "hip": ヒップ(数値),
-  "blood_type": "血液型",
   "image_urls": ["画像URL1"],
   "profile_text": "プロフィール要約(100字以内)"
 }}
@@ -460,7 +459,6 @@ def init_db(db_path):
         bust INTEGER,
         waist INTEGER,
         hip INTEGER,
-        blood_type TEXT,
         image_urls TEXT,
         profile_text TEXT,
         source_url TEXT UNIQUE,
@@ -480,9 +478,9 @@ def save_therapists(conn, salon_url, salon_name, therapists):
         try:
             c.execute('''INSERT OR REPLACE INTO therapist (
                 salon_url, salon_name, name, age, height,
-                bust, waist, hip, blood_type,
+                bust, waist, hip,
                 image_urls, profile_text, source_url
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', (
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', (
                 salon_url,
                 salon_name,
                 t.get('name'),
@@ -491,7 +489,6 @@ def save_therapists(conn, salon_url, salon_name, therapists):
                 t.get('bust'),
                 t.get('waist'),
                 t.get('hip'),
-                t.get('blood_type'),
                 json.dumps(t.get('image_urls') or [], ensure_ascii=False),
                 t.get('profile_text'),
                 t.get('source_url'),

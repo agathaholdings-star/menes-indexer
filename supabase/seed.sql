@@ -879,3 +879,39 @@ INSERT INTO areas (prefecture_id, name, slug, seo_keyword, search_volume, source
 
 -- Total: 821 areas inserted
 -- Final unique slugs: 821
+
+-- ============================================================
+-- Seed: テストユーザー（開発用）
+-- supabase db reset 後も自動で復元される
+-- ============================================================
+
+-- auth.users にテストユーザーを作成
+INSERT INTO auth.users (
+  id, instance_id, aud, role, email, encrypted_password,
+  email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
+  created_at, updated_at, confirmation_token, recovery_token
+) VALUES (
+  'a0000000-0000-0000-0000-000000000001',
+  '00000000-0000-0000-0000-000000000000',
+  'authenticated', 'authenticated',
+  'test@example.com',
+  crypt('test1234', gen_salt('bf')),
+  now(), '{"provider":"email","providers":["email"]}'::jsonb,
+  '{"display_name":"テストVIP"}'::jsonb,
+  now(), now(), '', ''
+) ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO auth.identities (
+  id, user_id, identity_data, provider, provider_id,
+  last_sign_in_at, created_at, updated_at
+) VALUES (
+  'a0000000-0000-0000-0000-000000000001',
+  'a0000000-0000-0000-0000-000000000001',
+  '{"sub":"a0000000-0000-0000-0000-000000000001","email":"test@example.com"}'::jsonb,
+  'email', 'a0000000-0000-0000-0000-000000000001',
+  now(), now(), now()
+) ON CONFLICT (provider, provider_id) DO NOTHING;
+
+-- profiles トリガーで自動作成されるが、VIPに昇格
+UPDATE profiles SET membership_type = 'vip', nickname = 'テストVIP'
+WHERE id = 'a0000000-0000-0000-0000-000000000001';

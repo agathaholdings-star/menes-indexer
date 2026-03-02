@@ -26,15 +26,18 @@ supabase/.temp/
 *.png
 !frontend/**/*.png
 !frontend/**/*.jpeg
-database/*_checkpoint.json
-database/therapist-scraper/*_checkpoint.json
+database/*checkpoint*.json
+database/therapist-scraper/*checkpoint*.json
 database/therapist-scraper/html_cache/
+database/therapist-scraper/image_recovery_report.csv
+database/therapist-scraper/test_*
 database/seed_reviews/data/
 database/salon_descriptions_data/
 database/shops_dump.sql
 database/vps_dump.sql
 database/vps_therapists_dump.sql
 database/dumps/*.sql.gz
+database/dumps/*.sql
 .playwright-mcp/
 
 # Unrelated projects

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import { TherapistImage } from "@/components/shared/therapist-image";
 import { ChevronRight, Star, MapPin, PenSquare } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -105,21 +105,12 @@ export default async function TypePage({
                       <Link key={therapist.id} href={`/therapist/${therapist.id}`}>
                         <Card className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer h-full">
                           <div className="aspect-[4/3] relative bg-muted">
-                            {imageUrl ? (
-                              <Image
-                                src={imageUrl}
-                                alt={displayName}
-                                fill
-                                className="object-cover"
-                                unoptimized
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center">
-                                <span className="text-4xl font-bold text-muted-foreground">
-                                  {displayName.charAt(0)}
-                                </span>
-                              </div>
-                            )}
+                            <TherapistImage
+                              src={imageUrl}
+                              alt={displayName}
+                              fill
+                              className="object-cover"
+                            />
                             <div className="absolute top-2 left-2">
                               <Badge className="bg-primary text-primary-foreground">
                                 {typeName}

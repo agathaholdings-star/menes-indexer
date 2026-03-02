@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import { TherapistImage } from "@/components/shared/therapist-image";
 import { ChevronRight, TrendingUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
@@ -83,19 +83,12 @@ export function PopularTherapists() {
                 >
                   <Card className="group h-full transition-all hover:shadow-md border-muted/50 overflow-hidden">
                     <div className="relative h-44 w-full overflow-hidden bg-muted">
-                      {therapist.image_url ? (
-                        <Image
-                          src={therapist.image_url}
-                          alt={therapist.name}
-                          fill
-                          className="object-cover transition-transform duration-300 group-hover:scale-105"
-                          unoptimized
-                        />
-                      ) : (
-                        <div className="h-full w-full flex items-center justify-center text-2xl text-muted-foreground">
-                          {therapist.name[0]}
-                        </div>
-                      )}
+                      <TherapistImage
+                        src={therapist.image_url}
+                        alt={therapist.name}
+                        fill
+                        className="object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
                       {/* Rank Badge */}
                       {index < 3 && (
                         <div className={`absolute top-2 left-2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${

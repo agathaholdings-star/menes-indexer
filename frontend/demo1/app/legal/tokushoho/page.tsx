@@ -106,7 +106,7 @@ export default function TokushohoPage() {
           </div>
 
           <p className="text-sm text-muted-foreground mt-8">
-            最終更新日: 2024年1月1日
+            最終更新日: 2026年3月1日
           </p>
         </div>
       </main>

@@ -20,17 +20,19 @@ interface ReviewListProps {
   reviews: Review[];
   isLocked?: boolean;
   onWriteReview?: () => void;
+  therapistId?: string;
   therapistName?: string;
   therapistAge?: number;
   therapistImage?: string;
 }
 
-export function ReviewList({ 
-  reviews, 
-  isLocked = true, 
+export function ReviewList({
+  reviews,
+  isLocked = true,
   onWriteReview,
-  therapistName = "田中まりあ",
-  therapistAge = 24,
+  therapistId,
+  therapistName = "セラピスト",
+  therapistAge = 0,
   therapistImage = "/placeholder.svg?height=100&width=100"
 }: ReviewListProps) {
   const [showUnlockModal, setShowUnlockModal] = useState(false);
@@ -81,14 +83,15 @@ export function ReviewList({
 
           <div className="divide-y">
             {reviews.map((review, index) => (
-              <ReviewCard 
-                key={review.id} 
-                review={review} 
-                getTypeLabel={getTypeLabel} 
-                getBodyLabel={getBodyLabel} 
+              <ReviewCard
+                key={review.id}
+                review={review}
+                getTypeLabel={getTypeLabel}
+                getBodyLabel={getBodyLabel}
                 getServiceLabel={getServiceLabel}
                 isLocked={isLocked && index > 0}
                 onUnlock={() => setShowUnlockModal(true)}
+                therapistId={therapistId}
                 therapistName={therapistName}
                 therapistAge={therapistAge}
                 therapistImage={therapistImage}
@@ -126,7 +129,7 @@ export function ReviewList({
           <DialogHeader className="bg-gradient-to-r from-primary to-primary/80 p-6 pb-4 text-white">
             <DialogTitle className="text-xl text-center text-white">口コミを見るためには</DialogTitle>
             <p className="text-center text-white/80 text-sm mt-1">
-              全国14,500店舗の口コミ45万件以上が読める!
+              全国6,400店舗以上の口コミが読める!
             </p>
           </DialogHeader>
           
@@ -218,6 +221,7 @@ function ReviewCard({
   getServiceLabel,
   isLocked = false,
   onUnlock,
+  therapistId,
   therapistName,
   therapistAge,
   therapistImage,
@@ -230,6 +234,7 @@ function ReviewCard({
   getServiceLabel: (id: string) => string;
   isLocked?: boolean;
   onUnlock?: () => void;
+  therapistId?: string;
   therapistName: string;
   therapistAge: number;
   therapistImage: string;
@@ -347,7 +352,7 @@ function ReviewCard({
 
             {/* Footer CTA */}
             <Link 
-              href={`/therapist/1`} 
+              href={therapistId ? `/therapist/${therapistId}` : "#"}
               className="flex items-center justify-center gap-2 mt-4 py-3 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors"
             >
               このセラピストの詳細を見る

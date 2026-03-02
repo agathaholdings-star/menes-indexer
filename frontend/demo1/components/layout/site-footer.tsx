@@ -101,9 +101,9 @@ export function SiteFooter() {
         </div>
 
         <div className="mt-8 border-t pt-8 text-center text-sm text-muted-foreground">
-          <p>SHIMATOMO ITALY S.R.L.S.</p>
-          <p>VIA DEL LAURO 9 20121 MILANO MI ITALY</p>
-          <p className="mt-4">&copy; 2024 メンエスSKR. All rights reserved.</p>
+          <p>株式会社AGATHA</p>
+          <p>〒107-0061 東京都港区北青山1-3-1-3階</p>
+          <p className="mt-4">&copy; 2026 メンエスSKR. All rights reserved.</p>
         </div>
       </div>
     </footer>

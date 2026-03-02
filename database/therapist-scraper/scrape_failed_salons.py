@@ -204,7 +204,10 @@ def clean_html_full(html: str, base_url: str, max_chars: int = 100_000) -> str:
 
     # imgのsrcを保持
     for img in soup.find_all('img'):
-        src = img.get('src') or img.get('data-src') or img.get('data-lazy-src') or ''
+        try:
+            src = img.get('src') or img.get('data-src') or img.get('data-lazy-src') or ''
+        except (AttributeError, TypeError):
+            continue
         if src:
             src = urljoin(base_url, src)
             alt = img.get('alt', '')

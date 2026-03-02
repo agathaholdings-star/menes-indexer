@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Lock, Crown, ArrowRight, Sparkles, Check } from "lucide-react";
+import { useTier } from "@/lib/hooks/use-tier";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -22,7 +23,8 @@ const vipFilters = [
 ];
 
 export function VipFilter() {
-  const [membershipLevel] = useState<MembershipLevel>("free");
+  const { membershipType } = useTier();
+  const membershipLevel = (membershipType || "free") as MembershipLevel;
   const [showStandardModal, setShowStandardModal] = useState(false);
   const [showVipModal, setShowVipModal] = useState(false);
 

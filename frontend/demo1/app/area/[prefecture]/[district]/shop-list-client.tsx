@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import { TherapistImage } from "@/components/shared/therapist-image";
 import { Star, MapPin, Clock, Users, MessageSquare, SlidersHorizontal, Crown } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -185,8 +185,8 @@ export function ShopListPageClient({
                           <div className="flex flex-col gap-4 sm:flex-row">
                             {/* Shop Image */}
                             <div className="relative w-full sm:w-48 h-32 rounded-lg overflow-hidden bg-muted shrink-0">
-                              <Image
-                                src={shop.images[0] || "/placeholder.svg"}
+                              <TherapistImage
+                                src={shop.images[0]}
                                 alt={shop.name}
                                 fill
                                 className="object-cover"
@@ -256,7 +256,7 @@ export function ShopListPageClient({
                                   <div className="flex -space-x-2">
                                     {shopTherapists.map(t => (
                                       <div key={t.id} className="relative w-8 h-8 rounded-full overflow-hidden border-2 border-card">
-                                        <Image src={t.images[0] || "/placeholder.svg"} alt={t.name} fill className="object-cover" />
+                                        <TherapistImage src={t.images[0]} alt={t.name} fill className="object-cover" />
                                       </div>
                                     ))}
                                   </div>
