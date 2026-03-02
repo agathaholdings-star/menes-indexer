@@ -31,6 +31,8 @@ database/therapist-scraper/*checkpoint*.json
 database/therapist-scraper/html_cache/
 database/therapist-scraper/image_recovery_report.csv
 database/therapist-scraper/test_*
+database/therapist-scraper/batch_api_data/
+database/therapist-scraper/failed_salons_*.csv
 database/seed_reviews/data/
 database/salon_descriptions_data/
 database/shops_dump.sql

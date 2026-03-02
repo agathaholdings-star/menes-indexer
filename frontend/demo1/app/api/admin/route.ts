@@ -85,18 +85,6 @@ export async function GET() {
     }));
   }
 
-  // Fetch threads
-  const { data: threadData } = await supabaseAdmin
-    .from("bbs_threads" as any)
-    .select("id, title, category, reply_count, view_count, created_at, user_id, profiles(nickname)")
-    .order("created_at", { ascending: false })
-    .limit(50);
-
-  const threads = (threadData || []).map((t: any) => ({
-    ...t,
-    user_nickname: t.profiles?.nickname || "名無し",
-  }));
-
   // Fetch users
   const { data: users } = await supabaseAdmin
     .from("profiles")
@@ -113,7 +101,6 @@ export async function GET() {
       pending: pendingCount.count ?? 0,
     },
     reviews: enrichedReviews,
-    threads,
     users: users ?? [],
   });
 }
@@ -162,14 +149,6 @@ export async function POST(req: NextRequest) {
         .from("reviews")
         .delete()
         .eq("id", review_id);
-      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-      return NextResponse.json({ ok: true });
-    }
-
-    case "delete_thread": {
-      const { thread_id } = body;
-      await supabaseAdmin.from("bbs_posts" as any).delete().eq("thread_id", thread_id);
-      const { error } = await supabaseAdmin.from("bbs_threads" as any).delete().eq("id", thread_id);
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
       return NextResponse.json({ ok: true });
     }

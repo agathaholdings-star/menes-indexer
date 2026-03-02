@@ -10,7 +10,6 @@ import {
   LogIn,
   PenSquare,
   MapPin,
-  MessageSquare,
   Trophy,
   Heart,
   Bell,
@@ -196,12 +195,6 @@ export function SiteHeader() {
                 ランキング
               </Link>
             </Button>
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/bbs">
-                <MessageSquare className="mr-1 h-4 w-4" />
-                掲示板
-              </Link>
-            </Button>
           </nav>
 
           {/* Auth & CTA */}
@@ -344,15 +337,6 @@ export function SiteHeader() {
                         お気に入り
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/mypage?tab=messages" className="cursor-pointer flex items-center justify-between">
-                        <span className="flex items-center">
-                          <MessageSquare className="h-4 w-4 mr-2" />
-                          メッセージ
-                        </span>
-                      </Link>
-                    </DropdownMenuItem>
-
                     <DropdownMenuSeparator />
 
                     {memberLevel !== "vip" && (
@@ -480,12 +464,6 @@ export function SiteHeader() {
                         ランキング
                       </Link>
                     </Button>
-                    <Button variant="ghost" className="justify-start" asChild>
-                      <Link href="/bbs">
-                        <MessageSquare className="mr-2 h-4 w-4" />
-                        掲示板
-                      </Link>
-                    </Button>
                   </nav>
 
                   {isLoggedIn && (
@@ -503,12 +481,6 @@ export function SiteHeader() {
                             <Link href="/mypage?tab=favorites">
                               <Heart className="mr-2 h-4 w-4" />
                               お気に入り
-                            </Link>
-                          </Button>
-                          <Button variant="ghost" className="justify-start" asChild>
-                            <Link href="/mypage?tab=messages">
-                              <MessageSquare className="mr-2 h-4 w-4" />
-                              メッセージ
                             </Link>
                           </Button>
                           <Button variant="ghost" className="justify-between" asChild>

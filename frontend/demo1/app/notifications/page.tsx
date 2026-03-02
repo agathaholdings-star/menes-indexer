@@ -6,8 +6,6 @@ import Link from "next/link";
 import {
   Bell,
   Heart,
-  MessageSquare,
-  MessageCircle,
   CheckCheck,
   Loader2,
   PenSquare,
@@ -45,10 +43,6 @@ function getNotificationIcon(type: string) {
   switch (type) {
     case "helpful":
       return <Heart className="h-5 w-5 text-pink-500" />;
-    case "bbs_reply":
-      return <MessageSquare className="h-5 w-5 text-blue-500" />;
-    case "dm":
-      return <MessageCircle className="h-5 w-5 text-green-500" />;
     case "favorite":
       return <Heart className="h-5 w-5 text-red-500" />;
     case "follow_review":

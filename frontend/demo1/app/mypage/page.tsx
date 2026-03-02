@@ -15,11 +15,9 @@ import {
   Lock,
   Sparkles,
   LayoutDashboard,
-  MessageCircle,
   Flame,
   Menu,
   X,
-  Send,
   Plus,
   Share2,
   Search,
@@ -61,7 +59,7 @@ import { PreferenceMap } from "@/components/mypage/preference-map";
 import { ReviewerLevelBadge } from "@/components/shared/reviewer-level-badge";
 
 type MemberLevel = "free" | "standard" | "vip";
-type Section = "dashboard" | "reviews" | "favorites" | "lists" | "messages" | "bbs" | "skr" | "notifications" | "settings";
+type Section = "dashboard" | "reviews" | "favorites" | "lists" | "skr" | "notifications" | "settings";
 
 const sidebarItems = [
   { id: "dashboard", label: "ダッシュボード", icon: LayoutDashboard },
@@ -69,8 +67,6 @@ const sidebarItems = [
   { id: "reviews", label: "投稿した口コミ", icon: Edit },
   { id: "favorites", label: "お気に入り", icon: Heart },
   { id: "lists", label: "リスト共有", icon: Share2 },
-  { id: "messages", label: "メッセージ", icon: MessageCircle },
-  { id: "bbs", label: "掲示板", icon: MessageSquare },
   { id: "skr", label: "SKR/HRリスト", icon: Flame },
   { id: "notifications", label: "通知", icon: Bell },
   { id: "settings", label: "設定", icon: Settings },
@@ -85,11 +81,6 @@ export default function MyPage() {
   const [memberLevel, setMemberLevel] = useState<MemberLevel>("free");
   const [monthlyReviewCount, setMonthlyReviewCount] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [selectedConversation, setSelectedConversation] = useState<string | null>("1");
-  const [messageInput, setMessageInput] = useState("");
-  const [bbsTab, setBbsTab] = useState("general");
-
-
   // Settings state
   const [editNickname, setEditNickname] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
@@ -255,7 +246,7 @@ export default function MyPage() {
     const currentUnlock = monthlyReviewCount >= 3
       ? "VIP相当の全機能"
       : monthlyReviewCount >= 2
-      ? "セラピスト分析 + 掲示板"
+      ? "セラピスト分析"
       : monthlyReviewCount >= 1
       ? "発見検索"
       : "口コミ読み放題";
@@ -265,7 +256,7 @@ export default function MyPage() {
       : monthlyReviewCount >= 2
       ? "VIP相当の全機能"
       : monthlyReviewCount >= 1
-      ? "セラピスト分析 + 掲示板"
+      ? "セラピスト分析"
       : "発見検索";
 
     return (
@@ -555,50 +546,6 @@ export default function MyPage() {
               <Share2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <p className="text-muted-foreground mb-2">リスト共有機能は準備中です</p>
               <p className="text-sm text-muted-foreground">お気に入りリストの公開・共有機能を近日中にリリースします</p>
-            </CardContent>
-          </Card>
-        );
-
-      case "messages":
-        if (!permissions.canUseDM) {
-          return <LockScreen title="メッセージ機能" description="他のユーザーとDMでコミュニケーションができます。スタンダード会員（月2本投稿）以上で利用可能です。" upgradeText="スタンダード会員になる" targetLevel="standard" />;
-        }
-        return (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">メッセージ</CardTitle>
-            </CardHeader>
-            <CardContent className="text-center py-8">
-              <MessageCircle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground mb-4">メッセージページで会話を管理できます</p>
-              <Link href="/messages">
-                <Button className="gap-2">
-                  <MessageCircle className="h-4 w-4" />
-                  メッセージを開く
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        );
-
-      case "bbs":
-        if (!permissions.canUseBBS) {
-          return <LockScreen title="掲示板機能" description="他のユーザーと情報交換ができる掲示板を利用できます。スタンダード会員（月2本投稿）以上で利用可能です。" upgradeText="スタンダード会員になる" targetLevel="standard" />;
-        }
-        return (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">掲示板</CardTitle>
-            </CardHeader>
-            <CardContent className="text-center py-8">
-              <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground mb-4">掲示板でメンズエステについて語り合おう</p>
-              <Link href="/bbs">
-                <Button className="gap-2">
-                  <MessageSquare className="h-4 w-4" />
-                  掲示板を開く
-                </Button>
-              </Link>
             </CardContent>
           </Card>
         );
@@ -980,8 +927,6 @@ export default function MyPage() {
                     const Icon = item.icon;
                     const isLocked =
                       (item.id === "lists" && !permissions.canUseDM) ||
-                      (item.id === "messages" && !permissions.canUseDM) ||
-                      (item.id === "bbs" && !permissions.canUseBBS) ||
                       (item.id === "skr" && !permissions.canUseSKRFilter);
 
                     if ("isLink" in item && item.isLink) {
@@ -1042,8 +987,6 @@ export default function MyPage() {
                     const Icon = item.icon;
                     const isLocked =
                       (item.id === "lists" && !permissions.canUseDM) ||
-                      (item.id === "messages" && !permissions.canUseDM) ||
-                      (item.id === "bbs" && !permissions.canUseBBS) ||
                       (item.id === "skr" && !permissions.canUseSKRFilter);
 
                     if ("isLink" in item && item.isLink) {

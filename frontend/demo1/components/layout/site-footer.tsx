@@ -37,11 +37,6 @@ export function SiteFooter() {
                   ランキング
                 </Link>
               </li>
-              <li>
-                <Link href="/bbs" className="text-muted-foreground hover:text-foreground">
-                  掲示板
-                </Link>
-              </li>
             </ul>
           </div>
 

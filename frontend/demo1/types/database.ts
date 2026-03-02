@@ -1,3 +1,4 @@
+Connecting to db 5432
 export type Json =
   | string
   | number
@@ -99,137 +100,6 @@ export type Database = {
           },
         ]
       }
-      bbs_post_likes: {
-        Row: {
-          created_at: string | null
-          post_id: number
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          post_id: number
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          post_id?: number
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "bbs_post_likes_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "bbs_posts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "bbs_post_likes_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      bbs_posts: {
-        Row: {
-          body: string
-          created_at: string | null
-          id: number
-          likes: number | null
-          thread_id: number
-          user_id: string
-        }
-        Insert: {
-          body: string
-          created_at?: string | null
-          id?: never
-          likes?: number | null
-          thread_id: number
-          user_id: string
-        }
-        Update: {
-          body?: string
-          created_at?: string | null
-          id?: never
-          likes?: number | null
-          thread_id?: number
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "bbs_posts_thread_id_fkey"
-            columns: ["thread_id"]
-            isOneToOne: false
-            referencedRelation: "bbs_threads"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "bbs_posts_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      bbs_threads: {
-        Row: {
-          body: string
-          category: string
-          created_at: string | null
-          id: number
-          is_locked: boolean | null
-          is_pinned: boolean | null
-          is_vip_only: boolean
-          last_reply_at: string | null
-          reply_count: number | null
-          title: string
-          updated_at: string | null
-          user_id: string
-          view_count: number | null
-        }
-        Insert: {
-          body: string
-          category?: string
-          created_at?: string | null
-          id?: never
-          is_locked?: boolean | null
-          is_pinned?: boolean | null
-          is_vip_only?: boolean
-          last_reply_at?: string | null
-          reply_count?: number | null
-          title: string
-          updated_at?: string | null
-          user_id: string
-          view_count?: number | null
-        }
-        Update: {
-          body?: string
-          category?: string
-          created_at?: string | null
-          id?: never
-          is_locked?: boolean | null
-          is_pinned?: boolean | null
-          is_vip_only?: boolean
-          last_reply_at?: string | null
-          reply_count?: number | null
-          title?: string
-          updated_at?: string | null
-          user_id?: string
-          view_count?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "bbs_threads_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       blocks: {
         Row: {
           blocked_id: string
@@ -277,96 +147,6 @@ export type Database = {
           label?: string
         }
         Relationships: []
-      }
-      cms_patterns: {
-        Row: {
-          ajax_pagination: Json
-          cms_name: string
-          confidence: number
-          created_at: string | null
-          fail_count: number
-          fingerprint: Json
-          id: number
-          list_data_rules: Json
-          list_url_rules: Json
-          success_count: number
-          therapist_data_rules: Json
-          therapist_list_rules: Json
-          updated_at: string | null
-          version: number
-        }
-        Insert: {
-          ajax_pagination?: Json
-          cms_name: string
-          confidence?: number
-          created_at?: string | null
-          fail_count?: number
-          fingerprint?: Json
-          id?: never
-          list_data_rules?: Json
-          list_url_rules?: Json
-          success_count?: number
-          therapist_data_rules?: Json
-          therapist_list_rules?: Json
-          updated_at?: string | null
-          version?: number
-        }
-        Update: {
-          ajax_pagination?: Json
-          cms_name?: string
-          confidence?: number
-          created_at?: string | null
-          fail_count?: number
-          fingerprint?: Json
-          id?: never
-          list_data_rules?: Json
-          list_url_rules?: Json
-          success_count?: number
-          therapist_data_rules?: Json
-          therapist_list_rules?: Json
-          updated_at?: string | null
-          version?: number
-        }
-        Relationships: []
-      }
-      conversations: {
-        Row: {
-          created_at: string | null
-          id: number
-          last_message_at: string | null
-          user1_id: string
-          user2_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: never
-          last_message_at?: string | null
-          user1_id: string
-          user2_id: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: never
-          last_message_at?: string | null
-          user1_id?: string
-          user2_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "conversations_user1_id_fkey"
-            columns: ["user1_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "conversations_user2_id_fkey"
-            columns: ["user2_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       cup_types: {
         Row: {
@@ -430,48 +210,6 @@ export type Database = {
           label?: string
         }
         Relationships: []
-      }
-      messages: {
-        Row: {
-          body: string
-          conversation_id: number
-          created_at: string | null
-          id: number
-          is_read: boolean | null
-          sender_id: string
-        }
-        Insert: {
-          body: string
-          conversation_id: number
-          created_at?: string | null
-          id?: never
-          is_read?: boolean | null
-          sender_id: string
-        }
-        Update: {
-          body?: string
-          conversation_id?: number
-          created_at?: string | null
-          id?: never
-          is_read?: boolean | null
-          sender_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "messages_conversation_id_fkey"
-            columns: ["conversation_id"]
-            isOneToOne: false
-            referencedRelation: "conversations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "messages_sender_id_fkey"
-            columns: ["sender_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       notifications: {
         Row: {
@@ -541,6 +279,7 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string | null
+          follower_count: number | null
           id: string
           is_admin: boolean
           membership_type: string | null
@@ -555,6 +294,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          follower_count?: number | null
           id: string
           is_admin?: boolean
           membership_type?: string | null
@@ -569,6 +309,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          follower_count?: number | null
           id?: string
           is_admin?: boolean
           membership_type?: string | null
@@ -582,39 +323,6 @@ export type Database = {
           view_permission_until?: string | null
         }
         Relationships: []
-      }
-      therapist_unlocks: {
-        Row: {
-          user_id: string
-          therapist_id: number
-          unlocked_at: string
-        }
-        Insert: {
-          user_id: string
-          therapist_id: number
-          unlocked_at?: string
-        }
-        Update: {
-          user_id?: string
-          therapist_id?: number
-          unlocked_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "therapist_unlocks_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "therapist_unlocks_therapist_id_fkey"
-            columns: ["therapist_id"]
-            isOneToOne: false
-            referencedRelation: "therapists"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       reports: {
         Row: {
@@ -656,6 +364,32 @@ export type Database = {
             columns: ["reporter_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      review_helpful: {
+        Row: {
+          created_at: string | null
+          review_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          review_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          review_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_helpful_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "reviews"
             referencedColumns: ["id"]
           },
         ]
@@ -714,6 +448,7 @@ export type Database = {
           created_at: string | null
           cup_type_id: number | null
           fake_count: number
+          helpful_count: number | null
           id: string
           is_seed: boolean
           is_verified: boolean | null
@@ -746,6 +481,7 @@ export type Database = {
           created_at?: string | null
           cup_type_id?: number | null
           fake_count?: number
+          helpful_count?: number | null
           id?: string
           is_seed?: boolean
           is_verified?: boolean | null
@@ -778,6 +514,7 @@ export type Database = {
           created_at?: string | null
           cup_type_id?: number | null
           fake_count?: number
+          helpful_count?: number | null
           id?: string
           is_seed?: boolean
           is_verified?: boolean | null
@@ -819,24 +556,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "reviews_service_level_id_fkey"
-            columns: ["service_level_id"]
-            isOneToOne: false
-            referencedRelation: "service_levels"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "reviews_shop_id_fkey"
+            foreignKeyName: "reviews_salon_id_fkey"
             columns: ["salon_id"]
             isOneToOne: false
             referencedRelation: "salon_review_stats"
             referencedColumns: ["salon_id"]
           },
           {
-            foreignKeyName: "reviews_shop_id_fkey"
+            foreignKeyName: "reviews_salon_id_fkey"
             columns: ["salon_id"]
             isOneToOne: false
             referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_service_level_id_fkey"
+            columns: ["service_level_id"]
+            isOneToOne: false
+            referencedRelation: "service_levels"
             referencedColumns: ["id"]
           },
           {
@@ -876,87 +613,23 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "shop_areas_area_id_fkey"
+            foreignKeyName: "salon_areas_area_id_fkey"
             columns: ["area_id"]
             isOneToOne: false
             referencedRelation: "areas"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "shop_areas_shop_id_fkey"
+            foreignKeyName: "salon_areas_salon_id_fkey"
             columns: ["salon_id"]
             isOneToOne: false
             referencedRelation: "salon_review_stats"
             referencedColumns: ["salon_id"]
           },
           {
-            foreignKeyName: "shop_areas_shop_id_fkey"
+            foreignKeyName: "salon_areas_salon_id_fkey"
             columns: ["salon_id"]
             isOneToOne: false
-            referencedRelation: "salons"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      salon_scrape_cache: {
-        Row: {
-          cms_pattern_id: number | null
-          created_at: string | null
-          extraction_method: string | null
-          fail_reason: string | null
-          fail_streak: number | null
-          last_scraped_at: string | null
-          last_therapist_count: number | null
-          name_css_selector: string | null
-          salon_id: number
-          therapist_list_url: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          cms_pattern_id?: number | null
-          created_at?: string | null
-          extraction_method?: string | null
-          fail_reason?: string | null
-          fail_streak?: number | null
-          last_scraped_at?: string | null
-          last_therapist_count?: number | null
-          name_css_selector?: string | null
-          salon_id: number
-          therapist_list_url?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          cms_pattern_id?: number | null
-          created_at?: string | null
-          extraction_method?: string | null
-          fail_reason?: string | null
-          fail_streak?: number | null
-          last_scraped_at?: string | null
-          last_therapist_count?: number | null
-          name_css_selector?: string | null
-          salon_id?: number
-          therapist_list_url?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "shop_scrape_cache_cms_pattern_id_fkey"
-            columns: ["cms_pattern_id"]
-            isOneToOne: false
-            referencedRelation: "cms_patterns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "shop_scrape_cache_shop_id_fkey"
-            columns: ["salon_id"]
-            isOneToOne: true
-            referencedRelation: "salon_review_stats"
-            referencedColumns: ["salon_id"]
-          },
-          {
-            foreignKeyName: "shop_scrape_cache_shop_id_fkey"
-            columns: ["salon_id"]
-            isOneToOne: true
             referencedRelation: "salons"
             referencedColumns: ["id"]
           },
@@ -1046,54 +719,6 @@ export type Database = {
         }
         Relationships: []
       }
-      scrape_log: {
-        Row: {
-          created_at: string | null
-          detail: string | null
-          html_hash: string | null
-          id: number
-          method: string
-          salon_id: number
-          step: string
-          success: boolean
-        }
-        Insert: {
-          created_at?: string | null
-          detail?: string | null
-          html_hash?: string | null
-          id?: never
-          method: string
-          salon_id: number
-          step: string
-          success?: boolean
-        }
-        Update: {
-          created_at?: string | null
-          detail?: string | null
-          html_hash?: string | null
-          id?: never
-          method?: string
-          salon_id?: number
-          step?: string
-          success?: boolean
-        }
-        Relationships: [
-          {
-            foreignKeyName: "scrape_log_shop_id_fkey"
-            columns: ["salon_id"]
-            isOneToOne: false
-            referencedRelation: "salon_review_stats"
-            referencedColumns: ["salon_id"]
-          },
-          {
-            foreignKeyName: "scrape_log_shop_id_fkey"
-            columns: ["salon_id"]
-            isOneToOne: false
-            referencedRelation: "salons"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       service_levels: {
         Row: {
           id: number
@@ -1109,6 +734,39 @@ export type Database = {
         }
         Relationships: []
       }
+      therapist_unlocks: {
+        Row: {
+          therapist_id: number
+          unlocked_at: string
+          user_id: string
+        }
+        Insert: {
+          therapist_id: number
+          unlocked_at?: string
+          user_id: string
+        }
+        Update: {
+          therapist_id?: number
+          unlocked_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "therapist_unlocks_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "therapist_unlocks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       therapists: {
         Row: {
           age: number | null
@@ -1121,6 +779,7 @@ export type Database = {
           image_urls: Json | null
           last_scraped_at: string | null
           name: string
+          person_id: number | null
           profile_text: string | null
           salon_id: number
           slug: string | null
@@ -1141,6 +800,7 @@ export type Database = {
           image_urls?: Json | null
           last_scraped_at?: string | null
           name: string
+          person_id?: number | null
           profile_text?: string | null
           salon_id: number
           slug?: string | null
@@ -1161,6 +821,7 @@ export type Database = {
           image_urls?: Json | null
           last_scraped_at?: string | null
           name?: string
+          person_id?: number | null
           profile_text?: string | null
           salon_id?: number
           slug?: string | null
@@ -1172,14 +833,14 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "therapists_shop_id_fkey"
+            foreignKeyName: "therapists_salon_id_fkey"
             columns: ["salon_id"]
             isOneToOne: false
             referencedRelation: "salon_review_stats"
             referencedColumns: ["salon_id"]
           },
           {
-            foreignKeyName: "therapists_shop_id_fkey"
+            foreignKeyName: "therapists_salon_id_fkey"
             columns: ["salon_id"]
             isOneToOne: false
             referencedRelation: "salons"
@@ -1187,40 +848,23 @@ export type Database = {
           },
         ]
       }
-      user_rewards: {
+      user_follows: {
         Row: {
-          discount_amount: number | null
-          id: number
-          review_count: number | null
-          status: string | null
-          target_month: string
-          user_id: string
+          created_at: string | null
+          followed_id: string
+          follower_id: string
         }
         Insert: {
-          discount_amount?: number | null
-          id?: never
-          review_count?: number | null
-          status?: string | null
-          target_month: string
-          user_id: string
+          created_at?: string | null
+          followed_id: string
+          follower_id: string
         }
         Update: {
-          discount_amount?: number | null
-          id?: never
-          review_count?: number | null
-          status?: string | null
-          target_month?: string
-          user_id?: string
+          created_at?: string | null
+          followed_id?: string
+          follower_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "user_rewards_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       user_sessions: {
         Row: {
@@ -1457,12 +1101,5 @@ export const Constants = {
   },
 } as const
 
-// Custom type aliases for convenience
-export type Prefecture = Database["public"]["Tables"]["prefectures"]["Row"];
-export type Area = Database["public"]["Tables"]["areas"]["Row"];
-export type Salon = Database["public"]["Tables"]["salons"]["Row"];
-export type Shop = Salon; // backward compat alias
-export type SalonArea = Database["public"]["Tables"]["salon_areas"]["Row"];
-export type Therapist = Database["public"]["Tables"]["therapists"]["Row"];
-export type Review = Database["public"]["Tables"]["reviews"]["Row"];
-
+A new version of Supabase CLI is available: v2.75.0 (currently installed v2.65.5)
+We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
