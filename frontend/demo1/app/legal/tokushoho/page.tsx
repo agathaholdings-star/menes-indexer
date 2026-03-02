@@ -1,4 +1,10 @@
+import { type Metadata } from "next";
 import { SiteHeader } from "@/components/layout/site-header";
+
+export const metadata: Metadata = {
+  title: "特定商取引法に基づく表記",
+  description: "メンエスSKRの特定商取引法に基づく表記。",
+};
 import { SiteFooter } from "@/components/layout/site-footer";
 
 export default function TokushohoPage() {

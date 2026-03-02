@@ -1,4 +1,10 @@
+import { type Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "セラピストランキング",
+  description: "メンズエステの人気セラピストランキング。口コミ評価の高いセラピストを一覧で確認できます。",
+};
 import { TherapistImage } from "@/components/shared/therapist-image";
 import { Trophy, ChevronRight, Star, TrendingUp, Medal } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";

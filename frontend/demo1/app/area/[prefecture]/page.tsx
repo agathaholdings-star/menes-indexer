@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MapPin, ChevronRight, Store } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+
+export const revalidate = 86400;
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { Sidebar } from "@/components/layout/sidebar";

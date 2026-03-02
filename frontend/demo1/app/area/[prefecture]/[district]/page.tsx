@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { therapistTypes, bodyTypes } from "@/lib/data";
 import { ShopListPageClient } from "./shop-list-client";
 import { getPrefectureBySlug, getAreaBySlug, getShopsByAreaSlug, getRankedSalonsByArea } from "@/lib/supabase-data";
+
+export const revalidate = 3600;
 import type { Shop as DbShop } from "@/types/database";
 import type { Shop } from "@/lib/data";
 import type { SalonRankingStats } from "@/lib/supabase-data";

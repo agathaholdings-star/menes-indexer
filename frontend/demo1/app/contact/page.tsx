@@ -1,4 +1,10 @@
+import { type Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "お問い合わせ",
+  description: "メンエスSKRへのお問い合わせはこちら。",
+};
 import { Mail, ChevronRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SiteHeader } from "@/components/layout/site-header";

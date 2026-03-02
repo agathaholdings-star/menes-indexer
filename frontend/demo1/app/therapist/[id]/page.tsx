@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { TherapistPageClient } from "./therapist-page-client";
 import { supabaseAdmin as supabase } from "@/lib/supabase-admin";
 import type { Therapist, Review } from "@/lib/data";
+
+export const revalidate = 3600;
 import { parseNameAge } from "@/lib/therapist-utils";
 import { getShopAreaInfo } from "@/lib/supabase-data";
 

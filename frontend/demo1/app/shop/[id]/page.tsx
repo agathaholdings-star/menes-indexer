@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { ShopPageClient } from "./shop-page-client";
 import { getShopById, getShopBySlug, getTherapistsByShopId, getShopAreaInfo, getSalonReviewStatsBatch } from "@/lib/supabase-data";
 import { supabaseAdmin as supabase } from "@/lib/supabase-admin";
+
+export const revalidate = 3600;
 import type { Shop as DbShop, Therapist as DbTherapist } from "@/types/database";
 import type { Shop, Therapist, Review } from "@/lib/data";
 import { parseNameAge } from "@/lib/therapist-utils";

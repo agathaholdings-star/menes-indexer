@@ -1,4 +1,10 @@
+import { type Metadata } from "next";
 import { SiteHeader } from "@/components/layout/site-header";
+
+export const metadata: Metadata = {
+  title: "利用規約",
+  description: "メンエスSKRの利用規約。サービスのご利用条件について。",
+};
 import { SiteFooter } from "@/components/layout/site-footer";
 
 export default function TermsPage() {

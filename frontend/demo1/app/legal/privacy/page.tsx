@@ -1,4 +1,10 @@
+import { type Metadata } from "next";
 import { SiteHeader } from "@/components/layout/site-header";
+
+export const metadata: Metadata = {
+  title: "プライバシーポリシー",
+  description: "メンエスSKRのプライバシーポリシー。個人情報の取り扱いについて。",
+};
 import { SiteFooter } from "@/components/layout/site-footer";
 
 export default function PrivacyPage() {
