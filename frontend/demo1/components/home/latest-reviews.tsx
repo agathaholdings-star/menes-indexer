@@ -6,7 +6,6 @@ import { Star, PenSquare } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { createSupabaseBrowser } from "@/lib/supabase/client";
 
 interface LatestReview {
   id: string;
@@ -23,15 +22,15 @@ export function LatestReviews() {
 
   useEffect(() => {
     async function fetchLatest() {
-      const supabase = createSupabaseBrowser();
-      const { data } = await supabase
-        .from("reviews")
-        .select("id, score, comment_first_impression, created_at, therapist_id, therapists(name, salon_id, salons(name))")
-        .eq("moderation_status", "approved")
-        .order("created_at", { ascending: false })
-        .limit(5);
-      setReviews((data as unknown as LatestReview[]) || []);
-      setLoading(false);
+      try {
+        const res = await fetch("/api/reviews/latest?limit=5");
+        const data = await res.json();
+        setReviews(Array.isArray(data) ? data : []);
+      } catch {
+        setReviews([]);
+      } finally {
+        setLoading(false);
+      }
     }
     fetchLatest();
   }, []);

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Lock, PenLine, Star, ChevronRight, Crown, Eye, TrendingUp, Flame, Heart, Sparkles } from "lucide-react";
+import { Lock, PenLine, Star, ChevronRight, Crown, Eye, TrendingUp, Flame, Heart, Sparkles, Unlock, Coins } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,6 +20,8 @@ interface ReviewListProps {
   reviews: Review[];
   isLocked?: boolean;
   onWriteReview?: () => void;
+  onUnlockTherapist?: () => Promise<boolean | undefined>;
+  reviewCredits?: number;
   therapistId?: string;
   therapistName?: string;
   therapistAge?: number;
@@ -30,18 +32,32 @@ export function ReviewList({
   reviews,
   isLocked = true,
   onWriteReview,
+  onUnlockTherapist,
+  reviewCredits = 0,
   therapistId,
   therapistName = "セラピスト",
   therapistAge = 0,
   therapistImage = "/placeholder.svg?height=100&width=100"
 }: ReviewListProps) {
   const [showUnlockModal, setShowUnlockModal] = useState(false);
+  const [unlockLoading, setUnlockLoading] = useState(false);
   const getTypeLabel = (id: string) => therapistTypes.find(t => t.id === id)?.label || id;
   const getBodyLabel = (id: string) => bodyTypes.find(b => b.id === id)?.label || id;
   const getServiceLabel = (id: string) => serviceTypes.find(s => s.id === id)?.label || id;
 
   const lockedCount = Math.max(reviews.length - 1, 0);
   const avgScore = reviews.length > 0 ? Math.round(reviews.reduce((acc, r) => acc + r.score, 0) / reviews.length) : 0;
+
+  const handleUnlock = async () => {
+    if (!onUnlockTherapist || unlockLoading) return;
+    setUnlockLoading(true);
+    const success = await onUnlockTherapist();
+    setUnlockLoading(false);
+    if (!success) {
+      // クレジット不足 → モーダル表示
+      setShowUnlockModal(true);
+    }
+  };
 
   return (
     <>
@@ -73,6 +89,12 @@ export function ReviewList({
                   <Eye className="h-3 w-3" />
                   {reviews.reduce((sum, r) => sum + (r.viewCount || 0), 0).toLocaleString()}回閲覧
                 </span>
+                {reviewCredits > 0 && (
+                  <span className="flex items-center gap-1 text-primary font-medium">
+                    <Coins className="h-3 w-3" />
+                    残り{reviewCredits}クレジット
+                  </span>
+                )}
               </div>
               <Badge variant="outline" className="text-xs text-primary border-primary/30">
                 <Lock className="h-3 w-3 mr-1" />
@@ -90,13 +112,14 @@ export function ReviewList({
                 getBodyLabel={getBodyLabel}
                 getServiceLabel={getServiceLabel}
                 isLocked={isLocked && index > 0}
-                onUnlock={() => setShowUnlockModal(true)}
+                onUnlock={reviewCredits > 0 ? handleUnlock : () => setShowUnlockModal(true)}
                 therapistId={therapistId}
                 therapistName={therapistName}
                 therapistAge={therapistAge}
                 therapistImage={therapistImage}
                 isPremium={index === 1}
                 reviewIndex={index}
+                reviewCredits={reviewCredits}
               />
             ))}
           </div>
@@ -105,19 +128,41 @@ export function ReviewList({
           {isLocked && (
             <div className="p-4 bg-gradient-to-t from-primary/10 to-transparent border-t">
               <div className="text-center mb-3">
-                <p className="text-sm text-muted-foreground">
-                  <span className="text-primary font-bold">{lockedCount}件</span>の口コミが会員登録で読めます
-                </p>
+                {reviewCredits > 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    <span className="text-primary font-bold">1クレジット</span>でこのセラピストの口コミ
+                    <span className="text-primary font-bold">{lockedCount}件</span>が全て読めます
+                  </p>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    口コミを書くと<span className="text-primary font-bold">10人分</span>のセラピスト口コミが読めます
+                  </p>
+                )}
               </div>
-              <Button 
-                onClick={() => setShowUnlockModal(true)}
-                className="w-full gap-2"
-                size="lg"
-              >
-                <Sparkles className="h-4 w-4" />
-                全ての口コミを読む
-                <ChevronRight className="h-4 w-4" />
-              </Button>
+              {reviewCredits > 0 ? (
+                <Button
+                  onClick={handleUnlock}
+                  disabled={unlockLoading}
+                  className="w-full gap-2"
+                  size="lg"
+                >
+                  <Unlock className="h-4 w-4" />
+                  この子の口コミを読む
+                  <Badge variant="secondary" className="ml-2 text-xs bg-white/20 text-white border-0">
+                    残り{reviewCredits}
+                  </Badge>
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => setShowUnlockModal(true)}
+                  className="w-full gap-2"
+                  size="lg"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  口コミを書いて10人分読む
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              )}
             </div>
           )}
         </CardContent>
@@ -127,16 +172,16 @@ export function ReviewList({
       <Dialog open={showUnlockModal} onOpenChange={setShowUnlockModal}>
         <DialogContent className="sm:max-w-md p-0 overflow-hidden">
           <DialogHeader className="bg-gradient-to-r from-primary to-primary/80 p-6 pb-4 text-white">
-            <DialogTitle className="text-xl text-center text-white">口コミを見るためには</DialogTitle>
+            <DialogTitle className="text-xl text-center text-white">口コミを読むには</DialogTitle>
             <p className="text-center text-white/80 text-sm mt-1">
-              全国6,400店舗以上の口コミが読める!
+              全国6,400以上の店舗の口コミが読める!
             </p>
           </DialogHeader>
-          
+
           <div className="p-6">
             <div className="space-y-4 mb-6">
               <div>
-                <p className="text-center text-sm font-medium mb-3">- 無料会員 -</p>
+                <p className="text-center text-sm font-medium mb-3">- 無料で読む -</p>
                 <div className="flex items-center justify-center gap-1 text-xs">
                   <div className="bg-primary text-primary-foreground rounded-lg px-3 py-2 text-center">
                     <span className="block font-bold">1</span>
@@ -145,12 +190,12 @@ export function ReviewList({
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   <div className="bg-primary text-primary-foreground rounded-lg px-3 py-2 text-center">
                     <span className="block font-bold">2</span>
-                    <span>アカウント発行&<br/>口コミ閲覧日数付与</span>
+                    <span>承認されると<br/>10クレジット獲得</span>
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   <div className="bg-primary/80 text-primary-foreground rounded-lg px-3 py-2 text-center">
                     <span className="block font-bold">3</span>
-                    <span>無料の口コミが<br/>閲覧可能に!</span>
+                    <span>10人分の<br/>口コミが読める!</span>
                   </div>
                 </div>
               </div>
@@ -177,30 +222,32 @@ export function ReviewList({
               </p>
               <p className="flex items-center gap-1 text-primary font-medium">
                 <TrendingUp className="h-4 w-4" />
-                多くのユーザーから地雷回避や理想のセラピストと出会えたと好評!
+                1件書けば10人分のセラピスト口コミが読める!
               </p>
             </div>
 
             <div className="space-y-3">
-              <Link href="/pricing" className="block">
-                <Button className="w-full gap-2 h-12 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80">
-                  <Crown className="h-4 w-4" />
-                  有料会員になって全ての口コミを読む
-                  <ChevronRight className="h-4 w-4 ml-auto" />
-                </Button>
-              </Link>
-              <Button 
+              <Button
                 onClick={() => {
                   setShowUnlockModal(false);
                   onWriteReview?.();
                 }}
-                variant="outline"
-                className="w-full gap-2 h-12 border-primary text-primary hover:bg-primary/5 bg-transparent"
+                className="w-full gap-2 h-12 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80"
               >
                 <PenLine className="h-4 w-4" />
-                口コミを書いてモザイクを外す
+                口コミを書いて10クレジットGET
                 <ChevronRight className="h-4 w-4 ml-auto" />
               </Button>
+              <Link href="/pricing" className="block">
+                <Button
+                  variant="outline"
+                  className="w-full gap-2 h-12 border-primary text-primary hover:bg-primary/5 bg-transparent"
+                >
+                  <Crown className="h-4 w-4" />
+                  有料会員になって読み放題
+                  <ChevronRight className="h-4 w-4 ml-auto" />
+                </Button>
+              </Link>
               <Link href="/login" className="block">
                 <Button variant="ghost" className="w-full text-muted-foreground h-10">
                   既に会員の方はこちら
@@ -227,6 +274,7 @@ function ReviewCard({
   therapistImage,
   isPremium = false,
   reviewIndex = 0,
+  reviewCredits = 0,
 }: {
   review: Review;
   getTypeLabel: (id: string) => string;
@@ -240,6 +288,7 @@ function ReviewCard({
   therapistImage: string;
   isPremium?: boolean;
   reviewIndex?: number;
+  reviewCredits?: number;
 }) {
   return (
     <div className={`relative ${isLocked ? 'bg-gradient-to-b from-white to-muted/30' : ''}`}>
@@ -318,7 +367,7 @@ function ReviewCard({
 
             {/* Blurred/masked content with gradient fade */}
             <div className="relative">
-              <div 
+              <div
                 className="select-none pointer-events-none text-sm leading-relaxed space-y-2"
                 style={{
                   filter: "blur(4px)",
@@ -338,20 +387,29 @@ function ReviewCard({
 
               {/* Unlock button */}
               <div className="absolute inset-0 flex items-center justify-center">
-                <Button 
+                <Button
                   onClick={onUnlock}
                   className="gap-2 shadow-xl hover:scale-105 transition-transform bg-gradient-to-r from-primary to-primary/90"
                   size="lg"
                 >
-                  <Lock className="h-4 w-4" />
-                  モザイクを外すには
-                  <ChevronRight className="h-4 w-4" />
+                  {reviewCredits > 0 ? (
+                    <>
+                      <Unlock className="h-4 w-4" />
+                      クレジットで読む
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="h-4 w-4" />
+                      モザイクを外すには
+                      <ChevronRight className="h-4 w-4" />
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
 
             {/* Footer CTA */}
-            <Link 
+            <Link
               href={therapistId ? `/therapist/${therapistId}` : "#"}
               className="flex items-center justify-center gap-2 mt-4 py-3 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors"
             >

@@ -549,6 +549,7 @@ export type Database = {
           nickname: string | null
           payment_customer_id: string | null
           payment_provider: string | null
+          review_credits: number
           total_review_count: number | null
           view_permission_until: string | null
         }
@@ -562,6 +563,7 @@ export type Database = {
           nickname?: string | null
           payment_customer_id?: string | null
           payment_provider?: string | null
+          review_credits?: number
           total_review_count?: number | null
           view_permission_until?: string | null
         }
@@ -575,10 +577,44 @@ export type Database = {
           nickname?: string | null
           payment_customer_id?: string | null
           payment_provider?: string | null
+          review_credits?: number
           total_review_count?: number | null
           view_permission_until?: string | null
         }
         Relationships: []
+      }
+      therapist_unlocks: {
+        Row: {
+          user_id: string
+          therapist_id: number
+          unlocked_at: string
+        }
+        Insert: {
+          user_id: string
+          therapist_id: number
+          unlocked_at?: string
+        }
+        Update: {
+          user_id?: string
+          therapist_id?: number
+          unlocked_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "therapist_unlocks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "therapist_unlocks_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapists"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reports: {
         Row: {
@@ -1253,6 +1289,7 @@ export type Database = {
           monthly_review_count: number
           monthly_review_reset_at: string
           nickname: string
+          review_credits: number
           total_review_count: number
           view_permission_until: string
         }[]
@@ -1283,6 +1320,7 @@ export type Database = {
         Returns: undefined
       }
       reject_review: { Args: { review_id: string }; Returns: undefined }
+      unlock_therapist: { Args: { p_therapist_id: number }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never

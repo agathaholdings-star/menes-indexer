@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { TherapistImage } from "@/components/shared/therapist-image";
-import { Share2, Heart, ChevronLeft, ChevronRight, PenSquare, Star } from "lucide-react";
+import { Share2, Heart, ChevronLeft, ChevronRight, PenSquare, Star, Unlock, Coins } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -33,10 +33,15 @@ interface TherapistPageClientProps {
 export function TherapistPageClient({ therapist, reviews, areaName, prefName }: TherapistPageClientProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
-  const { permissions, authUser, membershipType, monthlyReviewCount } = useTier();
-  const isLocked = !permissions.canViewReviewBody;
+  const { permissions, authUser, membershipType, monthlyReviewCount, reviewCredits, setReviewCredits } = useTier();
+  const isPaid = membershipType === "standard" || membershipType === "vip";
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [unlockLoading, setUnlockLoading] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
   const [favLoading, setFavLoading] = useState(false);
+
+  // ロック判定: 課金者は常にアンロック、無料ユーザーはDB確認
+  const isLocked = !authUser ? true : isPaid ? false : !isUnlocked;
 
   // Track review views on page load
   useEffect(() => {
@@ -47,6 +52,23 @@ export function TherapistPageClient({ therapist, reviews, areaName, prefName }: 
     });
   }, [reviews]);
 
+  // 解放状態チェック
+  useEffect(() => {
+    if (isPaid) { setIsUnlocked(true); return; }
+    if (!authUser) return;
+    const supabase = createSupabaseBrowser();
+    supabase
+      .from("therapist_unlocks")
+      .select("therapist_id")
+      .eq("user_id", authUser.id)
+      .eq("therapist_id", Number(therapist.id))
+      .maybeSingle()
+      .then(({ data }) => {
+        setIsUnlocked(!!data);
+      });
+  }, [authUser, therapist.id, isPaid]);
+
+  // お気に入りチェック
   useEffect(() => {
     if (!authUser) return;
     const supabase = createSupabaseBrowser();
@@ -59,6 +81,22 @@ export function TherapistPageClient({ therapist, reviews, areaName, prefName }: 
         setIsFavorited((data?.length || 0) > 0);
       });
   }, [authUser, therapist.id]);
+
+  // クレジットで解放
+  const handleUnlock = useCallback(async () => {
+    if (!authUser || unlockLoading) return;
+    setUnlockLoading(true);
+    const supabase = createSupabaseBrowser();
+    const { data } = await supabase.rpc("unlock_therapist", {
+      p_therapist_id: Number(therapist.id),
+    });
+    if (data === true) {
+      setIsUnlocked(true);
+      setReviewCredits((prev: number) => Math.max(0, prev - 1));
+    }
+    setUnlockLoading(false);
+    return data === true;
+  }, [authUser, therapist.id, unlockLoading, setReviewCredits]);
 
   const toggleFavorite = async () => {
     if (!authUser) return;
@@ -267,6 +305,8 @@ export function TherapistPageClient({ therapist, reviews, areaName, prefName }: 
                 reviews={reviews}
                 isLocked={isLocked}
                 onWriteReview={() => setIsReviewModalOpen(true)}
+                onUnlockTherapist={handleUnlock}
+                reviewCredits={reviewCredits}
                 therapistId={therapist.id}
                 therapistName={therapist.name}
                 therapistAge={therapist.age}
@@ -293,14 +333,30 @@ export function TherapistPageClient({ therapist, reviews, areaName, prefName }: 
       {/* Sticky CTA for locked users */}
       {isLocked && (
         <div className="sticky bottom-0 z-40 border-t bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 p-4 lg:hidden">
-          <Button
-            className="w-full gap-2"
-            size="lg"
-            onClick={() => setIsReviewModalOpen(true)}
-          >
-            <PenSquare className="h-5 w-5" />
-            口コミを投稿して無料で全て見る
-          </Button>
+          {authUser && reviewCredits > 0 ? (
+            <Button
+              className="w-full gap-2"
+              size="lg"
+              onClick={handleUnlock}
+              disabled={unlockLoading}
+            >
+              <Unlock className="h-5 w-5" />
+              この子の口コミを読む
+              <Badge variant="secondary" className="ml-2 text-xs">
+                <Coins className="h-3 w-3 mr-1" />
+                残り{reviewCredits}
+              </Badge>
+            </Button>
+          ) : (
+            <Button
+              className="w-full gap-2"
+              size="lg"
+              onClick={() => setIsReviewModalOpen(true)}
+            >
+              <PenSquare className="h-5 w-5" />
+              口コミを書いて10人分の口コミを読む
+            </Button>
+          )}
         </div>
       )}
 

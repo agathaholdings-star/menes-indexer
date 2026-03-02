@@ -185,6 +185,7 @@ export interface User {
   monthlyReviewCount: number;
   monthlyReviewResetAt?: string;
   totalReviewCount: number;
+  reviewCredits?: number;
   registeredAt: string;
   favorites: string[];
 }
@@ -206,9 +207,9 @@ export function getEffectiveTier(user: User): EffectiveTier {
     return "standard_0"; // 読み放題のみ
   }
 
-  // 無料会員
-  if (user.viewingExpiry && new Date(user.viewingExpiry) > new Date()) {
-    return "free_active"; // 3日間アクセス中
+  // 無料会員: クレジットがあればfree_active
+  if ((user.reviewCredits || 0) > 0) {
+    return "free_active";
   }
   return "free";
 }
