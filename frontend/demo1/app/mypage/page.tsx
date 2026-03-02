@@ -814,7 +814,7 @@ export default function MyPage() {
               <CardHeader>
                 <CardTitle className="text-lg">会員プラン</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4">
                 <div className="flex items-center justify-between p-4 border rounded-lg">
                   <div>
                     <p className="font-medium">現在のプラン</p>
@@ -824,6 +824,41 @@ export default function MyPage() {
                     <Button variant="outline" className="bg-transparent">プランを変更</Button>
                   </Link>
                 </div>
+                {(memberLevel === "standard" || memberLevel === "vip") && (
+                  <div className="p-4 border border-muted rounded-lg">
+                    <p className="text-sm text-muted-foreground mb-3">
+                      解約すると、契約期間の終了後に無料プランに戻ります。期間中は引き続きご利用いただけます。
+                    </p>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="outline" size="sm">有料プランを解約</Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>有料プランを解約しますか？</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            契約期間の終了後に無料プランに切り替わります。期間終了まではすべての機能をご利用いただけます。
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>やめる</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={async () => {
+                              const res = await fetch("/api/subscription", { method: "POST" });
+                              if (res.ok) {
+                                alert("解約手続きが完了しました。契約期間終了後に無料プランに切り替わります。");
+                              } else {
+                                alert("解約処理に失敗しました。サポートにお問い合わせください。");
+                              }
+                            }}
+                          >
+                            解約する
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
