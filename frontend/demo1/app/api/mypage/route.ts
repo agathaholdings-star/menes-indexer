@@ -27,7 +27,7 @@ export async function GET() {
   }
 
   // Fetch profile, favorites count, user reviews, SKR reviews, preference data in parallel
-  const [profileRes, favCountRes, userReviewsRes, skrReviewsRes, prefDataRes] = await Promise.all([
+  const [profileRes, favCountRes, userReviewsRes, skrReviewsRes, prefDataRes, feedbackRes] = await Promise.all([
     supabaseAdmin
       .from("profiles")
       .select("nickname, membership_type, monthly_review_count, total_review_count, view_permission_until")
@@ -53,6 +53,12 @@ export async function GET() {
     supabaseAdmin
       .from("reviews")
       .select("looks_type_id, body_type_id, service_level_id, param_conversation, param_distance, param_technique, param_personality")
+      .eq("user_id", user.id)
+      .eq("moderation_status", "approved"),
+    // 反響統計: ユーザーの承認済みレビューの閲覧数・参考になった・REAL/FAKE集計
+    supabaseAdmin
+      .from("reviews")
+      .select("view_count, helpful_count, real_count, fake_count")
       .eq("user_id", user.id)
       .eq("moderation_status", "approved"),
   ]);
@@ -120,6 +126,16 @@ export async function GET() {
     },
   };
 
+  // 反響統計の集計
+  const feedbackRows = feedbackRes.data || [];
+  const feedbackStats = {
+    totalViews: feedbackRows.reduce((sum: number, r: any) => sum + (r.view_count || 0), 0),
+    totalHelpful: feedbackRows.reduce((sum: number, r: any) => sum + (r.helpful_count || 0), 0),
+    totalReal: feedbackRows.reduce((sum: number, r: any) => sum + (r.real_count || 0), 0),
+    totalFake: feedbackRows.reduce((sum: number, r: any) => sum + (r.fake_count || 0), 0),
+    reviewCount: feedbackRows.length,
+  };
+
   return NextResponse.json({
     profile: profile
       ? {
@@ -134,5 +150,6 @@ export async function GET() {
     userReviews,
     skrReviews,
     preferenceData,
+    feedbackStats,
   });
 }

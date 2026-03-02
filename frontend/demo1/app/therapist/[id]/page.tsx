@@ -60,10 +60,10 @@ export default async function TherapistPage({ params }: TherapistPageProps) {
   const { name: parsedName, age: parsedAge } = parseNameAge(dbTherapist.name, dbTherapist.age);
   const areaInfo = await getShopAreaInfo(dbTherapist.salon_id);
 
-  // レビューをDBから取得
+  // レビューをDBから取得（投稿者プロフィールも結合）
   const { data: dbReviews } = await supabase
     .from("reviews")
-    .select("*")
+    .select("*, profiles:user_id(nickname, total_review_count)")
     .eq("therapist_id", Number(id))
     .eq("moderation_status", "approved")
     .order("created_at", { ascending: false });
@@ -128,9 +128,12 @@ export default async function TherapistPage({ params }: TherapistPageProps) {
     commentAdvice: r.comment_advice || "",
     createdAt: new Date(r.created_at).toLocaleDateString("ja-JP"),
     userId: r.user_id || "",
+    userName: (r as any).profiles?.nickname || "匿名",
+    reviewerLevel: (r as any).profiles?.total_review_count || 0,
     realCount: r.real_count || 0,
     fakeCount: r.fake_count || 0,
     viewCount: r.view_count || 0,
+    helpfulCount: r.helpful_count || 0,
   }));
 
   return (

@@ -15,6 +15,9 @@ import {
 } from "@/components/ui/dialog";
 import { therapistTypes, bodyTypes, serviceTypes, type Review } from "@/lib/data";
 import { ReviewVoteButtons } from "@/components/review/review-vote-buttons";
+import { HelpfulButton } from "@/components/review/helpful-button";
+import { ReviewerLevelBadge } from "@/components/shared/reviewer-level-badge";
+import { FollowButton } from "@/components/shared/follow-button";
 
 interface ReviewListProps {
   reviews: Review[];
@@ -339,7 +342,13 @@ function ReviewCard({
             <span>点数: <span className="text-primary font-bold">{review.score}</span>点</span>
           </div>
           <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
-            <span>投稿者: <Link href="#" className="text-primary hover:underline">{review.userName}</Link></span>
+            <span className="flex items-center gap-1">
+              投稿者: <Link href="#" className="text-primary hover:underline">{review.userName || "匿名"}</Link>
+              {(review.reviewerLevel || 0) > 0 && (
+                <ReviewerLevelBadge level={review.reviewerLevel || 0} size="sm" />
+              )}
+              {review.userId && <FollowButton userId={review.userId} size="sm" />}
+            </span>
             {(review.viewCount || 0) > 0 && (
               <span className="flex items-center gap-1">
                 <Eye className="h-3 w-3" />
@@ -464,11 +473,15 @@ function ReviewCard({
                 <p className="leading-relaxed text-muted-foreground">{review.commentAdvice}</p>
               </div>
             )}
-            <div className="pt-3 border-t border-border/50">
+            <div className="pt-3 border-t border-border/50 flex items-center gap-2 flex-wrap">
               <ReviewVoteButtons
                 reviewId={review.id}
                 initialRealCount={review.realCount || 0}
                 initialFakeCount={review.fakeCount || 0}
+              />
+              <HelpfulButton
+                reviewId={review.id}
+                initialHelpfulCount={review.helpfulCount || 0}
               />
             </div>
           </div>

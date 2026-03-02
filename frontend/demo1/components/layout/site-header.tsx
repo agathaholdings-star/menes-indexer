@@ -37,10 +37,11 @@ import { ReviewWizardModal } from "@/components/review/review-wizard-modal";
 import { useAuth } from "@/lib/auth-context";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
 import { useTier } from "@/lib/hooks/use-tier";
+import { ReviewerLevelBadge } from "@/components/shared/reviewer-level-badge";
 
 export function SiteHeader() {
   const { user: authUser, loading: authLoading, signOut: authSignOut } = useAuth();
-  const { effectiveTier, membershipType, monthlyReviewCount: tierMonthlyReviewCount, viewPermissionUntil } = useTier();
+  const { effectiveTier, membershipType, monthlyReviewCount: tierMonthlyReviewCount, viewPermissionUntil, totalReviewCount } = useTier();
   const memberLevel = (membershipType || "free") as "free" | "standard" | "vip";
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -257,6 +258,12 @@ export function SiteHeader() {
                         ))
                       )}
                     </div>
+                    <Link
+                      href="/notifications"
+                      className="block text-center py-2 text-sm text-primary hover:underline border-t"
+                    >
+                      すべての通知を見る
+                    </Link>
                   </PopoverContent>
                 </Popover>
 
@@ -286,6 +293,9 @@ export function SiteHeader() {
                           <p className="font-medium truncate">{user.name}</p>
                           <div className="flex items-center gap-2 mt-1">
                             {getMemberBadge()}
+                            {totalReviewCount > 0 && (
+                              <ReviewerLevelBadge level={totalReviewCount} size="sm" />
+                            )}
                           </div>
                         </div>
                       </div>
@@ -502,7 +512,7 @@ export function SiteHeader() {
                             </Link>
                           </Button>
                           <Button variant="ghost" className="justify-between" asChild>
-                            <Link href="/mypage?tab=notifications">
+                            <Link href="/notifications">
                               <span className="flex items-center">
                                 <Bell className="mr-2 h-4 w-4" />
                                 通知

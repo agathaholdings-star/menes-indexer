@@ -29,6 +29,8 @@ import {
   Monitor,
   Smartphone,
   Laptop,
+  ThumbsUp,
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -56,6 +58,7 @@ import { type EffectiveTier, getEffectiveTier, tierPermissions } from "@/lib/dat
 import { useAuth } from "@/lib/auth-context";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
 import { PreferenceMap } from "@/components/mypage/preference-map";
+import { ReviewerLevelBadge } from "@/components/shared/reviewer-level-badge";
 
 type MemberLevel = "free" | "standard" | "vip";
 type Section = "dashboard" | "reviews" | "favorites" | "lists" | "messages" | "bbs" | "skr" | "notifications" | "settings";
@@ -137,6 +140,10 @@ export default function MyPage() {
     serviceTypes: { id: string; count: number; percentage: number }[];
     avgParameters: { conversation: number; distance: number; technique: number; personality: number };
   } | null>(null);
+  const [feedbackStats, setFeedbackStats] = useState({
+    totalViews: 0, totalHelpful: 0, totalReal: 0, totalFake: 0, reviewCount: 0,
+  });
+  const [followingUsers, setFollowingUsers] = useState<{id: string; nickname: string; follower_count: number; total_review_count: number}[]>([]);
 
   // Fetch profile when auth user changes
   useEffect(() => {
@@ -165,6 +172,14 @@ export default function MyPage() {
       setUserReviews(data.userReviews || []);
       setSkrReviews(data.skrReviews || []);
       if (data.preferenceData) setPreferenceData(data.preferenceData);
+      setFeedbackStats(data.feedbackStats || { totalViews: 0, totalHelpful: 0, totalReal: 0, totalFake: 0, reviewCount: 0 });
+
+      // フォロー中ユーザー取得
+      fetch("/api/user-follows?mode=following")
+        .then(res => res.json())
+        .then(fdata => setFollowingUsers(fdata.following || []))
+        .catch(() => {});
+
       setProfileLoading(false);
     };
 
@@ -309,7 +324,8 @@ export default function MyPage() {
                       <Badge className={permissions.color}>{permissions.label}</Badge>
                     </div>
                     <p className="text-sm text-muted-foreground mb-2">{user.email}</p>
-                    <p className="text-xs text-muted-foreground">{user.memberSince}から利用中</p>
+                    <ReviewerLevelBadge level={profile?.total_review_count || 0} size="md" />
+                    <p className="text-xs text-muted-foreground mt-1">{user.memberSince}から利用中</p>
                   </div>
                 </div>
 
@@ -332,11 +348,64 @@ export default function MyPage() {
               </CardContent>
             </Card>
 
+            {/* 反響ダッシュボード */}
+            {feedbackStats.reviewCount > 0 && (
+              <div className="grid grid-cols-3 gap-3">
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <Eye className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />
+                    <p className="text-2xl font-bold">{feedbackStats.totalViews.toLocaleString()}</p>
+                    <p className="text-xs text-muted-foreground">総閲覧数</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <Heart className="h-5 w-5 mx-auto mb-1 text-pink-500" />
+                    <p className="text-2xl font-bold">{feedbackStats.totalHelpful.toLocaleString()}</p>
+                    <p className="text-xs text-muted-foreground">参考になった</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <ThumbsUp className="h-5 w-5 mx-auto mb-1 text-green-500" />
+                    <p className="text-2xl font-bold">
+                      {feedbackStats.totalReal + feedbackStats.totalFake > 0
+                        ? Math.round((feedbackStats.totalReal / (feedbackStats.totalReal + feedbackStats.totalFake)) * 100)
+                        : 0}%
+                    </p>
+                    <p className="text-xs text-muted-foreground">REAL率</p>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
             {/* 投稿数プログレスバー（Standard会員のみ） */}
             <ReviewProgressBar />
 
             {/* 嗜好マップ */}
             {preferenceData && <PreferenceMap data={preferenceData} />}
+
+            {/* フォロー中ユーザー */}
+            {followingUsers.length > 0 && (
+              <Card className="mb-6">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    フォロー中のレビュアー
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-2">
+                    {followingUsers.map(u => (
+                      <div key={u.id} className="flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-sm">
+                        <span>{u.nickname || "匿名"}</span>
+                        <ReviewerLevelBadge level={u.total_review_count} size="sm" />
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Member Benefits */}
             <Card>

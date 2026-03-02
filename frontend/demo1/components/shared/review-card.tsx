@@ -7,6 +7,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { therapistTypes, bodyTypes, serviceTypes, type Review } from "@/lib/data";
 import { ReviewVoteButtons } from "@/components/review/review-vote-buttons";
+import { HelpfulButton } from "@/components/review/helpful-button";
+import { ReviewerLevelBadge } from "@/components/shared/reviewer-level-badge";
 
 interface ReviewCardProps {
   review: Review;
@@ -61,6 +63,9 @@ export function ReviewCard({ review, isBlurred = false, showTherapist = true, va
                     <Eye className="h-3 w-3" />
                     {(review.viewCount || 0).toLocaleString()}
                   </Badge>
+                )}
+                {(review.reviewerLevel || 0) > 0 && (
+                  <ReviewerLevelBadge level={review.reviewerLevel || 0} size="sm" />
                 )}
                 {(review as any).isPremium && (
                   <Badge className="text-xs font-normal gap-1 px-1.5 py-0 bg-amber-500 hover:bg-amber-500">
@@ -123,11 +128,15 @@ export function ReviewCard({ review, isBlurred = false, showTherapist = true, va
               </div>
             )}
             {!isBlurred && (
-              <div className="pt-3 border-t border-border/50">
+              <div className="pt-3 border-t border-border/50 flex items-center gap-2 flex-wrap">
                 <ReviewVoteButtons
                   reviewId={review.id}
                   initialRealCount={review.realCount || 0}
                   initialFakeCount={review.fakeCount || 0}
+                />
+                <HelpfulButton
+                  reviewId={review.id}
+                  initialHelpfulCount={review.helpfulCount || 0}
                 />
               </div>
             )}
@@ -151,13 +160,16 @@ export function ReviewCard({ review, isBlurred = false, showTherapist = true, va
                 {review.therapistName}
               </Link>
             )}
-            <p className="text-sm text-muted-foreground">
-              {review.shopName} / {formattedDate}
+            <p className="text-sm text-muted-foreground flex items-center gap-1 flex-wrap">
+              <span>{review.shopName} / {formattedDate}</span>
               {(review.viewCount || 0) > 0 && (
-                <span className="inline-flex items-center gap-1 ml-2">
+                <span className="inline-flex items-center gap-1">
                   <Eye className="h-3 w-3 inline" />
                   {(review.viewCount || 0).toLocaleString()}
                 </span>
+              )}
+              {(review.reviewerLevel || 0) > 0 && (
+                <ReviewerLevelBadge level={review.reviewerLevel || 0} size="sm" />
               )}
             </p>
           </div>
@@ -198,11 +210,15 @@ export function ReviewCard({ review, isBlurred = false, showTherapist = true, va
           )}
         </div>
         {!isBlurred && (
-          <div className="pt-3 border-t border-border/50">
+          <div className="pt-3 border-t border-border/50 flex items-center gap-2 flex-wrap">
             <ReviewVoteButtons
               reviewId={review.id}
               initialRealCount={review.realCount || 0}
               initialFakeCount={review.fakeCount || 0}
+            />
+            <HelpfulButton
+              reviewId={review.id}
+              initialHelpfulCount={review.helpfulCount || 0}
             />
           </div>
         )}

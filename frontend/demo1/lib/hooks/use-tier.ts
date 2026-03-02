@@ -10,6 +10,7 @@ export function useTier() {
   const [membershipType, setMembershipType] = useState<string>("free");
   const [monthlyReviewCount, setMonthlyReviewCount] = useState(0);
   const [viewPermissionUntil, setViewPermissionUntil] = useState<string | undefined>();
+  const [totalReviewCount, setTotalReviewCount] = useState(0);
   const [reviewCredits, setReviewCredits] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -25,6 +26,7 @@ export function useTier() {
           setMembershipType(data.membership_type || "free");
           setMonthlyReviewCount(data.monthly_review_count || 0);
           setViewPermissionUntil(data.view_permission_until || undefined);
+          setTotalReviewCount(data.total_review_count || 0);
           setReviewCredits(data.review_credits || 0);
         }
         setLoading(false);
@@ -38,7 +40,7 @@ export function useTier() {
     memberType: membershipType as "free" | "standard" | "vip",
     monthlyReviewCount,
     viewingExpiry: viewPermissionUntil,
-    totalReviewCount: 0,
+    totalReviewCount,
     reviewCredits,
     registeredAt: "",
     favorites: [],
@@ -55,6 +57,7 @@ export function useTier() {
     membershipType,
     monthlyReviewCount,
     viewPermissionUntil,
+    totalReviewCount,
     reviewCredits,
     setReviewCredits,
   };

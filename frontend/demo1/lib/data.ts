@@ -174,6 +174,8 @@ export interface Review {
   realCount?: number;
   fakeCount?: number;
   viewCount?: number;
+  helpfulCount?: number;
+  reviewerLevel?: number;
 }
 
 export interface User {
