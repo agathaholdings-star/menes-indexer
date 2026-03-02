@@ -34,7 +34,6 @@ DECLARE
   v_user_id uuid := auth.uid();
   v_membership text;
   v_already boolean;
-  v_credits int;
 BEGIN
   IF v_user_id IS NULL THEN
     RETURN false;
@@ -55,14 +54,15 @@ BEGIN
     RETURN true;
   END IF;
 
-  -- クレジット確認
-  SELECT review_credits INTO v_credits FROM profiles WHERE id = v_user_id;
-  IF v_credits <= 0 THEN
+  -- アトミックにクレジット消費（race condition防止）
+  UPDATE profiles
+    SET review_credits = review_credits - 1
+    WHERE id = v_user_id AND review_credits > 0;
+
+  IF NOT FOUND THEN
     RETURN false;
   END IF;
 
-  -- 消費 & 解放
-  UPDATE profiles SET review_credits = review_credits - 1 WHERE id = v_user_id;
   INSERT INTO therapist_unlocks (user_id, therapist_id) VALUES (v_user_id, p_therapist_id);
   RETURN true;
 END;

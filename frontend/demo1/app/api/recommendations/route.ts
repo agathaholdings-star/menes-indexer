@@ -62,13 +62,14 @@ export async function GET(request: NextRequest) {
   const limit = Math.min(parseInt(searchParams.get("limit") || "10", 10), 20);
   const excludeSalonId = searchParams.get("exclude_salon_id");
 
-  // Fetch all approved reviews with structured data
+  // Fetch all approved reviews with structured data (seed口コミ=user_id NULLを除外)
   const { data: allReviews } = await supabaseAdmin
     .from("reviews")
     .select(
       "id, user_id, therapist_id, salon_id, score, looks_type_id, body_type_id, service_level_id, param_conversation, param_distance, param_technique, param_personality"
     )
-    .eq("moderation_status", "approved");
+    .eq("moderation_status", "approved")
+    .not("user_id", "is", null);
 
   if (!allReviews || allReviews.length === 0) {
     return NextResponse.json([]);
