@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import Link from "next/link";
 import { TherapistImage } from "@/components/shared/therapist-image";
 import { useSearchParams } from "next/navigation";
@@ -15,6 +15,7 @@ import {
   ChevronRight,
   Sparkles,
   X,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -169,6 +170,10 @@ function SearchContent() {
   const [dbTherapists, setDbTherapists] = useState<DBTherapist[]>([]);
   const [therapistLoading, setTherapistLoading] = useState(true);
   const [searchTriggered, setSearchTriggered] = useState(0);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [currentOffset, setCurrentOffset] = useState(0);
+  const PAGE_SIZE = 50;
 
   useEffect(() => {
     async function fetchTherapists() {
@@ -239,7 +244,11 @@ function SearchContent() {
         if (therapistIds && therapistIds.length > 0) {
           params.set("ids", therapistIds.join(","));
         }
-        params.set("limit", "50");
+        if (query) {
+          params.set("name", query);
+        }
+        params.set("limit", String(PAGE_SIZE));
+        params.set("offset", "0");
 
         const therapistRes = await fetch(`/api/therapists?${params.toString()}`);
         const data = await therapistRes.json();
@@ -299,8 +308,11 @@ function SearchContent() {
               };
             })
           );
+          setHasMore(filtered.length >= PAGE_SIZE);
+          setCurrentOffset(PAGE_SIZE);
         } else {
           setDbTherapists([]);
+          setHasMore(false);
         }
       } catch (err) {
         console.error("セラピスト検索エラー:", err);
@@ -312,6 +324,55 @@ function SearchContent() {
     fetchTherapists();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTriggered]);
+
+  const loadMoreTherapists = useCallback(async () => {
+    setLoadingMore(true);
+    try {
+      const params = new URLSearchParams();
+      if (selectedArea && selectedArea !== "all") {
+        params.set("area_slug", selectedArea);
+        if (selectedDistrict && selectedDistrict !== "all") {
+          params.set("district", selectedDistrict);
+        }
+      }
+      if (query) {
+        params.set("name", query);
+      }
+      params.set("limit", String(PAGE_SIZE));
+      params.set("offset", String(currentOffset));
+      const res = await fetch(`/api/therapists?${params.toString()}`);
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        const newTherapists = data.map((t: any) => {
+          const imgs = t.image_urls as string[] | null;
+          const shop = t.salons as { name: string; display_name: string | null; access: string | null } | null;
+          return {
+            id: Number(t.id),
+            name: cleanTherapistName(t.name),
+            age: t.age,
+            image_url: imgs?.[0] || null,
+            salon_id: Number(t.salon_id),
+            shop_name: shop?.display_name || shop?.name || "",
+            shop_access: shop?.access || null,
+            avg_score: null,
+            review_count: 0,
+            looks_types: [],
+            body_types: [],
+            service_levels: [],
+          };
+        }).filter((t: DBTherapist) => !isPlaceholderName(t.name) && t.name.length <= 15);
+        setDbTherapists(prev => [...prev, ...newTherapists]);
+        setHasMore(data.length >= PAGE_SIZE);
+        setCurrentOffset(prev => prev + PAGE_SIZE);
+      } else {
+        setHasMore(false);
+      }
+    } catch (err) {
+      console.error("追加読み込みエラー:", err);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [currentOffset, selectedArea, selectedDistrict, query]);
 
   // フィルター状態
   const [query, setQuery] = useState(initialQuery);
@@ -560,7 +621,8 @@ function SearchContent() {
                     )}
                   </div>
 
-                  {/* SKRフィルター */}
+                  {/* SKRフィルター（未ログインには非表示） */}
+                  {authUser && (
                   <div className="flex items-center gap-2">
                     {canUseSKRFilter ? (
                       <label className="flex items-center gap-2 cursor-pointer">
@@ -590,8 +652,10 @@ function SearchContent() {
                       </Tooltip>
                     )}
                   </div>
+                  )}
 
-                  {/* HRフィルター */}
+                  {/* HRフィルター（未ログインには非表示） */}
+                  {authUser && (
                   <div className="flex items-center gap-2">
                     {canUseHRFilter ? (
                       <label className="flex items-center gap-2 cursor-pointer">
@@ -621,6 +685,7 @@ function SearchContent() {
                       </Tooltip>
                     )}
                   </div>
+                  )}
 
                   {/* クリアボタン */}
                   <Button
@@ -754,7 +819,7 @@ function SearchContent() {
             <div className="flex-1">
               <div className="mb-4 flex items-center justify-between">
                 <p className="text-sm text-muted-foreground">
-                  {therapistLoading ? "読み込み中..." : `${sortedTherapists.length}件のセラピストが見つかりました`}
+                  {therapistLoading ? "読み込み中..." : sortedTherapists.length > 0 ? `${sortedTherapists.length}件のセラピストが見つかりました` : ""}
                 </p>
               </div>
 
@@ -830,14 +895,40 @@ function SearchContent() {
                 </div>
               )}
 
+              {/* もっと見るボタン */}
+              {!therapistLoading && hasMore && (
+                <div className="text-center py-6">
+                  <Button
+                    variant="outline"
+                    onClick={loadMoreTherapists}
+                    disabled={loadingMore}
+                    className="gap-2"
+                  >
+                    {loadingMore ? (
+                      <><Loader2 className="h-4 w-4 animate-spin" />読み込み中...</>
+                    ) : (
+                      <><ChevronDown className="h-4 w-4" />もっと見る</>
+                    )}
+                  </Button>
+                </div>
+              )}
+
               {!therapistLoading && sortedTherapists.length === 0 && (
                 <div className="text-center py-12">
-                  <p className="text-muted-foreground mb-4">
-                    条件に一致するセラピストが見つかりませんでした
-                  </p>
-                  <Button variant="outline" onClick={clearFilters} className="bg-transparent">
-                    条件をクリアして再検索
-                  </Button>
+                  {shopResults.length > 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      上記のサロンページからセラピストを確認できます
+                    </p>
+                  ) : (
+                    <>
+                      <p className="text-muted-foreground mb-4">
+                        条件に一致するセラピストが見つかりませんでした
+                      </p>
+                      <Button variant="outline" onClick={clearFilters} className="bg-transparent">
+                        条件をクリアして再検索
+                      </Button>
+                    </>
+                  )}
                 </div>
               )}
             </div>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { CheckCircle, Sparkles, Crown } from "lucide-react";
+import { CheckCircle, Sparkles, Crown, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -72,13 +72,24 @@ export function CompletionScreen({ memberType = "free", monthlyReviewCount = 0 }
           <Sparkles className="absolute -top-2 -right-2 w-8 h-8 text-amber-400 animate-pulse" />
         </div>
 
+        {/* Credit reward banner */}
+        <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-xl p-4 mb-6 w-full max-w-xs">
+          <div className="flex items-center justify-center gap-2 mb-1">
+            <Gift className="h-5 w-5 text-amber-500" />
+            <span className="text-lg font-bold text-amber-700">+10 クレジット獲得予定!</span>
+          </div>
+          <p className="text-xs text-amber-600/80">
+            審査完了後に反映されます
+          </p>
+        </div>
+
         {memberType === "free" && (
           <>
             <h1 className="text-2xl font-bold text-foreground mb-3">
               ロック解除!
             </h1>
             <p className="text-muted-foreground mb-8 leading-relaxed">
-              口コミ投稿ありがとうございます！
+              口コミ投稿ありがとうございます!
               <br />
               <span className="text-primary font-semibold">3日間</span>
               すべての口コミが見放題になりました

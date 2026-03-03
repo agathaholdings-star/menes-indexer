@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { TherapistImage } from "@/components/shared/therapist-image";
-import { Share2, Heart, ChevronLeft, ChevronRight, PenSquare, Star, Unlock, Coins } from "lucide-react";
+import { Share2, Heart, ChevronLeft, ChevronRight, PenSquare, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,108 +15,18 @@ import { ParameterRadarChart } from "@/components/therapist/radar-chart";
 import { CompositionChart } from "@/components/therapist/composition-chart";
 import { ReviewList } from "@/components/therapist/review-list";
 import { Recommendations } from "@/components/therapist/recommendations";
-import { SmartRecommendations } from "@/components/therapist/smart-recommendations";
 import { ReviewWizardModal } from "@/components/review/review-wizard-modal";
-import { CompatibilityLabel } from "@/components/therapist/compatibility-label";
-import { TransferHistory } from "@/components/therapist/transfer-history";
-import { createSupabaseBrowser } from "@/lib/supabase/client";
-import { useTier } from "@/lib/hooks/use-tier";
 import type { Therapist, Review } from "@/lib/data";
 
 interface TherapistPageClientProps {
   therapist: Therapist;
   reviews: Review[];
-  areaName?: string;
-  prefName?: string;
 }
 
-export function TherapistPageClient({ therapist, reviews, areaName, prefName }: TherapistPageClientProps) {
+export function TherapistPageClient({ therapist, reviews }: TherapistPageClientProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
-  const { permissions, authUser, membershipType, monthlyReviewCount, reviewCredits, setReviewCredits } = useTier();
-  const isPaid = membershipType === "standard" || membershipType === "vip";
-  const [isUnlocked, setIsUnlocked] = useState(false);
-  const [unlockLoading, setUnlockLoading] = useState(false);
-  const [isFavorited, setIsFavorited] = useState(false);
-  const [favLoading, setFavLoading] = useState(false);
-
-  // ロック判定: 課金者は常にアンロック、無料ユーザーはDB確認
-  const isLocked = !authUser ? true : isPaid ? false : !isUnlocked;
-
-  // Track review views on page load
-  useEffect(() => {
-    if (reviews.length === 0) return;
-    const supabase = createSupabaseBrowser();
-    supabase.rpc("increment_review_views", {
-      p_review_ids: reviews.map((r) => r.id),
-    });
-  }, [reviews]);
-
-  // 解放状態チェック
-  useEffect(() => {
-    if (isPaid) { setIsUnlocked(true); return; }
-    if (!authUser) return;
-    const supabase = createSupabaseBrowser();
-    supabase
-      .from("therapist_unlocks")
-      .select("therapist_id")
-      .eq("user_id", authUser.id)
-      .eq("therapist_id", Number(therapist.id))
-      .maybeSingle()
-      .then(({ data }) => {
-        setIsUnlocked(!!data);
-      });
-  }, [authUser, therapist.id, isPaid]);
-
-  // お気に入りチェック
-  useEffect(() => {
-    if (!authUser) return;
-    const supabase = createSupabaseBrowser();
-    supabase
-      .from("favorites")
-      .select("therapist_id")
-      .eq("user_id", authUser.id)
-      .eq("therapist_id", Number(therapist.id))
-      .then(({ data }) => {
-        setIsFavorited((data?.length || 0) > 0);
-      });
-  }, [authUser, therapist.id]);
-
-  // クレジットで解放
-  const handleUnlock = useCallback(async () => {
-    if (!authUser || unlockLoading) return;
-    setUnlockLoading(true);
-    const supabase = createSupabaseBrowser();
-    const { data } = await supabase.rpc("unlock_therapist", {
-      p_therapist_id: Number(therapist.id),
-    });
-    if (data === true) {
-      setIsUnlocked(true);
-      setReviewCredits((prev: number) => Math.max(0, prev - 1));
-    }
-    setUnlockLoading(false);
-    return data === true;
-  }, [authUser, therapist.id, unlockLoading, setReviewCredits]);
-
-  const toggleFavorite = async () => {
-    if (!authUser) return;
-    setFavLoading(true);
-    const supabase = createSupabaseBrowser();
-    if (isFavorited) {
-      await supabase
-        .from("favorites")
-        .delete()
-        .eq("user_id", authUser.id)
-        .eq("therapist_id", Number(therapist.id));
-      setIsFavorited(false);
-    } else {
-      await supabase
-        .from("favorites")
-        .insert({ user_id: authUser.id, therapist_id: Number(therapist.id) });
-      setIsFavorited(true);
-    }
-    setFavLoading(false);
-  };
+  const [isLocked] = useState(true);
 
   const nextImage = () => {
     setCurrentImageIndex((prev) =>
@@ -141,30 +51,18 @@ export function TherapistPageClient({ therapist, reviews, areaName, prefName }: 
             <Link href="/" className="hover:text-foreground">
               トップ
             </Link>
-            {therapist.area && (
-              <>
-                <span className="mx-2">/</span>
-                <Link href={`/area/${therapist.area}`} className="hover:text-foreground">
-                  {prefName || therapist.area}
-                </Link>
-              </>
-            )}
-            {therapist.district && (
-              <>
-                <span className="mx-2">/</span>
-                <Link href={`/area/${therapist.area}/${therapist.district}`} className="hover:text-foreground">
-                  {areaName || therapist.district}
-                </Link>
-              </>
-            )}
-            {therapist.shopName && (
-              <>
-                <span className="mx-2">/</span>
-                <Link href={`/shop/${therapist.shopId}`} className="hover:text-foreground">
-                  {therapist.shopName}
-                </Link>
-              </>
-            )}
+            <span className="mx-2">/</span>
+            <Link href={`/area/${therapist.area}`} className="hover:text-foreground">
+              {therapist.area}
+            </Link>
+            <span className="mx-2">/</span>
+            <Link href={`/area/${therapist.area}/${therapist.district}`} className="hover:text-foreground">
+              {therapist.district}
+            </Link>
+            <span className="mx-2">/</span>
+            <Link href={`/shop/${therapist.shopId}`} className="hover:text-foreground">
+              {therapist.shopName}
+            </Link>
             <span className="mx-2">/</span>
             <span className="text-foreground">{therapist.name}</span>
           </nav>
@@ -180,8 +78,8 @@ export function TherapistPageClient({ therapist, reviews, areaName, prefName }: 
                     {/* Image Gallery */}
                     <div className="relative w-full md:w-64 flex-shrink-0">
                       <div className="relative aspect-[4/5] overflow-hidden rounded-lg bg-muted">
-                        <TherapistImage
-                          src={therapist.images[currentImageIndex]}
+                        <Image
+                          src={therapist.images[currentImageIndex] || "/placeholder.svg"}
                           alt={therapist.name}
                           fill
                           className="object-cover"
@@ -222,8 +120,8 @@ export function TherapistPageClient({ therapist, reviews, areaName, prefName }: 
                               }`}
                               aria-label={`画像${index + 1}を表示`}
                             >
-                              <TherapistImage
-                                src={img}
+                              <Image
+                                src={img || "/placeholder.svg"}
                                 alt=""
                                 fill
                                 className="object-cover"
@@ -245,26 +143,18 @@ export function TherapistPageClient({ therapist, reviews, areaName, prefName }: 
                           <Link href={`/shop/${therapist.shopId}`} className="text-primary hover:underline">
                             {therapist.shopName}
                           </Link>
-                          {(therapist.averageScore > 0 || therapist.reviewCount > 0) && (
-                            <div className="flex items-center gap-2 mt-2">
-                              <div className="flex items-center gap-1 bg-primary/10 px-2 py-1 rounded">
-                                <Star className="h-4 w-4 fill-primary text-primary" />
-                                <span className="font-bold text-primary">{therapist.averageScore}点</span>
-                              </div>
-                              <span className="text-sm text-muted-foreground">({therapist.reviewCount}件の口コミ)</span>
+                          <div className="flex items-center gap-2 mt-2">
+                            <div className="flex items-center gap-1 bg-primary/10 px-2 py-1 rounded">
+                              <Star className="h-4 w-4 fill-primary text-primary" />
+                              <span className="font-bold text-primary">{therapist.averageScore}点</span>
                             </div>
-                          )}
+                            <span className="text-sm text-muted-foreground">({therapist.reviewCount}件の口コミ)</span>
+                          </div>
                         </div>
                         <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={toggleFavorite}
-                            disabled={favLoading || !authUser}
-                            className={isFavorited ? "text-red-500 border-red-200" : ""}
-                          >
-                            <Heart className={`h-4 w-4 ${isFavorited ? "fill-current" : ""}`} />
-                            <span className="sr-only">{isFavorited ? "お気に入り解除" : "お気に入りに追加"}</span>
+                          <Button variant="outline" size="icon">
+                            <Heart className="h-4 w-4" />
+                            <span className="sr-only">お気に入りに追加</span>
                           </Button>
                           <Button variant="outline" size="icon">
                             <Share2 className="h-4 w-4" />
@@ -275,14 +165,8 @@ export function TherapistPageClient({ therapist, reviews, areaName, prefName }: 
                       <ProfileTable therapist={therapist} />
                     </div>
                   </div>
-
-                  {/* Compatibility Label */}
-                  <CompatibilityLabel therapistId={therapist.id} variant="card" />
                 </CardContent>
               </Card>
-
-              {/* Transfer History */}
-              <TransferHistory therapistId={therapist.id} therapistName={therapist.name} />
 
               {/* Analysis Section */}
               <Card>
@@ -305,25 +189,16 @@ export function TherapistPageClient({ therapist, reviews, areaName, prefName }: 
                 reviews={reviews}
                 isLocked={isLocked}
                 onWriteReview={() => setIsReviewModalOpen(true)}
-                onUnlockTherapist={handleUnlock}
-                reviewCredits={reviewCredits}
-                therapistId={therapist.id}
-                therapistName={therapist.name}
-                therapistAge={therapist.age}
-                therapistImage={therapist.images[0]}
               />
 
-              {/* Smart Recommendations (根拠付き) */}
-              <SmartRecommendations excludeSalonId={therapist.shopId} />
-
-              {/* Same-salon Recommendations */}
+              {/* Recommendations */}
               <Recommendations therapist={therapist} />
             </div>
 
             {/* Sidebar */}
             <div className="lg:w-80 lg:shrink-0">
               <div className="lg:sticky lg:top-24">
-                <Sidebar />
+                <Sidebar prefectureName={therapist.area} />
               </div>
             </div>
           </div>
@@ -333,30 +208,14 @@ export function TherapistPageClient({ therapist, reviews, areaName, prefName }: 
       {/* Sticky CTA for locked users */}
       {isLocked && (
         <div className="sticky bottom-0 z-40 border-t bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 p-4 lg:hidden">
-          {authUser && reviewCredits > 0 ? (
-            <Button
-              className="w-full gap-2"
-              size="lg"
-              onClick={handleUnlock}
-              disabled={unlockLoading}
-            >
-              <Unlock className="h-5 w-5" />
-              この子の口コミを読む
-              <Badge variant="secondary" className="ml-2 text-xs">
-                <Coins className="h-3 w-3 mr-1" />
-                残り{reviewCredits}
-              </Badge>
-            </Button>
-          ) : (
-            <Button
-              className="w-full gap-2"
-              size="lg"
-              onClick={() => setIsReviewModalOpen(true)}
-            >
-              <PenSquare className="h-5 w-5" />
-              口コミを書いて10人分の口コミを読む
-            </Button>
-          )}
+          <Button
+            className="w-full gap-2"
+            size="lg"
+            onClick={() => setIsReviewModalOpen(true)}
+          >
+            <PenSquare className="h-5 w-5" />
+            口コミを投稿して無料で全て見る
+          </Button>
         </div>
       )}
 
@@ -367,8 +226,6 @@ export function TherapistPageClient({ therapist, reviews, areaName, prefName }: 
         open={isReviewModalOpen}
         onOpenChange={setIsReviewModalOpen}
         preselectedTherapistId={therapist.id}
-        memberType={membershipType as "free" | "standard" | "vip"}
-        monthlyReviewCount={monthlyReviewCount}
       />
     </div>
   );

@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useState, useEffect } from "react";
-import { X, ChevronLeft, ChevronRight, Check, Clock, Sparkles, Crown, Star, Heart, Smile, Flame, Leaf, Search, MapPin, AlertCircle, Camera, ImageIcon, Trash2 } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Check, Clock, Sparkles, Crown, Star, Heart, Smile, Flame, Leaf, Search, MapPin, AlertCircle, Camera, ImageIcon, Trash2, Gift, Loader2 } from "lucide-react";
 import { TherapistImage } from "@/components/shared/therapist-image";
 import { Button } from "@/components/ui/button";
 import {
@@ -404,7 +404,7 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
       case 6: return selectedService !== null;
       case 7: return true; // Ratings are optional
       case 8: return true; // Score always has default
-      case 9: return reviewText.q0.length >= 50 && reviewText.q1.length >= 50 && reviewText.q2.length >= 50 && reviewText.q3.length >= 100 && reviewText.q4.length >= 50 && reviewText.q5.length >= 20 && reviewText.q6.length >= 50 && reviewText.q7.length >= 50;
+      case 9: return reviewText.q0.length >= 30 && reviewText.q3.length >= 30 && reviewText.q6.length >= 30;
       case 10: return true; // 画像は任意なので常にtrue
       default: return false;
     }
@@ -649,6 +649,13 @@ function StepArea({
         <span className="text-sm text-muted-foreground">店舗名で直接検索</span>
       </button>
 
+      {prefecturesWithShops.length === 0 && allAreas.length === 0 ? (
+        <div className="grid grid-cols-2 gap-3">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-14 rounded-xl bg-muted animate-pulse" />
+          ))}
+        </div>
+      ) : (
       <div className="grid grid-cols-2 gap-3">
         {displayAreas.map((area) => (
           <button
@@ -672,6 +679,7 @@ function StepArea({
           </button>
         ))}
       </div>
+      )}
       {!showAllAreas && (
         <button
           type="button"
@@ -784,8 +792,11 @@ function StepShop({
         />
       </div>
       <div className="space-y-2 max-h-64 overflow-y-auto">
-        {filteredShops.length === 0 && (
-          <p className="text-sm text-muted-foreground text-center py-4">サロンが見つかりません</p>
+        {filteredShops.length === 0 && selectedArea && (
+          <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+            <Loader2 className="h-6 w-6 animate-spin mb-2" />
+            <p className="text-sm">サロンを読み込み中...</p>
+          </div>
         )}
         {filteredShops.map(shop => (
           <button
@@ -1002,7 +1013,7 @@ function StepCup({
 }) {
   return (
     <div>
-      <h3 className="text-base font-semibold mb-1">おっぱいは？</h3>
+      <h3 className="text-base font-semibold mb-1">バストサイズは？</h3>
       <p className="text-sm text-muted-foreground mb-4">
         体感で最も近いものを1つ選んでください
       </p>
@@ -1178,7 +1189,7 @@ function StepScore({
   );
 }
 
-// Step 9: Text Review - 8 questions with character limits
+// Step 9: Text Review - 3 required + 5 optional questions
 function StepText({
   reviewText,
   onChange,
@@ -1187,37 +1198,47 @@ function StepText({
   onChange: (key: keyof typeof reviewText, value: string) => void;
 }) {
   const questions = [
-    { key: "q0" as const, label: "Q1. 行ったきっかけは？", placeholder: "友人の紹介で初めて行きました。仕事のストレスが溜まっていたので、癒しを求めて予約しました。口コミの評判が良かったのが決め手です。", min: 50, max: 300 },
-    { key: "q1" as const, label: "Q2. 顔の印象は？", placeholder: "写真より可愛くてびっくり！とても明るい笑顔で出迎えてくれて、初めての緊張が一気にほぐれました。雰囲気も良くて安心感がありました。", min: 50, max: 300 },
-    { key: "q2" as const, label: "Q3. スタイルはどうだった？", placeholder: "スレンダーで脚が長く、スタイル抜群でした。写真通りの印象で期待を裏切らない感じ。肌もきれいで思わず見とれてしまいました。", min: 50, max: 300 },
-    { key: "q3" as const, label: "Q4. 施術の流れは？", placeholder: "会話がとても楽しく、施術も丁寧で時間があっという間に過ぎました。技術もしっかりしていてコリがほぐれました。特にアロマの香りが良く、肩甲骨まわりの圧が絶妙で、施術後は体がとても軽くなりました。リラックスできる空間づくりも素晴らしかったです。", min: 100, max: 300 },
-    { key: "q4" as const, label: "Q5. どこまでいけた？", placeholder: "密着度が高く、ドキドキする場面もありました。サービス内容は期待以上で、リピート確定です。詳しくは実際に体験してみてください。", min: 50, max: 300 },
-    { key: "q5" as const, label: "Q6. お値段は？", placeholder: "90分コースで15,000円でした。内容を考えるとコスパは良いと思います。指名料込みでも満足度は高かったです。", min: 20, max: 300 },
-    { key: "q6" as const, label: "Q7. また行きたい？", placeholder: "絶対リピートしたいです！次回は120分コースで予約しようと思います。指名して通い続けたいと思える方でした。", min: 50, max: 300 },
-    { key: "q7" as const, label: "Q8. 後輩へのアドバイスは？", placeholder: "人気なので予約は早めがおすすめです。土日は特に取りにくいので平日がねらい目。次回は指名で予約しようと思います。", min: 50, max: 300 },
+    { key: "q0" as const, label: "Q1. 行ったきっかけは？", placeholder: "友人の紹介で初めて行きました。口コミの評判が良かったのが決め手です。", min: 30, max: 200, required: true },
+    { key: "q3" as const, label: "Q2. 施術内容・サービスはどうでしたか？", placeholder: "会話がとても楽しく、施術も丁寧で時間があっという間に過ぎました。技術もしっかりしていてコリがほぐれました。", min: 30, max: 300, required: true },
+    { key: "q6" as const, label: "Q3. また行きたいと思いますか？", placeholder: "絶対リピートしたいです！次回は120分コースで予約しようと思います。", min: 30, max: 200, required: true },
+    { key: "q1" as const, label: "Q4. 第一印象は？", placeholder: "写真より可愛くてびっくり！明るい笑顔で緊張がほぐれました。", min: 0, max: 200, required: false },
+    { key: "q2" as const, label: "Q5. 特に良かった点は？", placeholder: "スタイル抜群で、接客も丁寧でした。", min: 0, max: 200, required: false },
+    { key: "q4" as const, label: "Q6. 気になった点・改善点は？", placeholder: "特にありませんが、強いて言えば...", min: 0, max: 200, required: false },
+    { key: "q5" as const, label: "Q7. コスパはどうでしたか？", placeholder: "90分コースで15,000円。内容を考えるとコスパ良し。", min: 0, max: 200, required: false },
+    { key: "q7" as const, label: "Q8. その他コメント", placeholder: "予約は早めがおすすめ。人気なので平日がねらい目です。", min: 0, max: 200, required: false },
   ];
 
   return (
     <div className="space-y-4">
       <h3 className="text-base font-semibold mb-1">最後に感想を教えて</h3>
+      <p className="text-sm text-muted-foreground">Q1〜Q3は必須です。Q4以降は任意ですが、書くほど他のユーザーの参考になります。</p>
       {questions.map((q) => (
         <div key={q.key}>
           <label htmlFor={q.key} className="block text-sm font-medium mb-1">
-            {q.label}（{q.min}〜{q.max}字）
+            {q.label}
+            {q.required ? (
+              <span className="text-xs text-destructive ml-1">（必須・{q.min}字以上）</span>
+            ) : (
+              <span className="text-xs text-muted-foreground ml-1">（任意）</span>
+            )}
           </label>
           <Textarea
             id={q.key}
             placeholder={q.placeholder}
             value={reviewText[q.key]}
             onChange={(e) => onChange(q.key, e.target.value)}
-            rows={q.min >= 100 ? 3 : 2}
+            rows={2}
             maxLength={q.max}
           />
           <p className={cn(
             "text-xs mt-1",
-            reviewText[q.key].length < q.min ? "text-muted-foreground" : reviewText[q.key].length <= q.max ? "text-green-600" : "text-destructive"
+            !q.required ? "text-muted-foreground" :
+            reviewText[q.key].length < q.min ? "text-muted-foreground" : "text-green-600"
           )}>
-            {reviewText[q.key].length}/{q.max}字（最低{q.min}字）
+            {reviewText[q.key].length}/{q.max}字
+            {q.required && reviewText[q.key].length < q.min && (
+              <span className="text-destructive ml-1">（あと{q.min - reviewText[q.key].length}字）</span>
+            )}
           </p>
         </div>
       ))}
@@ -1310,7 +1331,7 @@ function StepVerificationImage({
   );
 }
 
-// Completion Screen - pending approval message
+// Completion Screen - immediate reward feel
 function CompletionScreen({
   onClose,
   onContinue,
@@ -1324,20 +1345,33 @@ function CompletionScreen({
 }) {
   return (
     <div className="text-center py-8">
-      <div className="h-20 w-20 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-6">
-        <Clock className="h-10 w-10 text-amber-600" />
+      {/* Animated check icon */}
+      <div className="relative mx-auto mb-6 w-20 h-20">
+        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-green-100 to-emerald-100 shadow-lg animate-[scale-up_0.3s_ease-out]" />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <Check className="h-10 w-10 text-green-600" />
+        </div>
+        {/* Sparkle decorations */}
+        <div className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-yellow-400 animate-pulse" style={{ animationDelay: '0.2s' }} />
+        <div className="absolute -bottom-1 -left-1 h-2 w-2 rounded-full bg-primary animate-pulse" style={{ animationDelay: '0.5s' }} />
       </div>
+
       <h3 className="text-xl font-bold mb-2">投稿ありがとうございます！</h3>
-      <p className="text-muted-foreground mb-2">
-        数営業日以内に口コミを審査いたします
-      </p>
+
+      {/* Credit reward banner */}
+      <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-lg p-4 mb-4">
+        <div className="flex items-center justify-center gap-2 mb-1">
+          <Gift className="h-5 w-5 text-amber-600" />
+          <span className="font-bold text-amber-700 text-lg">+10 クレジット獲得予定!</span>
+        </div>
+        <p className="text-xs text-amber-600">審査完了後に反映されます</p>
+      </div>
 
       {memberType === "free" && (
         <div className="bg-primary/5 rounded-lg p-4 mb-4 text-sm">
-          <p className="font-semibold text-primary mb-1">承認されると...</p>
           <p className="text-muted-foreground">
-            <span className="text-primary font-bold">10クレジット</span>獲得
-            → セラピストの口コミが読めるようになります
+            <span className="text-primary font-bold">10クレジット</span>で
+            セラピスト10人分の口コミが読めるようになります
           </p>
         </div>
       )}
@@ -1354,7 +1388,7 @@ function CompletionScreen({
       )}
 
       <p className="text-sm text-muted-foreground mb-6">
-        口コミの質に応じて、口コミ見放題になる日数を付与します
+        数営業日以内に審査いたします
       </p>
 
       <div className="space-y-3">

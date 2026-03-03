@@ -24,9 +24,11 @@ export async function GET(req: NextRequest) {
   const salonId = searchParams.get("salon_id");
   const sort = searchParams.get("sort") || "newest";
   const limit = Math.min(parseInt(searchParams.get("limit") || "50", 10), 50);
+  const offset = Math.max(parseInt(searchParams.get("offset") || "0", 10), 0);
   const areaSlug = searchParams.get("area_slug");
   const district = searchParams.get("district");
   const ids = searchParams.get("ids"); // カンマ区切りのセラピストID
+  const name = searchParams.get("name"); // セラピスト名検索
 
   // Fetch therapists for a specific salon
   if (salonId) {
@@ -36,7 +38,10 @@ export async function GET(req: NextRequest) {
       .eq("salon_id", parseInt(salonId, 10))
       .eq("status", "active");
     q = applyPlaceholderFilters(q);
-    q = q.order("name").limit(limit);
+    if (name) {
+      q = q.ilike("name", `%${name}%`);
+    }
+    q = q.order("name").range(offset, offset + limit - 1);
     const { data } = await q;
     return NextResponse.json(data ?? []);
   }
@@ -79,6 +84,10 @@ export async function GET(req: NextRequest) {
 
   q = applyPlaceholderFilters(q);
 
+  if (name) {
+    q = q.ilike("name", `%${name}%`);
+  }
+
   if (shopIds) {
     q = q.in("salon_id", shopIds);
   }
@@ -90,7 +99,7 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  q = q.order("created_at", { ascending: false }).limit(limit);
+  q = q.order("created_at", { ascending: false }).range(offset, offset + limit - 1);
 
   const { data } = await q;
   return NextResponse.json(data ?? []);

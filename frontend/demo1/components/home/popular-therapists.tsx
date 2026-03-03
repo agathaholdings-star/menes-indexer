@@ -1,58 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Link from "next/link";
-import { TherapistImage } from "@/components/shared/therapist-image";
-import { ChevronRight, TrendingUp } from "lucide-react";
+import Image from "next/image";
+import { Star, ChevronRight, TrendingUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { cleanTherapistName, isPlaceholderName } from "@/lib/therapist-utils";
+import { mockTherapists } from "@/lib/data";
 
-interface PopularTherapist {
-  id: number;
-  name: string;
-  age: number | null;
-  image_url: string | null;
-  shop_name: string;
-}
+const MIN_REVIEW_COUNT_FOR_RANKING = 3;
 
 export function PopularTherapists() {
-  const [therapists, setTherapists] = useState<PopularTherapist[]>([]);
-
-  useEffect(() => {
-    async function fetchTherapists() {
-      const res = await fetch("/api/therapists/recommendations?limit=8");
-      const data = await res.json();
-      if (Array.isArray(data)) {
-        setTherapists(
-          data
-            .filter((t: any) => {
-              if (isPlaceholderName(t.name)) return false;
-              const cleaned = cleanTherapistName(t.name);
-              if (cleaned.length > 15) return false;
-              const shop = t.salons as { name: string; display_name: string | null } | null;
-              if (shop && (cleaned === shop.name || cleaned === shop.display_name)) return false;
-              return true;
-            })
-            .slice(0, 8)
-            .map((t: any) => {
-              const imgs = t.image_urls as string[] | null;
-              const shop = t.salons as { name: string; display_name: string | null } | null;
-              return {
-                id: Number(t.id),
-                name: cleanTherapistName(t.name),
-                age: t.age,
-                image_url: imgs?.[0] || null,
-                shop_name: shop?.display_name || shop?.name || "",
-              };
-            })
-        );
-      }
-    }
-    fetchTherapists();
-  }, []);
-
-  if (therapists.length === 0) return null;
+  const popularTherapists = [...mockTherapists]
+    .filter((t) => t.reviewCount >= MIN_REVIEW_COUNT_FOR_RANKING)
+    .sort((a, b) => b.averageScore - a.averageScore)
+    .slice(0, 8);
 
   return (
     <section className="mt-10">
@@ -61,7 +23,7 @@ export function PopularTherapists() {
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-lg">
               <TrendingUp className="h-5 w-5 text-primary" />
-              新着セラピスト
+              今週の人気セラピスト
             </CardTitle>
             <Link
               href="/ranking"
@@ -75,16 +37,16 @@ export function PopularTherapists() {
         <CardContent>
           <ScrollArea className="w-full whitespace-nowrap">
             <div className="flex gap-4 pb-4">
-              {therapists.map((therapist, index) => (
+              {popularTherapists.map((therapist, index) => (
                 <Link
                   key={therapist.id}
                   href={`/therapist/${therapist.id}`}
                   className="w-[160px] flex-shrink-0"
                 >
                   <Card className="group h-full transition-all hover:shadow-md border-muted/50 overflow-hidden">
-                    <div className="relative h-44 w-full overflow-hidden bg-muted">
-                      <TherapistImage
-                        src={therapist.image_url}
+                    <div className="relative h-44 w-full overflow-hidden">
+                      <Image
+                        src={therapist.images[0] || "/placeholder.svg"}
                         alt={therapist.name}
                         fill
                         className="object-cover transition-transform duration-300 group-hover:scale-105"
@@ -103,13 +65,30 @@ export function PopularTherapists() {
                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-3 pt-8">
                         <div className="flex items-center gap-1 text-white">
                           <span className="font-bold text-sm">{therapist.name}</span>
-                          {therapist.age && (
-                            <span className="text-xs opacity-80">({therapist.age})</span>
-                          )}
+                          <span className="text-xs opacity-80">({therapist.age})</span>
                         </div>
-                        <p className="text-xs text-white/70 truncate">{therapist.shop_name}</p>
+                        <p className="text-xs text-white/70 truncate">{therapist.shopName}</p>
                       </div>
                     </div>
+                    <CardContent className="p-3">
+                      {/* Tags - シンプルに統一 */}
+                      <div className="flex flex-wrap gap-1 mb-2">
+                        <Badge variant="secondary" className="text-xs bg-primary/10 text-primary border-0">
+                          {therapist.tags[0]}
+                        </Badge>
+                        {therapist.tags[1] && (
+                          <Badge variant="secondary" className="text-xs bg-muted text-muted-foreground border-0">
+                            {therapist.tags[1]}
+                          </Badge>
+                        )}
+                      </div>
+                      {/* Score */}
+                      <div className="flex items-center gap-1">
+                        <Star className="h-4 w-4 fill-primary text-primary" />
+                        <span className="font-bold text-sm">{therapist.averageScore}</span>
+                        <span className="text-xs text-muted-foreground">点</span>
+                      </div>
+                    </CardContent>
                   </Card>
                 </Link>
               ))}

@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState } from "react";
 import {
   Search,
   Menu,
@@ -10,6 +9,7 @@ import {
   LogIn,
   PenSquare,
   MapPin,
+  MessageSquare,
   Trophy,
   Heart,
   Bell,
@@ -31,100 +31,22 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ReviewWizardModal } from "@/components/review/review-wizard-modal";
-import { useAuth } from "@/lib/auth-context";
-import { createSupabaseBrowser } from "@/lib/supabase/client";
-import { useTier } from "@/lib/hooks/use-tier";
-import { ReviewerLevelBadge } from "@/components/shared/reviewer-level-badge";
 
 export function SiteHeader() {
-  const { user: authUser, loading: authLoading, signOut: authSignOut } = useAuth();
-  const { effectiveTier, membershipType, monthlyReviewCount: tierMonthlyReviewCount, viewPermissionUntil, totalReviewCount } = useTier();
-  const memberLevel = (membershipType || "free") as "free" | "standard" | "vip";
+  // Demo state - in production, use auth context
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [memberLevel, setMemberLevel] = useState<"free" | "standard" | "vip">("free");
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const router = useRouter();
 
-  const isLoggedIn = !!authUser;
-
-  // 通知
-  interface Notification {
-    id: number;
-    type: string;
-    title: string;
-    body: string | null;
-    link: string | null;
-    is_read: boolean;
-    created_at: string;
-  }
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-
-  const fetchNotifications = useCallback(async () => {
-    if (!authUser) return;
-    const supabase = createSupabaseBrowser();
-    const { data } = await supabase
-      .from("notifications")
-      .select("id, type, title, body, link, is_read, created_at")
-      .eq("user_id", authUser.id)
-      .order("created_at", { ascending: false })
-      .limit(10);
-    const items = (data || []) as Notification[];
-    setNotifications(items);
-    setUnreadCount(items.filter((n) => !n.is_read).length);
-  }, [authUser]);
-
-  // 初回取得 + 30秒ポーリング（タブ非表示時は停止）
-  useEffect(() => {
-    if (!authUser) return;
-    fetchNotifications();
-
-    const intervalId = setInterval(() => {
-      if (document.visibilityState === "visible") {
-        fetchNotifications();
-      }
-    }, 30000);
-
-    return () => clearInterval(intervalId);
-  }, [authUser, fetchNotifications]);
-
-  const markAllRead = async () => {
-    if (!authUser || unreadCount === 0) return;
-    const supabase = createSupabaseBrowser();
-    await supabase
-      .from("notifications")
-      .update({ is_read: true })
-      .eq("user_id", authUser.id)
-      .eq("is_read", false);
-    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
-    setUnreadCount(0);
-  };
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    const q = searchQuery.trim();
-    if (q) {
-      router.push(`/search?q=${encodeURIComponent(q)}`);
-    }
-  };
-
-  const monthlyReviewCount = tierMonthlyReviewCount;
-
-  const nickname = authUser?.user_metadata?.nickname || authUser?.email?.split("@")[0] || "ユーザー";
-
-  // 無料閲覧残り日数を計算
-  const computeRemainingDays = () => {
-    if (!viewPermissionUntil) return 0;
-    const diff = new Date(viewPermissionUntil).getTime() - Date.now();
-    return diff > 0 ? Math.ceil(diff / (1000 * 60 * 60 * 24)) : 0;
-  };
+  const [monthlyReviewCount, setMonthlyReviewCount] = useState(1);
 
   const user = {
-    name: nickname,
+    name: "山田太郎",
     avatar: null,
-    remainingDays: computeRemainingDays(),
-    unreadNotifications: unreadCount,
+    remainingDays: 3,
+    unreadNotifications: 5,
+    unreadMessages: 2,
     monthlyReviewCount: monthlyReviewCount,
   };
 
@@ -158,22 +80,20 @@ export function SiteHeader() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
               <span className="text-sm font-bold text-primary-foreground">ME</span>
             </div>
-            <span className="hidden text-lg font-bold sm:inline">メンエスSKR</span>
+            <span className="hidden text-lg font-bold sm:inline">メンエスインデクサ</span>
           </Link>
 
           {/* Search Bar - Desktop */}
-          <form onSubmit={handleSearch} className="hidden max-w-md flex-1 md:flex">
+          <div className="hidden max-w-md flex-1 md:flex">
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 type="search"
                 placeholder="店舗名・セラピスト名で検索"
                 className="w-full pl-10"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-          </form>
+          </div>
 
           {/* Navigation - Desktop */}
           <nav className="hidden items-center gap-1 lg:flex">
@@ -184,7 +104,7 @@ export function SiteHeader() {
               </Link>
             </Button>
             <Button variant="ghost" size="sm" asChild>
-              <Link href="/area/tokyo">
+              <Link href="/area">
                 <MapPin className="mr-1 h-4 w-4" />
                 エリア検索
               </Link>
@@ -212,53 +132,16 @@ export function SiteHeader() {
               /* Logged In State */
               <div className="flex items-center gap-2">
                 {/* Notifications */}
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="ghost" size="icon" className="relative hidden sm:flex">
-                      <Bell className="h-5 w-5" />
-                      {unreadCount > 0 && (
-                        <span className="absolute -top-1 -right-1 h-4 w-4 bg-primary text-primary-foreground text-[10px] rounded-full flex items-center justify-center">
-                          {unreadCount}
-                        </span>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent align="end" className="w-80 p-0">
-                    <div className="flex items-center justify-between px-4 py-3 border-b">
-                      <p className="font-medium text-sm">通知</p>
-                      {unreadCount > 0 && (
-                        <button onClick={markAllRead} className="text-xs text-primary hover:underline">
-                          すべて既読にする
-                        </button>
-                      )}
-                    </div>
-                    <div className="max-h-80 overflow-y-auto">
-                      {notifications.length === 0 ? (
-                        <div className="text-center py-8 text-sm text-muted-foreground">通知はありません</div>
-                      ) : (
-                        notifications.map((n) => (
-                          <Link
-                            key={n.id}
-                            href={n.link || "/mypage"}
-                            className={`block px-4 py-3 border-b last:border-0 hover:bg-muted/50 transition-colors ${!n.is_read ? "bg-primary/5" : ""}`}
-                          >
-                            <p className="text-sm font-medium">{n.title}</p>
-                            {n.body && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{n.body}</p>}
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {new Date(n.created_at).toLocaleDateString("ja-JP")}
-                            </p>
-                          </Link>
-                        ))
-                      )}
-                    </div>
-                    <Link
-                      href="/notifications"
-                      className="block text-center py-2 text-sm text-primary hover:underline border-t"
-                    >
-                      すべての通知を見る
-                    </Link>
-                  </PopoverContent>
-                </Popover>
+                <Button variant="ghost" size="icon" className="relative hidden sm:flex" asChild>
+                  <Link href="/mypage?tab=notifications">
+                    <Bell className="h-5 w-5" />
+                    {user.unreadNotifications > 0 && (
+                      <span className="absolute -top-1 -right-1 h-4 w-4 bg-primary text-primary-foreground text-[10px] rounded-full flex items-center justify-center">
+                        {user.unreadNotifications}
+                      </span>
+                    )}
+                  </Link>
+                </Button>
 
                 {/* User Dropdown */}
                 <DropdownMenu>
@@ -286,20 +169,13 @@ export function SiteHeader() {
                           <p className="font-medium truncate">{user.name}</p>
                           <div className="flex items-center gap-2 mt-1">
                             {getMemberBadge()}
-                            {totalReviewCount > 0 && (
-                              <ReviewerLevelBadge level={totalReviewCount} size="sm" />
-                            )}
                           </div>
                         </div>
                       </div>
                       {memberLevel === "free" && (
                         <div className="mt-3 p-2 rounded-md bg-muted text-sm">
                           <p className="text-muted-foreground">
-                            {user.remainingDays > 0 ? (
-                              <>無料閲覧残り: <span className="text-primary font-bold">{user.remainingDays}日</span></>
-                            ) : (
-                              <>口コミを投稿すると閲覧できます</>
-                            )}
+                            無料閲覧残り: <span className="text-primary font-bold">{user.remainingDays}日</span>
                           </p>
                         </div>
                       )}
@@ -337,6 +213,18 @@ export function SiteHeader() {
                         お気に入り
                       </Link>
                     </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/mypage?tab=messages" className="cursor-pointer flex items-center justify-between">
+                        <span className="flex items-center">
+                          <MessageSquare className="h-4 w-4 mr-2" />
+                          メッセージ
+                        </span>
+                        {user.unreadMessages > 0 && (
+                          <Badge variant="secondary" className="text-xs">{user.unreadMessages}</Badge>
+                        )}
+                      </Link>
+                    </DropdownMenuItem>
+
                     <DropdownMenuSeparator />
 
                     {memberLevel !== "vip" && (
@@ -359,7 +247,7 @@ export function SiteHeader() {
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       className="cursor-pointer text-destructive focus:text-destructive"
-                      onClick={() => authSignOut()}
+                      onClick={() => setIsLoggedIn(false)}
                     >
                       <LogOut className="h-4 w-4 mr-2" />
                       ログアウト
@@ -408,11 +296,7 @@ export function SiteHeader() {
                       </div>
                       {memberLevel === "free" && (
                         <p className="text-sm text-muted-foreground mt-2">
-                          {user.remainingDays > 0 ? (
-                            <>無料閲覧残り: <span className="text-primary font-bold">{user.remainingDays}日</span></>
-                          ) : (
-                            <>口コミを投稿すると閲覧できます</>
-                          )}
+                          無料閲覧残り: <span className="text-primary font-bold">{user.remainingDays}日</span>
                         </p>
                       )}
                       {memberLevel === "standard" && (
@@ -433,16 +317,14 @@ export function SiteHeader() {
                   )}
 
                   {/* Mobile Search */}
-                  <form onSubmit={handleSearch} className="relative">
+                  <div className="relative">
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       type="search"
                       placeholder="店舗名・セラピスト名で検索"
                       className="pl-10"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
                     />
-                  </form>
+                  </div>
 
                   {/* Mobile Navigation */}
                   <nav className="flex flex-col gap-1">
@@ -453,7 +335,7 @@ export function SiteHeader() {
                       </Link>
                     </Button>
                     <Button variant="ghost" className="justify-start" asChild>
-                      <Link href="/area/tokyo">
+                      <Link href="/area">
                         <MapPin className="mr-2 h-4 w-4" />
                         エリア検索
                       </Link>
@@ -484,7 +366,18 @@ export function SiteHeader() {
                             </Link>
                           </Button>
                           <Button variant="ghost" className="justify-between" asChild>
-                            <Link href="/notifications">
+                            <Link href="/mypage?tab=messages">
+                              <span className="flex items-center">
+                                <MessageSquare className="mr-2 h-4 w-4" />
+                                メッセージ
+                              </span>
+                              {user.unreadMessages > 0 && (
+                                <Badge variant="secondary" className="text-xs">{user.unreadMessages}</Badge>
+                              )}
+                            </Link>
+                          </Button>
+                          <Button variant="ghost" className="justify-between" asChild>
+                            <Link href="/mypage?tab=notifications">
                               <span className="flex items-center">
                                 <Bell className="mr-2 h-4 w-4" />
                                 通知
@@ -533,7 +426,7 @@ export function SiteHeader() {
                       <Button
                         variant="ghost"
                         className="text-destructive hover:text-destructive"
-                        onClick={() => authSignOut()}
+                        onClick={() => setIsLoggedIn(false)}
                       >
                         <LogOut className="mr-2 h-4 w-4" />
                         ログアウト

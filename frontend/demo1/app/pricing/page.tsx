@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { Check, X, Crown, Sparkles, Eye, Bell, Ban, MessageSquare, Filter, Search, BarChart3, PenSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,20 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
-import { useAuth } from "@/lib/auth-context";
 
-const plans: Array<{
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  priceNote: string | null;
-  features: Array<{ label: string; included: boolean; highlight?: boolean }>;
-  cta: string;
-  href: string;
-  popular?: boolean;
-  tier: string;
-}> = [
+const plans = [
   {
     id: "free",
     name: "無料会員",
@@ -39,7 +28,6 @@ const plans: Array<{
       { label: "SKR/HRフィルター", included: false },
     ],
     cta: "無料で始める",
-    href: "/register",
     popular: false,
     tier: "free",
   },
@@ -57,7 +45,6 @@ const plans: Array<{
       { label: "月3本投稿 → VIP相当の全機能解放", included: true, highlight: true },
     ],
     cta: "スタンダードに登録",
-    href: process.env.NEXT_PUBLIC_STRIPE_STANDARD_LINK || "",
     popular: true,
     tier: "standard",
   },
@@ -76,7 +63,6 @@ const plans: Array<{
       { label: "投稿不要", included: true },
     ],
     cta: "VIPに登録",
-    href: process.env.NEXT_PUBLIC_STRIPE_VIP_LINK || "",
     popular: false,
     tier: "vip",
   },
@@ -132,22 +118,10 @@ const faqs = [
   },
 ];
 
-function buildPaymentUrl(baseUrl: string, userId?: string, email?: string): string {
-  if (!baseUrl.startsWith("http")) return baseUrl;
-  const url = new URL(baseUrl);
-  if (userId) url.searchParams.set("client_reference_id", userId);
-  if (email) url.searchParams.set("prefilled_email", email);
-  return url.toString();
-}
-
 export default function PricingPage() {
-  const { user: authUser } = useAuth();
-
-  const getHref = (plan: typeof plans[number]) => {
-    if (plan.tier === "free") return plan.href;
-    if (!authUser) return `/login?redirect=/pricing`;
-    return buildPaymentUrl(plan.href, authUser.id, authUser.email || undefined);
-  };
+  // In production, this would come from auth context
+  // Demo: simulate current plan (change to "standard" or "vip" to see badge)
+  const [currentPlan] = useState<"free" | "standard" | "vip">("free");
 
   return (
     <div className="min-h-screen bg-background">
@@ -166,91 +140,111 @@ export default function PricingPage() {
 
         {/* 3カラムのプラン表示 */}
         <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto mb-16 items-start">
-          {plans.map((plan) => (
-            <Card
-              key={plan.id}
-              className={`relative ${
-                plan.popular
-                  ? "border-primary shadow-xl md:scale-105 md:-my-4 z-10"
-                  : plan.tier === "vip"
-                  ? "border-amber-400/50 bg-gradient-to-b from-amber-50/50 to-background"
-                  : ""
-              }`}
-            >
-              {plan.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <Badge className="gap-1 bg-primary">
-                    <Crown className="h-3 w-3" />
-                    人気
-                  </Badge>
-                </div>
-              )}
-              {plan.tier === "vip" && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <Badge className="gap-1 bg-gradient-to-r from-amber-500 to-yellow-500 border-0 text-white">
-                    <Sparkles className="h-3 w-3" />
-                    VIP
-                  </Badge>
-                </div>
-              )}
-              <CardHeader className="text-center pb-4 pt-8">
-                <CardTitle className={`text-xl ${plan.tier === "vip" ? "text-amber-700" : ""}`}>
-                  {plan.name}
-                </CardTitle>
-                <CardDescription>{plan.description}</CardDescription>
-                <div className="mt-4">
-                  <span className={`text-4xl font-bold ${plan.tier === "vip" ? "text-amber-600" : ""}`}>
-                    ¥{plan.price.toLocaleString()}
-                  </span>
-                  <span className="text-muted-foreground">/月</span>
-                  {plan.priceNote && (
-                    <p className={`text-xs mt-2 ${plan.tier === "vip" ? "text-amber-600" : "text-primary"}`}>
-                      {plan.priceNote}
-                    </p>
+          {plans.map((plan) => {
+            const isCurrentPlan = plan.id === currentPlan;
+            return (
+              <Card
+                key={plan.id}
+                className={`relative ${
+                  isCurrentPlan
+                    ? "ring-2 ring-primary border-primary shadow-lg"
+                    : plan.popular
+                    ? "border-primary shadow-xl md:scale-105 md:-my-4 z-10"
+                    : plan.tier === "vip"
+                    ? "border-amber-400/50 bg-gradient-to-b from-amber-50/50 to-background"
+                    : ""
+                }`}
+              >
+                {isCurrentPlan && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                    <Badge className="gap-1 bg-green-600 text-white border-0">
+                      <Check className="h-3 w-3" />
+                      ご利用中
+                    </Badge>
+                  </div>
+                )}
+                {!isCurrentPlan && plan.popular && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                    <Badge className="gap-1 bg-primary">
+                      <Crown className="h-3 w-3" />
+                      人気
+                    </Badge>
+                  </div>
+                )}
+                {!isCurrentPlan && plan.tier === "vip" && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                    <Badge className="gap-1 bg-gradient-to-r from-amber-500 to-yellow-500 border-0 text-white">
+                      <Sparkles className="h-3 w-3" />
+                      VIP
+                    </Badge>
+                  </div>
+                )}
+                <CardHeader className="text-center pb-4 pt-8">
+                  <CardTitle className={`text-xl ${plan.tier === "vip" ? "text-amber-700" : ""}`}>
+                    {plan.name}
+                  </CardTitle>
+                  <CardDescription>{plan.description}</CardDescription>
+                  <div className="mt-4">
+                    <span className={`text-4xl font-bold ${plan.tier === "vip" ? "text-amber-600" : ""}`}>
+                      ¥{plan.price.toLocaleString()}
+                    </span>
+                    <span className="text-muted-foreground">/月</span>
+                    {plan.priceNote && (
+                      <p className={`text-xs mt-2 ${plan.tier === "vip" ? "text-amber-600" : "text-primary"}`}>
+                        {plan.priceNote}
+                      </p>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-3 mb-6">
+                    {plan.features.map((feature, index) => (
+                      <li key={index} className="flex items-center gap-3">
+                        {feature.included ? (
+                          <Check className={`h-5 w-5 flex-shrink-0 ${
+                            feature.highlight ? "text-amber-500" : "text-primary"
+                          }`} />
+                        ) : (
+                          <X className="h-5 w-5 text-muted-foreground/50 flex-shrink-0" />
+                        )}
+                        <span className={
+                          feature.included
+                            ? feature.highlight
+                              ? "text-amber-700 font-medium"
+                              : ""
+                            : "text-muted-foreground/70"
+                        }>
+                          {feature.label}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                  {isCurrentPlan ? (
+                    <Button
+                      className="w-full"
+                      variant="outline"
+                      disabled
+                    >
+                      現在のプラン
+                    </Button>
+                  ) : (
+                    <Button
+                      className={`w-full ${
+                        plan.tier === "vip"
+                          ? "bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white border-0"
+                          : plan.popular
+                          ? ""
+                          : ""
+                      }`}
+                      variant={plan.popular ? "default" : plan.tier === "vip" ? "default" : "outline"}
+                    >
+                      {plan.cta}
+                    </Button>
                   )}
-                </div>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-3 mb-6">
-                  {plan.features.map((feature, index) => (
-                    <li key={index} className="flex items-center gap-3">
-                      {feature.included ? (
-                        <Check className={`h-5 w-5 flex-shrink-0 ${
-                          feature.highlight ? "text-amber-500" : "text-primary"
-                        }`} />
-                      ) : (
-                        <X className="h-5 w-5 text-muted-foreground/50 flex-shrink-0" />
-                      )}
-                      <span className={
-                        feature.included
-                          ? feature.highlight
-                            ? "text-amber-700 font-medium"
-                            : ""
-                          : "text-muted-foreground/70"
-                      }>
-                        {feature.label}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-                <Button
-                  asChild
-                  className={`w-full ${
-                    plan.tier === "vip"
-                      ? "bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white border-0"
-                      : plan.popular
-                      ? ""
-                      : ""
-                  }`}
-                  variant={plan.popular ? "default" : plan.tier === "vip" ? "default" : "outline"}
-                >
-                  <Link href={getHref(plan)} target={plan.tier === "free" || !authUser ? undefined : "_blank"}>
-                    {!authUser && plan.tier !== "free" ? "ログインして登録" : plan.cta}
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
 
         {/* Standard会員の投稿で段階的に機能が解放される説明 */}

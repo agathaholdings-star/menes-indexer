@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search, MapPin, ChevronDown, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,51 +12,24 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-interface PrefOption {
-  label: string;
-  value: string;
-  slug: string;
-}
+const prefectures = [
+  { label: "全国", value: "" },
+  { label: "東京", value: "東京" },
+  { label: "神奈川", value: "神奈川" },
+  { label: "大阪", value: "大阪" },
+  { label: "愛知", value: "愛知" },
+  { label: "福岡", value: "福岡" },
+];
 
 export function HeroSection() {
   const router = useRouter();
-  const defaultArea: PrefOption = { label: "全国", value: "", slug: "" };
-  const [selectedArea, setSelectedArea] = useState<PrefOption>(defaultArea);
+  const [selectedArea, setSelectedArea] = useState(prefectures[0]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [prefectures, setPrefectures] = useState<PrefOption[]>([defaultArea]);
-  const [shopCount, setShopCount] = useState(0);
-  const [areaCount, setAreaCount] = useState(0);
-
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const [prefsRes, statsRes] = await Promise.all([
-          fetch("/api/prefectures"),
-          fetch("/api/stats"),
-        ]);
-        const prefs = await prefsRes.json();
-        const stats = await statsRes.json();
-
-        if (Array.isArray(prefs)) {
-          setPrefectures([
-            defaultArea,
-            ...prefs.map((p: any) => ({ label: p.name, value: p.name, slug: p.slug })),
-          ]);
-        }
-
-        if (stats.shopCount != null) setShopCount(stats.shopCount);
-        if (stats.areaCount != null) setAreaCount(stats.areaCount);
-      } catch (err) {
-        console.error("ヒーローセクションデータ取得エラー:", err);
-      }
-    }
-    fetchData();
-  }, []);
 
   const handleSearch = () => {
     const params = new URLSearchParams();
     if (searchQuery) params.set("q", searchQuery);
-    if (selectedArea.slug) params.set("area", selectedArea.slug);
+    if (selectedArea.value) params.set("area", selectedArea.value);
     router.push(`/search?${params.toString()}`);
   };
 
@@ -79,7 +52,7 @@ export function HeroSection() {
         {/* Main Copy */}
         <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl text-balance leading-tight">
           名前を知らなくても、タイプで<span className="relative">
-            <span className="relative z-10">&quot;発見&quot;</span>
+            <span className="relative z-10">"発見"</span>
             <span className="absolute bottom-0 left-0 right-0 h-2 bg-white/30 -z-0" />
           </span>できる
         </h1>
@@ -99,10 +72,10 @@ export function HeroSection() {
                   <ChevronDown className="h-4 w-4 ml-auto sm:ml-1 text-muted-foreground" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="max-h-80 overflow-y-auto">
+              <DropdownMenuContent align="start">
                 {prefectures.map((area) => (
                   <DropdownMenuItem
-                    key={area.slug || "all"}
+                    key={area.label}
                     onClick={() => setSelectedArea(area)}
                   >
                     {area.label}
@@ -135,17 +108,17 @@ export function HeroSection() {
         {/* Stats */}
         <div className="mt-6 flex flex-wrap items-center justify-center gap-6 text-white/80">
           <div className="text-center">
-            <p className="text-xl font-bold text-white">{shopCount > 0 ? shopCount.toLocaleString() : "---"}</p>
+            <p className="text-xl font-bold text-white">14,500+</p>
             <p className="text-xs">登録店舗</p>
           </div>
           <div className="w-px h-8 bg-white/20 hidden sm:block" />
           <div className="text-center">
-            <p className="text-xl font-bold text-white">{areaCount > 0 ? areaCount.toLocaleString() : "---"}</p>
-            <p className="text-xs">対応エリア</p>
+            <p className="text-xl font-bold text-white">45万+</p>
+            <p className="text-xs">口コミ件数</p>
           </div>
           <div className="w-px h-8 bg-white/20 hidden sm:block" />
           <div className="text-center">
-            <p className="text-xl font-bold text-white">6</p>
+            <p className="text-xl font-bold text-white">8</p>
             <p className="text-xs">タイプ分類</p>
           </div>
         </div>
