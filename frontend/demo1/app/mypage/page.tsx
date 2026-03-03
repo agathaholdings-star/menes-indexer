@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   Heart,
@@ -9,13 +10,11 @@ import {
   Bell,
   Crown,
   ChevronRight,
-  Star,
   Edit,
   Eye,
   Lock,
   Sparkles,
   LayoutDashboard,
-  Users,
   MessageCircle,
   Flame,
   Menu,
@@ -23,14 +22,15 @@ import {
   Send,
   Plus,
   Share2,
-  Globe,
-  Trash2,
-  UserPlus,
   Search,
-  Filter,
   ExternalLink,
   BarChart3,
   PenSquare,
+  Monitor,
+  Smartphone,
+  Laptop,
+  ThumbsUp,
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -39,12 +39,26 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
-import { therapists, reviews, type EffectiveTier, getEffectiveTier, tierPermissions } from "@/lib/data";
+import { type EffectiveTier, getEffectiveTier, tierPermissions } from "@/lib/data";
+import { useAuth } from "@/lib/auth-context";
+import { createSupabaseBrowser } from "@/lib/supabase/client";
+import { PreferenceMap } from "@/components/mypage/preference-map";
+import { ReviewerLevelBadge } from "@/components/shared/reviewer-level-badge";
 
 type MemberLevel = "free" | "standard" | "vip";
 type Section = "dashboard" | "reviews" | "favorites" | "lists" | "messages" | "bbs" | "skr" | "notifications" | "settings";
@@ -62,65 +76,158 @@ const sidebarItems = [
   { id: "settings", label: "設定", icon: Settings },
 ] as const;
 
-// Mock data
-const mockConversations = [
-  { id: "1", name: "田中さん", lastMessage: "了解です！ありがとうございます", time: "10:30", unread: 2, avatar: "T" },
-  { id: "2", name: "佐藤さん", lastMessage: "その店舗良かったですよ", time: "昨日", unread: 0, avatar: "S" },
-  { id: "3", name: "山田さん", lastMessage: "今度行ってみます", time: "3日前", unread: 0, avatar: "Y" },
-];
-
-const mockPublicLists = [
-  { id: "1", userName: "メンエスマスター", avatar: "M", listName: "渋谷ギャル系TOP10", count: 10, followers: 234 },
-  { id: "2", userName: "癒し探求者", avatar: "Y", listName: "清楚系おすすめ", count: 8, followers: 156 },
-  { id: "3", userName: "週末リピーター", avatar: "S", listName: "コスパ最強リスト", count: 15, followers: 89 },
-];
-
-const mockBBSThreads = [
-  { id: "1", title: "初心者におすすめの店舗教えてください", author: "新規さん", comments: 24, lastUpdate: "1時間前", category: "質問" },
-  { id: "2", title: "渋谷エリアの最新情報", author: "渋谷マスター", comments: 56, lastUpdate: "3時間前", category: "エリア" },
-  { id: "3", title: "最近のトレンドについて", author: "情報通", comments: 18, lastUpdate: "昨日", category: "雑談" },
-];
-
-const mockSKRReviews = [
-  { id: "1", therapistName: "あいか", shopName: "アロマモア", level: "skr", rating: 92, comment: "サービスが素晴らしかった...", date: "2024-01-15", image: therapists[0]?.images[0] },
-  { id: "2", therapistName: "みく", shopName: "Premium Salon", level: "hr", rating: 95, comment: "期待以上の対応で...", date: "2024-01-14", image: therapists[1]?.images[0] },
-  { id: "3", therapistName: "りの", shopName: "Healing Room", level: "skr", rating: 88, comment: "リピート確定です...", date: "2024-01-13", image: therapists[2]?.images[0] },
-];
 
 export default function MyPage() {
+  const { user: authUser, loading: authLoading } = useAuth();
+  const router = useRouter();
+
   const [activeSection, setActiveSection] = useState<Section>("dashboard");
-  const [memberLevel, setMemberLevel] = useState<MemberLevel>("standard");
-  const [monthlyReviewCount, setMonthlyReviewCount] = useState(1);
+  const [memberLevel, setMemberLevel] = useState<MemberLevel>("free");
+  const [monthlyReviewCount, setMonthlyReviewCount] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedConversation, setSelectedConversation] = useState<string | null>("1");
   const [messageInput, setMessageInput] = useState("");
   const [bbsTab, setBbsTab] = useState("general");
-  const [listPublic, setListPublic] = useState(false);
+
+
+  // Settings state
+  const [editNickname, setEditNickname] = useState("");
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [profileSaved, setProfileSaved] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [savingPassword, setSavingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordSaved, setPasswordSaved] = useState(false);
+
+  // Profile state
+  const [profile, setProfile] = useState<{
+    nickname: string;
+    membership_type: string;
+    monthly_review_count: number;
+    total_review_count: number;
+    view_permission_until: string | null;
+  } | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+
+  // Real data states
+  const [favoriteCount, setFavoriteCount] = useState(0);
+  const [userReviews, setUserReviews] = useState<{
+    id: string;
+    therapist_name: string;
+    shop_name: string;
+    score: number;
+    service_level_id: number | null;
+    moderation_status: string;
+    created_at: string;
+  }[]>([]);
+  const [skrReviews, setSkrReviews] = useState<{
+    id: string;
+    therapist_id: number;
+    therapist_name: string;
+    therapist_image: string | null;
+    shop_name: string;
+    service_level_id: number;
+    score: number;
+    comment: string;
+    created_at: string;
+  }[]>([]);
+  const [preferenceData, setPreferenceData] = useState<{
+    totalReviews: number;
+    looksTypes: { id: string; count: number; percentage: number }[];
+    bodyTypes: { id: string; count: number; percentage: number }[];
+    serviceTypes: { id: string; count: number; percentage: number }[];
+    avgParameters: { conversation: number; distance: number; technique: number; personality: number };
+  } | null>(null);
+  const [feedbackStats, setFeedbackStats] = useState({
+    totalViews: 0, totalHelpful: 0, totalReal: 0, totalFake: 0, reviewCount: 0,
+  });
+  const [followingUsers, setFollowingUsers] = useState<{id: string; nickname: string; follower_count: number; total_review_count: number}[]>([]);
+
+  // Fetch profile when auth user changes
+  useEffect(() => {
+    if (authLoading) return;
+    if (!authUser) {
+      router.push("/login");
+      return;
+    }
+
+    const fetchData = async () => {
+      const res = await fetch("/api/mypage");
+      if (!res.ok) {
+        setProfileLoading(false);
+        return;
+      }
+
+      const data = await res.json();
+
+      if (data.profile) {
+        setProfile(data.profile);
+        setMemberLevel((data.profile.membership_type || "free") as MemberLevel);
+        setMonthlyReviewCount(data.profile.monthly_review_count || 0);
+        setEditNickname(data.profile.nickname || "名無し");
+      }
+      setFavoriteCount(data.favoriteCount || 0);
+      setUserReviews(data.userReviews || []);
+      setSkrReviews(data.skrReviews || []);
+      if (data.preferenceData) setPreferenceData(data.preferenceData);
+      setFeedbackStats(data.feedbackStats || { totalViews: 0, totalHelpful: 0, totalReal: 0, totalFake: 0, reviewCount: 0 });
+
+      // フォロー中ユーザー取得
+      fetch("/api/user-follows?mode=following")
+        .then(res => res.json())
+        .then(fdata => setFollowingUsers(fdata.following || []))
+        .catch(() => {});
+
+      setProfileLoading(false);
+    };
+
+    fetchData();
+  }, [authUser, authLoading]);
+
+  // Loading state
+  if (authLoading || profileLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <SiteHeader />
+        <main className="container mx-auto px-4 py-6">
+          <div className="flex items-center justify-center py-20">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+          </div>
+        </main>
+        <SiteFooter />
+      </div>
+    );
+  }
+
+  if (!authUser) return null; // redirect happening
 
   // getEffectiveTier でティアを計算
-  const mockUser = {
-    id: "user1",
-    email: "test@example.com",
-    name: "テストユーザー",
+  const tierUser = {
+    id: authUser.id,
+    email: authUser.email || "",
+    name: profile?.nickname || "名無し",
     memberType: memberLevel,
     monthlyReviewCount: monthlyReviewCount,
-    totalReviewCount: 12,
-    registeredAt: "2024-01-01",
+    totalReviewCount: profile?.total_review_count || 0,
+    registeredAt: authUser.created_at || "",
     favorites: [],
   };
-  const effectiveTier = getEffectiveTier(mockUser);
+  const effectiveTier = getEffectiveTier(tierUser);
   const permissions = tierPermissions[effectiveTier];
 
-  const user = {
-    nickname: "テストユーザー",
-    email: "test@example.com",
-    memberSince: "2024年1月",
-    reviewCount: 12,
-    favoriteCount: 5,
-  };
+  const memberSinceDate = authUser.created_at
+    ? new Date(authUser.created_at).toLocaleDateString("ja-JP", { year: "numeric", month: "long" })
+    : "";
 
-  const userReviews = reviews.slice(0, 3);
-  const favoriteTherapists = therapists.slice(0, 5);
+  const user = {
+    nickname: profile?.nickname || "名無し",
+    email: authUser.email || "",
+    memberSince: memberSinceDate,
+    reviewCount: profile?.total_review_count || 0,
+    favoriteCount,
+  };
 
   // Lock screen component
   const LockScreen = ({ title, description, upgradeText, targetLevel }: { title: string; description: string; upgradeText: string; targetLevel: "standard" | "vip" }) => (
@@ -217,7 +324,8 @@ export default function MyPage() {
                       <Badge className={permissions.color}>{permissions.label}</Badge>
                     </div>
                     <p className="text-sm text-muted-foreground mb-2">{user.email}</p>
-                    <p className="text-xs text-muted-foreground">{user.memberSince}から利用中</p>
+                    <ReviewerLevelBadge level={profile?.total_review_count || 0} size="md" />
+                    <p className="text-xs text-muted-foreground mt-1">{user.memberSince}から利用中</p>
                   </div>
                 </div>
 
@@ -237,36 +345,67 @@ export default function MyPage() {
                     <p className="text-sm text-muted-foreground">口コミ閲覧</p>
                   </div>
                 </div>
-
-                {/* クレジット残高表示 */}
-                {memberLevel === "free" && (
-                  <div className="mt-6 pt-6 border-t">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <Eye className="h-5 w-5 text-primary" />
-                        <h3 className="font-bold text-sm">閲覧クレジット</h3>
-                      </div>
-                      <span className="text-lg font-bold text-primary">3 / 10 クレジット</span>
-                    </div>
-                    <div className="w-full bg-muted rounded-full h-2.5 mb-3">
-                      <div className="bg-primary h-2.5 rounded-full transition-all" style={{ width: "30%" }} />
-                    </div>
-                    <div className="p-3 rounded-lg bg-primary/5 border border-primary/10">
-                      <p className="text-sm text-muted-foreground">
-                        <span className="font-medium text-foreground">1投稿 = 10クレジット獲得</span>
-                        （1クレジットで1人分の口コミが読めます）
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        新規登録時に3クレジット付与。口コミを投稿してクレジットを獲得しましょう。
-                      </p>
-                    </div>
-                  </div>
-                )}
               </CardContent>
             </Card>
 
+            {/* 反響ダッシュボード */}
+            {feedbackStats.reviewCount > 0 && (
+              <div className="grid grid-cols-3 gap-3">
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <Eye className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />
+                    <p className="text-2xl font-bold">{feedbackStats.totalViews.toLocaleString()}</p>
+                    <p className="text-xs text-muted-foreground">総閲覧数</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <Heart className="h-5 w-5 mx-auto mb-1 text-pink-500" />
+                    <p className="text-2xl font-bold">{feedbackStats.totalHelpful.toLocaleString()}</p>
+                    <p className="text-xs text-muted-foreground">参考になった</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <ThumbsUp className="h-5 w-5 mx-auto mb-1 text-green-500" />
+                    <p className="text-2xl font-bold">
+                      {feedbackStats.totalReal + feedbackStats.totalFake > 0
+                        ? Math.round((feedbackStats.totalReal / (feedbackStats.totalReal + feedbackStats.totalFake)) * 100)
+                        : 0}%
+                    </p>
+                    <p className="text-xs text-muted-foreground">REAL率</p>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
             {/* 投稿数プログレスバー（Standard会員のみ） */}
             <ReviewProgressBar />
+
+            {/* 嗜好マップ */}
+            {preferenceData && <PreferenceMap data={preferenceData} />}
+
+            {/* フォロー中ユーザー */}
+            {followingUsers.length > 0 && (
+              <Card className="mb-6">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    フォロー中のレビュアー
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-2">
+                    {followingUsers.map(u => (
+                      <div key={u.id} className="flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-sm">
+                        <span>{u.nickname || "匿名"}</span>
+                        <ReviewerLevelBadge level={u.total_review_count} size="sm" />
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Member Benefits */}
             <Card>
@@ -353,48 +492,47 @@ export default function MyPage() {
               <Badge variant="outline">{userReviews.length}件</Badge>
             </CardHeader>
             <CardContent>
-              {userReviews.length > 0 ? (
-                <div className="space-y-4">
-                  {userReviews.map((review) => (
-                    <div key={review.id} className="p-4 border rounded-lg hover:bg-muted/50 transition-colors">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <Link href={`/therapist/${review.therapistId}`} className="font-medium hover:text-primary">
-                              {review.therapistName}
-                            </Link>
-                            <Badge className="bg-primary text-primary-foreground">{review.score}点</Badge>
-                          </div>
-                          <p className="text-sm text-muted-foreground">{review.shopName} / {review.createdAt}</p>
-                          <div className="flex flex-wrap gap-2 mt-2">
-                            {review.tags?.map((tag, i) => (
-                              <Badge key={i} variant="outline" className="text-xs">{tag}</Badge>
-                            ))}
-                          </div>
-                          <div className="mt-3 space-y-2 text-sm">
-                            <div>
-                              <span className="text-muted-foreground">第一印象: </span>
-                              {review.q1FirstImpression}
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground">施術・接客: </span>
-                              {review.q2Service}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button variant="ghost" size="icon"><Edit className="h-4 w-4" /></Button>
-                          <Button variant="ghost" size="icon" className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
+              {userReviews.length === 0 ? (
                 <div className="text-center py-8">
                   <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                   <p className="text-muted-foreground mb-4">まだ口コミを投稿していません</p>
-                  <Button>口コミを投稿する</Button>
+                  <p className="text-sm text-muted-foreground mb-4">口コミを投稿すると機能が解放されます</p>
+                  <Link href="/review">
+                    <Button>口コミを投稿する</Button>
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {userReviews.map((review) => (
+                    <div key={review.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{review.therapist_name}</p>
+                        <p className="text-sm text-muted-foreground truncate">{review.shop_name}</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {new Date(review.created_at).toLocaleDateString("ja-JP")}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 ml-4">
+                        <Badge variant="secondary">{review.score}点</Badge>
+                        <Badge
+                          variant="outline"
+                          className={
+                            review.moderation_status === "approved"
+                              ? "text-green-600 border-green-300"
+                              : review.moderation_status === "rejected"
+                              ? "text-destructive border-destructive"
+                              : "text-amber-600 border-amber-300"
+                          }
+                        >
+                          {review.moderation_status === "approved"
+                            ? "承認済み"
+                            : review.moderation_status === "rejected"
+                            ? "却下"
+                            : "審査中"}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </CardContent>
@@ -402,189 +540,44 @@ export default function MyPage() {
         );
 
       case "favorites":
-        return (
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-lg">お気に入りセラピスト</CardTitle>
-              <Badge variant="outline">{favoriteTherapists.length} / {permissions.favoriteLimit === 999 ? "無制限" : permissions.favoriteLimit}</Badge>
-            </CardHeader>
-            <CardContent>
-              <div className="grid sm:grid-cols-2 gap-4">
-                {favoriteTherapists.map((therapist) => (
-                  <div key={therapist.id} className="flex items-center gap-4 p-3 border rounded-lg hover:bg-muted/50 transition-colors">
-                    <div className="w-16 h-16 rounded-lg bg-muted overflow-hidden flex-shrink-0">
-                      <img src={therapist.images[0] || "/placeholder.svg"} alt={therapist.name} className="w-full h-full object-cover" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <Link href={`/therapist/${therapist.id}`} className="font-medium hover:text-primary">{therapist.name}</Link>
-                      <p className="text-sm text-muted-foreground truncate">{therapist.shopName}</p>
-                      <div className="flex items-center gap-1 mt-1">
-                        <Star className="h-3 w-3 fill-primary text-primary" />
-                        <span className="text-xs font-medium">{therapist.rating}</span>
-                      </div>
-                    </div>
-                    <Button variant="ghost" size="icon" className="text-primary flex-shrink-0">
-                      <Heart className="h-5 w-5 fill-current" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        );
+        return <FavoritesSection favoriteLimit={permissions.favoriteLimit} />;
 
       case "lists":
         if (!permissions.canUseDM) {
           return <LockScreen title="リスト共有機能" description="他のユーザーのお気に入りリストを閲覧したり、自分のリストを公開できます。スタンダード会員（月2本投稿）以上で利用可能です。" upgradeText="スタンダード会員になる" targetLevel="standard" />;
         }
         return (
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">自分のリスト設定</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">公開ステータス</p>
-                    <p className="text-sm text-muted-foreground">他のユーザーがあなたのリストを閲覧できます</p>
-                  </div>
-                  <Switch checked={listPublic} onCheckedChange={setListPublic} />
-                </div>
-                {listPublic && (
-                  <>
-                    <div>
-                      <Label>リスト名</Label>
-                      <Input placeholder="例: 渋谷ギャル系おすすめ" className="mt-1" />
-                    </div>
-                    <Button variant="outline" className="gap-2 bg-transparent">
-                      <Share2 className="h-4 w-4" />
-                      共有URLをコピー
-                    </Button>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-lg">公開リスト一覧</CardTitle>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="リストを検索" className="pl-9 w-48" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {mockPublicLists.map((list) => (
-                    <div key={list.id} className="flex items-center gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors">
-                      <Avatar>
-                        <AvatarFallback className="bg-primary/10 text-primary">{list.avatar}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
-                        <p className="font-medium">{list.listName}</p>
-                        <p className="text-sm text-muted-foreground">{list.userName} / {list.count}人のセラピスト</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-medium">{list.followers} フォロワー</p>
-                        <div className="flex gap-2 mt-1">
-                          <Button size="sm" variant="outline" className="bg-transparent"><UserPlus className="h-4 w-4" /></Button>
-                          <Button size="sm"><ExternalLink className="h-4 w-4" /></Button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">リスト共有</CardTitle>
+            </CardHeader>
+            <CardContent className="text-center py-12">
+              <Share2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <p className="text-muted-foreground mb-2">リスト共有機能は準備中です</p>
+              <p className="text-sm text-muted-foreground">お気に入りリストの公開・共有機能を近日中にリリースします</p>
+            </CardContent>
+          </Card>
         );
 
       case "messages":
         if (!permissions.canUseDM) {
-          return <LockScreen title="メッセージ機能" description="他のユーザーとDMやグループチャットでコミュニケーションができます。スタンダード会員（月2本投稿）以上で利用可能です。" upgradeText="スタンダード会員になる" targetLevel="standard" />;
+          return <LockScreen title="メッセージ機能" description="他のユーザーとDMでコミュニケーションができます。スタンダード会員（月2本投稿）以上で利用可能です。" upgradeText="スタンダード会員になる" targetLevel="standard" />;
         }
         return (
-          <Card className="h-[600px] flex flex-col">
-            <CardHeader className="border-b">
-              <Tabs defaultValue="dm" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="dm">DM</TabsTrigger>
-                  <TabsTrigger value="groups">グループ</TabsTrigger>
-                </TabsList>
-              </Tabs>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">メッセージ</CardTitle>
             </CardHeader>
-            <div className="flex flex-1 overflow-hidden">
-              <div className="w-1/3 border-r overflow-y-auto">
-                {mockConversations.map((conv) => (
-                  <div
-                    key={conv.id}
-                    onClick={() => setSelectedConversation(conv.id)}
-                    className={`p-4 cursor-pointer hover:bg-muted/50 transition-colors border-b ${selectedConversation === conv.id ? "bg-primary/5" : ""}`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-10 w-10">
-                        <AvatarFallback className="bg-primary/10 text-primary">{conv.avatar}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <p className="font-medium truncate">{conv.name}</p>
-                          <span className="text-xs text-muted-foreground">{conv.time}</span>
-                        </div>
-                        <p className="text-sm text-muted-foreground truncate">{conv.lastMessage}</p>
-                      </div>
-                      {conv.unread > 0 && (
-                        <Badge className="bg-primary text-primary-foreground">{conv.unread}</Badge>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="flex-1 flex flex-col">
-                {selectedConversation ? (
-                  <>
-                    <div className="p-4 border-b">
-                      <h4 className="font-medium">{mockConversations.find(c => c.id === selectedConversation)?.name}</h4>
-                    </div>
-                    <div className="flex-1 p-4 overflow-y-auto space-y-4">
-                      <div className="flex justify-start">
-                        <div className="max-w-[70%] p-3 rounded-lg bg-muted">
-                          <p className="text-sm">こんにちは！渋谷でおすすめの店舗ありますか？</p>
-                          <p className="text-xs text-muted-foreground mt-1">10:25</p>
-                        </div>
-                      </div>
-                      <div className="flex justify-end">
-                        <div className="max-w-[70%] p-3 rounded-lg bg-primary text-primary-foreground">
-                          <p className="text-sm">アロマモアがおすすめですよ！</p>
-                          <p className="text-xs text-primary-foreground/70 mt-1">10:28</p>
-                        </div>
-                      </div>
-                      <div className="flex justify-start">
-                        <div className="max-w-[70%] p-3 rounded-lg bg-muted">
-                          <p className="text-sm">了解です！ありがとうございます</p>
-                          <p className="text-xs text-muted-foreground mt-1">10:30</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="p-4 border-t">
-                      <div className="flex gap-2">
-                        <Input
-                          placeholder="メッセージを入力..."
-                          value={messageInput}
-                          onChange={(e) => setMessageInput(e.target.value)}
-                          className="flex-1"
-                        />
-                        <Button size="icon"><Send className="h-4 w-4" /></Button>
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <div className="flex-1 flex items-center justify-center text-muted-foreground">
-                    会話を選択してください
-                  </div>
-                )}
-              </div>
-            </div>
+            <CardContent className="text-center py-8">
+              <MessageCircle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <p className="text-muted-foreground mb-4">メッセージページで会話を管理できます</p>
+              <Link href="/messages">
+                <Button className="gap-2">
+                  <MessageCircle className="h-4 w-4" />
+                  メッセージを開く
+                </Button>
+              </Link>
+            </CardContent>
           </Card>
         );
 
@@ -595,55 +588,17 @@ export default function MyPage() {
         return (
           <Card>
             <CardHeader>
-              <Tabs value={bbsTab} onValueChange={setBbsTab}>
-                <div className="flex items-center justify-between">
-                  <TabsList>
-                    <TabsTrigger value="general">一般</TabsTrigger>
-                    <TabsTrigger value="vip" className="gap-1">
-                      <Crown className="h-4 w-4" />
-                      VIP限定
-                    </TabsTrigger>
-                  </TabsList>
-                  <Button size="sm" className="gap-1">
-                    <Plus className="h-4 w-4" />
-                    新規スレッド
-                  </Button>
-                </div>
-              </Tabs>
+              <CardTitle className="text-lg">掲示板</CardTitle>
             </CardHeader>
-            <CardContent>
-              {bbsTab === "vip" && !permissions.canUseVIPBBS ? (
-                <LockScreen title="VIP限定掲示板" description="VIP会員専用の掲示板です。より深い情報交換ができます。スタンダード会員は月3本投稿、またはVIP会員で利用可能です。" upgradeText="VIP会員になる" targetLevel="vip" />
-              ) : (
-                <>
-                  <div className="flex gap-2 mb-4 flex-wrap">
-                    <Button variant="outline" size="sm" className="bg-transparent">全て</Button>
-                    <Button variant="outline" size="sm" className="bg-transparent">雑談</Button>
-                    <Button variant="outline" size="sm" className="bg-transparent">情報交換</Button>
-                    <Button variant="outline" size="sm" className="bg-transparent">質問</Button>
-                    <Button variant="outline" size="sm" className="bg-transparent">エリア別</Button>
-                  </div>
-                  <div className="space-y-3">
-                    {mockBBSThreads.map((thread) => (
-                      <Link key={thread.id} href={`/bbs/${thread.id}`} className="block p-4 border rounded-lg hover:bg-muted/50 transition-colors">
-                        <div className="flex items-start justify-between gap-4">
-                          <div>
-                            <div className="flex items-center gap-2 mb-1">
-                              <Badge variant="outline" className="text-xs">{thread.category}</Badge>
-                              <h4 className="font-medium">{thread.title}</h4>
-                            </div>
-                            <p className="text-sm text-muted-foreground">{thread.author} / {thread.lastUpdate}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-sm font-medium">{thread.comments}</p>
-                            <p className="text-xs text-muted-foreground">コメント</p>
-                          </div>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </>
-              )}
+            <CardContent className="text-center py-8">
+              <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <p className="text-muted-foreground mb-4">掲示板でメンズエステについて語り合おう</p>
+              <Link href="/bbs">
+                <Button className="gap-2">
+                  <MessageSquare className="h-4 w-4" />
+                  掲示板を開く
+                </Button>
+              </Link>
             </CardContent>
           </Card>
         );
@@ -655,13 +610,13 @@ export default function MyPage() {
               <CardContent className="p-0">
                 <div className="relative">
                   <div className="blur-sm pointer-events-none p-6 space-y-4">
-                    {mockSKRReviews.map((review) => (
-                      <div key={review.id} className="flex gap-4 p-4 border rounded-lg">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="flex gap-4 p-4 border rounded-lg">
                         <div className="w-16 h-16 rounded-lg bg-muted" />
-                        <div className="flex-1">
-                          <p className="font-medium">{review.therapistName}</p>
-                          <p className="text-sm text-muted-foreground">{review.shopName}</p>
-                          <p className="text-sm mt-2">{review.comment}</p>
+                        <div className="flex-1 space-y-2">
+                          <div className="h-4 bg-muted rounded w-24" />
+                          <div className="h-3 bg-muted rounded w-32" />
+                          <div className="h-3 bg-muted rounded w-full" />
                         </div>
                       </div>
                     ))}
@@ -698,85 +653,55 @@ export default function MyPage() {
                   <Flame className="h-5 w-5 text-amber-500" />
                   SKR/HRリスト
                 </CardTitle>
-                <div className="flex gap-2">
-                  <Select defaultValue="all">
-                    <SelectTrigger className="w-32">
-                      <SelectValue placeholder="レベル" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">全て</SelectItem>
-                      <SelectItem value="skr">SKR</SelectItem>
-                      <SelectItem value="hr">HR</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Select defaultValue="all">
-                    <SelectTrigger className="w-32">
-                      <SelectValue placeholder="エリア" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">全エリア</SelectItem>
-                      <SelectItem value="tokyo">東京</SelectItem>
-                      <SelectItem value="osaka">大阪</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {mockSKRReviews.map((review) => (
-                  <div key={review.id} className="flex gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors">
-                    <div className="w-16 h-16 rounded-lg bg-muted overflow-hidden flex-shrink-0">
-                      <img src={review.image || "/placeholder.svg"} alt={review.therapistName} className="w-full h-full object-cover" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Link href="#" className="font-medium hover:text-primary">{review.therapistName}</Link>
-                        <Badge className={review.level === "hr" ? "bg-gradient-to-r from-purple-500 to-purple-400" : "bg-gradient-to-r from-orange-500 to-orange-400"}>
-                          {review.level === "hr" ? "HR" : "SKR"}
-                        </Badge>
-                        <Badge className="bg-primary text-primary-foreground">{review.rating}点</Badge>
+              {skrReviews.length === 0 ? (
+                <div className="text-center py-8">
+                  <Flame className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">SKR/HRの口コミはまだありません</p>
+                  <p className="text-sm text-muted-foreground mt-2">口コミが承認されると表示されます</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {skrReviews.map((review) => (
+                    <div key={review.id} className="flex gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+                      <div className="w-16 h-16 rounded-lg bg-muted overflow-hidden flex-shrink-0">
+                        {review.therapist_image ? (
+                          <img src={review.therapist_image} alt={review.therapist_name} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-lg font-bold text-muted-foreground">
+                            {review.therapist_name.charAt(0)}
+                          </div>
+                        )}
                       </div>
-                      <p className="text-sm text-muted-foreground">{review.shopName} / {review.date}</p>
-                      <p className="text-sm mt-2">{review.comment}</p>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Link href={`/therapist/${review.therapist_id}`} className="font-medium hover:text-primary">
+                            {review.therapist_name}
+                          </Link>
+                          <Badge className={String(review.service_level_id) === "3" ? "bg-gradient-to-r from-purple-500 to-purple-400" : "bg-gradient-to-r from-orange-500 to-orange-400"}>
+                            {String(review.service_level_id) === "3" ? "HR" : "SKR"}
+                          </Badge>
+                          <Badge className="bg-primary text-primary-foreground">{review.score}点</Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {review.shop_name} / {new Date(review.created_at).toLocaleDateString("ja-JP")}
+                        </p>
+                        {review.comment && (
+                          <p className="text-sm mt-2 line-clamp-2">{review.comment}</p>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         );
 
       case "notifications":
-        return (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">通知</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {[
-                  { title: "新着口コミがあります", description: "お気に入りのセラピストに新しい口コミが投稿されました", time: "1時間前", read: false },
-                  { title: "DMが届きました", description: "田中さんからメッセージが届いています", time: "3時間前", read: false },
-                  { title: "口コミが承認されました", description: "投稿した口コミが承認され、公開されました", time: "1日前", read: true },
-                  { title: "フォロー中のリストが更新", description: "「渋谷ギャル系TOP10」に新しいセラピストが追加されました", time: "2日前", read: true },
-                  { title: "今月の投稿数リセット", description: "毎月1日に投稿数がリセットされました", time: "3日前", read: true },
-                ].map((notification, index) => (
-                  <div key={index} className={`p-4 border rounded-lg ${!notification.read ? "bg-primary/5 border-primary/20" : ""}`}>
-                    <div className="flex items-start gap-3">
-                      <div className={`w-2 h-2 rounded-full mt-2 ${!notification.read ? "bg-primary" : "bg-transparent"}`} />
-                      <div className="flex-1">
-                        <h4 className="font-medium">{notification.title}</h4>
-                        <p className="text-sm text-muted-foreground">{notification.description}</p>
-                        <p className="text-xs text-muted-foreground mt-1">{notification.time}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        );
+        return <NotificationsSection />;
 
       case "settings":
         return (
@@ -788,19 +713,43 @@ export default function MyPage() {
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-4">
                   <Avatar className="h-20 w-20">
-                    <AvatarFallback className="text-2xl bg-primary/10 text-primary">{user.nickname.charAt(0)}</AvatarFallback>
+                    <AvatarFallback className="text-2xl bg-primary/10 text-primary">{editNickname.charAt(0)}</AvatarFallback>
                   </Avatar>
-                  <Button variant="outline" className="bg-transparent">アバターを変更</Button>
                 </div>
                 <div>
                   <Label>ユーザー名</Label>
-                  <Input defaultValue={user.nickname} className="mt-1" />
+                  <Input
+                    value={editNickname}
+                    onChange={(e) => { setEditNickname(e.target.value); setProfileSaved(false); }}
+                    className="mt-1"
+                  />
                 </div>
                 <div>
                   <Label>メールアドレス</Label>
-                  <Input defaultValue={user.email} className="mt-1" />
+                  <Input value={user.email} disabled className="mt-1 bg-muted" />
                 </div>
-                <Button>保存</Button>
+                <div className="flex items-center gap-3">
+                  <Button
+                    disabled={savingProfile || editNickname === profile?.nickname}
+                    onClick={async () => {
+                      if (!authUser || !editNickname.trim()) return;
+                      setSavingProfile(true);
+                      const supabase = createSupabaseBrowser();
+                      const { error } = await supabase
+                        .from("profiles")
+                        .update({ nickname: editNickname.trim() })
+                        .eq("id", authUser.id);
+                      setSavingProfile(false);
+                      if (!error) {
+                        setProfile(prev => prev ? { ...prev, nickname: editNickname.trim() } : prev);
+                        setProfileSaved(true);
+                      }
+                    }}
+                  >
+                    {savingProfile ? "保存中..." : "保存"}
+                  </Button>
+                  {profileSaved && <span className="text-sm text-green-600">保存しました</span>}
+                </div>
               </CardContent>
             </Card>
 
@@ -810,18 +759,54 @@ export default function MyPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label>現在のパスワード</Label>
-                  <Input type="password" className="mt-1" />
-                </div>
-                <div>
                   <Label>新しいパスワード</Label>
-                  <Input type="password" className="mt-1" />
+                  <Input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => { setNewPassword(e.target.value); setPasswordError(""); setPasswordSaved(false); }}
+                    className="mt-1"
+                    placeholder="8文字以上"
+                  />
                 </div>
                 <div>
                   <Label>新しいパスワード（確認）</Label>
-                  <Input type="password" className="mt-1" />
+                  <Input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => { setConfirmPassword(e.target.value); setPasswordError(""); setPasswordSaved(false); }}
+                    className="mt-1"
+                  />
                 </div>
-                <Button>パスワードを変更</Button>
+                {passwordError && <p className="text-sm text-destructive">{passwordError}</p>}
+                <div className="flex items-center gap-3">
+                  <Button
+                    disabled={savingPassword || !newPassword || !confirmPassword}
+                    onClick={async () => {
+                      if (newPassword.length < 8) {
+                        setPasswordError("パスワードは8文字以上にしてください");
+                        return;
+                      }
+                      if (newPassword !== confirmPassword) {
+                        setPasswordError("パスワードが一致しません");
+                        return;
+                      }
+                      setSavingPassword(true);
+                      const supabase = createSupabaseBrowser();
+                      const { error } = await supabase.auth.updateUser({ password: newPassword });
+                      setSavingPassword(false);
+                      if (error) {
+                        setPasswordError(error.message);
+                      } else {
+                        setNewPassword("");
+                        setConfirmPassword("");
+                        setPasswordSaved(true);
+                      }
+                    }}
+                  >
+                    {savingPassword ? "変更中..." : "パスワードを変更"}
+                  </Button>
+                  {passwordSaved && <span className="text-sm text-green-600">変更しました</span>}
+                </div>
               </CardContent>
             </Card>
 
@@ -846,22 +831,15 @@ export default function MyPage() {
               <CardHeader>
                 <CardTitle className="text-lg">通知設定</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {[
-                  { label: "新着口コミ通知", description: "お気に入りセラピストに口コミが投稿された時" },
-                  { label: "DM通知", description: "新しいメッセージを受信した時" },
-                  { label: "運営からのお知らせ", description: "キャンペーンや重要なお知らせ" },
-                ].map((setting, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">{setting.label}</p>
-                      <p className="text-sm text-muted-foreground">{setting.description}</p>
-                    </div>
-                    <Switch defaultChecked />
-                  </div>
-                ))}
+              <CardContent>
+                <div className="text-center py-6">
+                  <Bell className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+                  <p className="text-muted-foreground text-sm">通知設定は現在準備中です</p>
+                </div>
               </CardContent>
             </Card>
+
+            <DeviceManagementSection />
 
             <Card className="border-destructive/50">
               <CardHeader>
@@ -869,7 +847,37 @@ export default function MyPage() {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground mb-4">退会すると全てのデータが削除され、復元できません。</p>
-                <Button variant="destructive">退会する</Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive">退会する</Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>本当に退会しますか？</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        退会すると、投稿した口コミ・お気に入り・メッセージなど全てのデータが完全に削除されます。この操作は取り消せません。
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>キャンセル</AlertDialogCancel>
+                      <AlertDialogAction
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        onClick={async () => {
+                          const res = await fetch("/api/account", { method: "DELETE" });
+                          if (res.ok) {
+                            const supabase = createSupabaseBrowser();
+                            await supabase.auth.signOut();
+                            router.push("/");
+                          } else {
+                            alert("退会処理に失敗しました。サポートにお問い合わせください。");
+                          }
+                        }}
+                      >
+                        退会する
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </CardContent>
             </Card>
           </div>
@@ -1009,5 +1017,223 @@ export default function MyPage() {
 
       <SiteFooter />
     </div>
+  );
+}
+
+// お気に入りセクション（API連動）
+function FavoritesSection({ favoriteLimit }: { favoriteLimit: number }) {
+  const [favorites, setFavorites] = useState<{ id: number; name: string; age: number | null; image_url: string | null; shop_name: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/favorites")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setFavorites(data);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  const removeFavorite = async (therapistId: number) => {
+    await fetch("/api/favorites", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ therapist_id: therapistId }),
+    });
+    setFavorites((prev) => prev.filter((f) => f.id !== therapistId));
+  };
+
+  if (loading) {
+    return <Card><CardContent className="p-6"><div className="animate-pulse h-32 bg-muted rounded" /></CardContent></Card>;
+  }
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="text-lg">お気に入りセラピスト</CardTitle>
+        <Badge variant="outline">{favorites.length} / {favoriteLimit === 999 ? "無制限" : favoriteLimit}</Badge>
+      </CardHeader>
+      <CardContent>
+        {favorites.length === 0 ? (
+          <div className="text-center py-8">
+            <Heart className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <p className="text-muted-foreground mb-4">まだお気に入りがありません</p>
+            <p className="text-sm text-muted-foreground mb-4">セラピスト詳細ページからお気に入り登録できます</p>
+            <Link href="/search">
+              <Button>セラピストを探す</Button>
+            </Link>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {favorites.map((fav) => (
+              <div key={fav.id} className="flex items-center gap-4 p-3 border rounded-lg">
+                <Link href={`/therapist/${fav.id}`} className="flex items-center gap-4 flex-1 min-w-0">
+                  <div className="w-12 h-12 rounded-full overflow-hidden bg-muted flex-shrink-0">
+                    {fav.image_url ? (
+                      <img src={fav.image_url} alt={fav.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-lg font-bold text-muted-foreground">{fav.name[0]}</div>
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-medium truncate">{fav.name}{fav.age ? ` (${fav.age})` : ""}</p>
+                    <p className="text-sm text-muted-foreground truncate">{fav.shop_name}</p>
+                  </div>
+                </Link>
+                <Button variant="ghost" size="sm" onClick={() => removeFavorite(fav.id)} className="text-muted-foreground hover:text-destructive">
+                  <Heart className="h-4 w-4 fill-current text-red-500" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// 通知セクション（API連動）
+function NotificationsSection() {
+  const [notifications, setNotifications] = useState<{ id: number; type: string; title: string; body: string | null; link: string | null; is_read: boolean; created_at: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/notifications")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setNotifications(data);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  const markAllRead = async () => {
+    await fetch("/api/notifications", { method: "PATCH" });
+    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+  };
+
+  if (loading) {
+    return <Card><CardContent className="p-6"><div className="animate-pulse h-32 bg-muted rounded" /></CardContent></Card>;
+  }
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="text-lg">通知</CardTitle>
+        {notifications.some((n) => !n.is_read) && (
+          <Button variant="ghost" size="sm" onClick={markAllRead} className="text-xs">
+            すべて既読にする
+          </Button>
+        )}
+      </CardHeader>
+      <CardContent>
+        {notifications.length === 0 ? (
+          <div className="text-center py-8">
+            <Bell className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <p className="text-muted-foreground">通知はありません</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {notifications.map((n) => (
+              <div key={n.id} className={`p-4 border rounded-lg ${!n.is_read ? "bg-primary/5 border-primary/20" : ""}`}>
+                <div className="flex items-start gap-3">
+                  <div className={`w-2 h-2 rounded-full mt-2 ${!n.is_read ? "bg-primary" : "bg-transparent"}`} />
+                  <div className="flex-1">
+                    {n.link ? (
+                      <Link href={n.link} className="hover:underline">
+                        <h4 className="font-medium">{n.title}</h4>
+                      </Link>
+                    ) : (
+                      <h4 className="font-medium">{n.title}</h4>
+                    )}
+                    {n.body && <p className="text-sm text-muted-foreground">{n.body}</p>}
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {new Date(n.created_at).toLocaleDateString("ja-JP")}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function DeviceManagementSection() {
+  const [sessions, setSessions] = useState<{ id: string; device_label: string | null; ip_address: string | null; last_active_at: string; created_at: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [removing, setRemoving] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/sessions")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setSessions(data);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  const removeSession = async (id: string) => {
+    setRemoving(id);
+    await fetch(`/api/sessions/${id}`, { method: "DELETE" });
+    setSessions((prev) => prev.filter((s) => s.id !== id));
+    setRemoving(null);
+  };
+
+  if (loading) {
+    return <Card><CardContent className="p-6"><div className="animate-pulse h-24 bg-muted rounded" /></CardContent></Card>;
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg">ログイン中のデバイス</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {sessions.length === 0 ? (
+          <p className="text-sm text-muted-foreground">アクティブなセッションはありません</p>
+        ) : (
+          <div className="space-y-3">
+            {sessions.map((s) => {
+              const label = s.device_label || "不明なデバイス";
+              const isMobile = label.includes("iPhone") || label.includes("Android") || label.includes("iPad");
+              const Icon = isMobile ? Smartphone : label.includes("macOS") || label.includes("Windows") ? Laptop : Monitor;
+              const lastActive = new Date(s.last_active_at);
+              const diffMs = Date.now() - lastActive.getTime();
+              const diffMin = Math.floor(diffMs / 60000);
+              const timeAgo = diffMin < 1 ? "たった今" : diffMin < 60 ? `${diffMin}分前` : diffMin < 1440 ? `${Math.floor(diffMin / 60)}時間前` : `${Math.floor(diffMin / 1440)}日前`;
+
+              return (
+                <div key={s.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <Icon className="h-5 w-5 text-muted-foreground" />
+                    <div>
+                      <p className="font-medium text-sm">{label}</p>
+                      <p className="text-xs text-muted-foreground">最終利用: {timeAgo}</p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeSession(s.id)}
+                    disabled={removing === s.id}
+                    className="text-destructive hover:text-destructive"
+                  >
+                    {removing === s.id ? "切断中..." : "切断"}
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        <p className="text-xs text-muted-foreground mt-3">
+          最大2台のデバイスでログインできます。
+        </p>
+      </CardContent>
+    </Card>
   );
 }

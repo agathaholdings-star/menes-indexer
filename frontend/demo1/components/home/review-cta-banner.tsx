@@ -3,23 +3,15 @@
 import Link from "next/link";
 import { PenLine, Gift, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useMemberLevel } from "@/components/shared/member-level-debug";
+import { useAuth } from "@/lib/auth-context";
+import { useTier } from "@/lib/hooks/use-tier";
 
-/**
- * 未投稿free会員向けの口コミ投稿CTAバナー。
- * 表示条件: ログイン済み + free会員 + 未投稿
- *
- * 現在はMemberLevelContextの"free"状態で表示。
- * Supabase認証統合後は、実際のログイン状態・投稿数を参照するよう差し替え。
- */
 export function ReviewCtaBanner() {
-  const { isFree } = useMemberLevel();
+  const { user } = useAuth();
+  const { membershipType, totalReviewCount, loading } = useTier();
 
-  // free会員でない場合（standard/vip）は表示しない
-  // TODO: Supabase認証統合後、以下の条件を追加:
-  //   - !session → 非表示（未ログイン）
-  //   - profile.total_review_count > 0 → 非表示（投稿済み）
-  if (!isFree) return null;
+  // 未ログイン、ロード中、有料会員、投稿済みは非表示
+  if (!user || loading || membershipType !== "free" || totalReviewCount > 0) return null;
 
   return (
     <section className="mt-6">

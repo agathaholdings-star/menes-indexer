@@ -11,13 +11,9 @@ import { LatestReviews } from "@/components/home/latest-reviews";
 import { PopularTherapists } from "@/components/home/popular-therapists";
 import { AreaPopularShops } from "@/components/home/area-popular-shops";
 import { ReviewCtaBanner } from "@/components/home/review-cta-banner";
-import {
-  MemberLevelProvider,
-} from "@/components/shared/member-level-debug";
 
 export function HomePageClient() {
   return (
-    <MemberLevelProvider>
       <div className="min-h-screen flex flex-col bg-background">
         <SiteHeader />
 
@@ -53,6 +49,5 @@ export function HomePageClient() {
 
         <SiteFooter />
       </div>
-    </MemberLevelProvider>
   );
 }
