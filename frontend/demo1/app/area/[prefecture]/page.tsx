@@ -109,7 +109,7 @@ export default async function AreaPrefecturePage({
                 </Link>
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
-                {shops.slice(0, 4).map((shop) => (
+                {areaShops.slice(0, 4).map((shop) => (
                   <Link key={shop.id} href={`/shop/${shop.id}`}>
                     <Card className="hover:shadow-md transition-shadow cursor-pointer">
                       <CardContent className="p-4">

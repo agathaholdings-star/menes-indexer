@@ -120,12 +120,14 @@ export function ShopPageClient({ shop, therapists, shopReviews }: ShopPageClient
 
                       <p className="mt-4 text-sm text-muted-foreground">{shop.description}</p>
 
-                      <Button className="mt-4 gap-2" asChild>
-                        <a href="#" target="_blank" rel="noopener noreferrer">
-                          <ExternalLink className="h-4 w-4" />
-                          公式サイト
-                        </a>
-                      </Button>
+                      {shop.officialUrl && (
+                        <Button className="mt-4 gap-2" asChild>
+                          <a href={shop.officialUrl} target="_blank" rel="noopener noreferrer">
+                            <ExternalLink className="h-4 w-4" />
+                            公式サイト
+                          </a>
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </CardContent>

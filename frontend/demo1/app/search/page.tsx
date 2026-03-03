@@ -325,6 +325,20 @@ function SearchContent() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTriggered]);
 
+  // フィルター状態
+  const [query, setQuery] = useState(initialQuery);
+  const [sortBy, setSortBy] = useState("newest");
+  const [selectedArea, setSelectedArea] = useState("");
+  const [selectedDistrict, setSelectedDistrict] = useState("");
+  const [shopName, setShopName] = useState("");
+  const [selectedTypes, setSelectedTypes] = useState<string[]>(
+    initialType ? [initialType] : []
+  );
+  const [selectedStyles, setSelectedStyles] = useState<string[]>([]);
+  const [scoreFilter, setScoreFilter] = useState("");
+  const [skrFilter, setSkrFilter] = useState(false);
+  const [hrFilter, setHrFilter] = useState(false);
+
   const loadMoreTherapists = useCallback(async () => {
     setLoadingMore(true);
     try {
@@ -373,20 +387,6 @@ function SearchContent() {
       setLoadingMore(false);
     }
   }, [currentOffset, selectedArea, selectedDistrict, query]);
-
-  // フィルター状態
-  const [query, setQuery] = useState(initialQuery);
-  const [sortBy, setSortBy] = useState("newest");
-  const [selectedArea, setSelectedArea] = useState("");
-  const [selectedDistrict, setSelectedDistrict] = useState("");
-  const [shopName, setShopName] = useState("");
-  const [selectedTypes, setSelectedTypes] = useState<string[]>(
-    initialType ? [initialType] : []
-  );
-  const [selectedStyles, setSelectedStyles] = useState<string[]>([]);
-  const [scoreFilter, setScoreFilter] = useState("");
-  const [skrFilter, setSkrFilter] = useState(false);
-  const [hrFilter, setHrFilter] = useState(false);
 
   // モーダル
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
