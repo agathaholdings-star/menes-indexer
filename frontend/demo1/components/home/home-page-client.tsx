@@ -11,8 +11,15 @@ import { LatestReviews } from "@/components/home/latest-reviews";
 import { PopularTherapists } from "@/components/home/popular-therapists";
 import { AreaPopularShops } from "@/components/home/area-popular-shops";
 import { ReviewCtaBanner } from "@/components/home/review-cta-banner";
+import type { AreasGrouped, AreaItem } from "@/lib/supabase-data";
 
-export function HomePageClient() {
+interface HomePageClientProps {
+  areasGrouped: AreasGrouped;
+  popularAreas: (AreaItem & { name: string })[];
+  regionOrder: string[];
+}
+
+export function HomePageClient({ areasGrouped, popularAreas, regionOrder }: HomePageClientProps) {
   return (
       <div className="min-h-screen flex flex-col bg-background">
         <SiteHeader />
@@ -32,7 +39,11 @@ export function HomePageClient() {
                 <TypeGrid />
                 <VipFilter />
                 <AreaPopularShops />
-                <AreaGrid />
+                <AreaGrid
+                  areasGrouped={areasGrouped}
+                  popularAreas={popularAreas}
+                  regionOrder={regionOrder}
+                />
                 <LatestReviews />
                 <PopularTherapists />
               </div>

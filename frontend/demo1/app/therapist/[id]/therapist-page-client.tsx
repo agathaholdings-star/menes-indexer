@@ -60,7 +60,7 @@ export function TherapistPageClient({ therapist, reviews }: TherapistPageClientP
               {therapist.district}
             </Link>
             <span className="mx-2">/</span>
-            <Link href={`/shop/${therapist.shopId}`} className="hover:text-foreground">
+            <Link href={`/salon/${therapist.shopId}`} className="hover:text-foreground">
               {therapist.shopName}
             </Link>
             <span className="mx-2">/</span>
@@ -140,7 +140,7 @@ export function TherapistPageClient({ therapist, reviews }: TherapistPageClientP
                             <h1 className="text-2xl font-bold">{therapist.name}</h1>
                             <span className="text-muted-foreground">({therapist.age})</span>
                           </div>
-                          <Link href={`/shop/${therapist.shopId}`} className="text-primary hover:underline">
+                          <Link href={`/salon/${therapist.shopId}`} className="text-primary hover:underline">
                             {therapist.shopName}
                           </Link>
                           <div className="flex items-center gap-2 mt-2">

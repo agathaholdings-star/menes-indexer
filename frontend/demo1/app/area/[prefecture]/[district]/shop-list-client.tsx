@@ -179,7 +179,7 @@ export function ShopListPageClient({
                 sortedShops.map(shop => {
                   const shopTherapists = getShopTherapists(shop.id);
                   return (
-                    <Link key={shop.id} href={`/shop/${shop.id}`}>
+                    <Link key={shop.id} href={`/salon/${shop.id}`}>
                       <Card className="transition-all hover:shadow-md hover:border-primary/20">
                         <CardContent className="p-4">
                           <div className="flex flex-col gap-4 sm:flex-row">

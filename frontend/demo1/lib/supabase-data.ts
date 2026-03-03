@@ -47,6 +47,87 @@ export async function getAreaBySlug(slug: string): Promise<Area | null> {
 }
 
 // =============================================================================
+// Areas Grouped (for area-grid / area page)
+// =============================================================================
+
+export interface AreaItem {
+  name: string;
+  slug: string;
+  prefSlug: string;
+  salon_count: number;
+}
+
+export interface AreasGrouped {
+  [region: string]: {
+    [prefName: string]: {
+      prefSlug: string;
+      areas: AreaItem[];
+    };
+  };
+}
+
+const REGION_ORDER = ["関東", "関西", "東海", "北海道・東北", "北陸・甲信越", "中国・四国", "九州・沖縄"];
+
+export async function getAllAreasGrouped(): Promise<{
+  areasGrouped: AreasGrouped;
+  popularAreas: (AreaItem & { name: string })[];
+  regionOrder: string[];
+}> {
+  const [prefectures, areasResult] = await Promise.all([
+    getAllPrefectures(),
+    supabase
+      .from("areas")
+      .select("id, name, slug, prefecture_id, salon_count")
+      .gt("salon_count", 0)
+      .order("search_volume", { ascending: false }),
+  ]);
+
+  const areas = areasResult.data || [];
+  const prefMap = new Map(prefectures.map((p) => [p.id, p]));
+
+  const grouped: AreasGrouped = {};
+
+  for (const pref of prefectures) {
+    const region = pref.region || "その他";
+    if (!grouped[region]) grouped[region] = {};
+
+    const prefAreas = areas
+      .filter((a) => a.prefecture_id === pref.id)
+      .map((a) => ({
+        name: a.name,
+        slug: a.slug,
+        prefSlug: pref.slug,
+        salon_count: a.salon_count ?? 0,
+      }));
+
+    if (prefAreas.length > 0) {
+      grouped[region][pref.name] = {
+        prefSlug: pref.slug,
+        areas: prefAreas,
+      };
+    }
+  }
+
+  // Popular areas: top 12 by salon_count
+  const allAreaItems: (AreaItem & { name: string })[] = areas
+    .map((a) => {
+      const pref = prefMap.get(a.prefecture_id);
+      return {
+        name: a.name,
+        slug: a.slug,
+        prefSlug: pref?.slug || "",
+        salon_count: a.salon_count ?? 0,
+      };
+    })
+    .sort((a, b) => b.salon_count - a.salon_count)
+    .slice(0, 12);
+
+  const regionOrder = REGION_ORDER.filter((r) => grouped[r]);
+
+  return { areasGrouped: grouped, popularAreas: allAreaItems, regionOrder };
+}
+
+// =============================================================================
 // Shops
 // =============================================================================
 

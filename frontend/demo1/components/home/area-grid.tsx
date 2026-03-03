@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { MapPin, TrendingUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,40 +11,16 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { areasData } from "@/lib/data";
+import type { AreasGrouped, AreaItem } from "@/lib/supabase-data";
 
-// Build a flat list of all districts with their region/prefecture for popularity ranking
-function getPopularAreas(limit: number) {
-  const allAreas: { region: string; prefecture: string; district: string }[] = [];
-  for (const [region, prefectures] of Object.entries(areasData)) {
-    for (const [prefecture, districts] of Object.entries(prefectures)) {
-      for (const district of districts) {
-        allAreas.push({ region, prefecture, district });
-      }
-    }
-  }
-  // Use a deterministic ranking: prioritize well-known areas
-  // Since we don't have salon_count in static data, use a hardcoded popularity order
-  const popularOrder = [
-    "新宿", "渋谷", "池袋", "五反田", "梅田", "難波",
-    "六本木", "上野", "栄", "銀座", "心斎橋", "三宮",
-    "中洲", "天神", "秋葉原",
-  ];
-  const sorted = allAreas.sort((a, b) => {
-    const aIdx = popularOrder.indexOf(a.district);
-    const bIdx = popularOrder.indexOf(b.district);
-    if (aIdx === -1 && bIdx === -1) return 0;
-    if (aIdx === -1) return 1;
-    if (bIdx === -1) return -1;
-    return aIdx - bIdx;
-  });
-  return sorted.slice(0, limit);
+interface AreaGridProps {
+  areasGrouped: AreasGrouped;
+  popularAreas: (AreaItem & { name: string })[];
+  regionOrder: string[];
 }
 
-export function AreaGrid() {
-  const [activeRegion, setActiveRegion] = useState("関東");
-
-  const popularAreas = useMemo(() => getPopularAreas(12), []);
+export function AreaGrid({ areasGrouped, popularAreas, regionOrder }: AreaGridProps) {
+  const [activeRegion, setActiveRegion] = useState(regionOrder[0] || "関東");
 
   return (
     <section className="mt-8">
@@ -65,11 +41,11 @@ export function AreaGrid() {
             <div className="flex flex-wrap gap-2">
               {popularAreas.map((area) => (
                 <Link
-                  key={`${area.prefecture}-${area.district}`}
-                  href={`/area/${area.prefecture}/${area.district}`}
+                  key={`${area.prefSlug}-${area.slug}`}
+                  href={`/area/${area.prefSlug}/${area.slug}`}
                   className="px-3 py-1.5 text-sm bg-primary/10 text-primary hover:bg-primary/20 rounded-full transition-colors font-medium"
                 >
-                  {area.district}
+                  {area.name}
                 </Link>
               ))}
             </div>
@@ -78,34 +54,37 @@ export function AreaGrid() {
           {/* Region Tabs */}
           <Tabs value={activeRegion} onValueChange={setActiveRegion}>
             <TabsList className="w-full justify-start flex-wrap h-auto gap-1">
-              {Object.keys(areasData).map((region) => (
+              {regionOrder.map((region) => (
                 <TabsTrigger key={region} value={region} className="text-sm">
                   {region}
                 </TabsTrigger>
               ))}
             </TabsList>
-            {Object.entries(areasData).map(([region, prefectures]) => (
+            {regionOrder.map((region) => (
               <TabsContent key={region} value={region} className="mt-4">
                 <Accordion type="multiple" className="w-full">
-                  {Object.entries(prefectures).map(([prefecture, districts]) => (
-                    <AccordionItem key={prefecture} value={prefecture}>
+                  {Object.entries(areasGrouped[region] || {}).map(([prefName, prefData]) => (
+                    <AccordionItem key={prefName} value={prefName}>
                       <AccordionTrigger className="py-3 hover:no-underline">
                         <div className="flex items-center gap-2">
-                          <span className="font-semibold">{prefecture}</span>
+                          <span className="font-semibold">{prefName}</span>
                           <span className="text-xs text-muted-foreground">
-                            ({districts.length}エリア)
+                            ({prefData.areas.length}エリア)
                           </span>
                         </div>
                       </AccordionTrigger>
                       <AccordionContent>
                         <div className="flex flex-wrap gap-2">
-                          {(districts as readonly string[]).map((district) => (
+                          {prefData.areas.map((area) => (
                             <Link
-                              key={district}
-                              href={`/area/${prefecture}/${district}`}
+                              key={area.slug}
+                              href={`/area/${area.prefSlug}/${area.slug}`}
                               className="px-3 py-1.5 text-sm bg-muted hover:bg-primary/10 hover:text-primary rounded-full transition-colors"
                             >
-                              {district}
+                              {area.name}
+                              <span className="text-xs text-muted-foreground ml-1">
+                                ({area.salon_count})
+                              </span>
                             </Link>
                           ))}
                         </div>

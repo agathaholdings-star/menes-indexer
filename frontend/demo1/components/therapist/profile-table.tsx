@@ -14,7 +14,7 @@ export function ProfileTable({ therapist }: ProfileTableProps) {
   ].filter(Boolean).join(" ");
 
   const profileItems = [
-    { label: "在籍店舗", value: therapist.shopName, isLink: true, href: `/shop/${therapist.shopId}` },
+    { label: "在籍店舗", value: therapist.shopName, isLink: true, href: `/salon/${therapist.shopId}` },
     { label: "年齢", value: `${therapist.age}歳` },
     ...(therapist.profile.height ? [{ label: "身長", value: `T${therapist.profile.height}` }] : []),
     ...(threeSizes ? [{ label: "スリーサイズ", value: threeSizes }] : []),
