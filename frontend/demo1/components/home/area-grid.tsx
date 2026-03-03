@@ -1,96 +1,50 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
-import { MapPin } from "lucide-react";
+import { MapPin, TrendingUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { areasData } from "@/lib/data";
 
-// region表示順
-const regionOrder = ["関東", "関西", "東海", "北海道・東北", "北陸・甲信越", "中国・四国", "九州・沖縄"];
-
-interface AreaItem {
-  name: string;
-  slug: string;
-  salon_count: number;
+// Build a flat list of all districts with their region/prefecture for popularity ranking
+function getPopularAreas(limit: number) {
+  const allAreas: { region: string; prefecture: string; district: string }[] = [];
+  for (const [region, prefectures] of Object.entries(areasData)) {
+    for (const [prefecture, districts] of Object.entries(prefectures)) {
+      for (const district of districts) {
+        allAreas.push({ region, prefecture, district });
+      }
+    }
+  }
+  // Use a deterministic ranking: prioritize well-known areas
+  // Since we don't have salon_count in static data, use a hardcoded popularity order
+  const popularOrder = [
+    "新宿", "渋谷", "池袋", "五反田", "梅田", "難波",
+    "六本木", "上野", "栄", "銀座", "心斎橋", "三宮",
+    "中洲", "天神", "秋葉原",
+  ];
+  const sorted = allAreas.sort((a, b) => {
+    const aIdx = popularOrder.indexOf(a.district);
+    const bIdx = popularOrder.indexOf(b.district);
+    if (aIdx === -1 && bIdx === -1) return 0;
+    if (aIdx === -1) return 1;
+    if (bIdx === -1) return -1;
+    return aIdx - bIdx;
+  });
+  return sorted.slice(0, limit);
 }
-
-interface PrefectureWithAreas {
-  name: string;
-  slug: string;
-  areas: AreaItem[];
-}
-
-type RegionData = Record<string, PrefectureWithAreas[]>;
 
 export function AreaGrid() {
   const [activeRegion, setActiveRegion] = useState("関東");
-  const [regionData, setRegionData] = useState<RegionData>({});
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function fetchData() {
-      const [prefsRes, areasRes] = await Promise.all([
-        fetch("/api/prefectures"),
-        fetch("/api/areas"),
-      ]);
-      const prefectures = await prefsRes.json();
-      const areas = await areasRes.json();
-
-      if (!Array.isArray(prefectures) || !Array.isArray(areas)) return;
-
-      // エリアをprefecture_idでグルーピング
-      const areasByPref = new Map<number, AreaItem[]>();
-      for (const area of areas) {
-        const list = areasByPref.get(area.prefecture_id) || [];
-        list.push({ name: area.name, slug: area.slug, salon_count: area.salon_count ?? 0 });
-        areasByPref.set(area.prefecture_id, list);
-      }
-
-      // リージョンごとにまとめる
-      const result: RegionData = {};
-      for (const pref of prefectures) {
-        const region = pref.region || "その他";
-        if (!result[region]) result[region] = [];
-        const prefAreas = areasByPref.get(pref.id) || [];
-        if (prefAreas.length > 0) {
-          result[region].push({
-            name: pref.name,
-            slug: pref.slug,
-            areas: prefAreas,
-          });
-        }
-      }
-
-      setRegionData(result);
-      setLoading(false);
-    }
-
-    fetchData();
-  }, []);
-
-  const regions = regionOrder.filter((r) => regionData[r]);
-
-  if (loading) {
-    return (
-      <section className="mt-8">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <MapPin className="h-5 w-5 text-primary" />
-              エリアから探す
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="animate-pulse space-y-4">
-              <div className="h-10 bg-muted rounded" />
-              <div className="h-32 bg-muted rounded" />
-            </div>
-          </CardContent>
-        </Card>
-      </section>
-    );
-  }
+  const popularAreas = useMemo(() => getPopularAreas(12), []);
 
   return (
     <section className="mt-8">
@@ -102,42 +56,76 @@ export function AreaGrid() {
           </CardTitle>
         </CardHeader>
         <CardContent>
+          {/* Popular Areas Section */}
+          <div className="mb-5">
+            <h4 className="text-sm font-semibold text-muted-foreground mb-2 flex items-center gap-1.5">
+              <TrendingUp className="h-4 w-4" />
+              人気エリア
+            </h4>
+            <div className="flex flex-wrap gap-2">
+              {popularAreas.map((area) => (
+                <Link
+                  key={`${area.prefecture}-${area.district}`}
+                  href={`/area/${area.prefecture}/${area.district}`}
+                  className="px-3 py-1.5 text-sm bg-primary/10 text-primary hover:bg-primary/20 rounded-full transition-colors font-medium"
+                >
+                  {area.district}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Region Tabs */}
           <Tabs value={activeRegion} onValueChange={setActiveRegion}>
             <TabsList className="w-full justify-start flex-wrap h-auto gap-1">
-              {regions.map((region) => (
+              {Object.keys(areasData).map((region) => (
                 <TabsTrigger key={region} value={region} className="text-sm">
                   {region}
                 </TabsTrigger>
               ))}
             </TabsList>
-            {regions.map((region) => (
+            {Object.entries(areasData).map(([region, prefectures]) => (
               <TabsContent key={region} value={region} className="mt-4">
-                <div className="space-y-4">
-                  {regionData[region].map((pref) => (
-                    <div key={pref.slug}>
-                      <h4 className="text-sm font-semibold mb-2 text-muted-foreground">
-                        <Link href={`/area/${pref.slug}`} className="hover:text-primary transition-colors">
-                          {pref.name}
-                        </Link>
-                      </h4>
-                      <div className="flex flex-wrap gap-2">
-                        {pref.areas.map((area) => (
-                          <Link
-                            key={area.slug}
-                            href={`/area/${pref.slug}/${area.slug}`}
-                            className="px-3 py-1.5 text-sm bg-muted hover:bg-primary/10 hover:text-primary rounded-full transition-colors"
-                          >
-                            {area.name}
-                            <span className="text-xs text-muted-foreground ml-1">({area.salon_count})</span>
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
+                <Accordion type="multiple" className="w-full">
+                  {Object.entries(prefectures).map(([prefecture, districts]) => (
+                    <AccordionItem key={prefecture} value={prefecture}>
+                      <AccordionTrigger className="py-3 hover:no-underline">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold">{prefecture}</span>
+                          <span className="text-xs text-muted-foreground">
+                            ({districts.length}エリア)
+                          </span>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <div className="flex flex-wrap gap-2">
+                          {(districts as readonly string[]).map((district) => (
+                            <Link
+                              key={district}
+                              href={`/area/${prefecture}/${district}`}
+                              className="px-3 py-1.5 text-sm bg-muted hover:bg-primary/10 hover:text-primary rounded-full transition-colors"
+                            >
+                              {district}
+                            </Link>
+                          ))}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
                   ))}
-                </div>
+                </Accordion>
               </TabsContent>
             ))}
           </Tabs>
+
+          {/* Link to full area page */}
+          <div className="mt-4 text-center">
+            <Link
+              href="/area"
+              className="text-sm text-primary hover:underline"
+            >
+              全エリア一覧を見る
+            </Link>
+          </div>
         </CardContent>
       </Card>
     </section>

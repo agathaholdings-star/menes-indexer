@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useState, useEffect } from "react";
-import { X, ChevronLeft, ChevronRight, Check, Clock, Sparkles, Crown, Star, Heart, Smile, Flame, Leaf, Search, MapPin, AlertCircle, Camera, ImageIcon, Trash2, Gift, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check, Sparkles, Crown, Star, Heart, Smile, Flame, Search, MapPin, AlertCircle, Camera, ImageIcon, Trash2, Gift, Loader2 } from "lucide-react";
 import { TherapistImage } from "@/components/shared/therapist-image";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,6 +25,7 @@ interface DBShop {
   name: string;
   display_name: string | null;
   access: string | null;
+  therapist_count?: number;
 }
 
 interface DBTherapist {
@@ -189,7 +190,7 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
         if (Array.isArray(salons)) {
           salons.forEach((s: any) => {
             if (!shopMap.has(s.id)) {
-              shopMap.set(s.id, { id: s.id, name: s.name, display_name: s.display_name, access: s.access });
+              shopMap.set(s.id, { id: s.id, name: s.name, display_name: s.display_name, access: s.access, therapist_count: s.therapist_count ?? 0 });
             }
           });
         }
@@ -210,18 +211,18 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
     fetchTherapists();
   }, [selectedShopId]);
 
-  // Handle preselected therapist
+  // Handle preselected therapist - fetch directly by ID
   useEffect(() => {
     if (!preselectedTherapistId) return;
     const fetchPreselected = async () => {
-      const res = await fetch(`/api/therapists?salon_id=0&limit=1`);
-      // Use a dedicated fetch for single therapist
-      const allRes = await fetch(`/api/therapists/recommendations?limit=50`);
-      const all = await allRes.json();
-      const found = Array.isArray(all) ? all.find((t: any) => t.id === Number(preselectedTherapistId)) : null;
+      const therapistId = Number(preselectedTherapistId);
+      const res = await fetch(`/api/therapists?ids=${therapistId}&limit=1`);
+      const data = await res.json();
+      const found = Array.isArray(data) && data.length > 0 ? data[0] : null;
       if (found) {
         setSelectedTherapistId(found.id);
         setSelectedShopId(found.salon_id);
+        setShopStepSkipped(true);
         setStep(3);
       }
     };
@@ -530,6 +531,7 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
                   setShowMissingReport={setShowMissingReport}
                   missingTherapistName={missingTherapistName}
                   setMissingTherapistName={setMissingTherapistName}
+                  selectedShopId={selectedShopId}
                 />
               )}
               {step === 3 && (
@@ -776,12 +778,43 @@ function StepShop({
   filteredShops: DBShop[];
   selectedArea: string | null;
 }) {
+  // Popular salons: top 5 by therapist_count
+  const popularShops = [...filteredShops]
+    .filter(s => (s.therapist_count ?? 0) > 0)
+    .sort((a, b) => (b.therapist_count ?? 0) - (a.therapist_count ?? 0))
+    .slice(0, 5);
+
   return (
     <div>
       <h3 className="text-base font-semibold mb-1">{selectedArea}のサロンを選択</h3>
       <p className="text-sm text-muted-foreground mb-4">
         ひらがな・カタカナで検索できます
       </p>
+
+      {/* Popular salons chips */}
+      {popularShops.length > 0 && !shopSearch && (
+        <div className="mb-4">
+          <p className="text-xs font-semibold text-primary mb-2">人気サロン</p>
+          <div className="flex flex-wrap gap-2">
+            {popularShops.map(shop => (
+              <button
+                key={shop.id}
+                type="button"
+                onClick={() => onSelect(shop.id)}
+                className={cn(
+                  "px-3 py-1.5 rounded-full text-sm font-medium border transition-all",
+                  selectedShopId === shop.id
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-primary/5 border-primary/20 text-primary hover:bg-primary/10"
+                )}
+              >
+                {shop.display_name || shop.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="relative mb-4">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
@@ -829,6 +862,7 @@ function StepTherapist({
   setShowMissingReport,
   missingTherapistName,
   setMissingTherapistName,
+  selectedShopId,
 }: {
   therapistSearch: string;
   setTherapistSearch: (v: string) => void;
@@ -839,7 +873,37 @@ function StepTherapist({
   setShowMissingReport: (v: boolean) => void;
   missingTherapistName: string;
   setMissingTherapistName: (v: string) => void;
+  selectedShopId: number | null;
 }) {
+  const [reportSubmitting, setReportSubmitting] = useState(false);
+  const [reportSubmitted, setReportSubmitted] = useState(false);
+
+  const handleReportSubmit = async () => {
+    if (!missingTherapistName.trim()) return;
+    setReportSubmitting(true);
+    try {
+      const res = await fetch("/api/missing-therapist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          therapist_name: missingTherapistName.trim(),
+          salon_id: selectedShopId,
+        }),
+      });
+      if (res.ok) {
+        setReportSubmitted(true);
+        setTimeout(() => {
+          setShowMissingReport(false);
+          setMissingTherapistName("");
+          setReportSubmitted(false);
+        }, 2000);
+      }
+    } catch {
+      // silently fail
+    } finally {
+      setReportSubmitting(false);
+    }
+  };
   return (
     <div>
       <h3 className="text-base font-semibold mb-1">セラピストを選択</h3>
@@ -917,8 +981,12 @@ function StepTherapist({
               <Button size="sm" variant="outline" onClick={() => setShowMissingReport(false)} className="bg-transparent">
                 キャンセル
               </Button>
-              <Button size="sm" disabled={!missingTherapistName.trim()}>
-                報告する
+              <Button
+                size="sm"
+                disabled={!missingTherapistName.trim() || reportSubmitting || reportSubmitted}
+                onClick={handleReportSubmit}
+              >
+                {reportSubmitted ? "報告を受け付けました" : reportSubmitting ? "送信中..." : "報告する"}
               </Button>
             </div>
           </div>
@@ -1058,19 +1126,13 @@ function StepService({
           type="button"
           onClick={() => onSelect("1")}
           className={cn(
-            "flex items-center gap-4 p-4 rounded-xl border-2 transition-all",
+            "flex items-center justify-center p-4 rounded-xl border-2 transition-all",
             selectedService === "1"
-              ? "border-primary bg-primary/5 ring-2 ring-primary/20"
-              : "border-border hover:border-primary/50 hover:bg-muted/50"
+              ? "border-primary bg-green-50 ring-2 ring-primary/20"
+              : "border-border bg-green-50/50 hover:border-primary/50"
           )}
         >
-          <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
-            <Leaf className="h-6 w-6 text-green-600" />
-          </div>
-          <div className="text-left">
-            <span className="font-medium">健全</span>
-            <p className="text-xs text-muted-foreground">マッサージ重視</p>
-          </div>
+          <span className="font-medium">健全</span>
         </button>
 
         {/* SKR */}
@@ -1078,19 +1140,13 @@ function StepService({
           type="button"
           onClick={() => onSelect("2")}
           className={cn(
-            "flex items-center gap-4 p-4 rounded-xl border-2 transition-all",
+            "flex items-center justify-center p-4 rounded-xl border-2 transition-all",
             selectedService === "2"
-              ? "border-primary bg-primary/5 ring-2 ring-primary/20"
-              : "border-border hover:border-primary/50 hover:bg-muted/50"
+              ? "border-primary bg-amber-50 ring-2 ring-primary/20"
+              : "border-border bg-amber-50/50 hover:border-primary/50"
           )}
         >
-          <div className="h-12 w-12 rounded-full bg-amber-100 flex items-center justify-center text-2xl">
-            🍄
-          </div>
-          <div className="text-left">
-            <span className="font-medium">SKR</span>
-            <p className="text-xs text-muted-foreground">きのこ</p>
-          </div>
+          <span className="font-medium">SKR</span>
         </button>
 
         {/* HR */}
@@ -1098,19 +1154,13 @@ function StepService({
           type="button"
           onClick={() => onSelect("3")}
           className={cn(
-            "flex items-center gap-4 p-4 rounded-xl border-2 transition-all",
+            "flex items-center justify-center p-4 rounded-xl border-2 transition-all",
             selectedService === "3"
-              ? "border-primary bg-primary/5 ring-2 ring-primary/20"
-              : "border-border hover:border-primary/50 hover:bg-muted/50"
+              ? "border-primary bg-pink-50 ring-2 ring-primary/20"
+              : "border-border bg-pink-50/50 hover:border-primary/50"
           )}
         >
-          <div className="h-12 w-12 rounded-full bg-pink-100 flex items-center justify-center">
-            <Heart className="h-6 w-6 text-pink-500 fill-pink-500" />
-          </div>
-          <div className="text-left">
-            <span className="font-medium">HR</span>
-            <p className="text-xs text-muted-foreground">ハート</p>
-          </div>
+          <span className="font-medium">HR</span>
         </button>
       </div>
     </div>
@@ -1198,14 +1248,14 @@ function StepText({
   onChange: (key: keyof typeof reviewText, value: string) => void;
 }) {
   const questions = [
-    { key: "q0" as const, label: "Q1. 行ったきっかけは？", placeholder: "友人の紹介で初めて行きました。口コミの評判が良かったのが決め手です。", min: 30, max: 200, required: true },
-    { key: "q3" as const, label: "Q2. 施術内容・サービスはどうでしたか？", placeholder: "会話がとても楽しく、施術も丁寧で時間があっという間に過ぎました。技術もしっかりしていてコリがほぐれました。", min: 30, max: 300, required: true },
-    { key: "q6" as const, label: "Q3. また行きたいと思いますか？", placeholder: "絶対リピートしたいです！次回は120分コースで予約しようと思います。", min: 30, max: 200, required: true },
-    { key: "q1" as const, label: "Q4. 第一印象は？", placeholder: "写真より可愛くてびっくり！明るい笑顔で緊張がほぐれました。", min: 0, max: 200, required: false },
-    { key: "q2" as const, label: "Q5. 特に良かった点は？", placeholder: "スタイル抜群で、接客も丁寧でした。", min: 0, max: 200, required: false },
-    { key: "q4" as const, label: "Q6. 気になった点・改善点は？", placeholder: "特にありませんが、強いて言えば...", min: 0, max: 200, required: false },
-    { key: "q5" as const, label: "Q7. コスパはどうでしたか？", placeholder: "90分コースで15,000円。内容を考えるとコスパ良し。", min: 0, max: 200, required: false },
-    { key: "q7" as const, label: "Q8. その他コメント", placeholder: "予約は早めがおすすめ。人気なので平日がねらい目です。", min: 0, max: 200, required: false },
+    { key: "q0" as const, label: "Q1. 行ったきっかけは？", placeholder: "ネットの口コミで高評価だったので初来店。指名なしで予約しました。", min: 30, max: 200, required: true },
+    { key: "q3" as const, label: "Q2. 施術内容・サービスはどうでしたか？", placeholder: "アロマの香りが心地よく、指圧の強さも都度確認してくれて安心でした。会話のテンポも良く、あっという間の90分。", min: 30, max: 300, required: true },
+    { key: "q6" as const, label: "Q3. また行きたいと思いますか？", placeholder: "確実にリピートします。次回は指名して120分で予約する予定です！", min: 30, max: 200, required: true },
+    { key: "q1" as const, label: "Q4. 第一印象は？", placeholder: "写真通りの清楚な雰囲気で、笑顔が素敵。部屋に入った瞬間に緊張がほぐれました。", min: 0, max: 200, required: false },
+    { key: "q2" as const, label: "Q5. 特に良かった点は？", placeholder: "力加減が絶妙で、肩まわりの凝りが一気に楽になりました。手技のバリエーションも豊富。", min: 0, max: 200, required: false },
+    { key: "q4" as const, label: "Q6. 気になった点・改善点は？", placeholder: "強いて言えば、施術中のBGMがもう少し静かだと更にリラックスできたかも。", min: 0, max: 200, required: false },
+    { key: "q5" as const, label: "Q7. コスパはどうでしたか？", placeholder: "90分12,000円で大満足。同エリアの他店と比べてもコスパは抜群だと思います。", min: 0, max: 200, required: false },
+    { key: "q7" as const, label: "Q8. その他コメント", placeholder: "お店の清潔感◎。シャワールームも広くて快適でした。アメニティも充実。", min: 0, max: 200, required: false },
   ];
 
   return (
@@ -1273,8 +1323,7 @@ function StepVerificationImage({
     <div>
       <h3 className="text-base font-semibold mb-1">予約スクショを添付（任意）</h3>
       <p className="text-sm text-muted-foreground mb-4">
-        予約確認画面のスクリーンショットを添付すると、管理者が確認後「認証済み」バッジが付きます。
-        スキップしても投稿できます。
+        予約スクショを添付すると「認証済み」バッジ + ボーナス5クレジット獲得！スキップしても投稿できます。
       </p>
 
       {preview ? (
@@ -1322,8 +1371,7 @@ function StepVerificationImage({
         <div className="flex items-start gap-2">
           <ImageIcon className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
           <div className="text-xs text-muted-foreground">
-            <p>予約スクショは管理者のみが確認でき、一般ユーザーには公開されません。</p>
-            <p className="mt-1">個人情報（名前・電話番号等）が含まれる場合はモザイク加工をおすすめします。</p>
+            <p>スクショは管理者のみ確認し、一般公開されません。番号や個人情報が気になる場合は、事前にモザイク加工してください。運営が責任を持って安全に管理します。</p>
           </div>
         </div>
       </div>

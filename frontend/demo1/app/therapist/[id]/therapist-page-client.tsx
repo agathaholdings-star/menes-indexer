@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { Share2, Heart, ChevronLeft, ChevronRight, PenSquare, Star } from "lucide-react";
+import { TherapistImage } from "@/components/shared/therapist-image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -78,8 +78,8 @@ export function TherapistPageClient({ therapist, reviews }: TherapistPageClientP
                     {/* Image Gallery */}
                     <div className="relative w-full md:w-64 flex-shrink-0">
                       <div className="relative aspect-[4/5] overflow-hidden rounded-lg bg-muted">
-                        <Image
-                          src={therapist.images[currentImageIndex] || "/placeholder.svg"}
+                        <TherapistImage
+                          src={therapist.images[currentImageIndex]}
                           alt={therapist.name}
                           fill
                           className="object-cover"
@@ -120,8 +120,8 @@ export function TherapistPageClient({ therapist, reviews }: TherapistPageClientP
                               }`}
                               aria-label={`画像${index + 1}を表示`}
                             >
-                              <Image
-                                src={img || "/placeholder.svg"}
+                              <TherapistImage
+                                src={img}
                                 alt=""
                                 fill
                                 className="object-cover"

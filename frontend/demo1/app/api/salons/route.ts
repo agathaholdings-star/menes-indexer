@@ -48,6 +48,20 @@ export async function GET(req: NextRequest) {
       .select("id, name, display_name, slug, image_url, access, description")
       .in("id", shopIds)
       .eq("is_active", true);
+    // Attach therapist_count per salon
+    if (data && data.length > 0) {
+      const { data: counts } = await supabaseAdmin
+        .from("therapists")
+        .select("salon_id")
+        .in("salon_id", data.map(s => s.id))
+        .eq("status", "active");
+      const countMap = new Map<number, number>();
+      (counts ?? []).forEach((t: any) => {
+        countMap.set(t.salon_id, (countMap.get(t.salon_id) || 0) + 1);
+      });
+      const enriched = data.map(s => ({ ...s, therapist_count: countMap.get(s.id) || 0 }));
+      return NextResponse.json(enriched);
+    }
     return NextResponse.json(data ?? []);
   }
 
