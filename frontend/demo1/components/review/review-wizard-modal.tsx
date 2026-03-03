@@ -97,6 +97,11 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
   const [submitting, setSubmitting] = useState(false);
   const [verificationImage, setVerificationImage] = useState<File | null>(null);
   const [verificationPreview, setVerificationPreview] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Profile state (auto-fetched)
+  const [actualMemberType, setActualMemberType] = useState<"free" | "standard" | "vip">(memberType);
+  const [actualMonthlyReviewCount, setActualMonthlyReviewCount] = useState(monthlyReviewCount);
 
   // DB state
   const [prefectures, setPrefectures] = useState<{ id: number; name: string }[]>([]);
@@ -107,6 +112,24 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
   const [directShopSearch, setDirectShopSearch] = useState("");
   const [directSearchResults, setDirectSearchResults] = useState<DBShop[]>([]);
   const [shopStepSkipped, setShopStepSkipped] = useState(false);
+
+  // Fetch user profile (membership_type, monthly_review_count)
+  useEffect(() => {
+    if (!open || !authUser) return;
+    const fetchProfile = async () => {
+      const supabase = createSupabaseBrowser();
+      const { data } = await supabase
+        .from("profiles")
+        .select("membership_type, monthly_review_count")
+        .eq("id", authUser.id)
+        .single();
+      if (data) {
+        setActualMemberType((data.membership_type as "free" | "standard" | "vip") || "free");
+        setActualMonthlyReviewCount(data.monthly_review_count || 0);
+      }
+    };
+    fetchProfile();
+  }, [open, authUser]);
 
   // Fetch prefectures on mount + which ones have shops
   useEffect(() => {
@@ -212,11 +235,11 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
       displayName.includes(shopSearch);
   });
 
-  // Filter therapists by search (client-side on already-fetched data)
+  // Filter therapists by search + deduplicate by name (keep first occurrence)
   const filteredTherapists = dbTherapists.filter(t =>
     t.name.toLowerCase().includes(therapistSearch.toLowerCase()) ||
     t.name.includes(therapistSearch)
-  );
+  ).filter((t, i, arr) => arr.findIndex(x => x.name === t.name) === i);
 
   // All prefecture names for area selector
   const allAreas = prefectures.map(p => p.name);
@@ -280,13 +303,14 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
 
         if (error) {
           console.error("Review insert failed:", error);
-          alert(`投稿に失敗しました: ${error.message}`);
+          setErrorMessage("投稿に失敗しました。もう一度お試しください。");
           return;
         }
+        setErrorMessage(null);
         setIsComplete(true);
       } catch (err) {
         console.error("Review submission error:", err);
-        alert("投稿中にエラーが発生しました。もう一度お試しください。");
+        setErrorMessage("投稿中にエラーが発生しました。もう一度お試しください。");
       } finally {
         setSubmitting(false);
       }
@@ -388,7 +412,7 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto p-0">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] max-w-[calc(100vw-2rem)] overflow-y-auto p-0">
         <DialogHeader className="p-6 pb-0">
           <div className="flex items-center justify-between">
             <DialogTitle className="text-lg">
@@ -415,6 +439,14 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
             </div>
           );
         })()}
+
+        {/* Error Message */}
+        {errorMessage && (
+          <div className="mx-6 mt-2 p-3 bg-destructive/10 text-destructive text-sm rounded-lg flex items-center gap-2">
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            {errorMessage}
+          </div>
+        )}
 
         {/* Step Content */}
         <div className="min-h-[400px] p-6">
@@ -446,8 +478,8 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
                 setVerificationImage(null);
                 setVerificationPreview(null);
               }}
-              memberType={memberType}
-              monthlyReviewCount={monthlyReviewCount}
+              memberType={actualMemberType}
+              monthlyReviewCount={actualMonthlyReviewCount}
             />
           ) : (
             <>
@@ -818,7 +850,7 @@ function StepTherapist({
       ) : (
         <>
           <p className="text-xs text-muted-foreground mb-2">【50音順】</p>
-          <div className="grid grid-cols-4 gap-2 max-h-64 overflow-y-auto">
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-64 overflow-y-auto">
             {filteredTherapists.map(t => (
               <button
                 key={t.id}
@@ -1299,6 +1331,28 @@ function CompletionScreen({
       <p className="text-muted-foreground mb-2">
         数営業日以内に口コミを審査いたします
       </p>
+
+      {memberType === "free" && (
+        <div className="bg-primary/5 rounded-lg p-4 mb-4 text-sm">
+          <p className="font-semibold text-primary mb-1">承認されると...</p>
+          <p className="text-muted-foreground">
+            <span className="text-primary font-bold">10クレジット</span>獲得
+            → セラピストの口コミが読めるようになります
+          </p>
+        </div>
+      )}
+
+      {memberType === "standard" && (
+        <div className="bg-primary/5 rounded-lg p-4 mb-4 text-sm">
+          <p className="text-muted-foreground">
+            今月の投稿: <span className="text-primary font-bold">{monthlyReviewCount + 1}/3</span>本
+            {monthlyReviewCount + 1 >= 3 && (
+              <span className="block mt-1 text-primary font-semibold">VIP相当の全機能が解放！</span>
+            )}
+          </p>
+        </div>
+      )}
+
       <p className="text-sm text-muted-foreground mb-6">
         口コミの質に応じて、口コミ見放題になる日数を付与します
       </p>
