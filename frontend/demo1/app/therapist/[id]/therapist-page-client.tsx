@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Share2, Heart, ChevronLeft, ChevronRight, PenSquare, Star } from "lucide-react";
+import { Share2, Heart, ChevronLeft, ChevronRight, PenSquare } from "lucide-react";
 import { TherapistImage } from "@/components/shared/therapist-image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -143,13 +143,11 @@ export function TherapistPageClient({ therapist, reviews }: TherapistPageClientP
                           <Link href={`/salon/${therapist.shopId}`} className="text-primary hover:underline">
                             {therapist.shopName}
                           </Link>
-                          <div className="flex items-center gap-2 mt-2">
-                            <div className="flex items-center gap-1 bg-primary/10 px-2 py-1 rounded">
-                              <Star className="h-4 w-4 fill-primary text-primary" />
-                              <span className="font-bold text-primary">{therapist.averageScore}点</span>
+                          {therapist.reviewCount > 0 && (
+                            <div className="mt-2">
+                              <span className="text-sm text-muted-foreground">({therapist.reviewCount}件の口コミ)</span>
                             </div>
-                            <span className="text-sm text-muted-foreground">({therapist.reviewCount}件の口コミ)</span>
-                          </div>
+                          )}
                         </div>
                         <div className="flex gap-2">
                           <Button variant="outline" size="icon">
@@ -189,6 +187,10 @@ export function TherapistPageClient({ therapist, reviews }: TherapistPageClientP
                 reviews={reviews}
                 isLocked={isLocked}
                 onWriteReview={() => setIsReviewModalOpen(true)}
+                therapistId={therapist.id}
+                therapistName={therapist.name}
+                therapistAge={therapist.age}
+                therapistImage={therapist.images[0]}
               />
 
               {/* Recommendations */}

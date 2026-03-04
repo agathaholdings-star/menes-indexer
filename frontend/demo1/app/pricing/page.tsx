@@ -38,7 +38,7 @@ const plans = [
     price: 4980,
     priceNote: "投稿するほど使える機能が増える",
     features: [
-      { label: "口コミ全文読み放題（MEと同等）", included: true },
+      { label: "口コミ全文読み放題", included: true },
       { label: "お気に入り登録（無制限）", included: true },
       { label: "月1本投稿 → 発見検索が使える", included: true, highlight: true },
       { label: "月2本投稿 → セラピスト分析 + 掲示板", included: true, highlight: true },
@@ -72,12 +72,12 @@ const unlockStages = [
   {
     posts: "0本",
     features: "口コミ全文読み放題",
-    description: "MEと同等の機能。同価格で乗り換えハードルゼロ。",
+    description: "口コミ読み放題＋投稿で機能拡張。",
   },
   {
     posts: "1本",
     features: "+ 発見検索",
-    description: "タイプ x エリア x スコアで検索。MEにない独自機能。約90秒で投稿完了。",
+    description: "タイプ x エリア x スコアで検索。SKR独自の検索機能。約90秒で投稿完了。",
   },
   {
     posts: "2本",
@@ -98,7 +98,7 @@ const faqs = [
   },
   {
     question: "スタンダード会員の投稿で解放される機能とは？",
-    answer: "料金は月額¥4,980で固定です。0本投稿でも口コミ読み放題（MEと同等）。月1本投稿で発見検索、月2本でセラピスト分析+掲示板、月3本でVIP相当の全機能が解放されます。毎月リセットされます。",
+    answer: "料金は月額¥4,980で固定です。0本投稿でも口コミ読み放題。月1本投稿で発見検索、月2本でセラピスト分析+掲示板、月3本でVIP相当の全機能が解放されます。毎月リセットされます。",
   },
   {
     question: "SKR/HRフィルターとは何ですか？",

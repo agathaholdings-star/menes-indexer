@@ -10,7 +10,6 @@ import {
   LogIn,
   PenSquare,
   MapPin,
-  Trophy,
   Heart,
   Bell,
   Settings,
@@ -187,12 +186,6 @@ export function SiteHeader() {
               <Link href="/area">
                 <MapPin className="mr-1 h-4 w-4" />
                 エリア検索
-              </Link>
-            </Button>
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/ranking">
-                <Trophy className="mr-1 h-4 w-4" />
-                ランキング
               </Link>
             </Button>
           </nav>
@@ -456,12 +449,6 @@ export function SiteHeader() {
                       <Link href="/area">
                         <MapPin className="mr-2 h-4 w-4" />
                         エリア検索
-                      </Link>
-                    </Button>
-                    <Button variant="ghost" className="justify-start" asChild>
-                      <Link href="/ranking">
-                        <Trophy className="mr-2 h-4 w-4" />
-                        ランキング
                       </Link>
                     </Button>
                   </nav>

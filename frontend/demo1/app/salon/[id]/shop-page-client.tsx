@@ -21,9 +21,14 @@ interface ShopPageClientProps {
   shop: Shop;
   therapists: Therapist[];
   shopReviews: Review[];
+  officialUrl?: string | null;
+  areaName?: string;
+  areaSlug?: string;
+  prefName?: string;
+  prefSlug?: string;
 }
 
-export function ShopPageClient({ shop, therapists, shopReviews }: ShopPageClientProps) {
+export function ShopPageClient({ shop, therapists, shopReviews, officialUrl, areaName, areaSlug, prefName, prefSlug }: ShopPageClientProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [therapistDisplayCount, setTherapistDisplayCount] = useState(THERAPISTS_PER_PAGE);
 
@@ -44,10 +49,18 @@ export function ShopPageClient({ shop, therapists, shopReviews }: ShopPageClient
           {/* Breadcrumb */}
           <nav className="mb-4 text-sm text-muted-foreground">
             <Link href="/" className="hover:text-foreground">トップ</Link>
-            <span className="mx-2">/</span>
-            <Link href={`/area/${shop.area}`} className="hover:text-foreground">{shop.area}</Link>
-            <span className="mx-2">/</span>
-            <Link href={`/area/${shop.area}/${shop.district}`} className="hover:text-foreground">{shop.district}</Link>
+            {prefName && prefSlug && (
+              <>
+                <span className="mx-2">/</span>
+                <Link href={`/area/${prefSlug}`} className="hover:text-foreground">{prefName}</Link>
+              </>
+            )}
+            {areaName && areaSlug && prefSlug && (
+              <>
+                <span className="mx-2">/</span>
+                <Link href={`/area/${prefSlug}/${areaSlug}`} className="hover:text-foreground">{areaName}</Link>
+              </>
+            )}
             <span className="mx-2">/</span>
             <span className="text-foreground">{shop.name}</span>
           </nav>
@@ -120,9 +133,9 @@ export function ShopPageClient({ shop, therapists, shopReviews }: ShopPageClient
 
                       <p className="mt-4 text-sm text-muted-foreground">{shop.description}</p>
 
-                      {shop.officialUrl && (
+                      {officialUrl && (
                         <Button className="mt-4 gap-2" asChild>
-                          <a href={shop.officialUrl} target="_blank" rel="noopener noreferrer">
+                          <a href={officialUrl} target="_blank" rel="noopener noreferrer">
                             <ExternalLink className="h-4 w-4" />
                             公式サイト
                           </a>
@@ -210,7 +223,7 @@ export function ShopPageClient({ shop, therapists, shopReviews }: ShopPageClient
             {/* Sidebar */}
             <div className="lg:w-80 lg:shrink-0">
               <div className="lg:sticky lg:top-24">
-                <Sidebar prefectureName={shop.area} />
+                <Sidebar prefectureName={prefName || ""} />
               </div>
             </div>
           </div>

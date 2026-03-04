@@ -102,6 +102,7 @@ export default async function TherapistPage({ params }: TherapistPageProps) {
     reviewCount,
     averageScore,
     rating: 0,
+    source_url: dbTherapist.source_url || "",
   };
 
   const reviews: Review[] = (dbReviews || []).map((r: any) => ({

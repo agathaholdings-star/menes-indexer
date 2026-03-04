@@ -142,6 +142,7 @@ export interface Therapist {
   reviewCount: number;
   averageScore: number;
   rating: number;
+  source_url?: string;
 }
 
 export interface Review {

@@ -34,7 +34,7 @@ export function HomePageClient({ areasGrouped, popularAreas, regionOrder }: Home
             {/* 2-column layout below hero */}
             <div className="mt-6 flex flex-col gap-8 lg:flex-row">
               {/* Main Column */}
-              <div className="flex-1 space-y-6">
+              <div className="flex-1 min-w-0 space-y-6">
                 <ReviewCtaBanner />
                 <TypeGrid />
                 <VipFilter />
