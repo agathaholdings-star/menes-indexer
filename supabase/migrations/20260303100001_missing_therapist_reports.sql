@@ -3,7 +3,7 @@
 -- 口コミ投稿時に「この人がいない」報告を保存
 -- ============================================================
 
-CREATE TABLE missing_therapist_reports (
+CREATE TABLE IF NOT EXISTS missing_therapist_reports (
   id              int8 PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
   therapist_name  text NOT NULL,
   salon_id        int8 REFERENCES salons(id) ON DELETE SET NULL,
@@ -13,7 +13,7 @@ CREATE TABLE missing_therapist_reports (
   CONSTRAINT chk_mtr_status CHECK (status IN ('pending', 'reviewed', 'added', 'dismissed'))
 );
 
-CREATE INDEX idx_mtr_status ON missing_therapist_reports (status) WHERE status = 'pending';
+CREATE INDEX IF NOT EXISTS idx_mtr_status ON missing_therapist_reports (status) WHERE status = 'pending';
 
 -- RLS: サービスロール経由のみ操作可能（APIはsupabaseAdminを使用）
 ALTER TABLE missing_therapist_reports ENABLE ROW LEVEL SECURITY;

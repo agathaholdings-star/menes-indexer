@@ -33,7 +33,7 @@ export default function ContactPage() {
               <p className="text-muted-foreground mb-4">
                 サービスに関するお問い合わせは、下記メールアドレスまでご連絡ください。
               </p>
-              <p className="font-medium">info@menes-indexer.com</p>
+              <p className="font-medium">info@menes-skr.com</p>
               <p className="text-sm text-muted-foreground mt-4">
                 通常2〜3営業日以内にご返信いたします。
               </p>

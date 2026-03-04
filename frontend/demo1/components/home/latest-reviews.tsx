@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Star, PenSquare } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Star, PenSquare, Clock, Eye, ArrowRight } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -13,7 +13,7 @@ interface LatestReview {
   comment_first_impression: string;
   created_at: string;
   therapist_id: number;
-  therapists: { name: string; salon_id: number; salons: { name: string } | null } | null;
+  therapists: { name: string; image_urls: string[] | null; salon_id: number; salons: { name: string } | null } | null;
 }
 
 export function LatestReviews() {
@@ -39,9 +39,9 @@ export function LatestReviews() {
     return (
       <section className="mt-8">
         <Card>
-          <CardHeader className="bg-primary text-primary-foreground py-3">
-            <CardTitle className="text-base font-medium">新着口コミ</CardTitle>
-          </CardHeader>
+          <div className="bg-gradient-to-r from-primary to-blue-600 px-5 py-3">
+            <h3 className="text-white font-bold text-base">新着口コミ</h3>
+          </div>
           <CardContent className="p-6 text-center text-sm text-muted-foreground">
             読み込み中...
           </CardContent>
@@ -54,9 +54,9 @@ export function LatestReviews() {
     return (
       <section className="mt-8">
         <Card className="overflow-hidden">
-          <CardHeader className="bg-primary text-primary-foreground py-3">
-            <CardTitle className="text-base font-medium">新着口コミ</CardTitle>
-          </CardHeader>
+          <div className="bg-gradient-to-r from-primary to-blue-600 px-5 py-3">
+            <h3 className="text-white font-bold text-base">新着口コミ</h3>
+          </div>
           <CardContent className="p-8 text-center">
             <PenSquare className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
             <h3 className="text-lg font-bold mb-2">口コミを募集中です</h3>
@@ -73,41 +73,72 @@ export function LatestReviews() {
   }
 
   return (
-    <section className="mt-8">
-      <Card className="overflow-hidden">
-        <CardHeader className="bg-primary text-primary-foreground py-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base font-medium">新着口コミ</CardTitle>
-            <Badge variant="secondary" className="text-xs">{reviews.length}件</Badge>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0 divide-y">
-          {reviews.map((r) => (
-            <Link key={r.id} href={`/therapist/${r.therapist_id}`} className="block hover:bg-muted/50 transition-colors">
-              <div className="p-4">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="font-medium text-sm">
-                    {r.therapists?.name || "不明"}
-                  </span>
-                  <div className="flex items-center gap-1 text-sm">
-                    <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
-                    <span className="font-bold text-primary">{r.score}点</span>
+    <section className="mt-8 space-y-4">
+      {reviews.map((r) => {
+        const shopName = r.therapists?.salons?.name || "サロン";
+        const therapistName = r.therapists?.name || "不明";
+        const imageUrl = r.therapists?.image_urls?.[0] || null;
+        const scorePercent = r.score;
+        const formattedDate = new Date(r.created_at).toLocaleDateString("ja-JP");
+
+        return (
+          <Card key={r.id} className="overflow-hidden shadow-md">
+            {/* バナー: サロン名 + セラピスト名 */}
+            <div className="bg-gradient-to-r from-primary to-blue-600 px-5 py-2.5">
+              <h3 className="text-white font-bold text-sm">{shopName}</h3>
+              <p className="text-blue-100 text-xs mt-0.5">
+                <span className="text-white font-bold">{therapistName}</span> さんの口コミ体験レポート
+              </p>
+            </div>
+
+            <Link href={`/therapist/${r.therapist_id}`} className="block hover:bg-muted/30 transition-colors">
+              <CardContent className="p-0">
+                <div className="p-4 flex gap-3">
+                  {/* セラピスト画像 */}
+                  {imageUrl ? (
+                    <div className="flex-shrink-0">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={imageUrl}
+                        alt={therapistName}
+                        className="w-14 h-14 rounded-lg object-cover"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-14 h-14 rounded-lg bg-muted flex items-center justify-center text-muted-foreground text-[10px] flex-shrink-0">
+                      No Photo
+                    </div>
+                  )}
+
+                  <div className="flex-1 min-w-0">
+                    {/* ティーザー */}
+                    <p className="text-sm leading-relaxed line-clamp-2 mb-2">
+                      {r.comment_first_impression}
+                    </p>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Clock className="h-3 w-3" />
+                      <span>{formattedDate}</span>
+                    </div>
+                  </div>
+
+                  {/* スコア円 */}
+                  <div className="relative w-14 h-14 flex-shrink-0">
+                    <svg className="w-14 h-14 -rotate-90" viewBox="0 0 36 36">
+                      <path d="M18 2.0845a 15.9155 15.9155 0 0 1 0 31.831a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#e5e7eb" strokeWidth="3" />
+                      <path d="M18 2.0845a 15.9155 15.9155 0 0 1 0 31.831a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#2563eb" strokeWidth="3" strokeDasharray={`${scorePercent}, 100`} strokeLinecap="round" />
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <span className="text-base font-bold text-primary leading-none">{r.score}</span>
+                      <span className="text-[7px] text-muted-foreground">/ 100</span>
+                    </div>
                   </div>
                 </div>
-                {r.therapists?.salons?.name && (
-                  <p className="text-xs text-muted-foreground mb-1">{r.therapists.salons.name}</p>
-                )}
-                <p className="text-sm text-muted-foreground line-clamp-2">
-                  {r.comment_first_impression}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {new Date(r.created_at).toLocaleDateString("ja-JP")}
-                </p>
-              </div>
+              </CardContent>
             </Link>
-          ))}
-        </CardContent>
-      </Card>
+          </Card>
+        );
+      })}
     </section>
   );
 }

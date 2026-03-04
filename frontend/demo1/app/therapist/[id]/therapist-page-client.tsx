@@ -138,7 +138,9 @@ export function TherapistPageClient({ therapist, reviews }: TherapistPageClientP
                         <div>
                           <div className="flex items-center gap-2">
                             <h1 className="text-2xl font-bold">{therapist.name}</h1>
-                            <span className="text-muted-foreground">({therapist.age})</span>
+                            {therapist.age > 0 && (
+                              <span className="text-muted-foreground">({therapist.age})</span>
+                            )}
                           </div>
                           <Link href={`/salon/${therapist.shopId}`} className="text-primary hover:underline">
                             {therapist.shopName}
@@ -191,6 +193,7 @@ export function TherapistPageClient({ therapist, reviews }: TherapistPageClientP
                 therapistName={therapist.name}
                 therapistAge={therapist.age}
                 therapistImage={therapist.images[0]}
+                shopName={therapist.shopName}
               />
 
               {/* Recommendations */}

@@ -178,26 +178,47 @@ export function ShopPageClient({ shop, therapists, shopReviews, officialUrl, are
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle>在籍セラピスト</CardTitle>
-                    <span className="text-sm text-muted-foreground">{therapists.length}人</span>
+                    {therapists.length > 0 && (
+                      <span className="text-sm text-muted-foreground">{therapists.length}人</span>
+                    )}
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-                    {therapists.slice(0, therapistDisplayCount).map(therapist => (
-                      <TherapistCard key={therapist.id} therapist={therapist} showShop={false} size="sm" />
-                    ))}
-                  </div>
-                  {therapists.length > therapistDisplayCount && (
-                    <div className="mt-6 text-center">
-                      <Button
-                        variant="outline"
-                        onClick={() => setTherapistDisplayCount(prev => prev + THERAPISTS_PER_PAGE)}
-                        className="gap-2"
-                      >
-                        <ChevronDown className="h-4 w-4" />
-                        もっと見る（残り{therapists.length - therapistDisplayCount}人）
-                      </Button>
+                  {therapists.length === 0 ? (
+                    <div className="py-8 text-center">
+                      <p className="text-muted-foreground">セラピスト情報は現在準備中です</p>
+                      {officialUrl && (
+                        <a
+                          href={officialUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-3 inline-flex items-center gap-1 text-sm text-primary hover:underline"
+                        >
+                          公式サイトで確認する
+                          <ExternalLink className="h-3.5 w-3.5" />
+                        </a>
+                      )}
                     </div>
+                  ) : (
+                    <>
+                      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+                        {therapists.slice(0, therapistDisplayCount).map(therapist => (
+                          <TherapistCard key={therapist.id} therapist={therapist} showShop={false} size="sm" />
+                        ))}
+                      </div>
+                      {therapists.length > therapistDisplayCount && (
+                        <div className="mt-6 text-center">
+                          <Button
+                            variant="outline"
+                            onClick={() => setTherapistDisplayCount(prev => prev + THERAPISTS_PER_PAGE)}
+                            className="gap-2"
+                          >
+                            <ChevronDown className="h-4 w-4" />
+                            もっと見る（残り{therapists.length - therapistDisplayCount}人）
+                          </Button>
+                        </div>
+                      )}
+                    </>
                   )}
                 </CardContent>
               </Card>
@@ -207,15 +228,23 @@ export function ShopPageClient({ shop, therapists, shopReviews, officialUrl, are
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle>店舗の口コミ</CardTitle>
-                    <span className="text-sm text-muted-foreground">{shopReviews.length}件</span>
+                    {shopReviews.length > 0 && (
+                      <span className="text-sm text-muted-foreground">{shopReviews.length}件</span>
+                    )}
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    {shopReviews.slice(0, 3).map(review => (
-                      <ReviewCard key={review.id} review={review} isBlurred={false} />
-                    ))}
-                  </div>
+                  {shopReviews.length === 0 ? (
+                    <div className="py-8 text-center">
+                      <p className="text-muted-foreground">まだ口コミはありません</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {shopReviews.slice(0, 3).map(review => (
+                        <ReviewCard key={review.id} review={review} isBlurred={true} therapistImageUrl={review.therapistImageUrl} />
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>

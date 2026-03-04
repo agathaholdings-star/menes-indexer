@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
   const { data, error } = await supabaseAdmin
     .from("reviews")
     .select(
-      "id, score, comment_first_impression, created_at, therapist_id, therapists(name, salon_id, salons(name))"
+      "id, score, comment_first_impression, created_at, therapist_id, therapists(name, image_urls, salon_id, salons(name))"
     )
     .eq("moderation_status", "approved")
     .order("created_at", { ascending: false })

@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { supabaseAdmin as supabase } from "@/lib/supabase-admin";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://menes-indexer.com";
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://menes-skr.com";
 
   // 静的ページ
   const staticPages: MetadataRoute.Sitemap = [

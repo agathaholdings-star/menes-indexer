@@ -13,6 +13,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trg_therapist_slug ON therapists;
 CREATE TRIGGER trg_therapist_slug
   BEFORE INSERT ON therapists
   FOR EACH ROW EXECUTE FUNCTION set_therapist_slug();

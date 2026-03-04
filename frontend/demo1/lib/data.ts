@@ -177,6 +177,7 @@ export interface Review {
   viewCount?: number;
   helpfulCount?: number;
   reviewerLevel?: number;
+  therapistImageUrl?: string;
 }
 
 export interface User {

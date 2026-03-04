@@ -7,4 +7,4 @@
 - セラピスト抽出の成功判定: 有効name + 有効source_url でDB保存完了
 - SKR/HR はセンシティブ内容の隠語、表現に注意
 - スクレイピングデータはリライトして使用（法的リスク対策）
-- **`supabase db reset` は絶対にユーザー確認なしで実行しない**。データ全消失するため。マイグレーション適用は `supabase migration up` で差分適用を優先すること
+- **`supabase db reset` は使用禁止**。本番デプロイフェーズのため不要。マイグレーション適用は `supabase migration up` で差分適用すること

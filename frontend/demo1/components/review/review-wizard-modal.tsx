@@ -64,13 +64,14 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
   const { user: authUser } = useAuth();
   const router = useRouter();
 
-  const [step, setStep] = useState(0);
+  const hasPreselected = preselectedTherapistId != null;
+  const [step, setStep] = useState(hasPreselected ? 3 : 0);
   const [showAllAreas, setShowAllAreas] = useState(false);
   const [selectedArea, setSelectedArea] = useState<string | null>(null);
   const [shopSearch, setShopSearch] = useState("");
   const [therapistSearch, setTherapistSearch] = useState("");
   const [selectedShopId, setSelectedShopId] = useState<number | null>(null);
-  const [selectedTherapistId, setSelectedTherapistId] = useState<number | null>(preselectedTherapistId != null ? Number(preselectedTherapistId) : null);
+  const [selectedTherapistId, setSelectedTherapistId] = useState<number | null>(hasPreselected ? Number(preselectedTherapistId) : null);
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [selectedBody, setSelectedBody] = useState<string | null>(null);
   const [selectedCup, setSelectedCup] = useState<string | null>(null);
@@ -112,7 +113,7 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
   const [directSearchMode, setDirectSearchMode] = useState(false);
   const [directShopSearch, setDirectShopSearch] = useState("");
   const [directSearchResults, setDirectSearchResults] = useState<DBShop[]>([]);
-  const [shopStepSkipped, setShopStepSkipped] = useState(false);
+  const [shopStepSkipped, setShopStepSkipped] = useState(hasPreselected);
 
   // Fetch user profile (membership_type, monthly_review_count)
   useEffect(() => {
@@ -213,7 +214,7 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
 
   // Handle preselected therapist - fetch directly by ID
   useEffect(() => {
-    if (!preselectedTherapistId) return;
+    if (!open || !preselectedTherapistId) return;
     const fetchPreselected = async () => {
       const therapistId = Number(preselectedTherapistId);
       const res = await fetch(`/api/therapists?ids=${therapistId}&limit=1`);
@@ -227,7 +228,7 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
       }
     };
     fetchPreselected();
-  }, [preselectedTherapistId]);
+  }, [open, preselectedTherapistId]);
 
   // Filter shops by search (client-side on already-fetched data)
   const filteredShops = dbShops.filter(shop => {
@@ -319,6 +320,8 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
   };
 
   const handleBack = () => {
+    // preselected時はstep 3が最初なので、それ以前には戻れない
+    if (hasPreselected && step <= 3) return;
     if (step > 0) {
       // 直接検索でstep 1をスキップした場合、step 2→step 0に戻る
       if (step === 2 && shopStepSkipped) {
@@ -371,13 +374,13 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
   };
 
   const handleClose = () => {
-    setStep(0);
+    setStep(hasPreselected ? 3 : 0);
     setShowAllAreas(false);
     setSelectedArea(null);
     setShopSearch("");
     setTherapistSearch("");
     setSelectedShopId(null);
-    setSelectedTherapistId(preselectedTherapistId != null ? Number(preselectedTherapistId) : null);
+    setSelectedTherapistId(hasPreselected ? Number(preselectedTherapistId) : null);
     setSelectedType(null);
     setSelectedBody(null);
     setSelectedCup(null);
@@ -388,7 +391,7 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
     setIsComplete(false);
     setShowMissingReport(false);
     setMissingTherapistName("");
-    setShopStepSkipped(false);
+    setShopStepSkipped(hasPreselected);
     setVerificationImage(null);
     setVerificationPreview(null);
     onOpenChange(false);
@@ -424,8 +427,9 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
 
         {/* Progress Bar */}
         {!isComplete && (() => {
-          const totalSteps = shopStepSkipped ? TOTAL_STEPS - 1 : TOTAL_STEPS;
-          const currentStep = shopStepSkipped && step >= 2 ? step - 1 : step;
+          const skippedSteps = hasPreselected ? 3 : shopStepSkipped ? 1 : 0;
+          const totalSteps = TOTAL_STEPS - skippedSteps;
+          const currentStep = hasPreselected ? step - 3 : shopStepSkipped && step >= 2 ? step - 1 : step;
           return (
             <div className="flex gap-1 px-6 pt-4">
               {Array.from({ length: totalSteps }).map((_, i) => (
@@ -479,6 +483,7 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
                 setVerificationImage(null);
                 setVerificationPreview(null);
               }}
+              /* 「続けて書く」は別セラピスト対象なのでstep 0（エリア選択）から */
               memberType={actualMemberType}
               monthlyReviewCount={actualMonthlyReviewCount}
             />
@@ -591,14 +596,18 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
             <Button
               variant="ghost"
               onClick={handleBack}
-              disabled={step === 0}
+              disabled={hasPreselected ? step <= 3 : step === 0}
               className="gap-1"
             >
               <ChevronLeft className="h-4 w-4" />
               戻る
             </Button>
             <span className="text-sm text-muted-foreground">
-              {(shopStepSkipped && step >= 2 ? step : step + 1)} / {shopStepSkipped ? TOTAL_STEPS - 1 : TOTAL_STEPS}
+              {(() => {
+                const skipped = hasPreselected ? 3 : shopStepSkipped && step >= 2 ? 1 : 0;
+                const total = TOTAL_STEPS - (hasPreselected ? 3 : shopStepSkipped ? 1 : 0);
+                return `${step - skipped + 1} / ${total}`;
+              })()}
             </span>
             <Button onClick={handleNext} disabled={!canProceed() || submitting} className="gap-1">
               {submitting ? "投稿中..." : step === TOTAL_STEPS - 1 ? "投稿する" : "次へ"}

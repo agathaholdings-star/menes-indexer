@@ -13,18 +13,25 @@ export function ProfileTable({ therapist }: ProfileTableProps) {
     therapist.profile.hip ? `H${therapist.profile.hip}` : null,
   ].filter(Boolean).join(" ");
 
+  // source_url がリスト系ページ（/staff, /cast, /therapist, /girl で終わる）の場合はラベルを変える
+  const listingPagePattern = /\/(staff|cast|therapist|girl)\/?$/i;
+  const sourceUrlLabel = therapist.source_url && listingPagePattern.test(therapist.source_url)
+    ? "公式サイト"
+    : "セラピストページURL";
+
   const profileItems: { label: string; value: string; isLink?: boolean; href?: string; isExternalLink?: boolean }[] = [
     { label: "在籍店舗", value: therapist.shopName, isLink: true, href: `/salon/${therapist.shopId}` },
-    { label: "年齢", value: `${therapist.age}歳` },
+    ...(therapist.age > 0 ? [{ label: "年齢", value: `${therapist.age}歳` }] : []),
     ...(therapist.profile.height ? [{ label: "身長", value: `T${therapist.profile.height}` }] : []),
     ...(threeSizes ? [{ label: "スリーサイズ", value: threeSizes }] : []),
-    ...(therapist.source_url ? [{ label: "セラピストページURL", value: therapist.source_url, isExternalLink: true }] : []),
+    ...(therapist.profile.cup ? [{ label: "カップ", value: therapist.profile.cup }] : []),
+    ...(therapist.source_url ? [{ label: sourceUrlLabel, value: therapist.source_url, isExternalLink: true }] : []),
   ];
 
   return (
     <div className="space-y-4">
       {/* Comment */}
-      {therapist.comment && (
+      {therapist.comment?.trim() && (
         <p className="text-sm text-muted-foreground italic border-l-2 border-primary pl-3">
           {therapist.comment}
         </p>

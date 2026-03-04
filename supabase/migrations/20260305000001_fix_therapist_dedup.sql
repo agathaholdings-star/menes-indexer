@@ -14,5 +14,5 @@
 ALTER TABLE therapists DROP CONSTRAINT IF EXISTS therapists_salon_id_slug_key;
 
 -- 2. 新しいUNIQUEインデックス（式インデックス）
-CREATE UNIQUE INDEX idx_therapists_dedup
+CREATE UNIQUE INDEX IF NOT EXISTS idx_therapists_dedup
   ON therapists (salon_id, COALESCE(source_url, ''), name);

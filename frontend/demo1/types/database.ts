@@ -40,16 +40,11 @@ export type Database = {
           created_at: string | null
           data_source_url: string | null
           id: number
-          meta_description: string | null
           name: string
-          nearby_areas: string | null
-          parent_group: string | null
           prefecture_id: number
           salon_count: number | null
           search_volume: number | null
-          seo_description: string | null
           seo_keyword: string | null
-          seo_title: string | null
           slug: string
           source_type: string | null
           updated_at: string | null
@@ -58,16 +53,11 @@ export type Database = {
           created_at?: string | null
           data_source_url?: string | null
           id?: never
-          meta_description?: string | null
           name: string
-          nearby_areas?: string | null
-          parent_group?: string | null
           prefecture_id: number
           salon_count?: number | null
           search_volume?: number | null
-          seo_description?: string | null
           seo_keyword?: string | null
-          seo_title?: string | null
           slug: string
           source_type?: string | null
           updated_at?: string | null
@@ -76,16 +66,11 @@ export type Database = {
           created_at?: string | null
           data_source_url?: string | null
           id?: never
-          meta_description?: string | null
           name?: string
-          nearby_areas?: string | null
-          parent_group?: string | null
           prefecture_id?: number
           salon_count?: number | null
           search_volume?: number | null
-          seo_description?: string | null
           seo_keyword?: string | null
-          seo_title?: string | null
           slug?: string
           source_type?: string | null
           updated_at?: string | null
@@ -210,6 +195,48 @@ export type Database = {
           label?: string
         }
         Relationships: []
+      }
+      missing_therapist_reports: {
+        Row: {
+          created_at: string | null
+          id: number
+          reviewed_at: string | null
+          salon_id: number | null
+          status: string
+          therapist_name: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: never
+          reviewed_at?: string | null
+          salon_id?: number | null
+          status?: string
+          therapist_name: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: never
+          reviewed_at?: string | null
+          salon_id?: number | null
+          status?: string
+          therapist_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "missing_therapist_reports_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salon_review_stats"
+            referencedColumns: ["salon_id"]
+          },
+          {
+            foreignKeyName: "missing_therapist_reports_salon_id_fkey"
+            columns: ["salon_id"]
+            isOneToOne: false
+            referencedRelation: "salons"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notifications: {
         Row: {
@@ -655,7 +682,6 @@ export type Database = {
           official_url: string | null
           phone: string | null
           salon_overview: string | null
-          search_volume: number | null
           seo_title: string | null
           service_tags: string[] | null
           slug: string | null
@@ -682,7 +708,6 @@ export type Database = {
           official_url?: string | null
           phone?: string | null
           salon_overview?: string | null
-          search_volume?: number | null
           seo_title?: string | null
           service_tags?: string[] | null
           slug?: string | null
@@ -709,7 +734,6 @@ export type Database = {
           official_url?: string | null
           phone?: string | null
           salon_overview?: string | null
-          search_volume?: number | null
           seo_title?: string | null
           service_tags?: string[] | null
           slug?: string | null
@@ -776,6 +800,7 @@ export type Database = {
           height: number | null
           hip: number | null
           id: number
+          image_status: string | null
           image_urls: Json | null
           last_scraped_at: string | null
           name: string
@@ -784,7 +809,6 @@ export type Database = {
           salon_id: number
           slug: string | null
           source_url: string | null
-          stats: Json | null
           status: string | null
           updated_at: string | null
           waist: number | null
@@ -797,6 +821,7 @@ export type Database = {
           height?: number | null
           hip?: number | null
           id?: never
+          image_status?: string | null
           image_urls?: Json | null
           last_scraped_at?: string | null
           name: string
@@ -805,7 +830,6 @@ export type Database = {
           salon_id: number
           slug?: string | null
           source_url?: string | null
-          stats?: Json | null
           status?: string | null
           updated_at?: string | null
           waist?: number | null
@@ -818,6 +842,7 @@ export type Database = {
           height?: number | null
           hip?: number | null
           id?: never
+          image_status?: string | null
           image_urls?: Json | null
           last_scraped_at?: string | null
           name?: string
@@ -826,7 +851,6 @@ export type Database = {
           salon_id?: number
           slug?: string | null
           source_url?: string | null
-          stats?: Json | null
           status?: string | null
           updated_at?: string | null
           waist?: number | null

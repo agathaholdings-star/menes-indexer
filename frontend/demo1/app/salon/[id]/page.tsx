@@ -161,7 +161,7 @@ export default async function ShopPage({ params }: ShopPageProps) {
   // 口コミ取得（approved のみ）+ セラピスト名をjoin
   const { data: reviewRows } = await supabase
     .from("reviews")
-    .select("*, therapists(name)")
+    .select("*, therapists(name, image_urls)")
     .eq("salon_id", dbShop.id)
     .eq("moderation_status", "approved")
     .order("created_at", { ascending: false })
@@ -170,11 +170,12 @@ export default async function ShopPage({ params }: ShopPageProps) {
   const shopReviews: Review[] = (reviewRows || []).map((r) => {
     const row = r as Record<string, unknown>;
     const review = toFrontendReview(row);
-    const therapistData = row.therapists as { name: string } | null;
+    const therapistData = row.therapists as { name: string; image_urls?: string[] } | null;
     if (therapistData?.name) {
       review.therapistName = therapistData.name;
     }
     review.shopName = shop.name;
+    review.therapistImageUrl = therapistData?.image_urls?.[0] || undefined;
     return review;
   });
 

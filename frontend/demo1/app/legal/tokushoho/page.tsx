@@ -25,32 +25,23 @@ export default function TokushohoPage() {
                 </tr>
                 <tr>
                   <th className="py-4 px-4 text-left bg-muted/50 font-medium">運営責任者</th>
-                  <td className="py-4 px-4">
-                    株式会社AGATHA<br />
-                    高橋勇気
-                  </td>
+                  <td className="py-4 px-4">請求があった場合に遅滞なく開示いたします</td>
                 </tr>
                 <tr>
                   <th className="py-4 px-4 text-left bg-muted/50 font-medium">所在地</th>
-                  <td className="py-4 px-4">
-                    〒107-0061<br />
-                    東京都港区北青山１丁目３－１－３階
-                  </td>
+                  <td className="py-4 px-4">請求があった場合に遅滞なく開示いたします</td>
                 </tr>
                 <tr>
                   <th className="py-4 px-4 text-left bg-muted/50 font-medium">電話番号</th>
-                  <td className="py-4 px-4">
-                    03-5414-3355<br />
-                    営業時間：10:00〜18:00（土日祝を除く）
-                  </td>
+                  <td className="py-4 px-4">請求があった場合に遅滞なく開示いたします</td>
                 </tr>
                 <tr>
                   <th className="py-4 px-4 text-left bg-muted/50 font-medium">メールアドレス</th>
-                  <td className="py-4 px-4">info@menes-indexer.com</td>
+                  <td className="py-4 px-4">info@menes-skr.com</td>
                 </tr>
                 <tr>
                   <th className="py-4 px-4 text-left bg-muted/50 font-medium">販売URL</th>
-                  <td className="py-4 px-4">https://menes-indexer.com</td>
+                  <td className="py-4 px-4">https://menes-skr.com</td>
                 </tr>
                 <tr>
                   <th className="py-4 px-4 text-left bg-muted/50 font-medium">販売価格</th>
