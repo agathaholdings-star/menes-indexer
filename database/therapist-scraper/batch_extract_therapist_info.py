@@ -15,9 +15,15 @@ Usage:
   # テスト（5件、DB書き込みなし）
   python batch_extract_therapist_info.py --limit 5 --dry-run
 
-  # 本番（全サロン）
+  # 本番（全サロン・新規のみ）
   python batch_extract_therapist_info.py          # 引数なし
   python batch_extract_therapist_info.py --full   # 明示的
+
+  # 特定サロンを再スクレイピング（既存データ更新）
+  python batch_extract_therapist_info.py --salon-ids 29,1234 --mode upsert
+
+  # セラピスト0件サロンのみ
+  python batch_extract_therapist_info.py --zero-therapists
 
   # VPS並列（ID範囲分割）
   python batch_extract_therapist_info.py --start-id 0 --end-id 3000
@@ -165,39 +171,22 @@ def _normalize_source_url(url: str) -> str:
     return url.rstrip('/')
 
 
-def insert_therapist_new(cur, salon_id, data):
-    """新規セラピストをINSERT。SAVEPOINT付き。Returns id or None.
+def upsert_therapist(cur, salon_id, data, mode='insert'):
+    """セラピストをINSERT or UPSERT。ON CONFLICT制約に委譲。
 
-    重複判定:
-    - salon_id + source_url + name の3点一致 → スキップ（真の重複）
-    - 同じsource_urlでも名前が違えばINSERT許可（single_page対応）
-    - source_urlなし → salon_id + name → スキップ
+    mode='insert': ON CONFLICT ... DO NOTHING（新規のみ）
+    mode='upsert': ON CONFLICT ... DO UPDATE SET ...（既存更新あり）
+
+    Returns (id, 'inserted'|'updated'|None)
     """
     t_name = data.get('name')
     if not t_name:
-        return None
+        return None, None
 
     source_url = data.get('source_url')
-
     if source_url:
-        # 保存前にsource_urlを正規化
         source_url = _normalize_source_url(source_url)
         data['source_url'] = source_url
-
-        # 重複チェック: source_url + name の両方が一致 → 真の重複
-        # single_pageでは全員同じsource_urlになるため、URLだけでは判定できない
-        cur.execute(
-            "SELECT id FROM therapists WHERE salon_id = %s AND source_url = %s AND name = %s LIMIT 1",
-            (salon_id, source_url, t_name))
-        if cur.fetchone():
-            return None
-    else:
-        # source_urlなし → salon_id + name フォールバック
-        cur.execute(
-            "SELECT id FROM therapists WHERE salon_id = %s AND name = %s LIMIT 1",
-            (salon_id, t_name))
-        if cur.fetchone():
-            return None
 
     bust_val = data.get('bust')
     if bust_val is not None:
@@ -210,9 +199,22 @@ def insert_therapist_new(cur, salon_id, data):
         except json.JSONDecodeError:
             image_urls = [image_urls]
 
-    try:
-        cur.execute("SAVEPOINT sp_insert")
-        cur.execute("""
+    params = {
+        'salon_id': salon_id,
+        'name': t_name,
+        'age': _safe_int(data.get('age'), min_val=18, max_val=70),
+        'height': _safe_int(data.get('height'), min_val=130, max_val=200),
+        'bust': bust_val,
+        'waist': _safe_int(data.get('waist')),
+        'hip': _safe_int(data.get('hip')),
+        'cup': data.get('cup'),
+        'image_urls': json.dumps(image_urls, ensure_ascii=False),
+        'profile_text': data.get('profile_text'),
+        'source_url': data.get('source_url'),
+    }
+
+    if mode == 'upsert':
+        sql = """
             INSERT INTO therapists (
                 salon_id, name, age, height,
                 bust, waist, hip, cup,
@@ -224,34 +226,52 @@ def insert_therapist_new(cur, salon_id, data):
                 %(image_urls)s::jsonb, %(profile_text)s, %(source_url)s,
                 'active', now()
             )
-            ON CONFLICT (salon_id, slug) DO NOTHING
+            ON CONFLICT (salon_id, COALESCE(source_url, ''), name) DO UPDATE SET
+                age = EXCLUDED.age,
+                height = EXCLUDED.height,
+                bust = EXCLUDED.bust,
+                waist = EXCLUDED.waist,
+                hip = EXCLUDED.hip,
+                cup = EXCLUDED.cup,
+                image_urls = EXCLUDED.image_urls,
+                profile_text = COALESCE(EXCLUDED.profile_text, therapists.profile_text),
+                source_url = COALESCE(EXCLUDED.source_url, therapists.source_url),
+                last_scraped_at = now(),
+                status = 'active'
+            RETURNING id, (xmax = 0) AS is_insert
+        """
+    else:
+        sql = """
+            INSERT INTO therapists (
+                salon_id, name, age, height,
+                bust, waist, hip, cup,
+                image_urls, profile_text, source_url,
+                status, last_scraped_at
+            ) VALUES (
+                %(salon_id)s, %(name)s, %(age)s, %(height)s,
+                %(bust)s, %(waist)s, %(hip)s, %(cup)s,
+                %(image_urls)s::jsonb, %(profile_text)s, %(source_url)s,
+                'active', now()
+            )
+            ON CONFLICT (salon_id, COALESCE(source_url, ''), name) DO NOTHING
             RETURNING id
-        """, {
-            'salon_id': salon_id,
-            'name': t_name,
-            'age': _safe_int(data.get('age'), min_val=18, max_val=70),
-            'height': _safe_int(data.get('height'), min_val=130, max_val=200),
-            'bust': bust_val,
-            'waist': _safe_int(data.get('waist')),
-            'hip': _safe_int(data.get('hip')),
-            'cup': data.get('cup'),
-            'image_urls': json.dumps(image_urls, ensure_ascii=False),
-            'profile_text': data.get('profile_text'),
-            'source_url': data.get('source_url'),
-        })
+        """
+
+    try:
+        cur.execute("SAVEPOINT sp_upsert")
+        cur.execute(sql, params)
         row = cur.fetchone()
         if row:
             t_id = row['id']
-            cur.execute("UPDATE therapists SET slug = %s WHERE id = %s",
-                        (str(t_id), t_id))
-            cur.execute("RELEASE SAVEPOINT sp_insert")
-            return t_id
-        cur.execute("RELEASE SAVEPOINT sp_insert")
-        return None
+            action = 'inserted' if (mode != 'upsert' or row.get('is_insert', True)) else 'updated'
+            cur.execute("RELEASE SAVEPOINT sp_upsert")
+            return t_id, action
+        cur.execute("RELEASE SAVEPOINT sp_upsert")
+        return None, None
     except Exception as e:
-        cur.execute("ROLLBACK TO SAVEPOINT sp_insert")
-        log.warning(f"  DB INSERT error: {t_name}: {e}")
-        return None
+        cur.execute("ROLLBACK TO SAVEPOINT sp_upsert")
+        log.warning(f"  DB UPSERT error: {t_name}: {e}")
+        return None, None
 
 
 def _get_existing_source_urls(cur, salon_id):
@@ -262,14 +282,17 @@ def _get_existing_source_urls(cur, salon_id):
     return {r['source_url'] for r in cur.fetchall()}
 
 
-def _process_haiku_salon(cur, salon, args, stats, _shutdown_ref):
+def _process_haiku_salon(cur, salon, args, stats, _shutdown_ref, mode='insert'):
     """全サロン共通: 3段階Haikuフローで処理
 
     scrape_failed_salons.py のロジックを統合:
     Stage 1: TOPページ分析 → page_type判定
     Stage 2: listing URL → 個別URL抽出
-    Stage 3: 個別ページ → Haiku情報抽出 → INSERT
+    Stage 3: 個別ページ → Haiku情報抽出 → INSERT/UPSERT
     + 3Days CMS直接抽出 / single_page一括抽出
+
+    mode='insert': 新規のみ（既存スキップ）
+    mode='upsert': 既存も更新
     """
     # scrape_failed_salons.py から遅延import（循環import回避）
     from scrape_failed_salons import (
@@ -295,8 +318,10 @@ def _process_haiku_salon(cur, salon, args, stats, _shutdown_ref):
 
     _cache.save("salon_top", salon_id, html)
 
-    # 既存source_urls（全パスで使う）
+    # 既存source_urls（insertモードではdedup用、upsertモードでは退職検知用）
     existing_urls = _get_existing_source_urls(cur, salon_id)
+    # 今回スクレイプで発見したURL（退職検知用）
+    scraped_urls = set()
 
     # --- 3Days CMS 直接抽出（$0）---
     data_js_url = detect_3days_cms(html)
@@ -308,9 +333,9 @@ def _process_haiku_salon(cur, salon, args, stats, _shutdown_ref):
             therapists = parse_3days_data_js(js_text, url, salon_name=salon_display)
             count = 0
             for t_data in therapists:
-                # 3Days CMS: 各セラピストに個別source_urlあり、insert_therapist_newのdedupに委譲
+                # 3Days CMS: 各セラピストに個別source_urlあり、ON CONFLICT dedupに委譲
                 if not args.dry_run:
-                    t_id = insert_therapist_new(cur, salon_id, t_data)
+                    t_id, _action = upsert_therapist(cur, salon_id, t_data, mode=mode)
                     if t_id:
                         count += 1
                 else:
@@ -380,9 +405,9 @@ def _process_haiku_salon(cur, salon, args, stats, _shutdown_ref):
                         therapists = parse_3days_data_js(js_text, listing_url_extra, salon_name=salon_display)
                         count = 0
                         for t_data in therapists:
-                            # 3Days CMS: insert_therapist_newのdedupに委譲
+                            # 3Days CMS: ON CONFLICT dedupに委譲
                             if not args.dry_run:
-                                t_id = insert_therapist_new(cur, salon_id, t_data)
+                                t_id, _action = upsert_therapist(cur, salon_id, t_data, mode=mode)
                                 if t_id:
                                     count += 1
                             else:
@@ -418,9 +443,9 @@ def _process_haiku_salon(cur, salon, args, stats, _shutdown_ref):
                         therapists = parse_3days_data_js(js_text, listing_url, salon_name=salon_display)
                         count = 0
                         for t_data in therapists:
-                            # 3Days CMS: insert_therapist_newのdedupに委譲
+                            # 3Days CMS: ON CONFLICT dedupに委譲
                             if not args.dry_run:
-                                t_id = insert_therapist_new(cur, salon_id, t_data)
+                                t_id, _action = upsert_therapist(cur, salon_id, t_data, mode=mode)
                                 if t_id:
                                     count += 1
                             else:
@@ -443,9 +468,9 @@ def _process_haiku_salon(cur, salon, args, stats, _shutdown_ref):
                         t_data['source_url'] = listing_url
                         stats['total_input_tokens'] = stats.get('total_input_tokens', 0) + t_data.pop('input_tokens', 0)
                         stats['total_output_tokens'] = stats.get('total_output_tokens', 0) + t_data.pop('output_tokens', 0)
-                        # single_page: insert_therapist_new()の3点dedup(url+name)に委譲
+                        # single_page: ON CONFLICT dedupに委譲
                         if not args.dry_run:
-                            t_id = insert_therapist_new(cur, salon_id, t_data)
+                            t_id, _action = upsert_therapist(cur, salon_id, t_data, mode=mode)
                             if t_id:
                                 count += 1
                         else:
@@ -461,9 +486,9 @@ def _process_haiku_salon(cur, salon, args, stats, _shutdown_ref):
             t_data['source_url'] = url
             stats['total_input_tokens'] = stats.get('total_input_tokens', 0) + t_data.pop('input_tokens', 0)
             stats['total_output_tokens'] = stats.get('total_output_tokens', 0) + t_data.pop('output_tokens', 0)
-            # single_page: insert_therapist_new()の3点dedup(url+name)に委譲
+            # single_page: ON CONFLICT dedupに委譲
             if not args.dry_run:
-                t_id = insert_therapist_new(cur, salon_id, t_data)
+                t_id, _action = upsert_therapist(cur, salon_id, t_data, mode=mode)
                 if t_id:
                     count += 1
             else:
@@ -520,9 +545,9 @@ def _process_haiku_salon(cur, salon, args, stats, _shutdown_ref):
                 t_data['source_url'] = listing_url_for_fallback
                 stats['total_input_tokens'] = stats.get('total_input_tokens', 0) + t_data.pop('input_tokens', 0)
                 stats['total_output_tokens'] = stats.get('total_output_tokens', 0) + t_data.pop('output_tokens', 0)
-                # single_page: insert_therapist_new()の3点dedup(url+name)に委譲
+                # single_page: ON CONFLICT dedupに委譲
                 if not args.dry_run:
-                    t_id = insert_therapist_new(cur, salon_id, t_data)
+                    t_id, _action = upsert_therapist(cur, salon_id, t_data, mode=mode)
                     if t_id:
                         count += 1
                 else:
@@ -552,8 +577,8 @@ def _process_haiku_salon(cur, salon, args, stats, _shutdown_ref):
     # source_url正規化（#除去 + URLデコード + https統一）
     individual_urls = list(dict.fromkeys(_normalize_source_url(u) for u in individual_urls))
 
-    # source_url dedup
-    if existing_urls:
+    # source_url dedup（insertモードのみ。upsertモードでは全件再取得）
+    if mode == 'insert' and existing_urls:
         individual_urls = [u for u in individual_urls if u not in existing_urls]
 
     if not individual_urls:
@@ -575,7 +600,7 @@ def _process_haiku_salon(cur, salon, args, stats, _shutdown_ref):
                     stats['total_input_tokens'] = stats.get('total_input_tokens', 0) + t_data.pop('input_tokens', 0)
                     stats['total_output_tokens'] = stats.get('total_output_tokens', 0) + t_data.pop('output_tokens', 0)
                     if not args.dry_run:
-                        t_id = insert_therapist_new(cur, salon_id, t_data)
+                        t_id, _action = upsert_therapist(cur, salon_id, t_data, mode=mode)
                         if t_id:
                             count += 1
                     else:
@@ -588,6 +613,9 @@ def _process_haiku_salon(cur, salon, args, stats, _shutdown_ref):
     for t_url in individual_urls:
         if _shutdown:
             break
+
+        # 退職検知用: このURLは現在も存在する
+        scraped_urls.add(t_url)
 
         t_html = fetch_page_smart(t_url, label="S3: ")
         if not t_html:
@@ -617,9 +645,12 @@ def _process_haiku_salon(cur, salon, args, stats, _shutdown_ref):
         data['source_url'] = t_url
 
         if not args.dry_run:
-            t_id = insert_therapist_new(cur, salon_id, data)
+            t_id, _action = upsert_therapist(cur, salon_id, data, mode=mode)
             if t_id:
-                stats['inserted'] = stats.get('inserted', 0) + 1
+                if _action == 'updated':
+                    stats['updated'] = stats.get('updated', 0) + 1
+                else:
+                    stats['inserted'] = stats.get('inserted', 0) + 1
                 salon_inserted += 1
             else:
                 stats['db_error'] = stats.get('db_error', 0) + 1
@@ -639,9 +670,9 @@ def _process_haiku_salon(cur, salon, args, stats, _shutdown_ref):
             t_data['source_url'] = listing_url_for_fallback
             stats['total_input_tokens'] = stats.get('total_input_tokens', 0) + t_data.pop('input_tokens', 0)
             stats['total_output_tokens'] = stats.get('total_output_tokens', 0) + t_data.pop('output_tokens', 0)
-            # single_page: insert_therapist_new()の3点dedup(url+name)に委譲
+            # single_page: ON CONFLICT dedupに委譲
             if not args.dry_run:
-                t_id = insert_therapist_new(cur, salon_id, t_data)
+                t_id, _action = upsert_therapist(cur, salon_id, t_data, mode=mode)
                 if t_id:
                     count += 1
                     salon_inserted += 1
@@ -649,6 +680,30 @@ def _process_haiku_salon(cur, salon, args, stats, _shutdown_ref):
                 count += 1
                 salon_inserted += 1
         stats['inserted'] = stats.get('inserted', 0) + count
+
+    # --- 退職検知（upsertモードのみ）---
+    if mode == 'upsert' and salon_inserted > 0 and scraped_urls:
+        try:
+            cur.execute("""
+                UPDATE therapists SET status = 'retired', updated_at = now()
+                WHERE salon_id = %s AND status = 'active'
+                  AND source_url IS NOT NULL
+                  AND source_url NOT IN %s
+                RETURNING id, name
+            """, (salon_id, tuple(scraped_urls)))
+            retired = cur.fetchall()
+            if retired:
+                stats['retired'] = stats.get('retired', 0) + len(retired)
+                log.info(f"  退職検知: {len(retired)}名")
+        except Exception as e:
+            log.warning(f"  退職検知エラー: {e}")
+
+    # salons.last_scraped_at 更新
+    if salon_inserted > 0 and not args.dry_run:
+        try:
+            cur.execute("UPDATE salons SET last_scraped_at = now() WHERE id = %s", (salon_id,))
+        except Exception:
+            pass
 
     return salon_inserted
 
@@ -679,6 +734,13 @@ def run_full(args):
     if args.end_id is not None:
         where_parts.append("s.id < %(end_id)s")
         params['end_id'] = args.end_id
+    if getattr(args, 'salon_ids', None):
+        ids = [int(x.strip()) for x in args.salon_ids.split(',')]
+        where_parts.append(f"s.id IN ({','.join(str(i) for i in ids)})")
+    if getattr(args, 'zero_therapists', False):
+        where_parts.append("""
+            NOT EXISTS (SELECT 1 FROM therapists t WHERE t.salon_id = s.id)
+        """)
 
     where_sql = " AND ".join(where_parts)
     cur.execute(f"""
@@ -718,7 +780,8 @@ def run_full(args):
         salon_id = salon['salon_id']
         salon_display = salon.get('salon_display') or salon.get('salon_name') or ''
 
-        salon_inserted = _process_haiku_salon(cur, salon, args, stats, _shutdown)
+        mode = getattr(args, 'mode', 'insert')
+        salon_inserted = _process_haiku_salon(cur, salon, args, stats, _shutdown, mode=mode)
 
         done_ids.add(salon_id)
         stats['processed'] = stats.get('processed', 0) + 1
@@ -749,6 +812,8 @@ def run_full(args):
     log.info(f"{'=' * 60}")
     log.info(f"  サロン処理:    {stats.get('processed', 0)} 件")
     log.info(f"  INSERT成功:    {stats.get('inserted', 0)} 件")
+    log.info(f"  UPDATE成功:    {stats.get('updated', 0)} 件")
+    log.info(f"  退職検知:      {stats.get('retired', 0)} 件")
     log.info(f"  fetch失敗:     {stats.get('fetch_failed', 0)} 件")
     log.info(f"  extract失敗:   {stats.get('extract_failed', 0)} 件")
     log.info(f"  name=null:     {stats.get('skipped_no_name', 0)} 件")
@@ -769,6 +834,12 @@ def main():
 
     parser.add_argument('--full', action='store_true',
                         help='全サロン3段階Haikuフロー（デフォルト動作、明示用）')
+    parser.add_argument('--mode', choices=['insert', 'upsert'], default='insert',
+                        help='insert=新規のみ, upsert=既存更新あり (default: insert)')
+    parser.add_argument('--salon-ids', type=str, default=None,
+                        help='カンマ区切りサロンID（例: 29,1234）')
+    parser.add_argument('--zero-therapists', action='store_true',
+                        help='セラピスト0件のサロンのみ対象')
     # 廃止済み引数（明示エラー）
     parser.add_argument('--new', action='store_true',
                         help=argparse.SUPPRESS)
@@ -794,10 +865,14 @@ def main():
 
     log.info("=" * 60)
     log.info(" セラピスト情報 Haiku 一括抽出バッチ")
-    log.info(f" batch_size={args.batch_size}"
+    log.info(f" mode={args.mode} batch_size={args.batch_size}"
              f" dry_run={args.dry_run} resume={args.resume}")
+    if args.salon_ids:
+        log.info(f" salon_ids: {args.salon_ids}")
     if args.start_id is not None or args.end_id is not None:
         log.info(f" ID範囲: [{args.start_id} .. {args.end_id})")
+    if args.zero_therapists:
+        log.info(" セラピスト0件サロンのみ")
     log.info("=" * 60)
 
     run_full(args)
