@@ -7,7 +7,6 @@ import { Star, MapPin, Clock, ExternalLink, ChevronLeft, ChevronRight, ChevronDo
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { SiteHeader } from "@/components/layout/site-header";
 import { Sidebar } from "@/components/layout/sidebar";
 import { SiteFooter } from "@/components/layout/site-footer";
@@ -143,33 +142,6 @@ export function ShopPageClient({ shop, therapists, shopReviews, officialUrl, are
                       )}
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-
-              {/* Price Table */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>料金表</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>コース名</TableHead>
-                        <TableHead>時間</TableHead>
-                        <TableHead className="text-right">料金</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {shop.courses.map((course, index) => (
-                        <TableRow key={index}>
-                          <TableCell className="font-medium">{course.name}</TableCell>
-                          <TableCell>{course.duration}</TableCell>
-                          <TableCell className="text-right">{course.price}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
                 </CardContent>
               </Card>
 

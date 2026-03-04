@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: TherapistPageProps): Promise<
   const shopName = shop?.display_name || shop?.name || "";
   const desc = `${data.name}${data.age ? `（${data.age}歳）` : ""}${shopName ? `（${shopName}）` : ""}の口コミ体験談`;
   return {
-    title: `${data.name}の口コミ体験談`,
+    title: `${shopName}「${data.name}」の口コミや評判が分かる体験談 - メンエスSKR`,
     description: desc,
   };
 }

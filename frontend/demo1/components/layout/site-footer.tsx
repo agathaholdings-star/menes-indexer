@@ -9,7 +9,7 @@ export function SiteFooter() {
           <div>
             <Link href="/" className="flex items-center gap-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                <span className="text-sm font-bold text-primary-foreground">ME</span>
+                <span className="text-sm font-bold text-primary-foreground">SKR</span>
               </div>
               <span className="text-lg font-bold">メンエスSKR</span>
             </Link>

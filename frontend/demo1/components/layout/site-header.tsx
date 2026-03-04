@@ -155,7 +155,7 @@ export function SiteHeader() {
           {/* Logo */}
           <Link href="/" className="flex shrink-0 items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-              <span className="text-sm font-bold text-primary-foreground">ME</span>
+              <span className="text-sm font-bold text-primary-foreground">SKR</span>
             </div>
             <span className="hidden text-lg font-bold sm:inline">メンエスSKR</span>
           </Link>
