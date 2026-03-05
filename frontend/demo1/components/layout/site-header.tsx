@@ -17,6 +17,7 @@ import {
   Crown,
   Star,
   ChevronDown,
+  Coins,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,7 +40,7 @@ import { ReviewerLevelBadge } from "@/components/shared/reviewer-level-badge";
 
 export function SiteHeader() {
   const { user: authUser, loading: authLoading, signOut: authSignOut } = useAuth();
-  const { effectiveTier, membershipType, monthlyReviewCount: tierMonthlyReviewCount, viewPermissionUntil, totalReviewCount } = useTier();
+  const { effectiveTier, membershipType, monthlyReviewCount: tierMonthlyReviewCount, viewPermissionUntil, totalReviewCount, reviewCredits } = useTier();
   const memberLevel = (membershipType || "free") as "free" | "standard" | "vip";
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -252,6 +253,14 @@ export function SiteHeader() {
                     </Link>
                   </PopoverContent>
                 </Popover>
+
+                {/* Credit Badge */}
+                {reviewCredits > 0 && (
+                  <div className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-xs font-medium">
+                    <Coins className="h-3.5 w-3.5" />
+                    <span>{reviewCredits}</span>
+                  </div>
+                )}
 
                 {/* User Dropdown */}
                 <DropdownMenu>

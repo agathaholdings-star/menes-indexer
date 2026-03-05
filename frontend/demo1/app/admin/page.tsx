@@ -17,6 +17,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { useAuth } from "@/lib/auth-context";
@@ -97,6 +108,9 @@ export default function AdminPage() {
   const [reviewFilter, setReviewFilter] = useState<ReviewFilter>("pending");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
+  const [rejectingReviewId, setRejectingReviewId] = useState<string | null>(null);
+  const [rejectReason, setRejectReason] = useState<string>("他サイトからの転載の疑い");
+  const [rejectCustomText, setRejectCustomText] = useState<string>("");
 
   useEffect(() => {
     if (!authUser) { setIsAdmin(false); setLoading(false); return; }
@@ -140,9 +154,15 @@ export default function AdminPage() {
     setActionLoading(null);
   };
 
-  const handleReject = async (reviewId: string) => {
+  const handleReject = async () => {
+    if (!rejectingReviewId) return;
+    const reviewId = rejectingReviewId;
+    const finalReason = rejectCustomText
+      ? `${rejectReason}: ${rejectCustomText}`
+      : rejectReason;
     setActionLoading(reviewId);
-    const result = await adminAction("reject_review", { review_id: reviewId });
+    setRejectingReviewId(null);
+    const result = await adminAction("reject_review", { review_id: reviewId, reason: finalReason });
     if (result.ok) {
       setReviews((prev) =>
         prev.map((r) => (r.id === reviewId ? { ...r, moderation_status: "rejected" as ModerationStatus } : r))
@@ -152,6 +172,8 @@ export default function AdminPage() {
       console.error("Reject failed:", result.error);
     }
     setActionLoading(null);
+    setRejectReason("他サイトからの転載の疑い");
+    setRejectCustomText("");
   };
 
   const handleDelete = async () => {
@@ -424,7 +446,7 @@ export default function AdminPage() {
                             variant="outline"
                             size="sm"
                             disabled={actionLoading === r.id}
-                            onClick={() => handleReject(r.id)}
+                            onClick={() => setRejectingReviewId(r.id)}
                             className="gap-1 bg-transparent"
                           >
                             <XCircle className="h-3.5 w-3.5" />
@@ -575,6 +597,53 @@ export default function AdminPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Rejection reason dialog */}
+      <Dialog
+        open={!!rejectingReviewId}
+        onOpenChange={(open) => {
+          if (!open) {
+            setRejectingReviewId(null);
+            setRejectReason("他サイトからの転載の疑い");
+            setRejectCustomText("");
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>却下理由を選択</DialogTitle>
+            <DialogDescription>
+              口コミを却下する理由を選択してください。
+            </DialogDescription>
+          </DialogHeader>
+          <RadioGroup value={rejectReason} onValueChange={setRejectReason} className="gap-3">
+            {["他サイトからの転載の疑い", "オリジナリティ不足", "規約違反"].map((option) => (
+              <div key={option} className="flex items-center gap-2">
+                <RadioGroupItem value={option} id={`reason-${option}`} />
+                <Label htmlFor={`reason-${option}`} className="cursor-pointer">{option}</Label>
+              </div>
+            ))}
+          </RadioGroup>
+          <div className="space-y-2">
+            <Label htmlFor="reject-custom-text">補足（任意）</Label>
+            <Textarea
+              id="reject-custom-text"
+              placeholder="補足コメントがあれば入力..."
+              value={rejectCustomText}
+              onChange={(e) => setRejectCustomText(e.target.value)}
+              rows={3}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRejectingReviewId(null)} className="bg-transparent">
+              キャンセル
+            </Button>
+            <Button variant="destructive" onClick={handleReject}>
+              却下する
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -12,6 +12,7 @@ export function useTier() {
   const [viewPermissionUntil, setViewPermissionUntil] = useState<string | undefined>();
   const [totalReviewCount, setTotalReviewCount] = useState(0);
   const [reviewCredits, setReviewCredits] = useState(0);
+  const [creditsExpiresAt, setCreditsExpiresAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -28,6 +29,7 @@ export function useTier() {
           setViewPermissionUntil(data.view_permission_until || undefined);
           setTotalReviewCount(data.total_review_count || 0);
           setReviewCredits(data.review_credits || 0);
+          setCreditsExpiresAt(data.credits_expires_at || null);
         }
         setLoading(false);
       });
@@ -60,5 +62,6 @@ export function useTier() {
     totalReviewCount,
     reviewCredits,
     setReviewCredits,
+    creditsExpiresAt,
   };
 }

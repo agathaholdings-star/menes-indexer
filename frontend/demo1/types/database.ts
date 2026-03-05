@@ -318,6 +318,7 @@ export type Database = {
           review_credits: number
           total_review_count: number | null
           view_permission_until: string | null
+          credits_expires_at: string | null
         }
         Insert: {
           created_at?: string | null
@@ -333,6 +334,7 @@ export type Database = {
           review_credits?: number
           total_review_count?: number | null
           view_permission_until?: string | null
+          credits_expires_at?: string | null
         }
         Update: {
           created_at?: string | null
@@ -348,6 +350,7 @@ export type Database = {
           review_credits?: number
           total_review_count?: number | null
           view_permission_until?: string | null
+          credits_expires_at?: string | null
         }
         Relationships: []
       }
@@ -493,6 +496,7 @@ export type Database = {
           user_id: string | null
           verification_image_path: string | null
           view_count: number
+          rejection_reason: string | null
         }
         Insert: {
           body_type_id?: number | null
@@ -526,6 +530,7 @@ export type Database = {
           user_id?: string | null
           verification_image_path?: string | null
           view_count?: number
+          rejection_reason?: string | null
         }
         Update: {
           body_type_id?: number | null
@@ -559,6 +564,7 @@ export type Database = {
           user_id?: string | null
           verification_image_path?: string | null
           view_count?: number
+          rejection_reason?: string | null
         }
         Relationships: [
           {
@@ -763,16 +769,19 @@ export type Database = {
           therapist_id: number
           unlocked_at: string
           user_id: string
+          is_permanent: boolean
         }
         Insert: {
           therapist_id: number
           unlocked_at?: string
           user_id: string
+          is_permanent?: boolean
         }
         Update: {
           therapist_id?: number
           unlocked_at?: string
           user_id?: string
+          is_permanent?: boolean
         }
         Relationships: [
           {
@@ -960,6 +969,7 @@ export type Database = {
           review_credits: number
           total_review_count: number
           view_permission_until: string
+          credits_expires_at: string
         }[]
       }
       get_ranked_salons_by_area: {
@@ -987,7 +997,14 @@ export type Database = {
         Args: { p_review_ids: string[] }
         Returns: undefined
       }
-      reject_review: { Args: { review_id: string }; Returns: undefined }
+      reject_review: {
+        Args: { review_id: string; p_reason?: string }
+        Returns: undefined
+      }
+      is_therapist_unlocked: {
+        Args: { p_therapist_id: number }
+        Returns: boolean
+      }
       unlock_therapist: { Args: { p_therapist_id: number }; Returns: boolean }
     }
     Enums: {

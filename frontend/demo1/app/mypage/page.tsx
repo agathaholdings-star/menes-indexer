@@ -59,6 +59,15 @@ import { useAuth } from "@/lib/auth-context";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
 import { PreferenceMap } from "@/components/mypage/preference-map";
 import { ReviewerLevelBadge } from "@/components/shared/reviewer-level-badge";
+import { ReviewWizardModal } from "@/components/review/review-wizard-modal";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 type MemberLevel = "free" | "standard" | "vip";
 type Section = "dashboard" | "reviews" | "favorites" | "lists" | "messages" | "bbs" | "skr" | "notifications" | "settings";
@@ -144,6 +153,19 @@ export default function MyPage() {
     totalViews: 0, totalHelpful: 0, totalReal: 0, totalFake: 0, reviewCount: 0,
   });
   const [followingUsers, setFollowingUsers] = useState<{id: string; nickname: string; follower_count: number; total_review_count: number}[]>([]);
+
+  // Welcome dialog state
+  const [showWelcome, setShowWelcome] = useState(false);
+  const [showReviewWizard, setShowReviewWizard] = useState(false);
+
+  // Check for justRegistered flag on mount
+  useEffect(() => {
+    const justRegistered = sessionStorage.getItem("justRegistered");
+    if (justRegistered) {
+      sessionStorage.removeItem("justRegistered");
+      setShowWelcome(true);
+    }
+  }, []);
 
   // Fetch profile when auth user changes
   useEffect(() => {
@@ -891,6 +913,40 @@ export default function MyPage() {
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
+
+      {/* Welcome Dialog for new registrations */}
+      <Dialog open={showWelcome} onOpenChange={setShowWelcome}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl">メンエスSKRへようこそ！</DialogTitle>
+            <DialogDescription className="space-y-2 pt-2">
+              <span className="block">口コミを投稿してクレジットを獲得しましょう</span>
+              <span className="block text-primary font-medium">1投稿で5人分の口コミが読めます</span>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="sm:justify-center pt-2">
+            <Button
+              size="lg"
+              className="w-full"
+              onClick={() => {
+                setShowWelcome(false);
+                setShowReviewWizard(true);
+              }}
+            >
+              <PenSquare className="h-4 w-4 mr-2" />
+              口コミを書く
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Review Wizard Modal */}
+      <ReviewWizardModal
+        open={showReviewWizard}
+        onOpenChange={setShowReviewWizard}
+        memberType={memberLevel}
+        monthlyReviewCount={monthlyReviewCount}
+      />
 
       <main className="container mx-auto px-4 py-6">
         <div className="flex gap-6">

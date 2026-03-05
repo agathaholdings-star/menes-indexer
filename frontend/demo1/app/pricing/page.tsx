@@ -1,128 +1,68 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import { Check, X, Crown, Sparkles, Eye, Bell, Ban, MessageSquare, Filter, Search, BarChart3, PenSquare } from "lucide-react";
+import {
+  Check,
+  X,
+  Crown,
+  Sparkles,
+  Eye,
+  PenSquare,
+  Lock,
+  CreditCard,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 
-const plans = [
-  {
-    id: "free",
-    name: "無料会員",
-    description: "口コミ投稿で3日間アクセス",
-    price: 0,
-    priceNote: null,
-    features: [
-      { label: "エリア・店舗検索", included: true },
-      { label: "セラピスト一覧", included: true },
-      { label: "口コミ投稿", included: true },
-      { label: "投稿後3日間口コミ閲覧", included: true },
-      { label: "お気に入り登録（5件まで）", included: true },
-      { label: "口コミ読み放題", included: false },
-      { label: "発見検索", included: false },
-      { label: "SKR/HRフィルター", included: false },
-    ],
-    cta: "無料で始める",
-    popular: false,
-    tier: "free",
-  },
-  {
-    id: "standard",
-    name: "スタンダード会員",
-    description: "口コミ読み放題 + 投稿で機能解放",
-    price: 4980,
-    priceNote: "投稿するほど使える機能が増える",
-    features: [
-      { label: "口コミ全文読み放題", included: true },
-      { label: "お気に入り登録（無制限）", included: true },
-      { label: "月1本投稿 → 発見検索が使える", included: true, highlight: true },
-      { label: "月2本投稿 → セラピスト分析 + 掲示板", included: true, highlight: true },
-      { label: "月3本投稿 → VIP相当の全機能解放", included: true, highlight: true },
-    ],
-    cta: "スタンダードに登録",
-    popular: true,
-    tier: "standard",
-  },
-  {
-    id: "vip",
-    name: "VIP会員",
-    description: "投稿不要で全機能使い放題",
-    price: 14980,
-    priceNote: "投稿なしで全機能を利用可能",
-    features: [
-      { label: "スタンダードの全機能", included: true },
-      { label: "SKR/HRフィルター・リスト", included: true, highlight: true },
-      { label: "全フィルター使い放題", included: true, highlight: true },
-      { label: "VIP専用掲示板", included: true, highlight: true },
-      { label: "セラピスト分析", included: true, highlight: true },
-      { label: "投稿不要", included: true },
-    ],
-    cta: "VIPに登録",
-    popular: false,
-    tier: "vip",
-  },
-];
-
-const unlockStages = [
-  {
-    posts: "0本",
-    features: "口コミ全文読み放題",
-    description: "口コミ読み放題＋投稿で機能拡張。",
-  },
-  {
-    posts: "1本",
-    features: "+ 発見検索",
-    description: "タイプ x エリア x スコアで検索。SKR独自の検索機能。約90秒で投稿完了。",
-  },
-  {
-    posts: "2本",
-    features: "+ セラピスト分析 + 掲示板・DM",
-    description: "レーダーチャート等の詳細分析。コミュニティ機能も解放。",
-  },
-  {
-    posts: "3本",
-    features: "VIP相当の全機能",
-    description: "SKR/HRフィルター、全リスト、VIP掲示板まで全て解放。",
-  },
-];
-
 const faqs = [
   {
-    question: "無料会員でも口コミは見れますか？",
-    answer: "はい、口コミを1件投稿すると3日間すべての口コミ本文とスコアが閲覧可能になります。投稿を続けることで継続的に閲覧できます。",
+    question: "クレジットとは何ですか？",
+    answer:
+      "クレジットは口コミを閲覧するための通貨です。1クレジットで1人のセラピストの口コミを全件閲覧できます。口コミを投稿すると無料でクレジットが付与されます。",
   },
   {
-    question: "スタンダード会員の投稿で解放される機能とは？",
-    answer: "料金は月額¥4,980で固定です。0本投稿でも口コミ読み放題。月1本投稿で発見検索、月2本でセラピスト分析+掲示板、月3本でVIP相当の全機能が解放されます。毎月リセットされます。",
+    question: "クレジットの有効期限はありますか？",
+    answer:
+      "はい、クレジットの有効期限は付与から7日間です。期限内にご利用ください。",
   },
   {
-    question: "SKR/HRフィルターとは何ですか？",
-    answer: "サービスレベル（SKR/HR）でセラピストを絞り込める機能です。Standard会員は月3本投稿、またはVIP会員で利用可能です。",
+    question: "スクショ付き投稿のボーナスとは？",
+    answer:
+      "口コミ投稿時にスクリーンショットを添付すると、通常5クレジットに加えてボーナス5クレジット（合計10クレジット）が付与されます。",
   },
   {
-    question: "解約はいつでもできますか？",
-    answer: "はい、いつでも解約可能です。解約後も契約期間終了までは全機能をご利用いただけます。",
+    question: "単品購入の「永久アンロック」とは？",
+    answer:
+      "一度購入すれば、そのセラピストの口コミはアカウントが存在する限りいつでも閲覧可能です。クレジットの有効期限はありません。",
   },
   {
     question: "支払い方法は何がありますか？",
-    answer: "クレジットカード（VISA、Mastercard、JCB、AMEX、Diners）に対応しています。",
+    answer:
+      "クレジットカード（VISA、Mastercard、JCB、AMEX、Diners）に対応しています。",
   },
   {
-    question: "投稿による機能解放は毎月リセットされますか？",
-    answer: "はい、毎月1日にリセットされます。ただし料金は固定（¥4,980）のまま変わりません。投稿数に応じて使える機能が増える仕組みです。",
+    question: "Standard/VIPプランはいつ利用できますか？",
+    answer:
+      "現在開発中です。リリース時にお知らせいたします。まずは無料の口コミ投稿か単品購入をご利用ください。",
   },
 ];
 
 export default function PricingPage() {
-  // In production, this would come from auth context
-  // Demo: simulate current plan (change to "standard" or "vip" to see badge)
-  const [currentPlan] = useState<"free" | "standard" | "vip">("free");
-
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
@@ -131,191 +71,297 @@ export default function PricingPage() {
         <div className="text-center mb-12">
           <Badge className="mb-4">料金プラン</Badge>
           <h1 className="text-3xl md:text-4xl font-bold mb-4 text-balance">
-            あなたに合ったプランを選ぼう
+            口コミ投稿で無料閲覧、または単品購入
           </h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            無料会員でも口コミ投稿で3日間閲覧可能。スタンダード会員は投稿するほど使える機能が増えます。
+            口コミを書いてクレジットを獲得するか、気になるセラピストを単品購入で永久アンロック。
           </p>
         </div>
 
-        {/* 3カラムのプラン表示 */}
-        <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto mb-16 items-start">
-          {plans.map((plan) => {
-            const isCurrentPlan = plan.id === currentPlan;
-            return (
-              <Card
-                key={plan.id}
-                className={`relative ${
-                  isCurrentPlan
-                    ? "ring-2 ring-primary border-primary shadow-lg"
-                    : plan.popular
-                    ? "border-primary shadow-xl md:scale-105 md:-my-4 z-10"
-                    : plan.tier === "vip"
-                    ? "border-amber-400/50 bg-gradient-to-b from-amber-50/50 to-background"
-                    : ""
-                }`}
-              >
-                {isCurrentPlan && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <Badge className="gap-1 bg-green-600 text-white border-0">
-                      <Check className="h-3 w-3" />
-                      ご利用中
-                    </Badge>
-                  </div>
-                )}
-                {!isCurrentPlan && plan.popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <Badge className="gap-1 bg-primary">
-                      <Crown className="h-3 w-3" />
-                      人気
-                    </Badge>
-                  </div>
-                )}
-                {!isCurrentPlan && plan.tier === "vip" && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <Badge className="gap-1 bg-gradient-to-r from-amber-500 to-yellow-500 border-0 text-white">
-                      <Sparkles className="h-3 w-3" />
-                      VIP
-                    </Badge>
-                  </div>
-                )}
-                <CardHeader className="text-center pb-4 pt-8">
-                  <CardTitle className={`text-xl ${plan.tier === "vip" ? "text-amber-700" : ""}`}>
-                    {plan.name}
-                  </CardTitle>
-                  <CardDescription>{plan.description}</CardDescription>
-                  <div className="mt-4">
-                    <span className={`text-4xl font-bold ${plan.tier === "vip" ? "text-amber-600" : ""}`}>
-                      ¥{plan.price.toLocaleString()}
-                    </span>
-                    <span className="text-muted-foreground">/月</span>
-                    {plan.priceNote && (
-                      <p className={`text-xs mt-2 ${plan.tier === "vip" ? "text-amber-600" : "text-primary"}`}>
-                        {plan.priceNote}
-                      </p>
-                    )}
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-3 mb-6">
-                    {plan.features.map((feature, index) => (
-                      <li key={index} className="flex items-center gap-3">
-                        {feature.included ? (
-                          <Check className={`h-5 w-5 flex-shrink-0 ${
-                            feature.highlight ? "text-amber-500" : "text-primary"
-                          }`} />
-                        ) : (
-                          <X className="h-5 w-5 text-muted-foreground/50 flex-shrink-0" />
-                        )}
-                        <span className={
-                          feature.included
-                            ? feature.highlight
-                              ? "text-amber-700 font-medium"
-                              : ""
-                            : "text-muted-foreground/70"
-                        }>
-                          {feature.label}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                  {isCurrentPlan ? (
-                    <Button
-                      className="w-full"
-                      variant="outline"
-                      disabled
-                    >
-                      現在のプラン
-                    </Button>
-                  ) : (
-                    <Button
-                      className={`w-full ${
-                        plan.tier === "vip"
-                          ? "bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white border-0"
-                          : plan.popular
-                          ? ""
-                          : ""
+        {/* 4カラムのプラン表示 */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto mb-16 items-start">
+          {/* Free Plan - highlighted */}
+          <Card className="border-primary shadow-xl md:scale-105 md:-my-4 z-10 lg:col-span-1">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+              <Badge className="gap-1 bg-primary">
+                <Crown className="h-3 w-3" />
+                おすすめ
+              </Badge>
+            </div>
+            <CardHeader className="text-center pb-4 pt-8">
+              <CardTitle className="text-xl">無料会員</CardTitle>
+              <CardDescription>口コミ投稿で無料閲覧</CardDescription>
+              <div className="mt-4">
+                <span className="text-4xl font-bold">¥0</span>
+                <span className="text-muted-foreground">/月</span>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-3 mb-6">
+                {[
+                  {
+                    label: "1投稿 = 5クレジット",
+                    included: true,
+                    highlight: true,
+                  },
+                  {
+                    label: "スクショ付きで+5ボーナス",
+                    included: true,
+                    highlight: true,
+                  },
+                  {
+                    label: "1クレジット = 1セラピストの口コミ全部閲覧",
+                    included: true,
+                  },
+                  {
+                    label: "クレジット有効期限: 7日間",
+                    included: true,
+                  },
+                  { label: "エリア・店舗検索", included: true },
+                  { label: "セラピスト一覧", included: true },
+                  { label: "お気に入り登録（5件まで）", included: true },
+                ].map((feature, index) => (
+                  <li key={index} className="flex items-center gap-3">
+                    <Check
+                      className={`h-5 w-5 flex-shrink-0 ${
+                        feature.highlight ? "text-amber-500" : "text-primary"
                       }`}
-                      variant={plan.popular ? "default" : plan.tier === "vip" ? "default" : "outline"}
+                    />
+                    <span
+                      className={
+                        feature.highlight ? "text-amber-700 font-medium" : ""
+                      }
                     >
-                      {plan.cta}
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })}
+                      {feature.label}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <Link href="/register">
+                <Button className="w-full">無料登録して口コミを書く</Button>
+              </Link>
+            </CardContent>
+          </Card>
+
+          {/* Single Purchase */}
+          <Card>
+            <CardHeader className="text-center pb-4 pt-8">
+              <CardTitle className="text-xl">単品購入</CardTitle>
+              <CardDescription>
+                口コミを書かずに閲覧したい方向け
+              </CardDescription>
+              <div className="mt-4">
+                <span className="text-4xl font-bold">¥1,000</span>
+                <span className="text-muted-foreground">
+                  /1セラピスト
+                </span>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-3 mb-6">
+                {[
+                  {
+                    label: "永久アンロック",
+                    included: true,
+                    highlight: true,
+                  },
+                  {
+                    label: "対象セラピストの口コミ全件閲覧",
+                    included: true,
+                  },
+                  { label: "有効期限なし", included: true },
+                  {
+                    label: "セラピストページから購入可能",
+                    included: true,
+                  },
+                ].map((feature, index) => (
+                  <li key={index} className="flex items-center gap-3">
+                    <Check
+                      className={`h-5 w-5 flex-shrink-0 ${
+                        feature.highlight ? "text-amber-500" : "text-primary"
+                      }`}
+                    />
+                    <span
+                      className={
+                        feature.highlight ? "text-amber-700 font-medium" : ""
+                      }
+                    >
+                      {feature.label}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <Button className="w-full" variant="outline" disabled>
+                <CreditCard className="h-4 w-4 mr-2" />
+                ログインして購入
+              </Button>
+              <p className="text-xs text-muted-foreground text-center mt-2">
+                セラピストページから購入できます
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Standard - greyed out */}
+          <Card className="opacity-60 relative">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+              <Badge
+                variant="secondary"
+                className="gap-1 bg-muted text-muted-foreground"
+              >
+                <Lock className="h-3 w-3" />
+                開発中
+              </Badge>
+            </div>
+            <CardHeader className="text-center pb-4 pt-8">
+              <CardTitle className="text-xl">スタンダード</CardTitle>
+              <CardDescription>
+                全セラピストの口コミ無制限閲覧
+              </CardDescription>
+              <div className="mt-4">
+                <span className="text-4xl font-bold">¥4,980</span>
+                <span className="text-muted-foreground">/月</span>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-3 mb-6">
+                {[
+                  { label: "口コミ全文読み放題", included: true },
+                  { label: "お気に入り登録（無制限）", included: true },
+                  { label: "発見検索", included: true },
+                  { label: "セラピスト分析", included: true },
+                ].map((feature, index) => (
+                  <li key={index} className="flex items-center gap-3">
+                    <Check className="h-5 w-5 flex-shrink-0 text-muted-foreground" />
+                    <span className="text-muted-foreground">
+                      {feature.label}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <Button className="w-full" variant="outline" disabled>
+                準備中
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* VIP - greyed out */}
+          <Card className="opacity-60 relative">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+              <Badge
+                variant="secondary"
+                className="gap-1 bg-muted text-muted-foreground"
+              >
+                <Lock className="h-3 w-3" />
+                開発中
+              </Badge>
+            </div>
+            <CardHeader className="text-center pb-4 pt-8">
+              <CardTitle className="text-xl">VIP</CardTitle>
+              <CardDescription>
+                Standard全機能 + 発見検索 + 優先サポート
+              </CardDescription>
+              <div className="mt-4">
+                <span className="text-4xl font-bold">¥14,980</span>
+                <span className="text-muted-foreground">/月</span>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-3 mb-6">
+                {[
+                  { label: "スタンダードの全機能", included: true },
+                  { label: "SKR/HRフィルター", included: true },
+                  { label: "全フィルター使い放題", included: true },
+                  { label: "優先サポート", included: true },
+                ].map((feature, index) => (
+                  <li key={index} className="flex items-center gap-3">
+                    <Check className="h-5 w-5 flex-shrink-0 text-muted-foreground" />
+                    <span className="text-muted-foreground">
+                      {feature.label}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <Button className="w-full" variant="outline" disabled>
+                準備中
+              </Button>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Standard会員の投稿で段階的に機能が解放される説明 */}
+        {/* クレジット仕組み説明 */}
         <div className="max-w-3xl mx-auto mb-16">
           <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold mb-2">スタンダード会員の投稿で機能解放</h2>
+            <h2 className="text-2xl font-bold mb-2">
+              クレジットの仕組み
+            </h2>
             <p className="text-muted-foreground">
-              料金は¥4,980固定。投稿するほど使える機能が増えます。毎月リセット。
+              口コミを投稿してクレジットを獲得。クレジットでセラピストの口コミを閲覧できます。
             </p>
           </div>
           <div className="space-y-4">
-            {unlockStages.map((stage, index) => (
+            {[
+              {
+                icon: PenSquare,
+                title: "口コミを投稿",
+                description:
+                  "セラピストページから口コミを投稿すると、5クレジットが即時付与されます。",
+                highlight: false,
+              },
+              {
+                icon: Sparkles,
+                title: "スクショ添付でボーナス",
+                description:
+                  "口コミにスクリーンショットを添付すると、ボーナス5クレジットが追加で付与されます（合計10クレジット）。",
+                highlight: true,
+              },
+              {
+                icon: Eye,
+                title: "口コミを閲覧",
+                description:
+                  "1クレジットで1セラピストの口コミを全件閲覧可能。気になるセラピストに使いましょう。",
+                highlight: false,
+              },
+            ].map((step, index) => (
               <div
                 key={index}
                 className={`flex items-start gap-4 p-4 rounded-lg border ${
-                  index === 3 ? "border-amber-400/50 bg-amber-50/50" : ""
+                  step.highlight ? "border-amber-400/50 bg-amber-50/50" : ""
                 }`}
               >
-                <div className={`flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold ${
-                  index === 3
-                    ? "bg-gradient-to-r from-amber-500 to-yellow-500 text-white"
-                    : "bg-primary/10 text-primary"
-                }`}>
-                  {stage.posts.replace("本", "")}
+                <div
+                  className={`flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center ${
+                    step.highlight
+                      ? "bg-gradient-to-r from-amber-500 to-yellow-500 text-white"
+                      : "bg-primary/10 text-primary"
+                  }`}
+                >
+                  <step.icon className="h-5 w-5" />
                 </div>
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-sm text-muted-foreground">月{stage.posts}投稿</span>
-                    <span className="font-medium">{stage.features}</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground">{stage.description}</p>
+                  <h3 className="font-medium mb-1">{step.title}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {step.description}
+                  </p>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* 特典セクション */}
-        <div className="max-w-4xl mx-auto mb-16">
-          <h2 className="text-2xl font-bold text-center mb-8">主要機能</h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              { icon: Eye, title: "口コミ読み放題", description: "すべての口コミを無制限で閲覧", note: "Standard(0本)〜" },
-              { icon: Search, title: "発見検索", description: "タイプxエリアxスコアで探索", note: "Standard(1本)〜" },
-              { icon: BarChart3, title: "セラピスト分析", description: "レーダーチャートで詳細分析", note: "Standard(2本)〜" },
-              { icon: Filter, title: "SKR/HRフィルター", description: "サービスレベルで絞り込み", note: "Standard(3本)〜 or VIP" },
-            ].map((benefit, index) => (
-              <Card key={index}>
-                <CardContent className="p-6 text-center">
-                  <div className="h-12 w-12 rounded-full flex items-center justify-center mx-auto mb-4 bg-primary/10">
-                    <benefit.icon className="h-6 w-6 text-primary" />
-                  </div>
-                  <h3 className="font-bold mb-2">{benefit.title}</h3>
-                  <p className="text-sm text-muted-foreground mb-2">{benefit.description}</p>
-                  <Badge variant="outline" className="text-xs">
-                    {benefit.note}
-                  </Badge>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-
         {/* FAQ */}
         <div className="max-w-2xl mx-auto">
-          <h2 className="text-2xl font-bold text-center mb-8">よくある質問</h2>
+          <h2 className="text-2xl font-bold text-center mb-8">
+            よくある質問
+          </h2>
           <Accordion type="single" collapsible className="w-full">
             {faqs.map((faq, index) => (
               <AccordionItem key={index} value={`item-${index}`}>
-                <AccordionTrigger className="text-left">{faq.question}</AccordionTrigger>
-                <AccordionContent className="text-muted-foreground">{faq.answer}</AccordionContent>
+                <AccordionTrigger className="text-left">
+                  {faq.question}
+                </AccordionTrigger>
+                <AccordionContent className="text-muted-foreground">
+                  {faq.answer}
+                </AccordionContent>
               </AccordionItem>
             ))}
           </Accordion>
@@ -323,16 +369,20 @@ export default function PricingPage() {
 
         {/* CTA */}
         <div className="text-center mt-16 p-8 bg-gradient-to-r from-primary/10 to-primary/5 rounded-2xl max-w-2xl mx-auto">
-          <h2 className="text-2xl font-bold mb-4">まずは無料で始めよう</h2>
+          <h2 className="text-2xl font-bold mb-4">
+            まずは無料で始めよう
+          </h2>
           <p className="text-muted-foreground mb-6">
-            口コミを投稿するだけで3日間すべての口コミが閲覧可能。気に入ったら有料プランへ。
+            口コミを投稿するだけでクレジットを獲得。気になるセラピストの口コミを無料で閲覧できます。
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link href="/register">
               <Button size="lg">無料で会員登録</Button>
             </Link>
             <Link href="/">
-              <Button size="lg" variant="outline">サイトを見てみる</Button>
+              <Button size="lg" variant="outline">
+                サイトを見てみる
+              </Button>
             </Link>
           </div>
         </div>

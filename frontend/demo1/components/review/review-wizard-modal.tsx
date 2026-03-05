@@ -1413,7 +1413,7 @@ function CompletionScreen({
         <div className="absolute -bottom-1 -left-1 h-2 w-2 rounded-full bg-primary animate-pulse" style={{ animationDelay: '0.5s' }} />
       </div>
 
-      <h3 className="text-xl font-bold mb-2">投稿ありがとうございます！</h3>
+      <h3 className="text-xl font-bold mb-2">口コミが送信されました</h3>
 
       {/* Credit reward banner */}
       <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-lg p-4 mb-4">
@@ -1421,7 +1421,8 @@ function CompletionScreen({
           <Gift className="h-5 w-5 text-amber-600" />
           <span className="font-bold text-amber-700 text-lg">+10 クレジット獲得予定!</span>
         </div>
-        <p className="text-xs text-amber-600">審査完了後に反映されます</p>
+        <p className="text-xs text-amber-600">管理者が確認後、通常30分以内にクレジットが付与されます</p>
+        <p className="text-xs text-amber-600 mt-1">承認されるとメールでお知らせします</p>
       </div>
 
       {memberType === "free" && (
@@ -1445,7 +1446,7 @@ function CompletionScreen({
       )}
 
       <p className="text-sm text-muted-foreground mb-6">
-        数営業日以内に審査いたします
+        通常30分以内に審査が完了します
       </p>
 
       <div className="space-y-3">

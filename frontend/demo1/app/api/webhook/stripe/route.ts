@@ -42,6 +42,50 @@ export async function POST(req: NextRequest) {
     const customerEmail = session.customer_details?.email;
     const customerId = session.customer as string | null;
 
+    // --- Single therapist unlock purchase ---
+    if (session.metadata?.therapist_id) {
+      const therapistId = parseInt(session.metadata.therapist_id);
+
+      // Find user by client_reference_id first, then by email
+      let user: { id: string; email?: string } | undefined;
+      if (session.client_reference_id) {
+        const { data: authData } = await supabaseAdmin.auth.admin.getUserById(
+          session.client_reference_id
+        );
+        if (authData?.user) {
+          user = authData.user;
+        }
+      }
+      if (!user && customerEmail) {
+        const { data: authData } = await supabaseAdmin.auth.admin.listUsers();
+        user = authData?.users?.find((u) => u.email === customerEmail);
+      }
+
+      if (user) {
+        await supabaseAdmin.from("therapist_unlocks").upsert(
+          {
+            user_id: user.id,
+            therapist_id: therapistId,
+            is_permanent: true,
+            unlocked_at: new Date().toISOString(),
+          },
+          { onConflict: "user_id,therapist_id" }
+        );
+
+        console.log(
+          `[Stripe Webhook] Single unlock: ${user.id} → therapist ${therapistId}`
+        );
+      } else {
+        console.error(
+          "[Stripe Webhook] Single unlock: user not found for session:",
+          session.id
+        );
+      }
+
+      return NextResponse.json({ received: true });
+    }
+
+    // --- Subscription purchase ---
     if (!customerEmail) {
       console.error("No customer email in session:", session.id);
       return NextResponse.json({ error: "No email" }, { status: 400 });

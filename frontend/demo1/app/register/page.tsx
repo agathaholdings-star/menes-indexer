@@ -64,6 +64,7 @@ export default function RegisterPage() {
       return;
     }
 
+    sessionStorage.setItem("justRegistered", "true");
     router.push("/mypage");
     router.refresh();
   };

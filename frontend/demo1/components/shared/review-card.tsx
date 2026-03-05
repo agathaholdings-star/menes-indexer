@@ -16,6 +16,7 @@ interface ReviewCardProps {
   showTherapist?: boolean;
   variant?: "default" | "detailed";
   therapistImageUrl?: string;
+  onBlurClick?: () => void;
 }
 
 function formatDate(dateStr: string): string {
@@ -27,7 +28,7 @@ function formatDate(dateStr: string): string {
   }
 }
 
-export function ReviewCard({ review, isBlurred = false, showTherapist = true, variant = "default", therapistImageUrl }: ReviewCardProps) {
+export function ReviewCard({ review, isBlurred = false, showTherapist = true, variant = "default", therapistImageUrl, onBlurClick }: ReviewCardProps) {
   const typeLabel = therapistTypes.find((t) => t.id === review.typeId)?.label || review.typeId;
   const bodyLabel = bodyTypes.find((b) => b.id === review.bodyType)?.label || review.bodyType;
   const serviceLabel = serviceTypes.find((s) => s.id === review.serviceType)?.label || review.serviceType;
@@ -129,7 +130,11 @@ export function ReviewCard({ review, isBlurred = false, showTherapist = true, va
               </div>
               <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/60 to-background" />
               <div className="absolute inset-0 flex items-center justify-center">
-                <Button className="gap-2 shadow-2xl bg-primary hover:bg-primary/90 hover:scale-105 transition-transform" size="lg">
+                <Button
+                  onClick={onBlurClick}
+                  className="gap-2 shadow-2xl bg-primary hover:bg-primary/90 hover:scale-105 transition-transform"
+                  size="lg"
+                >
                   <Lock className="h-4 w-4" />モザイクを外すには<ChevronRight className="h-4 w-4" />
                 </Button>
               </div>

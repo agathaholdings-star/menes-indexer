@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { Share2, Heart, ChevronLeft, ChevronRight, PenSquare } from "lucide-react";
+import { Share2, Heart, ChevronLeft, ChevronRight, PenSquare, Sparkles } from "lucide-react";
 import { TherapistImage } from "@/components/shared/therapist-image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,6 +15,8 @@ import { ProfileTable } from "@/components/therapist/profile-table";
 import { ReviewList } from "@/components/therapist/review-list";
 import { Recommendations } from "@/components/therapist/recommendations";
 import { ReviewWizardModal } from "@/components/review/review-wizard-modal";
+import { useTier } from "@/lib/hooks/use-tier";
+import { createSupabaseBrowser } from "@/lib/supabase/client";
 import type { Therapist, Review } from "@/lib/data";
 
 interface TherapistPageClientProps {
@@ -25,7 +27,41 @@ interface TherapistPageClientProps {
 export function TherapistPageClient({ therapist, reviews }: TherapistPageClientProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
-  const [isLocked] = useState(true);
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const { permissions, reviewCredits, setReviewCredits, authUser, loading: tierLoading } = useTier();
+
+  // Check unlock status on mount
+  useEffect(() => {
+    if (tierLoading) return;
+    // Standard/VIP users always see unlocked
+    if (permissions.canViewReviewBody) {
+      setIsUnlocked(true);
+      return;
+    }
+    // For credit-based users, check if this therapist is already unlocked
+    if (!authUser) return;
+    const supabase = createSupabaseBrowser();
+    supabase
+      .rpc("is_therapist_unlocked", { p_therapist_id: therapist.id })
+      .then(({ data }) => {
+        if (data === true) setIsUnlocked(true);
+      });
+  }, [authUser, therapist.id, permissions.canViewReviewBody, tierLoading]);
+
+  const handleUnlockTherapist = useCallback(async (): Promise<boolean | undefined> => {
+    if (isUnlocked) return true;
+    if (reviewCredits <= 0) return undefined;
+    const supabase = createSupabaseBrowser();
+    const { data, error } = await supabase.rpc("unlock_therapist", {
+      p_therapist_id: therapist.id,
+    });
+    if (error || !data) return undefined;
+    setIsUnlocked(true);
+    setReviewCredits((prev: number) => Math.max(0, prev - 1));
+    return true;
+  }, [isUnlocked, reviewCredits, therapist.id, setReviewCredits]);
+
+  const isLocked = !isUnlocked;
 
   const nextImage = () => {
     setCurrentImageIndex((prev) =>
@@ -168,16 +204,34 @@ export function TherapistPageClient({ therapist, reviews }: TherapistPageClientP
               </Card>
 
               {/* Reviews Section */}
-              <ReviewList
-                reviews={reviews}
-                isLocked={isLocked}
-                onWriteReview={() => setIsReviewModalOpen(true)}
-                therapistId={therapist.id}
-                therapistName={therapist.name}
-                therapistAge={therapist.age}
-                therapistImage={therapist.images[0]}
-                shopName={therapist.shopName}
-              />
+              {reviews.length === 0 ? (
+                <Card>
+                  <CardContent className="p-8 text-center">
+                    <Sparkles className="h-10 w-10 mx-auto text-primary/60 mb-3" />
+                    <h3 className="text-lg font-bold mb-2">このセラピストの口コミを最初に投稿しませんか?</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      口コミを投稿すると5クレジット獲得(スクショ付きで10クレジット)
+                    </p>
+                    <Button onClick={() => setIsReviewModalOpen(true)} className="gap-2">
+                      <PenSquare className="h-4 w-4" />
+                      口コミを書く
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : (
+                <ReviewList
+                  reviews={reviews}
+                  isLocked={isLocked}
+                  onWriteReview={() => setIsReviewModalOpen(true)}
+                  onUnlockTherapist={handleUnlockTherapist}
+                  reviewCredits={reviewCredits}
+                  therapistId={therapist.id}
+                  therapistName={therapist.name}
+                  therapistAge={therapist.age}
+                  therapistImage={therapist.images[0]}
+                  shopName={therapist.shopName}
+                />
+              )}
 
               {/* Recommendations */}
               <Recommendations therapist={therapist} />

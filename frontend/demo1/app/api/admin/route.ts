@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { getResend } from "@/lib/resend";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
@@ -123,13 +124,73 @@ export async function POST(req: NextRequest) {
       const { review_id } = body;
       const { error } = await supabaseAdmin.rpc("approve_review", { review_id });
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+      // Send approval notification email (non-blocking)
+      try {
+        const { data: review } = await supabaseAdmin
+          .from("reviews")
+          .select("user_id, therapist_id")
+          .eq("id", review_id)
+          .single();
+        if (review) {
+          const [userRes, therapistRes, profileRes] = await Promise.all([
+            supabaseAdmin.auth.admin.getUserById(review.user_id),
+            supabaseAdmin.from("therapists").select("name").eq("id", review.therapist_id).single(),
+            supabaseAdmin.from("profiles").select("nickname").eq("id", review.user_id).single(),
+          ]);
+          const email = userRes.data.user?.email;
+          const therapistName = therapistRes.data?.name || "セラピスト";
+          const nickname = profileRes.data?.nickname || "ユーザー";
+          if (email) {
+            await getResend()?.emails.send({
+              from: "メンエスSKR <info@menes-skr.com>",
+              to: email,
+              subject: "口コミが承認されました",
+              html: `<p>${nickname}様</p><p>${therapistName}への口コミが承認されました。クレジットが付与されました。</p><p>サイトにログインして口コミを閲覧しましょう。</p><p>メンエスSKR</p>`,
+            });
+          }
+        }
+      } catch (emailError) {
+        console.error("Failed to send approval email:", emailError);
+      }
+
       return NextResponse.json({ ok: true });
     }
 
     case "reject_review": {
-      const { review_id } = body;
-      const { error } = await supabaseAdmin.rpc("reject_review", { review_id });
+      const { review_id, reason } = body;
+      const { error } = await supabaseAdmin.rpc("reject_review", { review_id, p_reason: reason || null });
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+      // Send rejection notification email (non-blocking)
+      try {
+        const { data: review } = await supabaseAdmin
+          .from("reviews")
+          .select("user_id, therapist_id")
+          .eq("id", review_id)
+          .single();
+        if (review) {
+          const [userRes, therapistRes, profileRes] = await Promise.all([
+            supabaseAdmin.auth.admin.getUserById(review.user_id),
+            supabaseAdmin.from("therapists").select("name").eq("id", review.therapist_id).single(),
+            supabaseAdmin.from("profiles").select("nickname").eq("id", review.user_id).single(),
+          ]);
+          const email = userRes.data.user?.email;
+          const therapistName = therapistRes.data?.name || "セラピスト";
+          const nickname = profileRes.data?.nickname || "ユーザー";
+          if (email) {
+            await getResend()?.emails.send({
+              from: "メンエスSKR <info@menes-skr.com>",
+              to: email,
+              subject: "口コミについてのご連絡",
+              html: `<p>${nickname}様</p><p>${therapistName}への口コミについて、以下の理由により承認できませんでした。</p><p>理由: ${reason || "規約違反"}</p><p>内容を修正の上、再投稿をお願いいたします。</p><p>メンエスSKR</p>`,
+            });
+          }
+        }
+      } catch (emailError) {
+        console.error("Failed to send rejection email:", emailError);
+      }
+
       return NextResponse.json({ ok: true });
     }
 

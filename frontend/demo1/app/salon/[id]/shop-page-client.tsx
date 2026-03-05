@@ -12,6 +12,7 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { TherapistCard } from "@/components/shared/therapist-card";
 import { ReviewCard } from "@/components/shared/review-card";
+import { useTier } from "@/lib/hooks/use-tier";
 import type { Shop, Therapist, Review } from "@/lib/data";
 
 const THERAPISTS_PER_PAGE = 16;
@@ -30,6 +31,8 @@ interface ShopPageClientProps {
 export function ShopPageClient({ shop, therapists, shopReviews, officialUrl, areaName, areaSlug, prefName, prefSlug }: ShopPageClientProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [therapistDisplayCount, setTherapistDisplayCount] = useState(THERAPISTS_PER_PAGE);
+  const { permissions } = useTier();
+  const isReviewBlurred = !permissions.canViewReviewBody;
 
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev === shop.images.length - 1 ? 0 : prev + 1));
@@ -213,7 +216,7 @@ export function ShopPageClient({ shop, therapists, shopReviews, officialUrl, are
                   ) : (
                     <div className="space-y-4">
                       {shopReviews.slice(0, 3).map(review => (
-                        <ReviewCard key={review.id} review={review} isBlurred={true} therapistImageUrl={review.therapistImageUrl} />
+                        <ReviewCard key={review.id} review={review} isBlurred={isReviewBlurred} therapistImageUrl={review.therapistImageUrl} />
                       ))}
                     </div>
                   )}
