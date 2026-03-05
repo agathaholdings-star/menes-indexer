@@ -6,13 +6,12 @@ import { Share2, Heart, ChevronLeft, ChevronRight, PenSquare } from "lucide-reac
 import { TherapistImage } from "@/components/shared/therapist-image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+
 import { SiteHeader } from "@/components/layout/site-header";
 import { Sidebar } from "@/components/layout/sidebar";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { ProfileTable } from "@/components/therapist/profile-table";
-import { ParameterRadarChart } from "@/components/therapist/radar-chart";
-import { CompositionChart } from "@/components/therapist/composition-chart";
+
 import { ReviewList } from "@/components/therapist/review-list";
 import { Recommendations } from "@/components/therapist/recommendations";
 import { ReviewWizardModal } from "@/components/review/review-wizard-modal";
@@ -164,22 +163,6 @@ export function TherapistPageClient({ therapist, reviews }: TherapistPageClientP
                       </div>
                       <ProfileTable therapist={therapist} />
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Analysis Section */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    分析データ
-                    <Badge variant="secondary" className="text-xs">独自機能</Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid gap-6 md:grid-cols-2">
-                    <ParameterRadarChart parameters={therapist.parameters} />
-                    <CompositionChart types={therapist.types} />
                   </div>
                 </CardContent>
               </Card>
