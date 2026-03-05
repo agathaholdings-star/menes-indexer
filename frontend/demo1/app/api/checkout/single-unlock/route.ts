@@ -3,7 +3,7 @@ import Stripe from "stripe";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_placeholder", {
   apiVersion: "2026-01-28.clover",
 });
 
