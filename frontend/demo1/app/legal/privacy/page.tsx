@@ -13,17 +13,17 @@ export default function PrivacyPage() {
       <SiteHeader />
 
       <main className="container mx-auto px-4 py-12">
-        <div className="max-w-3xl mx-auto prose prose-neutral dark:prose-invert">
-          <h1>プライバシーポリシー</h1>
+        <div className="max-w-3xl mx-auto space-y-6 text-sm leading-relaxed text-foreground/90">
+          <h1 className="text-3xl font-bold mb-8">プライバシーポリシー</h1>
 
           <p>
             メンエスSKR（以下「当サービス」）は、ユーザーの個人情報の取り扱いについて、
             以下のとおりプライバシーポリシー（以下「本ポリシー」）を定めます。
           </p>
 
-          <h2>1. 収集する情報</h2>
+          <h2 className="text-xl font-semibold mt-8 pt-4 border-t">1. 収集する情報</h2>
           <p>当サービスでは、以下の情報を収集することがあります。</p>
-          <ul>
+          <ul className="list-disc list-inside space-y-1 pl-2">
             <li>メールアドレス</li>
             <li>パスワード（暗号化して保存）</li>
             <li>ユーザーが投稿した口コミ情報</li>
@@ -32,9 +32,9 @@ export default function PrivacyPage() {
             <li>アクセスログ（IPアドレス、ブラウザ情報、アクセス日時など）</li>
           </ul>
 
-          <h2>2. 情報の利用目的</h2>
+          <h2 className="text-xl font-semibold mt-8 pt-4 border-t">2. 情報の利用目的</h2>
           <p>収集した情報は、以下の目的で利用します。</p>
-          <ul>
+          <ul className="list-disc list-inside space-y-1 pl-2">
             <li>サービスの提供・運営</li>
             <li>ユーザー認証</li>
             <li>有料サービスの決済処理</li>
@@ -44,32 +44,32 @@ export default function PrivacyPage() {
             <li>不正利用の防止</li>
           </ul>
 
-          <h2>3. 情報の第三者提供</h2>
+          <h2 className="text-xl font-semibold mt-8 pt-4 border-t">3. 情報の第三者提供</h2>
           <p>
             当サービスは、以下の場合を除き、ユーザーの個人情報を第三者に提供することはありません。
           </p>
-          <ul>
+          <ul className="list-disc list-inside space-y-1 pl-2">
             <li>ユーザーの同意がある場合</li>
             <li>法令に基づく場合</li>
             <li>人の生命、身体または財産の保護のために必要な場合</li>
             <li>サービス提供に必要な業務委託先への提供（決済代行など）</li>
           </ul>
 
-          <h2>4. 情報の管理</h2>
+          <h2 className="text-xl font-semibold mt-8 pt-4 border-t">4. 情報の管理</h2>
           <p>
             当サービスは、ユーザーの個人情報を適切に管理し、不正アクセス、紛失、破壊、改ざん、
             漏洩などを防止するため、必要かつ適切なセキュリティ対策を講じます。
           </p>
 
-          <h2>5. Cookieの使用</h2>
+          <h2 className="text-xl font-semibold mt-8 pt-4 border-t">5. Cookieの使用</h2>
           <p>
             当サービスでは、ユーザー体験の向上やアクセス解析のためにCookieを使用しています。
             ブラウザの設定によりCookieを無効にすることも可能ですが、一部機能が制限される場合があります。
           </p>
 
-          <h2>6. 外部サービスの利用</h2>
+          <h2 className="text-xl font-semibold mt-8 pt-4 border-t">6. 外部サービスの利用</h2>
           <p>当サービスでは、以下の外部サービスを利用しています。</p>
-          <ul>
+          <ul className="list-disc list-inside space-y-1 pl-2">
             <li>Stripe（決済処理）</li>
             <li>Google Analytics（アクセス解析）</li>
           </ul>
@@ -77,9 +77,9 @@ export default function PrivacyPage() {
             これらのサービスにおける情報の取り扱いについては、各サービスのプライバシーポリシーをご確認ください。
           </p>
 
-          <h2>7. ユーザーの権利</h2>
+          <h2 className="text-xl font-semibold mt-8 pt-4 border-t">7. ユーザーの権利</h2>
           <p>ユーザーは、自身の個人情報について以下の権利を有します。</p>
-          <ul>
+          <ul className="list-disc list-inside space-y-1 pl-2">
             <li>個人情報の開示請求</li>
             <li>個人情報の訂正・削除請求</li>
             <li>個人情報の利用停止請求</li>
@@ -88,13 +88,13 @@ export default function PrivacyPage() {
             これらの請求は、お問い合わせフォームよりご連絡ください。
           </p>
 
-          <h2>8. 本ポリシーの変更</h2>
+          <h2 className="text-xl font-semibold mt-8 pt-4 border-t">8. 本ポリシーの変更</h2>
           <p>
             当サービスは、必要に応じて本ポリシーを変更することがあります。
             重要な変更がある場合は、サービス内でお知らせします。
           </p>
 
-          <h2>9. お問い合わせ</h2>
+          <h2 className="text-xl font-semibold mt-8 pt-4 border-t">9. お問い合わせ</h2>
           <p>
             本ポリシーに関するお問い合わせは、サイト内のお問い合わせフォームよりご連絡ください。
           </p>
