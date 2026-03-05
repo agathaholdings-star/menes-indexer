@@ -154,11 +154,9 @@ export function SiteHeader() {
       <header className="sticky top-0 z-50 border-b bg-card">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4">
           {/* Logo */}
-          <Link href="/" className="flex shrink-0 items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-              <span className="text-sm font-bold text-primary-foreground">SKR</span>
-            </div>
-            <span className="hidden text-lg font-bold sm:inline">メンエスSKR</span>
+          <Link href="/" className="flex shrink-0 flex-col">
+            <span className="text-2xl font-black tracking-tight text-primary leading-none">SKR</span>
+            <span className="hidden text-[10px] font-medium text-muted-foreground sm:inline">メンズエステ口コミ・レビュー</span>
           </Link>
 
           {/* Search Bar - Desktop */}

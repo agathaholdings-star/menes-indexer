@@ -7,11 +7,9 @@ export function SiteFooter() {
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {/* Brand */}
           <div>
-            <Link href="/" className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                <span className="text-sm font-bold text-primary-foreground">SKR</span>
-              </div>
-              <span className="text-lg font-bold">メンエスSKR</span>
+            <Link href="/" className="flex flex-col">
+              <span className="text-2xl font-black tracking-tight text-primary leading-none">SKR</span>
+              <span className="text-[10px] font-medium text-muted-foreground">メンズエステ口コミ・レビュー</span>
             </Link>
             <p className="mt-3 text-sm text-muted-foreground">
               メンズエステの口コミ・体験談サイト
@@ -96,7 +94,7 @@ export function SiteFooter() {
         </div>
 
         <div className="mt-8 border-t pt-8 text-center text-sm text-muted-foreground">
-          <p>&copy; 2026 メンエスSKR. All rights reserved.</p>
+          <p>&copy; 2026 SKR. All rights reserved.</p>
         </div>
       </div>
     </footer>
