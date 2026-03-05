@@ -41,12 +41,13 @@ export default function TokushohoPage() {
                 </tr>
                 <tr>
                   <th className="py-4 px-4 text-left bg-muted/50 font-medium">販売URL</th>
-                  <td className="py-4 px-4">https://menes-skr.com</td>
+                  <td className="py-4 px-4">https://www.menes-skr.com</td>
                 </tr>
                 <tr>
                   <th className="py-4 px-4 text-left bg-muted/50 font-medium">販売価格</th>
                   <td className="py-4 px-4">
                     各商品ページに税込価格で表示します。<br />
+                    セラピスト情報アンロック: 1,000円（税込）<br />
                     スタンダード会員: 月額4,980円（税込）<br />
                     VIP会員: 月額14,980円（税込）
                   </td>
@@ -82,7 +83,8 @@ export default function TokushohoPage() {
                   <th className="py-4 px-4 text-left bg-muted/50 font-medium">返品・キャンセルについて</th>
                   <td className="py-4 px-4">
                     デジタルコンテンツの性質上、お客様都合による返品・返金には応じておりません。<br />
-                    解約はいつでも可能で、解約後も契約期間終了までサービスをご利用いただけます。
+                    サブスクリプションの解約はマイページの「プラン管理」からいつでも手続きできます。<br />
+                    解約後も、当月の契約期間終了までサービスをご利用いただけます。
                   </td>
                 </tr>
                 <tr>
@@ -103,7 +105,7 @@ export default function TokushohoPage() {
           </div>
 
           <p className="text-sm text-muted-foreground mt-8">
-            最終更新日: 2026年3月1日
+            最終更新日: 2026年3月5日
           </p>
         </div>
       </main>
