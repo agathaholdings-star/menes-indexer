@@ -72,7 +72,7 @@ export default async function ShopListPage({ params }: ShopListPageProps) {
   }
 
   const area = await getAreaBySlug(district);
-  if (!area) {
+  if (!area || !area.salon_count) {
     notFound();
   }
 

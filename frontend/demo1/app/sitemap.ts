@@ -14,13 +14,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/contact`, lastModified: new Date(), changeFrequency: "yearly", priority: 0.3 },
   ];
 
-  // 都道府県ページ
+  // 都道府県ページ（サロンがあるエリアを持つ県のみ）
   const { data: prefectures } = await supabase
     .from("prefectures")
-    .select("slug");
+    .select("slug, areas!inner(id)")
+    .gt("areas.salon_count", 0);
 
-  const prefPages: MetadataRoute.Sitemap = (prefectures || []).map((p) => ({
-    url: `${baseUrl}/area/${p.slug}`,
+  // 重複除去（inner joinで複数エリアあると都道府県が複数回出る）
+  const uniquePrefSlugs = [...new Set((prefectures || []).map((p) => p.slug))];
+  const prefPages: MetadataRoute.Sitemap = uniquePrefSlugs.map((slug) => ({
+    url: `${baseUrl}/area/${slug}`,
     changeFrequency: "weekly" as const,
     priority: 0.8,
   }));

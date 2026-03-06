@@ -33,6 +33,7 @@ export async function getAreasByPrefectureId(prefectureId: number): Promise<Area
     .from("areas")
     .select("*")
     .eq("prefecture_id", prefectureId)
+    .gt("salon_count", 0)
     .order("search_volume", { ascending: false });
   return data || [];
 }
