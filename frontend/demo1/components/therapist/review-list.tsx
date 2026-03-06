@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Lock, PenLine, Star, ChevronRight, Crown, Eye, TrendingUp, Flame, Heart, Sparkles, Unlock, Coins, Clock, ThumbsUp, Award, ArrowRight } from "lucide-react";
+import { Lock, PenLine, Star, ChevronRight, Crown, Eye, TrendingUp, Flame, Heart, Sparkles, Unlock, Coins, Clock, ThumbsUp, Award, ArrowRight, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -165,9 +165,16 @@ export function ReviewList({
               >
                 <PenLine className="h-4 w-4" />あなたの体験を投稿して5クレジットGET<ChevronRight className="h-4 w-4 ml-auto" />
               </Button>
+              {therapistId && (
+                <a href={`/api/checkout/single-unlock?therapist_id=${therapistId}`} className="block">
+                  <Button variant="outline" className="w-full gap-2 h-12 border-amber-500 text-amber-700 hover:bg-amber-50 bg-transparent">
+                    <CreditCard className="h-4 w-4" />¥1,000で永久アンロック<ChevronRight className="h-4 w-4 ml-auto" />
+                  </Button>
+                </a>
+              )}
               <Link href="/pricing" className="block">
-                <Button variant="outline" className="w-full gap-2 h-12 border-primary text-primary hover:bg-primary/5 bg-transparent">
-                  <Crown className="h-4 w-4" />有料会員になって読み放題<ChevronRight className="h-4 w-4 ml-auto" />
+                <Button variant="outline" className="w-full gap-2 h-10 text-muted-foreground hover:text-foreground bg-transparent">
+                  <Crown className="h-4 w-4" />有料会員になって読み放題（開発中）
                 </Button>
               </Link>
               <Link href="/login" className="block">

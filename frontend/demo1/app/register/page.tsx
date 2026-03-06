@@ -1,10 +1,10 @@
 "use client";
 
-import React from "react";
+import React, { Suspense } from "react";
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Mail, Lock, User, Check } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Eye, EyeOff, Mail, Lock, User, Check, MailCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,11 +22,22 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
 
 export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><div className="animate-pulse text-muted-foreground">読み込み中...</div></div>}>
+      <RegisterContent />
+    </Suspense>
+  );
+}
+
+function RegisterContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirect") || "/mypage";
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
   const [formData, setFormData] = useState({
     nickname: "",
     email: "",
@@ -50,11 +61,12 @@ export default function RegisterPage() {
     setError(null);
 
     const supabase = createSupabaseBrowser();
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: formData.email,
       password: formData.password,
       options: {
         data: { nickname: formData.nickname },
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectTo)}`,
       },
     });
 
@@ -64,8 +76,16 @@ export default function RegisterPage() {
       return;
     }
 
+    // メール確認が必要な場合（本番環境）
+    if (!data.session) {
+      setShowEmailConfirmation(true);
+      setIsLoading(false);
+      return;
+    }
+
+    // メール確認不要の場合（ローカル開発）
     sessionStorage.setItem("justRegistered", "true");
-    router.push("/mypage");
+    router.push(redirectTo);
     router.refresh();
   };
 
@@ -75,6 +95,21 @@ export default function RegisterPage() {
 
       <main className="container mx-auto px-4 py-12">
         <div className="max-w-md mx-auto">
+          {showEmailConfirmation ? (
+            <Card>
+              <CardContent className="p-8 text-center">
+                <MailCheck className="h-12 w-12 mx-auto text-primary mb-4" />
+                <h2 className="text-xl font-bold mb-2">確認メールを送信しました</h2>
+                <p className="text-muted-foreground mb-4">
+                  <span className="font-medium text-foreground">{formData.email}</span> に確認メールを送信しました。
+                  メール内のリンクをクリックして登録を完了してください。
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  メールが届かない場合は、迷惑メールフォルダをご確認ください。
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
           <Card>
             <CardHeader className="text-center">
               <CardTitle className="text-2xl">新規登録</CardTitle>
@@ -236,7 +271,7 @@ export default function RegisterPage() {
               <p className="text-center text-sm text-muted-foreground mt-6">
                 既にアカウントをお持ちの方は{" "}
                 <Link
-                  href="/login"
+                  href={`/login${redirectTo !== "/mypage" ? `?redirect=${encodeURIComponent(redirectTo)}` : ""}`}
                   className="text-primary hover:underline"
                 >
                   ログイン
@@ -244,6 +279,7 @@ export default function RegisterPage() {
               </p>
             </CardContent>
           </Card>
+          )}
         </div>
       </main>
 

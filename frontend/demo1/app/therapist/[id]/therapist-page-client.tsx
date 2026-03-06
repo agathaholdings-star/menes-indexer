@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Share2, Heart, ChevronLeft, ChevronRight, PenSquare, Sparkles } from "lucide-react";
 import { TherapistImage } from "@/components/shared/therapist-image";
 import { Button } from "@/components/ui/button";
@@ -25,11 +26,39 @@ interface TherapistPageClientProps {
 }
 
 export function TherapistPageClient({ therapist, reviews }: TherapistPageClientProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [reviewForThisTherapist, setReviewForThisTherapist] = useState(false);
   const [isUnlocked, setIsUnlocked] = useState(false);
   const { permissions, reviewCredits, setReviewCredits, authUser, loading: tierLoading } = useTier();
+
+  // B5: ?write=true でウィザード自動起動
+  useEffect(() => {
+    if (searchParams.get("write") === "true" && authUser && !tierLoading) {
+      setReviewForThisTherapist(true);
+      setIsReviewModalOpen(true);
+    }
+  }, [searchParams, authUser, tierLoading]);
+
+  // 未ログイン時に登録ページへリダイレクト
+  const redirectToRegister = useCallback((writeForThis: boolean) => {
+    const redirectPath = writeForThis
+      ? `/therapist/${therapist.id}?write=true`
+      : `/therapist/${therapist.id}`;
+    router.push(`/register?redirect=${encodeURIComponent(redirectPath)}`);
+  }, [router, therapist.id]);
+
+  // 口コミ投稿ボタンのハンドラ（ログインチェック付き）
+  const handleWriteReview = useCallback((forThisTherapist: boolean) => {
+    if (!authUser) {
+      redirectToRegister(forThisTherapist);
+      return;
+    }
+    setReviewForThisTherapist(forThisTherapist);
+    setIsReviewModalOpen(true);
+  }, [authUser, redirectToRegister]);
 
   // Check unlock status on mount
   useEffect(() => {
@@ -213,7 +242,7 @@ export function TherapistPageClient({ therapist, reviews }: TherapistPageClientP
                     <p className="text-sm text-muted-foreground mb-4">
                       口コミを投稿すると5クレジット獲得(スクショ付きで10クレジット)
                     </p>
-                    <Button onClick={() => { setReviewForThisTherapist(true); setIsReviewModalOpen(true); }} className="gap-2">
+                    <Button onClick={() => handleWriteReview(true)} className="gap-2">
                       <PenSquare className="h-4 w-4" />
                       口コミを書く
                     </Button>
@@ -223,7 +252,7 @@ export function TherapistPageClient({ therapist, reviews }: TherapistPageClientP
                 <ReviewList
                   reviews={reviews}
                   isLocked={isLocked}
-                  onWriteReview={() => { setReviewForThisTherapist(false); setIsReviewModalOpen(true); }}
+                  onWriteReview={() => handleWriteReview(false)}
                   onUnlockTherapist={handleUnlockTherapist}
                   reviewCredits={reviewCredits}
                   therapistId={therapist.id}
@@ -254,7 +283,7 @@ export function TherapistPageClient({ therapist, reviews }: TherapistPageClientP
           <Button
             className="w-full gap-2"
             size="lg"
-            onClick={() => { setReviewForThisTherapist(false); setIsReviewModalOpen(true); }}
+            onClick={() => handleWriteReview(false)}
           >
             <PenSquare className="h-5 w-5" />
             あなたの体験を投稿してクレジットGET
