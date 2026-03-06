@@ -41,7 +41,7 @@ export default function TokushohoPage() {
                 </tr>
                 <tr>
                   <th className="py-4 px-4 text-left bg-muted/50 font-medium">販売URL</th>
-                  <td className="py-4 px-4">https://www.menes-skr.com</td>
+                  <td className="py-4 px-4">https://menes-skr.com</td>
                 </tr>
                 <tr>
                   <th className="py-4 px-4 text-left bg-muted/50 font-medium">販売価格</th>

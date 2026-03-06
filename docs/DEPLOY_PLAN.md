@@ -31,7 +31,7 @@
 - 値: `price_1T7Zoe0XBzvgRtVLEvchOUaa`
 
 #### P4: Stripe Webhook未設定
-- 本番エンドポイント `https://www.menes-skr.com/api/webhook/stripe` の登録が必要
+- 本番エンドポイント `https://menes-skr.com/api/webhook/stripe` の登録が必要
 - 必要なイベント: `checkout.session.completed`, `customer.subscription.deleted`, `invoice.payment_succeeded`
 
 ---
@@ -119,7 +119,7 @@ WHERE image_urls::text LIKE '%127.0.0.1%';
 
 ### 3-2. Stripe Webhookエンドポイント設定（テストモード）
 - Stripe Dashboard → Developers → Webhooks → Add endpoint
-- URL: `https://www.menes-skr.com/api/webhook/stripe`
+- URL: `https://menes-skr.com/api/webhook/stripe`
 - Events: `checkout.session.completed`, `customer.subscription.deleted`, `invoice.payment_succeeded`
 - Signing secret → Vercel env varsに設定
 
@@ -130,7 +130,7 @@ git push origin main
 ```
 
 ### 検証チェックリスト
-- [ ] `www.menes-skr.com` でトップページが表示される（データあり）
+- [ ] `menes-skr.com` でトップページが表示される（データあり）
 - [ ] `/area/tokyo` で東京都ページが表示される
 - [ ] `/area/tokyo/shinjuku` で新宿エリアページが表示される
 - [ ] `/salon/[id]` でサロンページが表示される
@@ -145,7 +145,7 @@ git push origin main
 ## Phase 4: GSC登録 + インデックステスト
 
 ### 4-1. GSCプロパティ追加
-- Google Search Console → プロパティ追加 → `www.menes-skr.com`
+- Google Search Console → プロパティ追加 → `menes-skr.com`
 - 認証方法: DNS TXTレコード（Cloudflareで追加）
 
 ### 4-2. URL検査（インデックス前の確認）
@@ -153,7 +153,7 @@ git push origin main
 
 | ページタイプ | テストURL例 | 確認するタイトル |
 |-------------|------------|----------------|
-| トップ | `https://www.menes-skr.com/` | メンエスSKR |
+| トップ | `https://menes-skr.com/` | メンエスSKR |
 | 都道府県 | `/area/tokyo` | 東京都のメンズエステ - メンエスSKR |
 | エリア | `/area/tokyo/shinjuku` | 新宿のおすすめメンズエステランキング - メンエスSKR |
 | サロン | `/salon/[id]` | {店名}の口コミ体験談 - メンエスSKR |
@@ -162,7 +162,7 @@ git push origin main
 | 料金 | `/pricing` | 料金プラン - メンエスSKR |
 
 ### 4-3. sitemap送信
-- GSC → Sitemaps → `https://www.menes-skr.com/sitemap.xml` 送信
+- GSC → Sitemaps → `https://menes-skr.com/sitemap.xml` 送信
 - 現在のsitemap: 都道府県47 + エリア821 + サロン6,489 = 約7,357 URL
 
 ### 4-4. 少量インデックスリクエスト
