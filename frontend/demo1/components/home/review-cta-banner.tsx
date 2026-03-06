@@ -28,11 +28,11 @@ export function ReviewCtaBanner() {
             </div>
             <div>
               <h3 className="font-bold text-base text-foreground">
-                口コミ1件で、10人分の口コミが読める！
+                口コミ1件で、5人分の口コミが読める！
               </h3>
               <p className="mt-1 text-sm text-muted-foreground">
                 あなたの体験を共有して、他のユーザーの口コミを閲覧しよう。
-                新規登録で3クレジット付与中。
+                スクショ付きなら10人分読める！
               </p>
             </div>
           </div>

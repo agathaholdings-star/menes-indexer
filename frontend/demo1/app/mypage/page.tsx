@@ -444,7 +444,7 @@ export default function MyPage() {
                       {permissions.canViewReviewBody ? <Eye className="h-5 w-5 text-primary" /> : <Lock className="h-5 w-5 text-muted-foreground" />}
                       <div>
                         <p className="font-medium">口コミ閲覧</p>
-                        <p className="text-sm text-muted-foreground">{permissions.canViewReviewBody ? "全文閲覧可能" : "投稿で3日間解放"}</p>
+                        <p className="text-sm text-muted-foreground">{permissions.canViewReviewBody ? "全文閲覧可能" : "投稿でクレジット獲得（7日間有効）"}</p>
                       </div>
                     </div>
                   </div>

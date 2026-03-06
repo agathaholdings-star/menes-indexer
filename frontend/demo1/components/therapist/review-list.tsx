@@ -125,12 +125,12 @@ export function ReviewList({
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   <div className="bg-primary text-primary-foreground rounded-lg px-3 py-2 text-center">
                     <span className="block font-bold">2</span>
-                    <span>承認されると<br/>10クレジット獲得</span>
+                    <span>承認されると<br/>5クレジット獲得</span>
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   <div className="bg-primary/80 text-primary-foreground rounded-lg px-3 py-2 text-center">
                     <span className="block font-bold">3</span>
-                    <span>10人分の<br/>口コミが読める!</span>
+                    <span>5人分の<br/>口コミが読める!</span>
                   </div>
                 </div>
               </div>
@@ -152,9 +152,9 @@ export function ReviewList({
             </div>
 
             <div className="bg-muted/50 rounded-lg p-4 mb-4 text-sm text-muted-foreground space-y-2">
-              <p>口コミを読むためには、あなたが体験したメンズエステの口コミ投稿をお願いしています。</p>
+              <p>あなたが体験した別のセラピストの口コミを投稿すると、クレジットで口コミが読めるようになります。</p>
               <p className="flex items-center gap-1 text-primary font-medium">
-                <TrendingUp className="h-4 w-4" />1件書けば10人分のセラピスト口コミが読める!
+                <TrendingUp className="h-4 w-4" />1件書けば5人分の口コミが読める（スクショ付き10人分）
               </p>
             </div>
 
@@ -163,7 +163,7 @@ export function ReviewList({
                 onClick={() => { setShowUnlockModal(false); onWriteReview?.(); }}
                 className="w-full gap-2 h-12 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80"
               >
-                <PenLine className="h-4 w-4" />口コミを書いて10クレジットGET<ChevronRight className="h-4 w-4 ml-auto" />
+                <PenLine className="h-4 w-4" />あなたの体験を投稿して5クレジットGET<ChevronRight className="h-4 w-4 ml-auto" />
               </Button>
               <Link href="/pricing" className="block">
                 <Button variant="outline" className="w-full gap-2 h-12 border-primary text-primary hover:bg-primary/5 bg-transparent">

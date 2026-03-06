@@ -27,6 +27,7 @@ interface TherapistPageClientProps {
 export function TherapistPageClient({ therapist, reviews }: TherapistPageClientProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [reviewForThisTherapist, setReviewForThisTherapist] = useState(false);
   const [isUnlocked, setIsUnlocked] = useState(false);
   const { permissions, reviewCredits, setReviewCredits, authUser, loading: tierLoading } = useTier();
 
@@ -212,7 +213,7 @@ export function TherapistPageClient({ therapist, reviews }: TherapistPageClientP
                     <p className="text-sm text-muted-foreground mb-4">
                       口コミを投稿すると5クレジット獲得(スクショ付きで10クレジット)
                     </p>
-                    <Button onClick={() => setIsReviewModalOpen(true)} className="gap-2">
+                    <Button onClick={() => { setReviewForThisTherapist(true); setIsReviewModalOpen(true); }} className="gap-2">
                       <PenSquare className="h-4 w-4" />
                       口コミを書く
                     </Button>
@@ -222,7 +223,7 @@ export function TherapistPageClient({ therapist, reviews }: TherapistPageClientP
                 <ReviewList
                   reviews={reviews}
                   isLocked={isLocked}
-                  onWriteReview={() => setIsReviewModalOpen(true)}
+                  onWriteReview={() => { setReviewForThisTherapist(false); setIsReviewModalOpen(true); }}
                   onUnlockTherapist={handleUnlockTherapist}
                   reviewCredits={reviewCredits}
                   therapistId={therapist.id}
@@ -253,10 +254,10 @@ export function TherapistPageClient({ therapist, reviews }: TherapistPageClientP
           <Button
             className="w-full gap-2"
             size="lg"
-            onClick={() => setIsReviewModalOpen(true)}
+            onClick={() => { setReviewForThisTherapist(false); setIsReviewModalOpen(true); }}
           >
             <PenSquare className="h-5 w-5" />
-            口コミを投稿して無料で全て見る
+            あなたの体験を投稿してクレジットGET
           </Button>
         </div>
       )}
@@ -266,8 +267,8 @@ export function TherapistPageClient({ therapist, reviews }: TherapistPageClientP
       {/* Review Wizard Modal */}
       <ReviewWizardModal
         open={isReviewModalOpen}
-        onOpenChange={setIsReviewModalOpen}
-        preselectedTherapistId={therapist.id}
+        onOpenChange={(open) => { setIsReviewModalOpen(open); if (!open) setReviewForThisTherapist(false); }}
+        preselectedTherapistId={reviewForThisTherapist ? therapist.id : undefined}
       />
     </div>
   );

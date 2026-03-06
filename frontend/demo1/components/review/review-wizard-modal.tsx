@@ -486,6 +486,7 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
               /* 「続けて書く」は別セラピスト対象なのでstep 0（エリア選択）から */
               memberType={actualMemberType}
               monthlyReviewCount={actualMonthlyReviewCount}
+              hasScreenshot={!!verificationImage}
             />
           ) : (
             <>
@@ -1394,11 +1395,13 @@ function CompletionScreen({
   onContinue,
   memberType,
   monthlyReviewCount,
+  hasScreenshot,
 }: {
   onClose: () => void;
   onContinue: () => void;
   memberType: "free" | "standard" | "vip";
   monthlyReviewCount: number;
+  hasScreenshot: boolean;
 }) {
   return (
     <div className="text-center py-8">
@@ -1419,7 +1422,7 @@ function CompletionScreen({
       <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-lg p-4 mb-4">
         <div className="flex items-center justify-center gap-2 mb-1">
           <Gift className="h-5 w-5 text-amber-600" />
-          <span className="font-bold text-amber-700 text-lg">+10 クレジット獲得予定!</span>
+          <span className="font-bold text-amber-700 text-lg">+{hasScreenshot ? 10 : 5} クレジット獲得予定!</span>
         </div>
         <p className="text-xs text-amber-600">管理者が確認後、通常30分以内にクレジットが付与されます</p>
         <p className="text-xs text-amber-600 mt-1">承認されるとメールでお知らせします</p>
@@ -1428,8 +1431,8 @@ function CompletionScreen({
       {memberType === "free" && (
         <div className="bg-primary/5 rounded-lg p-4 mb-4 text-sm">
           <p className="text-muted-foreground">
-            <span className="text-primary font-bold">10クレジット</span>で
-            セラピスト10人分の口コミが読めるようになります
+            <span className="text-primary font-bold">{hasScreenshot ? 10 : 5}クレジット</span>で
+            セラピスト{hasScreenshot ? 10 : 5}人分の口コミが読めるようになります
           </p>
         </div>
       )}

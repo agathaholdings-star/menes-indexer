@@ -18,9 +18,10 @@ interface ConfettiPiece {
 interface CompletionScreenProps {
   memberType?: "free" | "standard" | "vip";
   monthlyReviewCount?: number;
+  hasScreenshot?: boolean;
 }
 
-export function CompletionScreen({ memberType = "free", monthlyReviewCount = 0 }: CompletionScreenProps) {
+export function CompletionScreen({ memberType = "free", monthlyReviewCount = 0, hasScreenshot = false }: CompletionScreenProps) {
   const [confetti, setConfetti] = useState<ConfettiPiece[]>([]);
   const [showContent, setShowContent] = useState(false);
 
@@ -76,7 +77,7 @@ export function CompletionScreen({ memberType = "free", monthlyReviewCount = 0 }
         <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-xl p-4 mb-6 w-full max-w-xs">
           <div className="flex items-center justify-center gap-2 mb-1">
             <Gift className="h-5 w-5 text-amber-500" />
-            <span className="text-lg font-bold text-amber-700">+10 クレジット獲得予定!</span>
+            <span className="text-lg font-bold text-amber-700">+{hasScreenshot ? 10 : 5} クレジット獲得予定!</span>
           </div>
           <p className="text-xs text-amber-600/80">
             審査完了後に反映されます
@@ -91,8 +92,8 @@ export function CompletionScreen({ memberType = "free", monthlyReviewCount = 0 }
             <p className="text-muted-foreground mb-8 leading-relaxed">
               口コミ投稿ありがとうございます!
               <br />
-              <span className="text-primary font-semibold">3日間</span>
-              すべての口コミが見放題になりました
+              承認後 <span className="text-primary font-semibold">{hasScreenshot ? 10 : 5}クレジット</span>
+              が付与され、セラピスト{hasScreenshot ? 10 : 5}人分の口コミが読めます（7日間有効）
             </p>
           </>
         )}
