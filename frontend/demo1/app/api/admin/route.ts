@@ -122,33 +122,61 @@ export async function POST(req: NextRequest) {
   switch (action) {
     case "approve_review": {
       const { review_id } = body;
-      const { error } = await supabaseAdmin.rpc("approve_review", { review_id });
-      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+      // Direct DB update (replaces RPC which fails with service_role_key due to auth.uid() check)
+      const { data: updatedReview, error: reviewError } = await supabaseAdmin
+        .from("reviews")
+        .update({ moderation_status: "approved" })
+        .eq("id", review_id)
+        .eq("moderation_status", "pending")
+        .select("user_id, therapist_id, verification_image_path")
+        .single();
+
+      if (reviewError || !updatedReview) {
+        return NextResponse.json(
+          { error: reviewError?.message || "Review not found or already processed" },
+          { status: 500 }
+        );
+      }
+
+      // Grant credits: 10 with screenshot, 5 without
+      const credits = updatedReview.verification_image_path ? 10 : 5;
+      const { data: currentProfile } = await supabaseAdmin
+        .from("profiles")
+        .select("total_review_count, monthly_review_count, monthly_review_reset_at, review_credits")
+        .eq("id", updatedReview.user_id)
+        .single();
+
+      if (currentProfile) {
+        await supabaseAdmin
+          .from("profiles")
+          .update({
+            total_review_count: (currentProfile.total_review_count || 0) + 1,
+            monthly_review_count: (currentProfile.monthly_review_count || 0) + 1,
+            monthly_review_reset_at: currentProfile.monthly_review_reset_at || new Date().toISOString(),
+            review_credits: (currentProfile.review_credits || 0) + credits,
+            credits_expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          })
+          .eq("id", updatedReview.user_id);
+      }
 
       // Send approval notification email (non-blocking)
       try {
-        const { data: review } = await supabaseAdmin
-          .from("reviews")
-          .select("user_id, therapist_id")
-          .eq("id", review_id)
-          .single();
-        if (review) {
-          const [userRes, therapistRes, profileRes] = await Promise.all([
-            supabaseAdmin.auth.admin.getUserById(review.user_id),
-            supabaseAdmin.from("therapists").select("name").eq("id", review.therapist_id).single(),
-            supabaseAdmin.from("profiles").select("nickname").eq("id", review.user_id).single(),
-          ]);
-          const email = userRes.data.user?.email;
-          const therapistName = therapistRes.data?.name || "セラピスト";
-          const nickname = profileRes.data?.nickname || "ユーザー";
-          if (email) {
-            await getResend()?.emails.send({
-              from: "メンエスSKR <info@menes-skr.com>",
-              to: email,
-              subject: "口コミが承認されました",
-              html: `<p>${nickname}様</p><p>${therapistName}への口コミが承認されました。クレジットが付与されました。</p><p>サイトにログインして口コミを閲覧しましょう。</p><p>メンエスSKR</p>`,
-            });
-          }
+        const [userRes, therapistRes, profileRes] = await Promise.all([
+          supabaseAdmin.auth.admin.getUserById(updatedReview.user_id),
+          supabaseAdmin.from("therapists").select("name").eq("id", updatedReview.therapist_id).single(),
+          supabaseAdmin.from("profiles").select("nickname").eq("id", updatedReview.user_id).single(),
+        ]);
+        const email = userRes.data.user?.email;
+        const therapistName = therapistRes.data?.name || "セラピスト";
+        const nickname = profileRes.data?.nickname || "ユーザー";
+        if (email) {
+          await getResend()?.emails.send({
+            from: "メンエスSKR <info@menes-skr.com>",
+            to: email,
+            subject: "口コミが承認されました",
+            html: `<p>${nickname}様</p><p>${therapistName}への口コミが承認されました。クレジットが付与されました。</p><p>サイトにログインして口コミを閲覧しましょう。</p><p>メンエスSKR</p>`,
+          });
         }
       } catch (emailError) {
         console.error("Failed to send approval email:", emailError);
@@ -159,33 +187,40 @@ export async function POST(req: NextRequest) {
 
     case "reject_review": {
       const { review_id, reason } = body;
-      const { error } = await supabaseAdmin.rpc("reject_review", { review_id, p_reason: reason || null });
-      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+      // Direct DB update (replaces RPC which fails with service_role_key due to auth.uid() check)
+      const { data: rejectedReview, error: rejectError } = await supabaseAdmin
+        .from("reviews")
+        .update({ moderation_status: "rejected", rejection_reason: reason || null })
+        .eq("id", review_id)
+        .eq("moderation_status", "pending")
+        .select("user_id, therapist_id")
+        .single();
+
+      if (rejectError || !rejectedReview) {
+        return NextResponse.json(
+          { error: rejectError?.message || "Review not found or already processed" },
+          { status: 500 }
+        );
+      }
 
       // Send rejection notification email (non-blocking)
       try {
-        const { data: review } = await supabaseAdmin
-          .from("reviews")
-          .select("user_id, therapist_id")
-          .eq("id", review_id)
-          .single();
-        if (review) {
-          const [userRes, therapistRes, profileRes] = await Promise.all([
-            supabaseAdmin.auth.admin.getUserById(review.user_id),
-            supabaseAdmin.from("therapists").select("name").eq("id", review.therapist_id).single(),
-            supabaseAdmin.from("profiles").select("nickname").eq("id", review.user_id).single(),
-          ]);
-          const email = userRes.data.user?.email;
-          const therapistName = therapistRes.data?.name || "セラピスト";
-          const nickname = profileRes.data?.nickname || "ユーザー";
-          if (email) {
-            await getResend()?.emails.send({
-              from: "メンエスSKR <info@menes-skr.com>",
-              to: email,
-              subject: "口コミについてのご連絡",
-              html: `<p>${nickname}様</p><p>${therapistName}への口コミについて、以下の理由により承認できませんでした。</p><p>理由: ${reason || "規約違反"}</p><p>内容を修正の上、再投稿をお願いいたします。</p><p>メンエスSKR</p>`,
-            });
-          }
+        const [userRes, therapistRes, profileRes] = await Promise.all([
+          supabaseAdmin.auth.admin.getUserById(rejectedReview.user_id),
+          supabaseAdmin.from("therapists").select("name").eq("id", rejectedReview.therapist_id).single(),
+          supabaseAdmin.from("profiles").select("nickname").eq("id", rejectedReview.user_id).single(),
+        ]);
+        const email = userRes.data.user?.email;
+        const therapistName = therapistRes.data?.name || "セラピスト";
+        const nickname = profileRes.data?.nickname || "ユーザー";
+        if (email) {
+          await getResend()?.emails.send({
+            from: "メンエスSKR <info@menes-skr.com>",
+            to: email,
+            subject: "口コミについてのご連絡",
+            html: `<p>${nickname}様</p><p>${therapistName}への口コミについて、以下の理由により承認できませんでした。</p><p>理由: ${reason || "規約違反"}</p><p>内容を修正の上、再投稿をお願いいたします。</p><p>メンエスSKR</p>`,
+          });
         }
       } catch (emailError) {
         console.error("Failed to send rejection email:", emailError);
