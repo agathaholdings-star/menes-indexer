@@ -139,12 +139,14 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
     if (!open) return;
     const fetchPrefectures = async () => {
       const res = await fetch("/api/prefectures");
+      if (!res.ok) return;
       const data = await res.json();
       if (Array.isArray(data)) {
         setPrefectures(data.map((p: any) => ({ id: p.id, name: p.name })));
 
         // Get areas to count shops per prefecture
         const areasRes = await fetch("/api/areas");
+        if (!areasRes.ok) return;
         const areas = await areasRes.json();
         if (Array.isArray(areas)) {
           const prefCounts = new Map<number, number>();
@@ -166,6 +168,7 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
     if (!directSearchMode || directShopSearch.length < 1) { setDirectSearchResults([]); return; }
     const timer = setTimeout(async () => {
       const res = await fetch(`/api/salons?search=${encodeURIComponent(directShopSearch)}&limit=30`);
+      if (!res.ok) return;
       const data = await res.json();
       if (Array.isArray(data)) setDirectSearchResults(data);
     }, 300);
@@ -181,6 +184,7 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
         || prefectures.find(p => p.name.startsWith(selectedArea));
       if (!prefecture) return;
       const areasRes = await fetch(`/api/areas?prefecture_id=${prefecture.id}`);
+      if (!areasRes.ok) { setDbShops([]); return; }
       const areaData = await areasRes.json();
       if (!Array.isArray(areaData) || areaData.length === 0) { setDbShops([]); return; }
 
@@ -188,6 +192,7 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
       const shopMap = new Map<number, DBShop>();
       for (const area of areaData) {
         const salonsRes = await fetch(`/api/salons?area_id=${area.id}&limit=50`);
+        if (!salonsRes.ok) continue;
         const salons = await salonsRes.json();
         if (Array.isArray(salons)) {
           salons.forEach((s: any) => {
@@ -207,6 +212,7 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
     if (!selectedShopId) { setDbTherapists([]); return; }
     const fetchTherapists = async () => {
       const res = await fetch(`/api/therapists?salon_id=${selectedShopId}&limit=50`);
+      if (!res.ok) return;
       const data = await res.json();
       if (Array.isArray(data)) setDbTherapists(data as unknown as DBTherapist[]);
     };
@@ -219,6 +225,7 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
     const fetchPreselected = async () => {
       const therapistId = Number(preselectedTherapistId);
       const res = await fetch(`/api/therapists?ids=${therapistId}&limit=1`);
+      if (!res.ok) return;
       const data = await res.json();
       const found = Array.isArray(data) && data.length > 0 ? data[0] : null;
       if (found) {

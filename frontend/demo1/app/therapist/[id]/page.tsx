@@ -139,12 +139,74 @@ export default async function TherapistPage({ params }: TherapistPageProps) {
     helpfulCount: r.helpful_count || 0,
   }));
 
+  const reviewStructuredData = (dbReviews || []).slice(0, 5).reduce<Record<string, unknown>[]>((items, r: any) => {
+    const reviewBody = [
+      r.comment_reason,
+      r.comment_first_impression,
+      r.comment_style,
+      r.comment_service,
+      r.comment_service_detail,
+      r.comment_cost,
+      r.comment_revisit,
+      r.comment_advice,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .slice(0, 300);
+
+    if (!reviewBody && !r.score) return items;
+
+    items.push({
+      "@type": "Review",
+      author: { "@type": "Person", name: r.profiles?.nickname || "匿名" },
+      reviewRating: {
+        "@type": "Rating",
+        ratingValue: r.score || 0,
+        bestRating: 100,
+        worstRating: 1,
+      },
+      reviewBody,
+      datePublished: r.created_at,
+    });
+    return items;
+  }, []);
+
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://menes-skr.com";
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    name: therapist.shopName || therapist.name,
+    image: therapist.images.length > 0 ? therapist.images : undefined,
+    description: `${therapist.name}${therapist.age ? `（${therapist.age}歳）` : ""}${therapist.shopName ? `（${therapist.shopName}）` : ""}${therapist.comment ? ` ${therapist.comment}` : ""}`,
+    url: `${baseUrl}/therapist/${therapist.id}`,
+    address: areaInfo
+      ? { "@type": "PostalAddress", addressRegion: areaInfo.prefName, addressLocality: areaInfo.areaName }
+      : undefined,
+    employee: {
+      "@type": "Person",
+      name: therapist.name,
+      image: therapist.images[0] || undefined,
+      description: therapist.comment || undefined,
+      url: `${baseUrl}/therapist/${therapist.id}`,
+    },
+    aggregateRating: reviewCount > 0
+      ? { "@type": "AggregateRating", ratingValue: averageScore, reviewCount, bestRating: 100, worstRating: 1 }
+      : undefined,
+    review: reviewStructuredData.length > 0 ? reviewStructuredData : undefined,
+  };
+
   return (
-    <TherapistPageClient
-      therapist={therapist}
-      reviews={reviews}
-      areaName={areaInfo?.areaName}
-      prefName={areaInfo?.prefName}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }}
+      />
+      <TherapistPageClient
+        therapist={therapist}
+        reviews={reviews}
+        areaName={areaInfo?.areaName}
+        prefName={areaInfo?.prefName}
+      />
+    </>
   );
 }

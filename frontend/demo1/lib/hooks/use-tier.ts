@@ -32,7 +32,8 @@ export function useTier() {
           setCreditsExpiresAt(data.credits_expires_at || null);
         }
         setLoading(false);
-      });
+      })
+      .catch(() => setLoading(false));
   }, [authUser]);
 
   const tierUser: User = {

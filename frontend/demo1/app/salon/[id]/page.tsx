@@ -181,16 +181,38 @@ export default async function ShopPage({ params }: ShopPageProps) {
     return review;
   });
 
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://menes-skr.com";
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    name: shop.name,
+    image: shop.images.length > 0 ? shop.images : (shop.thumbnail ? [shop.thumbnail] : undefined),
+    description: shop.description || `${shop.name}の口コミ体験談・セラピスト一覧`,
+    url: `${baseUrl}/salon/${shop.id}`,
+    address: areaInfo
+      ? { "@type": "PostalAddress", addressRegion: areaInfo.prefName || undefined, addressLocality: areaInfo.areaName || undefined }
+      : undefined,
+    aggregateRating: shop.reviewCount > 0
+      ? { "@type": "AggregateRating", ratingValue: Number(shop.averageScore.toFixed(1)), reviewCount: shop.reviewCount, bestRating: 100, worstRating: 1 }
+      : undefined,
+  };
+
   return (
-    <ShopPageClient
-      shop={shop}
-      therapists={therapists}
-      shopReviews={shopReviews}
-      officialUrl={dbShop.official_url || null}
-      areaName={areaInfo?.areaName || ""}
-      areaSlug={areaInfo?.areaSlug || ""}
-      prefName={areaInfo?.prefName || ""}
-      prefSlug={areaInfo?.prefSlug || ""}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }}
+      />
+      <ShopPageClient
+        shop={shop}
+        therapists={therapists}
+        shopReviews={shopReviews}
+        officialUrl={dbShop.official_url || null}
+        areaName={areaInfo?.areaName || ""}
+        areaSlug={areaInfo?.areaSlug || ""}
+        prefName={areaInfo?.prefName || ""}
+        prefSlug={areaInfo?.prefSlug || ""}
+      />
+    </>
   );
 }

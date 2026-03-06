@@ -38,6 +38,9 @@ export async function POST(req: NextRequest) {
 
     // --- Single therapist unlock purchase ---
     if (session.metadata?.therapist_id) {
+      if (session.payment_status !== "paid") {
+        return NextResponse.json({ received: true });
+      }
       const therapistId = parseInt(session.metadata.therapist_id);
 
       // Find user by client_reference_id first, then by email
@@ -80,6 +83,11 @@ export async function POST(req: NextRequest) {
     }
 
     // --- Subscription purchase ---
+    // "paid" = normal charge, "no_payment_required" = free trial start
+    if (session.payment_status !== "paid" && session.payment_status !== "no_payment_required") {
+      return NextResponse.json({ received: true });
+    }
+
     if (!customerEmail) {
       console.error("No customer email in session:", session.id);
       return NextResponse.json({ error: "No email" }, { status: 400 });
