@@ -19,6 +19,7 @@ import {
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
+import { sanitizeRedirect } from "@/lib/utils/sanitize-redirect";
 import {
   generateDeviceFingerprint,
   getDeviceLabel,
@@ -43,7 +44,14 @@ export default function LoginPage() {
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirect") || "/mypage";
+  const redirectTo = sanitizeRedirect(searchParams.get("redirect"));
+  const authError = searchParams.get("error");
+  const authErrorMessage =
+    authError === "expired"
+      ? "認証リンクの有効期限が切れています。もう一度お試しください。"
+      : authError === "auth_callback_failed"
+        ? "認証処理に失敗しました。もう一度ログインしてください。"
+        : null;
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -116,6 +124,8 @@ function LoginContent() {
     // デバイス制限チェック
     const deviceOk = await registerDevice();
     if (!deviceOk) {
+      // 注: セッションは残すが、deviceLimitSessionsのUIで解決させる
+      // サインアウトするとDELETE /api/sessions/[id]が認証エラーになるため
       setIsLoading(false);
       return;
     }
@@ -138,6 +148,12 @@ function LoginContent() {
               </CardDescription>
             </CardHeader>
             <CardContent>
+              {authErrorMessage && (
+                <div className="mb-4 p-3 rounded-md bg-destructive/10 text-destructive text-sm">
+                  {authErrorMessage}
+                </div>
+              )}
+
               {error && (
                 <div className="mb-4 p-3 rounded-md bg-destructive/10 text-destructive text-sm">
                   {error}
@@ -207,7 +223,7 @@ function LoginContent() {
                   <div className="flex items-center justify-between">
                     <Label htmlFor="password">パスワード</Label>
                     <Link
-                      href="/login?reset=true"
+                      href="/password-reset"
                       className="text-sm text-primary hover:underline"
                     >
                       パスワードを忘れた方

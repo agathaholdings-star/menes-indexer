@@ -99,6 +99,7 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
   const [submitting, setSubmitting] = useState(false);
   const [verificationImage, setVerificationImage] = useState<File | null>(null);
   const [verificationPreview, setVerificationPreview] = useState<string | null>(null);
+  const [screenshotUploadFailed, setScreenshotUploadFailed] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Profile state (auto-fetched)
@@ -274,6 +275,7 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
             .upload(filePath, verificationImage);
           if (uploadError) {
             console.error("Image upload failed:", uploadError);
+            setScreenshotUploadFailed(true);
           } else {
             imagePath = filePath;
           }
@@ -408,7 +410,7 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
       case 6: return selectedService !== null;
       case 7: return true; // Ratings are optional
       case 8: return true; // Score always has default
-      case 9: return reviewText.q0.length >= 30 && reviewText.q3.length >= 30 && reviewText.q6.length >= 30;
+      case 9: return reviewText.q0.trim().length >= 30 && reviewText.q3.trim().length >= 30 && reviewText.q6.trim().length >= 30;
       case 10: return true; // 画像は任意なので常にtrue
       default: return false;
     }

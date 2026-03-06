@@ -28,11 +28,13 @@ export const metadata: Metadata = {
     title: 'メンズエステの口コミならメンエスSKR',
     description: 'メンズエステの口コミ・体験談ならメンエスSKR。エリア・タイプ・スタイルで理想のセラピストを発見。',
     url: siteUrl,
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'メンエスSKR' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'メンエスSKR',
     description: 'メンズエステの口コミ・体験談ならメンエスSKR',
+    images: ['/og-image.png'],
   },
   robots: {
     index: true,

@@ -20,6 +20,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
+import { sanitizeRedirect } from "@/lib/utils/sanitize-redirect";
 
 export default function RegisterPage() {
   return (
@@ -32,7 +33,7 @@ export default function RegisterPage() {
 function RegisterContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirect") || "/mypage";
+  const redirectTo = sanitizeRedirect(searchParams.get("redirect"));
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
@@ -80,12 +81,10 @@ function RegisterContent() {
     if (!data.session) {
       // 既存ユーザーの検出（identitiesが空 = 既に登録済み）
       if (data.user && data.user.identities && data.user.identities.length === 0) {
-        setError("このメールアドレスは既に登録されています。ログインしてください。");
+        setError("このメールアドレスは既に登録されています。ログインページからお試しください。");
         setIsLoading(false);
         return;
       }
-      // 確認後のリダイレクト先を保存
-      localStorage.setItem("auth_redirect", redirectTo);
       setShowEmailConfirmation(true);
       setIsLoading(false);
       return;

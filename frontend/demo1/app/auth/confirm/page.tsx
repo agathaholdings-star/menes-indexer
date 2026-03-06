@@ -37,8 +37,21 @@ function ConfirmContent() {
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
+    const code = searchParams.get("code");
     const tokenHash = searchParams.get("token_hash");
     const type = searchParams.get("type") as "signup" | "email" | "recovery" | "invite" | undefined;
+    const next = searchParams.get("next");
+    // URLパラメータ優先、なければfallback
+    const redirectTo = (next && next.startsWith("/") && !next.startsWith("//")) ? next : "/mypage";
+
+    // Flow A: codeパラメータがあればcallbackにリダイレクト
+    if (code) {
+      const query = searchParams.toString();
+      window.location.replace(
+        query ? `/auth/callback?${query}` : "/auth/callback"
+      );
+      return;
+    }
 
     if (!tokenHash || !type) {
       setStatus("error");
@@ -55,18 +68,18 @@ function ConfirmContent() {
 
       if (error) {
         setStatus("error");
-        setErrorMessage(
-          error.message.includes("expired")
-            ? "リンクの有効期限が切れています。もう一度登録してください。"
-            : `確認に失敗しました: ${error.message}`
-        );
+        const code = error.code || error.message;
+        if (/expired|otp_expired/i.test(code)) {
+          setErrorMessage("リンクの有効期限が切れています。もう一度登録してください。");
+        } else if (/already/i.test(code)) {
+          setErrorMessage("このリンクは既に使用済みです。ログインしてください。");
+        } else {
+          setErrorMessage(`確認に失敗しました: ${error.message}`);
+        }
         return;
       }
 
       setStatus("success");
-      // 登録時に保存したリダイレクト先を取得
-      const redirectTo = localStorage.getItem("auth_redirect") || "/mypage";
-      localStorage.removeItem("auth_redirect");
       setTimeout(() => {
         router.push(redirectTo);
         router.refresh();

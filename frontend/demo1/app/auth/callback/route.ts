@@ -6,7 +6,9 @@ import type { NextRequest } from "next/server";
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") || "/mypage";
+  const rawNext = searchParams.get("next") || "/mypage";
+  // Open redirect対策: 内部パスのみ許可
+  const next = (rawNext.startsWith("/") && !rawNext.startsWith("//")) ? rawNext : "/mypage";
 
   if (code) {
     const cookieStore = await cookies();
@@ -31,8 +33,11 @@ export async function GET(request: NextRequest) {
     if (!error) {
       return NextResponse.redirect(`${origin}${next}`);
     }
+    // エラー種別をクエリに伝播
+    const errorCode = /expired/i.test(error.message) ? "expired" : "auth_callback_failed";
+    return NextResponse.redirect(`${origin}/login?error=${errorCode}`);
   }
 
-  // エラー時またはcodeなしはログインページへ
+  // codeなしはログインページへ
   return NextResponse.redirect(`${origin}/login?error=auth_callback_failed`);
 }

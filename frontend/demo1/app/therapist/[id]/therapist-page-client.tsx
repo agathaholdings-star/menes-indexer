@@ -32,7 +32,7 @@ export function TherapistPageClient({ therapist, reviews }: TherapistPageClientP
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [reviewForThisTherapist, setReviewForThisTherapist] = useState(false);
   const [isUnlocked, setIsUnlocked] = useState(false);
-  const { permissions, reviewCredits, setReviewCredits, authUser, loading: tierLoading } = useTier();
+  const { permissions, reviewCredits, setReviewCredits, authUser, loading: tierLoading, effectiveTier } = useTier();
 
   // B5: ?write=true でウィザード自動起動
   useEffect(() => {
@@ -64,7 +64,7 @@ export function TherapistPageClient({ therapist, reviews }: TherapistPageClientP
   useEffect(() => {
     if (tierLoading) return;
     // Standard/VIP users always see unlocked
-    if (permissions.canViewReviewBody) {
+    if (permissions.canViewReviewBody && effectiveTier !== "free_active") {
       setIsUnlocked(true);
       return;
     }
@@ -76,7 +76,7 @@ export function TherapistPageClient({ therapist, reviews }: TherapistPageClientP
       .then(({ data }) => {
         if (data === true) setIsUnlocked(true);
       });
-  }, [authUser, therapist.id, permissions.canViewReviewBody, tierLoading]);
+  }, [authUser, therapist.id, permissions.canViewReviewBody, effectiveTier, tierLoading]);
 
   const handleUnlockTherapist = useCallback(async (): Promise<boolean | undefined> => {
     if (isUnlocked) return true;

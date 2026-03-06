@@ -40,7 +40,11 @@ export async function updateSession(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("redirect", request.nextUrl.pathname);
-    return NextResponse.redirect(url);
+    const response = NextResponse.redirect(url);
+    supabaseResponse.cookies.getAll().forEach((cookie) => {
+      response.cookies.set(cookie.name, cookie.value);
+    });
+    return response;
   }
 
   // ログイン済みでログイン/登録ページにアクセスした場合リダイレクト
@@ -52,7 +56,11 @@ export async function updateSession(request: NextRequest) {
   if (user && isAuthPage) {
     const url = request.nextUrl.clone();
     url.pathname = "/mypage";
-    return NextResponse.redirect(url);
+    const response = NextResponse.redirect(url);
+    supabaseResponse.cookies.getAll().forEach((cookie) => {
+      response.cookies.set(cookie.name, cookie.value);
+    });
+    return response;
   }
 
   return supabaseResponse;

@@ -166,11 +166,21 @@ export function ReviewList({
                 <PenLine className="h-4 w-4" />あなたの体験を投稿して5クレジットGET<ChevronRight className="h-4 w-4 ml-auto" />
               </Button>
               {therapistId && (
-                <a href={`/api/checkout/single-unlock?therapist_id=${therapistId}`} className="block">
-                  <Button variant="outline" className="w-full gap-2 h-12 border-amber-500 text-amber-700 hover:bg-amber-50 bg-transparent">
-                    <CreditCard className="h-4 w-4" />¥1,000で永久アンロック<ChevronRight className="h-4 w-4 ml-auto" />
-                  </Button>
-                </a>
+                <Button
+                  variant="outline"
+                  className="w-full gap-2 h-12 border-amber-500 text-amber-700 hover:bg-amber-50 bg-transparent"
+                  onClick={async () => {
+                    const res = await fetch("/api/checkout/single-unlock", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ therapist_id: therapistId }),
+                    });
+                    const data = await res.json();
+                    if (data.url) window.location.href = data.url;
+                  }}
+                >
+                  <CreditCard className="h-4 w-4" />¥1,000で永久アンロック<ChevronRight className="h-4 w-4 ml-auto" />
+                </Button>
               )}
               <Link href="/pricing" className="block">
                 <Button variant="outline" className="w-full gap-2 h-10 text-muted-foreground hover:text-foreground bg-transparent">

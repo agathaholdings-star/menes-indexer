@@ -254,9 +254,9 @@ export const tierPermissions: Record<EffectiveTier, {
     favoriteLimit: 5,
   },
   free_active: {
-    label: "無料会員（閲覧中）",
+    label: "無料会員（クレジットあり）",
     color: "bg-green-100 text-green-800",
-    canViewReviewBody: true,
+    canViewReviewBody: false,
     canViewScores: true,
     canUseDiscoverySearch: false,
     canUseTherapistAnalysis: false,

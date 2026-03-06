@@ -21,9 +21,11 @@ export async function generateMetadata({ params }: ShopPageProps): Promise<Metad
   const name = dbShop.display_name || dbShop.name;
   const areaInfo = await getShopAreaInfo(dbShop.id);
   const areaText = areaInfo ? `${areaInfo.prefName}${areaInfo.areaName}` : "";
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://menes-skr.com";
   return {
     title: dbShop.seo_title || `${name}の口コミ体験談`,
     description: `${name}の口コミ体験談・セラピスト一覧。${areaText}${dbShop.access ? `（${dbShop.access}）` : ""}`,
+    alternates: { canonical: `${baseUrl}/salon/${dbShop.id}` },
   };
 }
 

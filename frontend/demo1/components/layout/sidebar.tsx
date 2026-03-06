@@ -152,7 +152,7 @@ export function Sidebar({ prefectureName }: SidebarProps = {}) {
             {shops.map((shop) => (
               <li key={shop.id}>
                 <Link
-                  href={`/salon/${shop.slug || shop.id}`}
+                  href={`/salon/${shop.id}`}
                   className="flex items-center justify-between py-2 border-b last:border-0 hover:bg-muted/50 -mx-2 px-2 rounded transition-colors"
                 >
                   <div>

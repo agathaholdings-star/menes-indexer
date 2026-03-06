@@ -4,14 +4,16 @@ import { supabaseAdmin as supabase } from "@/lib/supabase-admin";
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://menes-skr.com";
 
+  const fixedDate = new Date("2026-03-06");
+
   // 静的ページ
   const staticPages: MetadataRoute.Sitemap = [
-    { url: baseUrl, lastModified: new Date(), changeFrequency: "daily", priority: 1.0 },
-    { url: `${baseUrl}/area`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.9 },
-    { url: `${baseUrl}/search`, lastModified: new Date(), changeFrequency: "daily", priority: 0.8 },
-    { url: `${baseUrl}/ranking`, lastModified: new Date(), changeFrequency: "daily", priority: 0.7 },
-    { url: `${baseUrl}/pricing`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.5 },
-    { url: `${baseUrl}/contact`, lastModified: new Date(), changeFrequency: "yearly", priority: 0.3 },
+    { url: baseUrl, lastModified: fixedDate, changeFrequency: "daily", priority: 1.0 },
+    { url: `${baseUrl}/area`, lastModified: fixedDate, changeFrequency: "weekly", priority: 0.9 },
+    { url: `${baseUrl}/search`, lastModified: fixedDate, changeFrequency: "daily", priority: 0.8 },
+    { url: `${baseUrl}/ranking`, lastModified: fixedDate, changeFrequency: "daily", priority: 0.7 },
+    { url: `${baseUrl}/pricing`, lastModified: fixedDate, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${baseUrl}/contact`, lastModified: fixedDate, changeFrequency: "yearly", priority: 0.3 },
   ];
 
   // 都道府県ページ（サロンがあるエリアを持つ県のみ）
@@ -24,6 +26,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const uniquePrefSlugs = [...new Set((prefectures || []).map((p) => p.slug))];
   const prefPages: MetadataRoute.Sitemap = uniquePrefSlugs.map((slug) => ({
     url: `${baseUrl}/area/${slug}`,
+    lastModified: fixedDate,
     changeFrequency: "weekly" as const,
     priority: 0.8,
   }));
@@ -38,6 +41,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const prefSlug = (a.prefectures as unknown as { slug: string } | null)?.slug || "";
     return {
       url: `${baseUrl}/area/${prefSlug}/${a.slug}`,
+      lastModified: fixedDate,
       changeFrequency: "weekly" as const,
       priority: 0.7,
     };
@@ -56,5 +60,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
-  return [...staticPages, ...prefPages, ...areaPages, ...shopPages];
+  // 口コミ付きセラピストページ
+  const { data: therapists } = await supabase
+    .from("therapists")
+    .select("id, updated_at")
+    .gt("review_count", 0)
+    .order("id");
+
+  const therapistPages: MetadataRoute.Sitemap = (therapists || []).map((t) => ({
+    url: `${baseUrl}/therapist/${t.id}`,
+    lastModified: t.updated_at ? new Date(t.updated_at) : fixedDate,
+    changeFrequency: "weekly" as const,
+    priority: 0.6,
+  }));
+
+  return [...staticPages, ...prefPages, ...areaPages, ...shopPages, ...therapistPages];
 }

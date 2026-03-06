@@ -714,7 +714,7 @@ function SearchContent() {
               ) : shopResults.length > 0 ? (
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {shopResults.map((shop) => (
-                    <Link key={shop.id} href={`/salon/${shop.slug || shop.id}`}>
+                    <Link key={shop.id} href={`/salon/${shop.id}`}>
                       <Card className="hover:shadow-md transition-shadow">
                         <CardContent className="p-3 flex gap-3">
                           <div className="relative w-16 h-16 rounded overflow-hidden bg-muted shrink-0">
