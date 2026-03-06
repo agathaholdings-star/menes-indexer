@@ -78,6 +78,14 @@ function RegisterContent() {
 
     // メール確認が必要な場合（本番環境）
     if (!data.session) {
+      // 既存ユーザーの検出（identitiesが空 = 既に登録済み）
+      if (data.user && data.user.identities && data.user.identities.length === 0) {
+        setError("このメールアドレスは既に登録されています。ログインしてください。");
+        setIsLoading(false);
+        return;
+      }
+      // 確認後のリダイレクト先を保存
+      localStorage.setItem("auth_redirect", redirectTo);
       setShowEmailConfirmation(true);
       setIsLoading(false);
       return;
