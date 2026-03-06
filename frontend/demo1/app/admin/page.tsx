@@ -97,7 +97,7 @@ async function adminAction(action: string, params: Record<string, any> = {}) {
 }
 
 export default function AdminPage() {
-  const { user: authUser } = useAuth();
+  const { user: authUser, loading: authLoading } = useAuth();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [reviews, setReviews] = useState<ReviewRow[]>([]);
   const [threads, setThreads] = useState<ThreadRow[]>([]);
@@ -113,6 +113,7 @@ export default function AdminPage() {
   const [rejectCustomText, setRejectCustomText] = useState<string>("");
 
   useEffect(() => {
+    if (authLoading) return;
     if (!authUser) { setIsAdmin(false); setLoading(false); return; }
 
     async function fetchData() {
@@ -138,7 +139,7 @@ export default function AdminPage() {
     }
 
     fetchData();
-  }, [authUser]);
+  }, [authUser, authLoading]);
 
   const handleApprove = async (reviewId: string) => {
     setActionLoading(reviewId);
