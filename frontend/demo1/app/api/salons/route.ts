@@ -4,11 +4,12 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const areaId = searchParams.get("area_id");
+  const prefectureId = searchParams.get("prefecture_id");
   const ids = searchParams.get("ids");
   const areaSlug = searchParams.get("area_slug");
   const search = searchParams.get("search");
   const random = searchParams.get("random");
-  const limit = Math.min(parseInt(searchParams.get("limit") || "50", 10), 50);
+  const limit = Math.min(parseInt(searchParams.get("limit") || "50", 10), 200);
 
   // Search by name
   if (search) {
@@ -30,6 +31,42 @@ export async function GET(req: NextRequest) {
       .select("id, name, display_name, slug, image_url, access, description")
       .in("id", idArr)
       .eq("is_active", true);
+    return NextResponse.json(data ?? []);
+  }
+
+  // Fetch by prefecture_id (all salons in prefecture via areas -> salon_areas)
+  if (prefectureId) {
+    const { data: areaRows } = await supabaseAdmin
+      .from("areas")
+      .select("id")
+      .eq("prefecture_id", parseInt(prefectureId, 10));
+    if (!areaRows || areaRows.length === 0) return NextResponse.json([]);
+    const areaIds = areaRows.map(a => a.id);
+    const { data: shopAreaRows } = await supabaseAdmin
+      .from("salon_areas")
+      .select("salon_id")
+      .in("area_id", areaIds)
+      .limit(limit);
+    if (!shopAreaRows || shopAreaRows.length === 0) return NextResponse.json([]);
+    const shopIds = [...new Set(shopAreaRows.map(sa => sa.salon_id))];
+    const { data } = await supabaseAdmin
+      .from("salons")
+      .select("id, name, display_name, slug, image_url, access, description")
+      .in("id", shopIds)
+      .eq("is_active", true);
+    if (data && data.length > 0) {
+      const { data: counts } = await supabaseAdmin
+        .from("therapists")
+        .select("salon_id")
+        .in("salon_id", data.map(s => s.id))
+        .eq("status", "active");
+      const countMap = new Map<number, number>();
+      (counts ?? []).forEach((t: any) => {
+        countMap.set(t.salon_id, (countMap.get(t.salon_id) || 0) + 1);
+      });
+      const enriched = data.map(s => ({ ...s, therapist_count: countMap.get(s.id) || 0 }));
+      return NextResponse.json(enriched);
+    }
     return NextResponse.json(data ?? []);
   }
 

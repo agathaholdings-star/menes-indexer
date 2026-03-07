@@ -192,26 +192,11 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
         || prefectures.find(p => p.name === prefectureShortNames[selectedArea])
         || prefectures.find(p => p.name.startsWith(selectedArea));
       if (!prefecture) return;
-      const areasRes = await fetch(`/api/areas?prefecture_id=${prefecture.id}`);
-      if (!areasRes.ok) { setDbShops([]); return; }
-      const areaData = await areasRes.json();
-      if (!Array.isArray(areaData) || areaData.length === 0) { setDbShops([]); return; }
-
-      // Fetch salons for each area and dedupe
-      const shopMap = new Map<number, DBShop>();
-      for (const area of areaData) {
-        const salonsRes = await fetch(`/api/salons?area_id=${area.id}&limit=50`);
-        if (!salonsRes.ok) continue;
-        const salons = await salonsRes.json();
-        if (Array.isArray(salons)) {
-          salons.forEach((s: any) => {
-            if (!shopMap.has(s.id)) {
-              shopMap.set(s.id, { id: s.id, name: s.name, display_name: s.display_name, access: s.access, therapist_count: s.therapist_count ?? 0 });
-            }
-          });
-        }
-      }
-      setDbShops(Array.from(shopMap.values()));
+      const salonsRes = await fetch(`/api/salons?prefecture_id=${prefecture.id}&limit=200`);
+      if (!salonsRes.ok) { setDbShops([]); return; }
+      const salons = await salonsRes.json();
+      if (!Array.isArray(salons) || salons.length === 0) { setDbShops([]); return; }
+      setDbShops(salons.map((s: any) => ({ id: s.id, name: s.name, display_name: s.display_name, access: s.access, therapist_count: s.therapist_count ?? 0 })));
     };
     fetchShops();
   }, [selectedArea, prefectures]);
