@@ -20,9 +20,9 @@ import { FollowButton } from "@/components/shared/follow-button";
 
 interface ReviewListProps {
   reviews: Review[];
-  isLocked?: boolean;
+  unlockedReviewIds?: Set<string>;
   onWriteReview?: () => void;
-  onUnlockTherapist?: () => Promise<boolean | undefined>;
+  onUnlockReview?: (reviewId: string) => Promise<boolean | undefined>;
   reviewCredits?: number;
   therapistId?: string;
   therapistName?: string;
@@ -33,9 +33,9 @@ interface ReviewListProps {
 
 export function ReviewList({
   reviews,
-  isLocked = true,
+  unlockedReviewIds = new Set(),
   onWriteReview,
-  onUnlockTherapist,
+  onUnlockReview,
   reviewCredits = 0,
   therapistId,
   therapistName = "セラピスト",
@@ -44,22 +44,24 @@ export function ReviewList({
   shopName = "",
 }: ReviewListProps) {
   const [showUnlockModal, setShowUnlockModal] = useState(false);
-  const [unlockLoading, setUnlockLoading] = useState(false);
+  const [unlockLoading, setUnlockLoading] = useState<string | null>(null);
   const getTypeLabel = (id: string) => therapistTypes.find(t => t.id === id)?.label || id;
   const getBodyLabel = (id: string) => bodyTypes.find(b => b.id === id)?.label || id;
   const getServiceLabel = (id: string) => serviceTypes.find(s => s.id === id)?.label || id;
 
   const avgScore = reviews.length > 0 ? Math.round(reviews.reduce((acc, r) => acc + r.score, 0) / reviews.length) : 0;
 
-  const handleUnlock = async () => {
-    if (!onUnlockTherapist || unlockLoading) return;
-    setUnlockLoading(true);
-    const success = await onUnlockTherapist();
-    setUnlockLoading(false);
+  const handleUnlock = async (reviewId: string) => {
+    if (!onUnlockReview || unlockLoading) return;
+    setUnlockLoading(reviewId);
+    const success = await onUnlockReview(reviewId);
+    setUnlockLoading(null);
     if (!success) {
       setShowUnlockModal(true);
     }
   };
+
+  const hasAnyLocked = reviews.some(r => !unlockedReviewIds.has(r.id));
 
   return (
     <>
@@ -71,8 +73,8 @@ export function ReviewList({
             getTypeLabel={getTypeLabel}
             getBodyLabel={getBodyLabel}
             getServiceLabel={getServiceLabel}
-            isLocked={isLocked}
-            onUnlock={reviewCredits > 0 ? handleUnlock : () => setShowUnlockModal(true)}
+            isLocked={!unlockedReviewIds.has(review.id)}
+            onUnlock={reviewCredits > 0 ? () => handleUnlock(review.id) : () => setShowUnlockModal(true)}
             therapistId={therapistId}
             therapistName={therapistName}
             therapistAge={therapistAge}
@@ -85,16 +87,15 @@ export function ReviewList({
       </div>
 
       {/* Bottom CTA (outside cards) */}
-      {isLocked && reviews.length > 0 && (
+      {hasAnyLocked && reviews.length > 0 && (
         <div className="mt-4 p-4 bg-gradient-to-t from-primary/5 to-transparent rounded-lg border">
           <p className="text-center text-sm text-muted-foreground mb-3">
             あなたの体験が、誰かの「ハズレ回避」になります
           </p>
           {reviewCredits > 0 ? (
-            <Button onClick={handleUnlock} disabled={unlockLoading} className="w-full gap-2" size="lg">
-              <Unlock className="h-4 w-4" />口コミを読む
-              <Badge variant="secondary" className="ml-2 text-xs bg-white/20 text-white border-0">残り{reviewCredits}</Badge>
-            </Button>
+            <p className="text-center text-sm font-medium text-primary">
+              <Coins className="h-4 w-4 inline mr-1" />残り{reviewCredits}クレジット — 気になる口コミをタップしてアンロック
+            </p>
           ) : (
             <Button onClick={onWriteReview} className="w-full gap-2" size="lg">
               <Sparkles className="h-4 w-4" />口コミを投稿して読む
@@ -130,7 +131,7 @@ export function ReviewList({
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   <div className="bg-primary/80 text-primary-foreground rounded-lg px-3 py-2 text-center">
                     <span className="block font-bold">3</span>
-                    <span>5人分の<br/>口コミが読める!</span>
+                    <span>5件の<br/>口コミが読める!</span>
                   </div>
                 </div>
               </div>
@@ -154,21 +155,21 @@ export function ReviewList({
             <div className="bg-muted/50 rounded-lg p-4 mb-4 text-sm text-muted-foreground space-y-2">
               <p>あなたが体験した別のセラピストの口コミを投稿すると、クレジットで口コミが読めるようになります。</p>
               <p className="flex items-center gap-1 text-primary font-medium">
-                <TrendingUp className="h-4 w-4" />1件書けば5人分の口コミが読める（スクショ付き10人分）
+                <TrendingUp className="h-4 w-4" />1件書けば5件の口コミが読める（スクショ付き10件）
               </p>
             </div>
 
             <div className="space-y-3">
               <Button
                 onClick={() => { setShowUnlockModal(false); onWriteReview?.(); }}
-                className="w-full gap-2 h-12 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80"
+                className="w-full gap-2 h-12 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white"
               >
                 <PenLine className="h-4 w-4" />あなたの体験を投稿して5クレジットGET<ChevronRight className="h-4 w-4 ml-auto" />
               </Button>
               {therapistId && (
                 <Button
                   variant="outline"
-                  className="w-full gap-2 h-12 border-amber-500 text-amber-700 hover:bg-amber-50 bg-transparent"
+                  className="w-full gap-2 h-10 border-pink-300 text-pink-600 hover:bg-pink-50 bg-transparent"
                   onClick={async () => {
                     const res = await fetch("/api/checkout/single-unlock", {
                       method: "POST",
@@ -179,7 +180,7 @@ export function ReviewList({
                     if (data.url) window.location.href = data.url;
                   }}
                 >
-                  <CreditCard className="h-4 w-4" />¥1,000で永久アンロック<ChevronRight className="h-4 w-4 ml-auto" />
+                  <CreditCard className="h-4 w-4" />¥1,000で永久アンロック
                 </Button>
               )}
               <Link href="/pricing" className="block">

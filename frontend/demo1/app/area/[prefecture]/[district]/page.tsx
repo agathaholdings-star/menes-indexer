@@ -22,7 +22,7 @@ export async function generateMetadata({
   const salonCount = area.salon_count || 0;
   return {
     title: `${area.name}のおすすめメンズエステランキング`,
-    description: `${pref.name}${area.name}エリアのおすすめメンズエステ${salonCount}店舗をランキング。口コミ・評価で比較。`,
+    description: `${pref.name}${area.name}のメンズエステ${salonCount}店舗を口コミ・評価でランキング。料金や施術内容、サービスの質、密着度、セラピストの評判を比較して最適なサロンを見つけよう。`,
   };
 }
 
@@ -107,16 +107,48 @@ export default async function ShopListPage({ params }: ShopListPageProps) {
     }
   }
 
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://menes-skr.com";
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "トップ",
+        item: baseUrl,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: `${pref.name}のメンズエステ`,
+        item: `${baseUrl}/area/${prefecture}`,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: `${area.name}のメンズエステ`,
+        item: `${baseUrl}/area/${prefecture}/${district}`,
+      },
+    ],
+  };
+
   return (
-    <ShopListPageClient
-      prefecture={prefecture}
-      district={district}
-      decodedPrefecture={pref.name}
-      decodedDistrict={area.name}
-      shops={shops}
-      allTherapists={[]}
-      therapistTypes={therapistTypes}
-      bodyTypes={bodyTypes}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd).replace(/</g, "\\u003c") }}
+      />
+      <ShopListPageClient
+        prefecture={prefecture}
+        district={district}
+        decodedPrefecture={pref.name}
+        decodedDistrict={area.name}
+        shops={shops}
+        allTherapists={[]}
+        therapistTypes={therapistTypes}
+        bodyTypes={bodyTypes}
+      />
+    </>
   );
 }

@@ -31,7 +31,7 @@ export function TherapistPageClient({ therapist, reviews }: TherapistPageClientP
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [reviewForThisTherapist, setReviewForThisTherapist] = useState(false);
-  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [unlockedReviewIds, setUnlockedReviewIds] = useState<Set<string>>(new Set());
   const { permissions, reviewCredits, setReviewCredits, authUser, loading: tierLoading, effectiveTier } = useTier();
 
   // B5: ?write=true でウィザード自動起動
@@ -48,38 +48,41 @@ export function TherapistPageClient({ therapist, reviews }: TherapistPageClientP
     setIsReviewModalOpen(true);
   }, []);
 
-  // Check unlock status on mount
+  // Check per-review unlock status on mount
   useEffect(() => {
-    if (tierLoading) return;
+    if (tierLoading || reviews.length === 0) return;
     // Standard/VIP users always see unlocked
     if (permissions.canViewReviewBody && effectiveTier !== "free_active") {
-      setIsUnlocked(true);
+      setUnlockedReviewIds(new Set(reviews.map(r => r.id)));
       return;
     }
-    // For credit-based users, check if this therapist is already unlocked
+    // For credit-based users, batch check which reviews are unlocked
     if (!authUser) return;
     const supabase = createSupabaseBrowser();
+    const reviewIds = reviews.map(r => r.id);
     supabase
-      .rpc("is_therapist_unlocked", { p_therapist_id: therapist.id })
+      .rpc("are_reviews_unlocked", { p_review_ids: reviewIds })
       .then(({ data }) => {
-        if (data === true) setIsUnlocked(true);
+        if (data && Array.isArray(data)) {
+          setUnlockedReviewIds(new Set(data as string[]));
+        }
       });
-  }, [authUser, therapist.id, permissions.canViewReviewBody, effectiveTier, tierLoading]);
+  }, [authUser, reviews, permissions.canViewReviewBody, effectiveTier, tierLoading]);
 
-  const handleUnlockTherapist = useCallback(async (): Promise<boolean | undefined> => {
-    if (isUnlocked) return true;
+  const handleUnlockReview = useCallback(async (reviewId: string): Promise<boolean | undefined> => {
+    if (unlockedReviewIds.has(reviewId)) return true;
     if (reviewCredits <= 0) return undefined;
     const supabase = createSupabaseBrowser();
-    const { data, error } = await supabase.rpc("unlock_therapist", {
-      p_therapist_id: therapist.id,
+    const { data, error } = await supabase.rpc("unlock_review", {
+      p_review_id: reviewId,
     });
     if (error || !data) return undefined;
-    setIsUnlocked(true);
+    setUnlockedReviewIds(prev => new Set([...prev, reviewId]));
     setReviewCredits((prev: number) => Math.max(0, prev - 1));
     return true;
-  }, [isUnlocked, reviewCredits, therapist.id, setReviewCredits]);
+  }, [unlockedReviewIds, reviewCredits, setReviewCredits]);
 
-  const isLocked = !isUnlocked;
+  const hasAnyLocked = reviews.some(r => !unlockedReviewIds.has(r.id));
 
   const nextImage = () => {
     setCurrentImageIndex((prev) =>
@@ -142,7 +145,7 @@ export function TherapistPageClient({ therapist, reviews }: TherapistPageClientP
                             <button
                               type="button"
                               onClick={prevImage}
-                              className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-card/80 flex items-center justify-center shadow hover:bg-card transition-colors"
+                              className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-card/80 flex items-center justify-center shadow hover:bg-card transition-colors"
                               aria-label="前の画像"
                             >
                               <ChevronLeft className="h-5 w-5" />
@@ -150,7 +153,7 @@ export function TherapistPageClient({ therapist, reviews }: TherapistPageClientP
                             <button
                               type="button"
                               onClick={nextImage}
-                              className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-card/80 flex items-center justify-center shadow hover:bg-card transition-colors"
+                              className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-card/80 flex items-center justify-center shadow hover:bg-card transition-colors"
                               aria-label="次の画像"
                             >
                               <ChevronRight className="h-5 w-5" />
@@ -239,9 +242,9 @@ export function TherapistPageClient({ therapist, reviews }: TherapistPageClientP
               ) : (
                 <ReviewList
                   reviews={reviews}
-                  isLocked={isLocked}
+                  unlockedReviewIds={unlockedReviewIds}
                   onWriteReview={() => handleWriteReview(false)}
-                  onUnlockTherapist={handleUnlockTherapist}
+                  onUnlockReview={handleUnlockReview}
                   reviewCredits={reviewCredits}
                   therapistId={therapist.id}
                   therapistName={therapist.name}
@@ -266,7 +269,7 @@ export function TherapistPageClient({ therapist, reviews }: TherapistPageClientP
       </main>
 
       {/* Sticky CTA for locked users */}
-      {isLocked && (
+      {hasAnyLocked && (
         <div className="sticky bottom-0 z-40 border-t bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 p-4 lg:hidden">
           <Button
             className="w-full gap-2"

@@ -55,7 +55,7 @@ export function UnlockModal({
                 口コミを投稿して無料で読む
               </Button>
               <p className="text-xs text-muted-foreground text-center mt-2">
-                1投稿で5人分の口コミが読めます（スクショ付きなら10人分）
+                1投稿で5件の口コミが読めます（スクショ付きなら10件）
               </p>
             </div>
 

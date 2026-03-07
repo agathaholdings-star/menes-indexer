@@ -6,8 +6,10 @@ import { TherapistImage } from "@/components/shared/therapist-image";
 import { Star, MapPin, Clock, Users, MessageSquare, SlidersHorizontal, Crown } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import type { Shop, Therapist, TherapistType, BodyType } from "@/lib/data";
@@ -84,6 +86,56 @@ export function ShopListPageClient({
     );
   };
 
+  const activeFilterCount = selectedTypes.length + selectedStyles.length;
+
+  const filterContent = (
+    <div className="space-y-4">
+      <div>
+        <h3 className="text-sm font-medium mb-2">並び替え</h3>
+        <Select value={sortBy} onValueChange={setSortBy}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ranking">おすすめ順</SelectItem>
+            <SelectItem value="reviews">口コミ数順</SelectItem>
+            <SelectItem value="score">平均点順</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div>
+        <h3 className="text-sm font-medium mb-2">タイプ</h3>
+        <div className="space-y-2">
+          {therapistTypes.map(type => (
+            <label key={type.id} className="flex items-center gap-2 cursor-pointer">
+              <Checkbox
+                checked={selectedTypes.includes(type.id)}
+                onCheckedChange={() => toggleType(type.id)}
+              />
+              <span className="text-sm">{type.label}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-sm font-medium mb-2">スタイル</h3>
+        <div className="space-y-2">
+          {bodyTypes.map(body => (
+            <label key={body.id} className="flex items-center gap-2 cursor-pointer">
+              <Checkbox
+                checked={selectedStyles.includes(body.id)}
+                onCheckedChange={() => toggleStyle(body.id)}
+              />
+              <span className="text-sm">{body.label}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <SiteHeader />
@@ -109,60 +161,43 @@ export function ShopListPageClient({
           </div>
 
           <div className="flex flex-col gap-6 lg:flex-row">
-            {/* Filters - Sidebar */}
-            <aside className="lg:w-64 shrink-0">
+            {/* Mobile Filter Button */}
+            <div className="lg:hidden">
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="outline" className="w-full">
+                    <SlidersHorizontal className="h-4 w-4 mr-2" />
+                    絞り込み
+                    {activeFilterCount > 0 && (
+                      <Badge variant="default" className="ml-2 h-5 min-w-5 px-1.5 text-xs">
+                        {activeFilterCount}
+                      </Badge>
+                    )}
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-80 overflow-y-auto">
+                  <SheetHeader>
+                    <SheetTitle className="flex items-center gap-2">
+                      <SlidersHorizontal className="h-4 w-4" />
+                      絞り込み
+                    </SheetTitle>
+                  </SheetHeader>
+                  <div className="px-1 pb-6">
+                    {filterContent}
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
+
+            {/* Desktop Filters - Sidebar */}
+            <aside className="hidden lg:block lg:w-64 shrink-0">
               <Card>
                 <CardContent className="p-4">
                   <div className="flex items-center gap-2 mb-4">
                     <SlidersHorizontal className="h-4 w-4" />
                     <h2 className="font-semibold">絞り込み</h2>
                   </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <h3 className="text-sm font-medium mb-2">並び替え</h3>
-                      <Select value={sortBy} onValueChange={setSortBy}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="ranking">おすすめ順</SelectItem>
-                          <SelectItem value="reviews">口コミ数順</SelectItem>
-                          <SelectItem value="score">平均点順</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <h3 className="text-sm font-medium mb-2">タイプ</h3>
-                      <div className="space-y-2">
-                        {therapistTypes.map(type => (
-                          <label key={type.id} className="flex items-center gap-2 cursor-pointer">
-                            <Checkbox
-                              checked={selectedTypes.includes(type.id)}
-                              onCheckedChange={() => toggleType(type.id)}
-                            />
-                            <span className="text-sm">{type.label}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <h3 className="text-sm font-medium mb-2">スタイル</h3>
-                      <div className="space-y-2">
-                        {bodyTypes.map(body => (
-                          <label key={body.id} className="flex items-center gap-2 cursor-pointer">
-                            <Checkbox
-                              checked={selectedStyles.includes(body.id)}
-                              onCheckedChange={() => toggleStyle(body.id)}
-                            />
-                            <span className="text-sm">{body.label}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
+                  {filterContent}
                 </CardContent>
               </Card>
             </aside>

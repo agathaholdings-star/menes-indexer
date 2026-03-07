@@ -382,6 +382,16 @@ export function SiteHeader() {
               </div>
             )}
 
+            {/* Mobile Review Button */}
+            <Button
+              size="icon"
+              className="sm:hidden h-9 w-9"
+              onClick={() => setIsReviewModalOpen(true)}
+              aria-label="口コミ投稿"
+            >
+              <PenSquare className="h-4 w-4" />
+            </Button>
+
             {/* Mobile Menu */}
             <Sheet>
               <SheetTrigger asChild>

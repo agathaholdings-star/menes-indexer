@@ -20,7 +20,7 @@ export async function generateMetadata({
   if (!pref) return {};
   return {
     title: `${pref.name}のメンズエステ`,
-    description: `${pref.name}エリアのメンズエステ店舗・セラピスト情報を掲載。口コミやレーダーチャートで自分に合ったセラピストを見つけよう。`,
+    description: `${pref.name}のメンズエステをエリア別に探せます。口コミ体験談・料金・施術内容・セラピストの評判を比較して、自分に合ったサロンを見つけよう。`,
   };
 }
 
@@ -40,7 +40,32 @@ export default async function AreaPrefecturePage({
 
   const totalSalonCount = areas.reduce((sum, a) => sum + (a.salon_count || 0), 0);
 
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://menes-skr.com";
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "トップ",
+        item: baseUrl,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: `${pref.name}のメンズエステ`,
+        item: `${baseUrl}/area/${prefecture}`,
+      },
+    ],
+  };
+
   return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd).replace(/</g, "\\u003c") }}
+      />
     <div className="min-h-screen bg-background">
       <SiteHeader />
 
@@ -116,5 +141,6 @@ export default async function AreaPrefecturePage({
 
       <SiteFooter />
     </div>
+    </>
   );
 }

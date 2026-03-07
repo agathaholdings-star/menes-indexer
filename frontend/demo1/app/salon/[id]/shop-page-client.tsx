@@ -88,7 +88,7 @@ export function ShopPageClient({ shop, therapists, shopReviews, officialUrl, are
                             <button
                               type="button"
                               onClick={prevImage}
-                              className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-card/80 flex items-center justify-center shadow hover:bg-card"
+                              className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-card/80 flex items-center justify-center shadow hover:bg-card"
                               aria-label="前の画像"
                             >
                               <ChevronLeft className="h-5 w-5" />
@@ -96,7 +96,7 @@ export function ShopPageClient({ shop, therapists, shopReviews, officialUrl, are
                             <button
                               type="button"
                               onClick={nextImage}
-                              className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-card/80 flex items-center justify-center shadow hover:bg-card"
+                              className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-card/80 flex items-center justify-center shadow hover:bg-card"
                               aria-label="次の画像"
                             >
                               <ChevronRight className="h-5 w-5" />

@@ -20,11 +20,30 @@ export async function generateMetadata({ params }: ShopPageProps): Promise<Metad
   if (!dbShop) return {};
   const name = dbShop.display_name || dbShop.name;
   const areaInfo = await getShopAreaInfo(dbShop.id);
-  const areaText = areaInfo ? `${areaInfo.prefName}${areaInfo.areaName}` : "";
+  const areaText = areaInfo ? `（${areaInfo.areaName}）` : "";
+
+  // 口コミ件数・セラピスト数を取得
+  const statsMap = await getSalonReviewStatsBatch([dbShop.id]);
+  const stats = statsMap.get(dbShop.id);
+  const reviewCount = stats?.review_count ?? 0;
+  const therapistCount = stats?.therapist_count ?? 0;
+
+  // 料金情報
+  const priceText = dbShop.base_price
+    ? `料金${dbShop.base_duration || 60}分${dbShop.base_price.toLocaleString()}円〜。`
+    : "";
+
+  // 動的な統計テキスト
+  const statsTexts: string[] = [];
+  if (reviewCount > 0) statsTexts.push(`口コミ${reviewCount}件`);
+  if (therapistCount > 0) statsTexts.push(`セラピスト${therapistCount}名`);
+  const statsText = statsTexts.length > 0 ? `${statsTexts.join("・")}掲載。` : "";
+
+  const desc = `${name}${areaText}の口コミ体験談。${statsText}${priceText}施術内容やサービスの質、セラピストの評判をリアルな口コミで比較できます。`;
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://menes-skr.com";
   return {
     title: dbShop.seo_title || `${name}の口コミ体験談`,
-    description: `${name}の口コミ体験談・セラピスト一覧。${areaText}${dbShop.access ? `（${dbShop.access}）` : ""}`,
+    description: desc,
     alternates: { canonical: `${baseUrl}/salon/${dbShop.id}` },
   };
 }
@@ -197,11 +216,46 @@ export default async function ShopPage({ params }: ShopPageProps) {
       : undefined,
   };
 
+  const breadcrumbItems: { name: string; item: string }[] = [
+    { name: "トップ", item: baseUrl },
+  ];
+  if (areaInfo?.prefSlug && areaInfo?.prefName) {
+    breadcrumbItems.push({
+      name: `${areaInfo.prefName}のメンズエステ`,
+      item: `${baseUrl}/area/${areaInfo.prefSlug}`,
+    });
+  }
+  if (areaInfo?.prefSlug && areaInfo?.areaSlug && areaInfo?.areaName) {
+    breadcrumbItems.push({
+      name: `${areaInfo.areaName}のメンズエステ`,
+      item: `${baseUrl}/area/${areaInfo.prefSlug}/${areaInfo.areaSlug}`,
+    });
+  }
+  breadcrumbItems.push({
+    name: shop.name,
+    item: `${baseUrl}/salon/${shop.id}`,
+  });
+
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: breadcrumbItems.map((item, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: item.name,
+      item: item.item,
+    })),
+  };
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd).replace(/</g, "\\u003c") }}
       />
       <ShopPageClient
         shop={shop}

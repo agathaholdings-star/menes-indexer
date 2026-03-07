@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: TherapistPageProps): Promise<
   if (!/^\d+$/.test(id)) return {};
   const { data } = await supabase
     .from("therapists")
-    .select("name, age, salon_id")
+    .select("name, age, salon_id, height, cup")
     .eq("id", Number(id))
     .single();
   if (!data) return {};
@@ -27,7 +27,17 @@ export async function generateMetadata({ params }: TherapistPageProps): Promise<
     .eq("id", data.salon_id)
     .single();
   const shopName = shop?.display_name || shop?.name || "";
-  const desc = `${data.name}${data.age ? `（${data.age}歳）` : ""}${shopName ? `（${shopName}）` : ""}の口コミ体験談`;
+  const areaInfo = await getShopAreaInfo(data.salon_id);
+  const areaText = areaInfo ? `（${areaInfo.areaName}）` : "";
+
+  // スペック情報を組み立て
+  const specs: string[] = [];
+  if (data.age) specs.push(`${data.age}歳`);
+  if (data.height) specs.push(`${data.height}cm`);
+  if (data.cup) specs.push(`${data.cup}カップ`);
+  const specText = specs.length > 0 ? `（${specs.join("・")}）` : "";
+
+  const desc = `${shopName}${areaText}の${data.name}${specText}の口コミ体験談。サービスの質や施術内容、密着度、雰囲気などリアルな評判を掲載。`;
   return {
     title: `${shopName}「${data.name}」の口コミや評判が分かる体験談`,
     description: desc,
@@ -195,11 +205,52 @@ export default async function TherapistPage({ params }: TherapistPageProps) {
     review: reviewStructuredData.length > 0 ? reviewStructuredData : undefined,
   };
 
+  const breadcrumbItems: { name: string; item: string }[] = [
+    { name: "トップ", item: baseUrl },
+  ];
+  if (areaInfo?.prefSlug && areaInfo?.prefName) {
+    breadcrumbItems.push({
+      name: `${areaInfo.prefName}のメンズエステ`,
+      item: `${baseUrl}/area/${areaInfo.prefSlug}`,
+    });
+  }
+  if (areaInfo?.prefSlug && areaInfo?.areaSlug && areaInfo?.areaName) {
+    breadcrumbItems.push({
+      name: `${areaInfo.areaName}のメンズエステ`,
+      item: `${baseUrl}/area/${areaInfo.prefSlug}/${areaInfo.areaSlug}`,
+    });
+  }
+  if (therapist.shopName && therapist.shopId) {
+    breadcrumbItems.push({
+      name: therapist.shopName,
+      item: `${baseUrl}/salon/${therapist.shopId}`,
+    });
+  }
+  breadcrumbItems.push({
+    name: therapist.name,
+    item: `${baseUrl}/therapist/${therapist.id}`,
+  });
+
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: breadcrumbItems.map((item, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: item.name,
+      item: item.item,
+    })),
+  };
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd).replace(/</g, "\\u003c") }}
       />
       <TherapistPageClient
         therapist={therapist}

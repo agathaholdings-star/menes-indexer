@@ -108,18 +108,18 @@ export function HeroSection() {
         {/* Stats */}
         <div className="mt-6 flex flex-wrap items-center justify-center gap-6 text-white/80">
           <div className="text-center">
-            <p className="text-xl font-bold text-white">14,500+</p>
+            <p className="text-xl font-bold text-white">8,700+</p>
             <p className="text-xs">登録店舗</p>
           </div>
           <div className="w-px h-8 bg-white/20 hidden sm:block" />
           <div className="text-center">
-            <p className="text-xl font-bold text-white">45万+</p>
-            <p className="text-xs">口コミ件数</p>
+            <p className="text-xl font-bold text-white">128,000+</p>
+            <p className="text-xs">登録セラピスト</p>
           </div>
           <div className="w-px h-8 bg-white/20 hidden sm:block" />
           <div className="text-center">
-            <p className="text-xl font-bold text-white">8</p>
-            <p className="text-xs">タイプ分類</p>
+            <p className="text-xl font-bold text-white">11,000+</p>
+            <p className="text-xs">口コミ件数</p>
           </div>
         </div>
       </div>
