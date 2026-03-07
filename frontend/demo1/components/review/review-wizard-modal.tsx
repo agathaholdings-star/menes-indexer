@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight, Check, Sparkles, Crown, Star, Heart, Smile, Flame, Search, MapPin, AlertCircle, Camera, ImageIcon, Trash2, Gift, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check, Sparkles, Crown, Star, Heart, Smile, Flame, Search, MapPin, AlertCircle, Camera, ImageIcon, Trash2, Gift, Loader2, Mail, Lock, User, Eye, EyeOff, MailCheck } from "lucide-react";
 import { TherapistImage } from "@/components/shared/therapist-image";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,7 +14,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { therapistTypes, bodyTypes, cupTypes, parameterLabels } from "@/lib/data";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
 import { useAuth } from "@/lib/auth-context";
@@ -43,7 +46,7 @@ interface ReviewWizardModalProps {
   monthlyReviewCount?: number;
 }
 
-const TOTAL_STEPS = 11;
+const TOTAL_STEPS = 12; // 0-10: review steps, 11: registration (guest only)
 
 const typeIcons: Record<string, React.ElementType> = {
   idol: Sparkles,
@@ -102,6 +105,12 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
   const [screenshotUploadFailed, setScreenshotUploadFailed] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // Guest registration state (step 11)
+  const [guestForm, setGuestForm] = useState({ nickname: "", email: "", password: "" });
+  const [guestAgreed, setGuestAgreed] = useState(false);
+  const [showGuestPassword, setShowGuestPassword] = useState(false);
+  const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
+
   // Profile state (auto-fetched)
   const [actualMemberType, setActualMemberType] = useState<"free" | "standard" | "vip">(memberType);
   const [actualMonthlyReviewCount, setActualMonthlyReviewCount] = useState(monthlyReviewCount);
@@ -116,7 +125,7 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
   const [directSearchResults, setDirectSearchResults] = useState<DBShop[]>([]);
   const [shopStepSkipped, setShopStepSkipped] = useState(hasPreselected);
 
-  // Fetch user profile (membership_type, monthly_review_count)
+  // Fetch user profile (membership_type, monthly_review_count) - only for logged-in users
   useEffect(() => {
     if (!open || !authUser) return;
     const fetchProfile = async () => {
@@ -254,77 +263,187 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
   // All prefecture names for area selector
   const allAreas = prefectures.map(p => p.name);
 
-  const handleNext = async () => {
-    if (step < TOTAL_STEPS - 1) {
-      setStep(step + 1);
-    } else {
-      // 最終ステップ (Step 9): DBに口コミを保存
-      if (!authUser) {
-        onOpenChange(false);
-        router.push("/login?redirect=/review");
+  // Helper: insert review into DB
+  const submitReview = async (userId: string) => {
+    const supabase = createSupabaseBrowser();
+    let imagePath: string | null = null;
+
+    // 画像がある場合 → Supabase Storage にアップロード
+    if (verificationImage) {
+      const ext = verificationImage.name.split(".").pop() || "jpg";
+      const filePath = `${userId}/${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("review-verifications")
+        .upload(filePath, verificationImage);
+      if (uploadError) {
+        console.error("Image upload failed:", uploadError);
+        setScreenshotUploadFailed(true);
+      } else {
+        imagePath = filePath;
+      }
+    }
+
+    const { error } = await supabase.from("reviews").insert({
+      user_id: userId,
+      therapist_id: selectedTherapistId,
+      salon_id: selectedShopId,
+      looks_type_id: Number(selectedType),
+      body_type_id: Number(selectedBody),
+      cup_type_id: Number(selectedCup),
+      service_level_id: Number(selectedService),
+      param_conversation: ratings.conversation,
+      param_distance: ratings.distance,
+      param_technique: ratings.technique,
+      param_personality: ratings.personality,
+      score: score,
+      comment_reason: reviewText.q0,
+      comment_first_impression: reviewText.q1,
+      comment_style: reviewText.q2,
+      comment_service: reviewText.q3,
+      comment_service_detail: reviewText.q4,
+      comment_cost: reviewText.q5,
+      comment_revisit: reviewText.q6,
+      comment_advice: reviewText.q7,
+      verification_image_path: imagePath,
+    });
+
+    return error;
+  };
+
+  // Guest registration + review submit
+  const handleGuestSubmit = async () => {
+    if (!guestAgreed || !guestForm.email || !guestForm.password || guestForm.password.length < 6) return;
+    if (!selectedShopId || !selectedTherapistId) return;
+
+    setSubmitting(true);
+    setErrorMessage(null);
+
+    try {
+      const supabase = createSupabaseBrowser();
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email: guestForm.email,
+        password: guestForm.password,
+        options: {
+          data: { nickname: guestForm.nickname },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (signUpError) {
+        setErrorMessage(signUpError.message);
+        setSubmitting(false);
         return;
       }
-      if (!selectedShopId || !selectedTherapistId) {
+
+      // 既存ユーザーチェック
+      if (data.user && data.user.identities && data.user.identities.length === 0) {
+        setErrorMessage("このメールアドレスは既に登録されています。ログインページからお試しください。");
+        setSubmitting(false);
         return;
       }
 
-      setSubmitting(true);
-      try {
-        const supabase = createSupabaseBrowser();
-        let imagePath: string | null = null;
-
-        // 画像がある場合 → Supabase Storage にアップロード
-        if (verificationImage) {
-          const ext = verificationImage.name.split(".").pop() || "jpg";
-          const filePath = `${authUser.id}/${Date.now()}.${ext}`;
-          const { error: uploadError } = await supabase.storage
-            .from("review-verifications")
-            .upload(filePath, verificationImage);
-          if (uploadError) {
-            console.error("Image upload failed:", uploadError);
-            setScreenshotUploadFailed(true);
-          } else {
-            imagePath = filePath;
-          }
-        }
-
-        const { error } = await supabase.from("reviews").insert({
-          user_id: authUser.id,
-          therapist_id: selectedTherapistId,
-          salon_id: selectedShopId,
-          looks_type_id: Number(selectedType),
-          body_type_id: Number(selectedBody),
-          cup_type_id: Number(selectedCup),
-          service_level_id: Number(selectedService),
-          param_conversation: ratings.conversation,
-          param_distance: ratings.distance,
-          param_technique: ratings.technique,
-          param_personality: ratings.personality,
-          score: score,
-          comment_reason: reviewText.q0,
-          comment_first_impression: reviewText.q1,
-          comment_style: reviewText.q2,
-          comment_service: reviewText.q3,
-          comment_service_detail: reviewText.q4,
-          comment_cost: reviewText.q5,
-          comment_revisit: reviewText.q6,
-          comment_advice: reviewText.q7,
-          verification_image_path: imagePath,
-        });
-
-        if (error) {
-          console.error("Review insert failed:", error);
-          setErrorMessage("投稿に失敗しました。もう一度お試しください。");
+      // ローカル開発（メール確認不要）: sessionがあるのでそのまま投稿
+      if (data.session && data.user) {
+        const reviewError = await submitReview(data.user.id);
+        if (reviewError) {
+          console.error("Review insert failed:", reviewError);
+          setErrorMessage("口コミの保存に失敗しました。もう一度お試しください。");
+          setSubmitting(false);
           return;
         }
-        setErrorMessage(null);
         setIsComplete(true);
-      } catch (err) {
-        console.error("Review submission error:", err);
-        setErrorMessage("投稿中にエラーが発生しました。もう一度お試しください。");
-      } finally {
         setSubmitting(false);
+        return;
       }
+
+      // 本番（メール確認必要）: APIでservice_role経由で口コミを保存
+      if (data.user) {
+        const fd = new FormData();
+        fd.append("user_id", data.user.id);
+        fd.append("therapist_id", String(selectedTherapistId));
+        fd.append("salon_id", String(selectedShopId));
+        fd.append("looks_type_id", String(Number(selectedType)));
+        fd.append("body_type_id", String(Number(selectedBody)));
+        fd.append("cup_type_id", String(Number(selectedCup)));
+        fd.append("service_level_id", String(Number(selectedService)));
+        fd.append("param_conversation", String(ratings.conversation));
+        fd.append("param_distance", String(ratings.distance));
+        fd.append("param_technique", String(ratings.technique));
+        fd.append("param_personality", String(ratings.personality));
+        fd.append("score", String(score));
+        fd.append("comment_reason", reviewText.q0);
+        fd.append("comment_first_impression", reviewText.q1);
+        fd.append("comment_style", reviewText.q2);
+        fd.append("comment_service", reviewText.q3);
+        fd.append("comment_service_detail", reviewText.q4);
+        fd.append("comment_cost", reviewText.q5);
+        fd.append("comment_revisit", reviewText.q6);
+        fd.append("comment_advice", reviewText.q7);
+        if (verificationImage) {
+          fd.append("verification_image", verificationImage);
+        }
+
+        const res = await fetch("/api/reviews/guest-submit", {
+          method: "POST",
+          body: fd,
+        });
+
+        if (!res.ok) {
+          setErrorMessage("口コミの保存に失敗しました。もう一度お試しください。");
+          setSubmitting(false);
+          return;
+        }
+      }
+
+      setShowEmailConfirmation(true);
+      setSubmitting(false);
+    } catch (err) {
+      console.error("Guest submit error:", err);
+      setErrorMessage("投稿中にエラーが発生しました。もう一度お試しください。");
+      setSubmitting(false);
+    }
+  };
+
+  const handleNext = async () => {
+    // step 10 (画像アップロード) の次:
+    // - ログイン済み → DB保存して完了
+    // - 未ログイン → step 11 (登録フォーム) へ
+    if (step === 10) {
+      if (authUser) {
+        // ログイン済み: 従来通りDB保存
+        if (!selectedShopId || !selectedTherapistId) return;
+        setSubmitting(true);
+        try {
+          const reviewError = await submitReview(authUser.id);
+          if (reviewError) {
+            console.error("Review insert failed:", reviewError);
+            setErrorMessage("投稿に失敗しました。もう一度お試しください。");
+            return;
+          }
+          setErrorMessage(null);
+          setIsComplete(true);
+        } catch (err) {
+          console.error("Review submission error:", err);
+          setErrorMessage("投稿中にエラーが発生しました。もう一度お試しください。");
+        } finally {
+          setSubmitting(false);
+        }
+      } else {
+        // 未ログイン: 登録ステップへ
+        setStep(11);
+      }
+      return;
+    }
+
+    // step 11 (登録フォーム) の送信
+    if (step === 11) {
+      await handleGuestSubmit();
+      return;
+    }
+
+    // その他のステップ: 次へ進む
+    if (step < 10) {
+      setStep(step + 1);
     }
   };
 
@@ -403,6 +522,11 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
     setShopStepSkipped(hasPreselected);
     setVerificationImage(null);
     setVerificationPreview(null);
+    setGuestForm({ nickname: "", email: "", password: "" });
+    setGuestAgreed(false);
+    setShowGuestPassword(false);
+    setShowEmailConfirmation(false);
+    setErrorMessage(null);
     onOpenChange(false);
   };
 
@@ -419,6 +543,7 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
       case 8: return true; // Score always has default
       case 9: return reviewText.q0.trim().length >= 30 && reviewText.q3.trim().length >= 30 && reviewText.q6.trim().length >= 30;
       case 10: return true; // 画像は任意なので常にtrue
+      case 11: return guestForm.nickname.trim() !== "" && guestForm.email.trim() !== "" && guestForm.password.length >= 6 && guestAgreed;
       default: return false;
     }
   };
@@ -435,9 +560,11 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
         </DialogHeader>
 
         {/* Progress Bar */}
-        {!isComplete && (() => {
+        {!isComplete && !showEmailConfirmation && (() => {
           const skippedSteps = hasPreselected ? 3 : shopStepSkipped ? 1 : 0;
-          const totalSteps = TOTAL_STEPS - skippedSteps;
+          // For logged-in users, total is 11 (steps 0-10); for guests, 12 (steps 0-11)
+          const effectiveTotalSteps = authUser ? TOTAL_STEPS - 1 : TOTAL_STEPS;
+          const totalSteps = effectiveTotalSteps - skippedSteps;
           const currentStep = hasPreselected ? step - 3 : shopStepSkipped && step >= 2 ? step - 1 : step;
           return (
             <div className="flex gap-1 px-6 pt-4">
@@ -596,12 +723,44 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
                   }}
                 />
               )}
+              {step === 11 && (
+                showEmailConfirmation ? (
+                  <div className="text-center py-8">
+                    <div className="relative mx-auto mb-6 w-20 h-20">
+                      <div className="absolute inset-0 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 shadow-lg" />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <MailCheck className="h-10 w-10 text-blue-600" />
+                      </div>
+                    </div>
+                    <h3 className="text-xl font-bold mb-2">口コミ投稿 + 登録完了!</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      確認メールを <span className="font-medium text-foreground">{guestForm.email}</span> に送信しました。
+                    </p>
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 text-sm text-blue-700">
+                      <p className="font-medium mb-1">メール内のリンクをクリックして登録を完了してください</p>
+                      <p className="text-xs">確認後、クレジットが付与され口コミが閲覧できるようになります</p>
+                    </div>
+                    <Button onClick={handleClose} className="w-full">
+                      閉じる
+                    </Button>
+                  </div>
+                ) : (
+                  <StepRegistration
+                    guestForm={guestForm}
+                    setGuestForm={setGuestForm}
+                    guestAgreed={guestAgreed}
+                    setGuestAgreed={setGuestAgreed}
+                    showPassword={showGuestPassword}
+                    setShowPassword={setShowGuestPassword}
+                  />
+                )
+              )}
             </>
           )}
         </div>
 
         {/* Navigation */}
-        {!isComplete && (
+        {!isComplete && !showEmailConfirmation && (
           <div className="flex items-center justify-between p-6 pt-0 border-t mt-4">
             <Button
               variant="ghost"
@@ -615,13 +774,18 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
             <span className="text-sm text-muted-foreground">
               {(() => {
                 const skipped = hasPreselected ? 3 : shopStepSkipped && step >= 2 ? 1 : 0;
-                const total = TOTAL_STEPS - (hasPreselected ? 3 : shopStepSkipped ? 1 : 0);
+                const effectiveTotal = authUser ? TOTAL_STEPS - 1 : TOTAL_STEPS;
+                const total = effectiveTotal - (hasPreselected ? 3 : shopStepSkipped ? 1 : 0);
                 return `${step - skipped + 1} / ${total}`;
               })()}
             </span>
             <Button onClick={handleNext} disabled={!canProceed() || submitting} className="gap-1">
-              {submitting ? "投稿中..." : step === TOTAL_STEPS - 1 ? "投稿する" : "次へ"}
-              {step < TOTAL_STEPS - 1 && !submitting && <ChevronRight className="h-4 w-4" />}
+              {submitting ? "投稿中..." :
+                step === 11 ? "登録して投稿する" :
+                step === 10 && authUser ? "投稿する" :
+                step === 10 && !authUser ? "次へ" :
+                "次へ"}
+              {step < 10 && !submitting && <ChevronRight className="h-4 w-4" />}
             </Button>
           </div>
         )}
@@ -1392,6 +1556,119 @@ function StepVerificationImage({
           <div className="text-xs text-muted-foreground">
             <p>スクショは管理者のみ確認し、一般公開されません。番号や個人情報が気になる場合は、事前にモザイク加工してください。運営が責任を持って安全に管理します。</p>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Step 11: Guest Registration
+function StepRegistration({
+  guestForm,
+  setGuestForm,
+  guestAgreed,
+  setGuestAgreed,
+  showPassword,
+  setShowPassword,
+}: {
+  guestForm: { nickname: string; email: string; password: string };
+  setGuestForm: (form: { nickname: string; email: string; password: string }) => void;
+  guestAgreed: boolean;
+  setGuestAgreed: (v: boolean) => void;
+  showPassword: boolean;
+  setShowPassword: (v: boolean) => void;
+}) {
+  return (
+    <div>
+      <h3 className="text-base font-semibold mb-1">あと少し! アカウントを作成</h3>
+      <p className="text-sm text-muted-foreground mb-4">
+        口コミを公開するためにアカウント登録が必要です。30秒で完了します。
+      </p>
+
+      <div className="space-y-4">
+        <div>
+          <Label htmlFor="guest-nickname" className="text-sm font-medium">
+            ニックネーム <span className="text-destructive">*</span>
+          </Label>
+          <div className="relative mt-1">
+            <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              id="guest-nickname"
+              placeholder="口コミに表示される名前"
+              value={guestForm.nickname}
+              onChange={(e) => setGuestForm({ ...guestForm, nickname: e.target.value })}
+              className="pl-10"
+              autoFocus
+            />
+          </div>
+        </div>
+
+        <div>
+          <Label htmlFor="guest-email" className="text-sm font-medium">
+            メールアドレス <span className="text-destructive">*</span>
+          </Label>
+          <div className="relative mt-1">
+            <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              id="guest-email"
+              type="email"
+              placeholder="example@email.com"
+              value={guestForm.email}
+              onChange={(e) => setGuestForm({ ...guestForm, email: e.target.value })}
+              className="pl-10"
+            />
+          </div>
+        </div>
+
+        <div>
+          <Label htmlFor="guest-password" className="text-sm font-medium">
+            パスワード <span className="text-destructive">*</span>
+          </Label>
+          <div className="relative mt-1">
+            <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              id="guest-password"
+              type={showPassword ? "text" : "password"}
+              placeholder="6文字以上"
+              value={guestForm.password}
+              onChange={(e) => setGuestForm({ ...guestForm, password: e.target.value })}
+              className="pl-10 pr-10"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+          {guestForm.password.length > 0 && guestForm.password.length < 6 && (
+            <p className="text-xs text-destructive mt-1">6文字以上で入力してください</p>
+          )}
+        </div>
+
+        <div className="flex items-start gap-2 pt-2">
+          <Checkbox
+            id="guest-terms"
+            checked={guestAgreed}
+            onCheckedChange={(checked) => setGuestAgreed(checked === true)}
+          />
+          <Label htmlFor="guest-terms" className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
+            <Link href="/terms" target="_blank" className="text-primary hover:underline">利用規約</Link>
+            {" "}と{" "}
+            <Link href="/privacy" target="_blank" className="text-primary hover:underline">プライバシーポリシー</Link>
+            {" "}に同意します
+          </Label>
+        </div>
+      </div>
+
+      <div className="mt-4 p-3 rounded-lg bg-amber-50 border border-amber-200">
+        <div className="flex items-start gap-2">
+          <Gift className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+          <p className="text-xs text-amber-700">
+            登録完了後、口コミが承認されると<span className="font-bold">5クレジット</span>獲得!
+            他のセラピストの口コミが読めるようになります。
+          </p>
         </div>
       </div>
     </div>

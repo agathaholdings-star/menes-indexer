@@ -36,29 +36,17 @@ export function TherapistPageClient({ therapist, reviews }: TherapistPageClientP
 
   // B5: ?write=true でウィザード自動起動
   useEffect(() => {
-    if (searchParams.get("write") === "true" && authUser && !tierLoading) {
+    if (searchParams.get("write") === "true") {
       setReviewForThisTherapist(true);
       setIsReviewModalOpen(true);
     }
-  }, [searchParams, authUser, tierLoading]);
+  }, [searchParams]);
 
-  // 未ログイン時に登録ページへリダイレクト
-  const redirectToRegister = useCallback((writeForThis: boolean) => {
-    const redirectPath = writeForThis
-      ? `/therapist/${therapist.id}?write=true`
-      : `/therapist/${therapist.id}`;
-    router.push(`/register?redirect=${encodeURIComponent(redirectPath)}`);
-  }, [router, therapist.id]);
-
-  // 口コミ投稿ボタンのハンドラ（ログインチェック付き）
+  // 口コミ投稿ボタンのハンドラ（ログイン不要でモーダル直接オープン）
   const handleWriteReview = useCallback((forThisTherapist: boolean) => {
-    if (!authUser) {
-      redirectToRegister(forThisTherapist);
-      return;
-    }
     setReviewForThisTherapist(forThisTherapist);
     setIsReviewModalOpen(true);
-  }, [authUser, redirectToRegister]);
+  }, []);
 
   // Check unlock status on mount
   useEffect(() => {
