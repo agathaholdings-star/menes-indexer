@@ -4,6 +4,7 @@ import { SiteHeader } from "@/components/layout/site-header";
 export const metadata: Metadata = {
   title: "特定商取引法に基づく表記",
   description: "メンエスSKRの特定商取引法に基づく表記。",
+  robots: { index: false, follow: false },
 };
 import { SiteFooter } from "@/components/layout/site-footer";
 
@@ -25,7 +26,7 @@ export default function TokushohoPage() {
                 </tr>
                 <tr>
                   <th className="py-4 px-4 text-left bg-muted/50 font-medium">運営責任者</th>
-                  <td className="py-4 px-4">請求があった場合に遅滞なく開示いたします</td>
+                  <td className="py-4 px-4">高橋勇気</td>
                 </tr>
                 <tr>
                   <th className="py-4 px-4 text-left bg-muted/50 font-medium">所在地</th>
@@ -105,7 +106,7 @@ export default function TokushohoPage() {
           </div>
 
           <p className="text-sm text-muted-foreground mt-8">
-            最終更新日: 2026年3月5日
+            最終更新日: 2026年3月8日
           </p>
         </div>
       </main>

@@ -4,6 +4,7 @@ import { SiteHeader } from "@/components/layout/site-header";
 export const metadata: Metadata = {
   title: "利用規約",
   description: "メンエスSKRの利用規約。サービスのご利用条件について。",
+  robots: { index: false, follow: false },
 };
 import { SiteFooter } from "@/components/layout/site-footer";
 
