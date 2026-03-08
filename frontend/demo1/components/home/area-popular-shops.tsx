@@ -60,6 +60,7 @@ function AreaSectionCard({ section, defaultOpen }: { section: AreaSection; defau
                     width={400}
                     height={200}
                     className="w-full h-32 object-cover"
+                    unoptimized
                   />
                 </div>
                 <div className="p-3">

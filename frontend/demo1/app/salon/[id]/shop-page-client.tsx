@@ -82,6 +82,7 @@ export function ShopPageClient({ shop, therapists, shopReviews, officialUrl, are
                           alt={shop.name}
                           fill
                           className="object-cover"
+                          unoptimized
                         />
                         {shop.images.length > 1 && (
                           <>

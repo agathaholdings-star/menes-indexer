@@ -133,7 +133,7 @@ export default async function AreaPrefecturePage({
           </div>
 
           {/* Sidebar */}
-          <aside className="w-full lg:w-80 flex-shrink-0">
+          <aside className="hidden lg:block w-full lg:w-80 flex-shrink-0">
             <Sidebar prefectureName={pref.name} />
           </aside>
         </div>

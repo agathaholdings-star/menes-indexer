@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { TherapistImage } from "@/components/shared/therapist-image";
-import { Star, MapPin, Clock, Users, MessageSquare, SlidersHorizontal, Crown } from "lucide-react";
+import { Star, MapPin, Clock, Users, MessageSquare, SlidersHorizontal, Crown, Navigation } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import type { Shop, Therapist, TherapistType, BodyType } from "@/lib/data";
+import type { SalonLatestReview, NearbyAreaLink } from "@/lib/supabase-data";
 
 interface ShopListPageClientProps {
   prefecture: string;
@@ -23,6 +24,10 @@ interface ShopListPageClientProps {
   allTherapists: Therapist[];
   therapistTypes: readonly TherapistType[];
   bodyTypes: readonly BodyType[];
+  latestReviews?: Record<string, SalonLatestReview>;
+  nearbyAreas?: NearbyAreaLink[];
+  prefectureSlug?: string;
+  seoDescription?: string;
 }
 
 function RankBadge({ rank }: { rank: number }) {
@@ -55,6 +60,10 @@ export function ShopListPageClient({
   allTherapists,
   therapistTypes,
   bodyTypes,
+  latestReviews = {},
+  nearbyAreas = [],
+  prefectureSlug,
+  seoDescription,
 }: ShopListPageClientProps) {
   const [sortBy, setSortBy] = useState("ranking");
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
@@ -159,6 +168,12 @@ export function ShopListPageClient({
               {shops.length}店舗を口コミ・評価でランキング
             </p>
           </div>
+
+          {seoDescription && (
+            <div className="mb-6">
+              <p className="text-sm text-muted-foreground leading-relaxed">{seoDescription}</p>
+            </div>
+          )}
 
           <div className="flex flex-col gap-6 lg:flex-row">
             {/* Mobile Filter Button */}
@@ -275,6 +290,22 @@ export function ShopListPageClient({
                                 <p className="text-sm font-medium mt-2">{shop.priceRange}</p>
                               )}
 
+                              {/* 最新口コミプレビュー */}
+                              {latestReviews[shop.id] && (
+                                <div className="mt-3 p-2.5 bg-muted/50 rounded-md">
+                                  <p className="text-sm text-foreground/80 line-clamp-2">
+                                    {latestReviews[shop.id].comment_first_impression.length > 80
+                                      ? latestReviews[shop.id].comment_first_impression.slice(0, 80) + "..."
+                                      : latestReviews[shop.id].comment_first_impression}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    {latestReviews[shop.id].nickname || "匿名ユーザー"}
+                                    {" / "}
+                                    {new Date(latestReviews[shop.id].created_at).toLocaleDateString("ja-JP", { year: "numeric", month: "short", day: "numeric" })}
+                                  </p>
+                                </div>
+                              )}
+
                               {shop.genres.length > 0 && (
                                 <div className="flex flex-wrap gap-1 mt-2">
                                   {shop.genres.map(genre => (
@@ -307,6 +338,34 @@ export function ShopListPageClient({
               )}
             </div>
           </div>
+
+          {/* 近隣エリアのメンズエステ */}
+          {nearbyAreas.length > 0 && prefectureSlug && (
+            <section className="mt-10">
+              <div className="flex items-center gap-2 mb-4">
+                <Navigation className="h-4 w-4 text-muted-foreground" />
+                <h2 className="text-lg font-semibold">近隣エリアのメンズエステ</h2>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {nearbyAreas.map((area) => (
+                  <Link
+                    key={area.slug}
+                    href={`/area/${prefectureSlug}/${area.slug}`}
+                  >
+                    <Badge
+                      variant="outline"
+                      className="px-3 py-1.5 text-sm hover:bg-primary/10 hover:border-primary/30 transition-colors cursor-pointer"
+                    >
+                      {area.name}
+                      {area.salon_count != null && area.salon_count > 0 && (
+                        <span className="ml-1 text-muted-foreground">({area.salon_count})</span>
+                      )}
+                    </Badge>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
         </div>
       </main>
 

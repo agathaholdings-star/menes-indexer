@@ -47,6 +47,36 @@ export async function getAreaBySlug(slug: string): Promise<Area | null> {
   return data;
 }
 
+export interface NearbyAreaLink {
+  name: string;
+  slug: string;
+  salon_count: number | null;
+}
+
+/** nearby_areas(パイプ区切りエリア名)からリンク用データを取得 */
+export async function getNearbyAreas(
+  nearbyAreasStr: string | null,
+  prefectureId: number
+): Promise<NearbyAreaLink[]> {
+  if (!nearbyAreasStr) return [];
+  const names = nearbyAreasStr.split("|").map((s) => s.trim()).filter(Boolean);
+  if (names.length === 0) return [];
+
+  const { data } = await supabase
+    .from("areas")
+    .select("name, slug, salon_count")
+    .eq("prefecture_id", prefectureId)
+    .in("name", names);
+
+  if (!data || data.length === 0) return [];
+
+  // seed順(パイプ区切り順)を維持
+  const byName = new Map(data.map((a) => [a.name, a]));
+  return names
+    .map((n) => byName.get(n))
+    .filter((a): a is NearbyAreaLink => a != null);
+}
+
 // =============================================================================
 // Areas Grouped (for area-grid / area page)
 // =============================================================================
@@ -335,5 +365,65 @@ export async function getSalonReviewStatsBatch(
       });
     }
   }
+  return result;
+}
+
+// =============================================================================
+// 最新口コミプレビュー（サロンカード用）
+// =============================================================================
+
+export interface SalonLatestReview {
+  salon_id: number;
+  comment_first_impression: string;
+  nickname: string | null;
+  created_at: string;
+}
+
+/**
+ * 指定サロンIDリストの最新承認済み口コミ1件ずつをバッチ取得。
+ * DISTINCT ON (shop_id) + ORDER BY created_at DESC で N+1 なしの1クエリ。
+ */
+export async function getLatestReviewsBySalonIds(
+  salonIds: number[]
+): Promise<Map<number, SalonLatestReview>> {
+  const result = new Map<number, SalonLatestReview>();
+  if (salonIds.length === 0) return result;
+
+  // Supabase JS client doesn't support DISTINCT ON, so use raw SQL via rpc
+  // Instead, fetch all approved reviews for these salons ordered by created_at desc,
+  // then pick the first per salon in JS. Limited to avoid huge payloads.
+  const { data, error } = await supabase
+    .from("reviews")
+    .select("shop_id, comment_first_impression, created_at, profiles(nickname)")
+    .in("shop_id", salonIds)
+    .eq("moderation_status", "approved")
+    .not("comment_first_impression", "is", null)
+    .order("created_at", { ascending: false })
+    .limit(salonIds.length * 3); // fetch a few per salon, pick first
+
+  if (error) {
+    console.error("getLatestReviewsBySalonIds error:", error);
+    return result;
+  }
+
+  if (data) {
+    for (const row of data as Array<{
+      shop_id: number;
+      comment_first_impression: string;
+      created_at: string;
+      profiles: { nickname: string | null } | null;
+    }>) {
+      // Only keep the first (latest) per salon
+      if (!result.has(row.shop_id)) {
+        result.set(row.shop_id, {
+          salon_id: row.shop_id,
+          comment_first_impression: row.comment_first_impression,
+          nickname: row.profiles?.nickname ?? null,
+          created_at: row.created_at,
+        });
+      }
+    }
+  }
+
   return result;
 }

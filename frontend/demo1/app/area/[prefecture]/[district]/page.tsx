@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { therapistTypes, bodyTypes } from "@/lib/data";
 import { ShopListPageClient } from "./shop-list-client";
-import { getPrefectureBySlug, getAreaBySlug, getShopsByAreaSlug, getRankedSalonsByArea } from "@/lib/supabase-data";
+import { getPrefectureBySlug, getAreaBySlug, getShopsByAreaSlug, getRankedSalonsByArea, getLatestReviewsBySalonIds, getNearbyAreas } from "@/lib/supabase-data";
+import type { SalonLatestReview, NearbyAreaLink } from "@/lib/supabase-data";
 
 export const revalidate = 3600;
 import type { Shop as DbShop } from "@/types/database";
@@ -20,9 +21,10 @@ export async function generateMetadata({
   if (!pref || !area) return {};
 
   const salonCount = area.salon_count || 0;
+  const defaultDescription = `${pref.name}${area.name}のメンズエステ${salonCount}店舗を口コミ・評価でランキング。料金や施術内容、サービスの質、密着度、セラピストの評判を比較して最適なサロンを見つけよう。`;
   return {
     title: `${area.name}のおすすめメンズエステランキング`,
-    description: `${pref.name}${area.name}のメンズエステ${salonCount}店舗を口コミ・評価でランキング。料金や施術内容、サービスの質、密着度、セラピストの評判を比較して最適なサロンを見つけよう。`,
+    description: area.meta_description || defaultDescription,
   };
 }
 
@@ -99,6 +101,18 @@ export default async function ShopListPage({ params }: ShopListPageProps) {
     shops.push(toFrontendShop(dbShop, r, rank++));
   }
 
+  // 最新口コミプレビューをバッチ取得
+  const allSalonIds = dbShops.map((s) => s.id);
+  const latestReviewsMap = await getLatestReviewsBySalonIds(allSalonIds);
+  // シリアライズ可能な形式に変換（Map → Record）
+  const latestReviews: Record<string, SalonLatestReview> = {};
+  for (const [salonId, review] of latestReviewsMap) {
+    latestReviews[String(salonId)] = review;
+  }
+
+  // 近隣エリアリンクを取得
+  const nearbyAreas = await getNearbyAreas(area.nearby_areas ?? null, area.prefecture_id);
+
   // RPCに含まれなかったサロン（is_active=falseなど）を末尾に追加
   const rankedIds = new Set(rankingData.map((r) => r.salon_id));
   for (const dbShop of dbShops) {
@@ -148,6 +162,10 @@ export default async function ShopListPage({ params }: ShopListPageProps) {
         allTherapists={[]}
         therapistTypes={therapistTypes}
         bodyTypes={bodyTypes}
+        latestReviews={latestReviews}
+        nearbyAreas={nearbyAreas}
+        prefectureSlug={prefecture}
+        seoDescription={area.seo_description ?? undefined}
       />
     </>
   );

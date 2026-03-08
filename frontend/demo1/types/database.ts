@@ -1,4 +1,3 @@
-Connecting to db 5432
 export type Json =
   | string
   | number
@@ -40,10 +39,13 @@ export type Database = {
           created_at: string | null
           data_source_url: string | null
           id: number
+          meta_description: string | null
           name: string
+          nearby_areas: string | null
           prefecture_id: number
           salon_count: number | null
           search_volume: number | null
+          seo_description: string | null
           seo_keyword: string | null
           slug: string
           source_type: string | null
@@ -53,10 +55,13 @@ export type Database = {
           created_at?: string | null
           data_source_url?: string | null
           id?: never
+          meta_description?: string | null
           name: string
+          nearby_areas?: string | null
           prefecture_id: number
           salon_count?: number | null
           search_volume?: number | null
+          seo_description?: string | null
           seo_keyword?: string | null
           slug: string
           source_type?: string | null
@@ -66,10 +71,13 @@ export type Database = {
           created_at?: string | null
           data_source_url?: string | null
           id?: never
+          meta_description?: string | null
           name?: string
+          nearby_areas?: string | null
           prefecture_id?: number
           salon_count?: number | null
           search_volume?: number | null
+          seo_description?: string | null
           seo_keyword?: string | null
           slug?: string
           source_type?: string | null
@@ -1141,6 +1149,3 @@ export const Constants = {
     Enums: {},
   },
 } as const
-
-A new version of Supabase CLI is available: v2.75.0 (currently installed v2.65.5)
-We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli

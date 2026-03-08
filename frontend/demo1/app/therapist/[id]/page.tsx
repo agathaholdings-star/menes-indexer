@@ -65,7 +65,7 @@ export default async function TherapistPage({ params }: TherapistPageProps) {
 
   const { data: shop } = await supabase
     .from("salons")
-    .select("name, display_name")
+    .select("name, display_name, business_hours, base_price, base_duration, access")
     .eq("id", dbTherapist.salon_id)
     .single();
 
@@ -257,6 +257,12 @@ export default async function TherapistPage({ params }: TherapistPageProps) {
         reviews={reviews}
         areaName={areaInfo?.areaName}
         prefName={areaInfo?.prefName}
+        salonInfo={{
+          businessHours: shop?.business_hours || null,
+          basePrice: shop?.base_price || null,
+          baseDuration: shop?.base_duration || null,
+          access: shop?.access || null,
+        }}
       />
     </>
   );

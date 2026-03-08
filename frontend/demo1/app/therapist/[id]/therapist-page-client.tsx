@@ -20,12 +20,20 @@ import { useTier } from "@/lib/hooks/use-tier";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
 import type { Therapist, Review } from "@/lib/data";
 
+interface SalonInfo {
+  businessHours: string | null;
+  basePrice: number | null;
+  baseDuration: number | null;
+  access: string | null;
+}
+
 interface TherapistPageClientProps {
   therapist: Therapist;
   reviews: Review[];
+  salonInfo?: SalonInfo;
 }
 
-export function TherapistPageClient({ therapist, reviews }: TherapistPageClientProps) {
+export function TherapistPageClient({ therapist, reviews, salonInfo }: TherapistPageClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -221,6 +229,37 @@ export function TherapistPageClient({ therapist, reviews }: TherapistPageClientP
                       <ProfileTable therapist={therapist} />
                     </div>
                   </div>
+
+                  {/* 所属サロン情報 */}
+                  {salonInfo && (salonInfo.access || salonInfo.businessHours || (salonInfo.basePrice && salonInfo.baseDuration)) && (
+                    <div className="mt-6 border-t pt-4">
+                      <h2 className="text-sm font-semibold mb-3 text-muted-foreground">所属サロン情報</h2>
+                      <div className="border rounded-lg overflow-hidden">
+                        <table className="w-full text-sm">
+                          <tbody>
+                            {salonInfo.access && (
+                              <tr className="bg-muted/30">
+                                <th className="px-4 py-2.5 text-left font-medium text-muted-foreground w-32">アクセス</th>
+                                <td className="px-4 py-2.5">{salonInfo.access}</td>
+                              </tr>
+                            )}
+                            {salonInfo.businessHours && (
+                              <tr className={salonInfo.access ? "bg-background" : "bg-muted/30"}>
+                                <th className="px-4 py-2.5 text-left font-medium text-muted-foreground w-32">営業時間</th>
+                                <td className="px-4 py-2.5">{salonInfo.businessHours}</td>
+                              </tr>
+                            )}
+                            {salonInfo.basePrice && salonInfo.baseDuration && (
+                              <tr className={[salonInfo.access, salonInfo.businessHours].filter(Boolean).length % 2 === 0 ? "bg-muted/30" : "bg-background"}>
+                                <th className="px-4 py-2.5 text-left font-medium text-muted-foreground w-32">料金</th>
+                                <td className="px-4 py-2.5">{salonInfo.baseDuration}分 {salonInfo.basePrice.toLocaleString()}円〜</td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
@@ -259,7 +298,7 @@ export function TherapistPageClient({ therapist, reviews }: TherapistPageClientP
             </div>
 
             {/* Sidebar */}
-            <div className="lg:w-80 lg:shrink-0">
+            <div className="hidden lg:block lg:w-80 lg:shrink-0">
               <div className="lg:sticky lg:top-24">
                 <Sidebar prefectureName={therapist.area} />
               </div>
