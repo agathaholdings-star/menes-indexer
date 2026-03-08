@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Search,
@@ -18,6 +18,9 @@ import {
   Star,
   ChevronDown,
   Coins,
+  Store,
+  Users,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,6 +41,14 @@ import { createSupabaseBrowser } from "@/lib/supabase/client";
 import { useTier } from "@/lib/hooks/use-tier";
 import { ReviewerLevelBadge } from "@/components/shared/reviewer-level-badge";
 
+interface SuggestResult {
+  therapists: { id: number; name: string; salonName: string | null }[];
+  salons: { id: number; name: string; slug: string }[];
+  areas: { id: number; name: string; slug: string; prefectureName: string | null; prefectureSlug: string | null }[];
+}
+
+const emptySuggestions: SuggestResult = { therapists: [], salons: [], areas: [] };
+
 export function SiteHeader() {
   const { user: authUser, loading: authLoading, signOut: authSignOut } = useAuth();
   const { effectiveTier, membershipType, monthlyReviewCount: tierMonthlyReviewCount, viewPermissionUntil, totalReviewCount, reviewCredits } = useTier();
@@ -45,8 +56,118 @@ export function SiteHeader() {
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
+  const pathname = usePathname();
+
+  // Suggest state
+  const [suggestions, setSuggestions] = useState<SuggestResult>(emptySuggestions);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+  const suggestRef = useRef<HTMLDivElement>(null);
+  const desktopInputRef = useRef<HTMLInputElement>(null);
+  const mobileInputRef = useRef<HTMLInputElement>(null);
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isLoggedIn = !!authUser;
+
+  // Close suggestions on route change
+  useEffect(() => {
+    setShowSuggestions(false);
+    setSuggestions(emptySuggestions);
+  }, [pathname]);
+
+  // Click outside to close suggestions
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (suggestRef.current && !suggestRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Build flat list of suggestion items for keyboard navigation
+  const flatItems = useCallback(() => {
+    const items: { type: "therapist" | "salon" | "area"; item: any }[] = [];
+    suggestions.therapists.forEach((t) => items.push({ type: "therapist", item: t }));
+    suggestions.salons.forEach((s) => items.push({ type: "salon", item: s }));
+    suggestions.areas.forEach((a) => items.push({ type: "area", item: a }));
+    return items;
+  }, [suggestions]);
+
+  const navigateToItem = useCallback(
+    (type: string, item: any) => {
+      setShowSuggestions(false);
+      setSearchQuery("");
+      if (type === "therapist") {
+        router.push(`/therapist/${item.id}`);
+      } else if (type === "salon") {
+        router.push(`/shop/${item.slug || item.id}`);
+      } else if (type === "area") {
+        const prefSlug = item.prefectureSlug || "";
+        router.push(`/area/${prefSlug}/${item.slug}`);
+      }
+    },
+    [router]
+  );
+
+  // Fetch suggestions with debounce
+  const fetchSuggestions = useCallback((query: string) => {
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+
+    const isJapanese = /[^\x00-\x7F]/.test(query);
+    const minLength = isJapanese ? 2 : 3;
+
+    if (query.trim().length < minLength) {
+      setSuggestions(emptySuggestions);
+      setShowSuggestions(false);
+      setIsLoadingSuggestions(false);
+      return;
+    }
+
+    setIsLoadingSuggestions(true);
+    debounceTimer.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/suggest?q=${encodeURIComponent(query.trim())}`);
+        if (res.ok) {
+          const data: SuggestResult = await res.json();
+          setSuggestions(data);
+          const hasResults = data.therapists.length + data.salons.length + data.areas.length > 0;
+          setShowSuggestions(hasResults);
+          setActiveIndex(-1);
+        }
+      } catch {
+        // silently fail
+      } finally {
+        setIsLoadingSuggestions(false);
+      }
+    }, 300);
+  }, []);
+
+  const handleSearchInputChange = (value: string) => {
+    setSearchQuery(value);
+    fetchSuggestions(value);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    const items = flatItems();
+    if (!showSuggestions || items.length === 0) return;
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActiveIndex((prev) => (prev < items.length - 1 ? prev + 1 : 0));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActiveIndex((prev) => (prev > 0 ? prev - 1 : items.length - 1));
+    } else if (e.key === "Enter" && activeIndex >= 0) {
+      e.preventDefault();
+      const selected = items[activeIndex];
+      navigateToItem(selected.type, selected.item);
+    } else if (e.key === "Escape") {
+      setShowSuggestions(false);
+    }
+  };
 
   // 通知
   interface Notification {
@@ -161,15 +282,43 @@ export function SiteHeader() {
 
           {/* Search Bar - Desktop */}
           <form onSubmit={handleSearch} className="hidden max-w-md flex-1 md:flex">
-            <div className="relative w-full">
+            <div className="relative w-full" ref={suggestRef}>
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              {isLoadingSuggestions && (
+                <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground animate-spin" />
+              )}
               <Input
+                ref={desktopInputRef}
                 type="search"
                 placeholder="店舗名・セラピスト名で検索"
                 className="w-full pl-10"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => handleSearchInputChange(e.target.value)}
+                onFocus={() => {
+                  const items = flatItems();
+                  if (items.length > 0) setShowSuggestions(true);
+                }}
+                onKeyDown={handleKeyDown}
+                autoComplete="off"
+                role="combobox"
+                aria-expanded={showSuggestions}
+                aria-autocomplete="list"
+                aria-controls="suggest-listbox"
               />
+              {/* Suggestion Dropdown */}
+              {showSuggestions && (
+                <div
+                  id="suggest-listbox"
+                  role="listbox"
+                  className="absolute top-full left-0 right-0 mt-1 bg-card border rounded-lg shadow-lg z-50 overflow-hidden max-h-80 overflow-y-auto"
+                >
+                  <SuggestDropdown
+                    suggestions={suggestions}
+                    activeIndex={activeIndex}
+                    onSelect={navigateToItem}
+                  />
+                </div>
+              )}
             </div>
           </form>
 
@@ -444,14 +593,39 @@ export function SiteHeader() {
 
                   {/* Mobile Search */}
                   <form onSubmit={handleSearch} className="relative">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      type="search"
-                      placeholder="店舗名・セラピスト名で検索"
-                      className="pl-10"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      {isLoadingSuggestions && (
+                        <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground animate-spin" />
+                      )}
+                      <Input
+                        ref={mobileInputRef}
+                        type="search"
+                        placeholder="店舗名・セラピスト名で検索"
+                        className="pl-10"
+                        value={searchQuery}
+                        onChange={(e) => handleSearchInputChange(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        autoComplete="off"
+                        role="combobox"
+                        aria-expanded={showSuggestions}
+                        aria-autocomplete="list"
+                        aria-controls="suggest-listbox-mobile"
+                      />
+                      {showSuggestions && (
+                        <div
+                          id="suggest-listbox-mobile"
+                          role="listbox"
+                          className="absolute top-full left-0 right-0 mt-1 bg-card border rounded-lg shadow-lg z-50 overflow-hidden max-h-60 overflow-y-auto"
+                        >
+                          <SuggestDropdown
+                            suggestions={suggestions}
+                            activeIndex={activeIndex}
+                            onSelect={navigateToItem}
+                          />
+                        </div>
+                      )}
+                    </div>
                   </form>
 
                   {/* Mobile Navigation */}
@@ -557,6 +731,123 @@ export function SiteHeader() {
         memberType={isLoggedIn ? memberLevel : "free"}
         monthlyReviewCount={user.monthlyReviewCount}
       />
+    </>
+  );
+}
+
+/* ─── Suggest Dropdown Component ─── */
+
+function SuggestDropdown({
+  suggestions,
+  activeIndex,
+  onSelect,
+}: {
+  suggestions: SuggestResult;
+  activeIndex: number;
+  onSelect: (type: string, item: any) => void;
+}) {
+  let idx = -1;
+
+  const itemClass = (i: number) =>
+    `flex items-center gap-3 px-3 py-2.5 cursor-pointer transition-colors ${
+      i === activeIndex ? "bg-primary/10" : "hover:bg-muted/50"
+    }`;
+
+  return (
+    <>
+      {suggestions.therapists.length > 0 && (
+        <div>
+          <div className="px-3 py-1.5 text-xs font-medium text-muted-foreground bg-muted/30 flex items-center gap-1.5">
+            <Users className="h-3 w-3" />
+            セラピスト
+          </div>
+          {suggestions.therapists.map((t) => {
+            idx++;
+            const currentIdx = idx;
+            return (
+              <div
+                key={`t-${t.id}`}
+                role="option"
+                aria-selected={currentIdx === activeIndex}
+                className={itemClass(currentIdx)}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  onSelect("therapist", t);
+                }}
+              >
+                <Users className="h-4 w-4 text-muted-foreground shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate">{t.name}</p>
+                  {t.salonName && (
+                    <p className="text-xs text-muted-foreground truncate">{t.salonName}</p>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {suggestions.salons.length > 0 && (
+        <div>
+          <div className="px-3 py-1.5 text-xs font-medium text-muted-foreground bg-muted/30 flex items-center gap-1.5">
+            <Store className="h-3 w-3" />
+            サロン
+          </div>
+          {suggestions.salons.map((s) => {
+            idx++;
+            const currentIdx = idx;
+            return (
+              <div
+                key={`s-${s.id}`}
+                role="option"
+                aria-selected={currentIdx === activeIndex}
+                className={itemClass(currentIdx)}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  onSelect("salon", s);
+                }}
+              >
+                <Store className="h-4 w-4 text-muted-foreground shrink-0" />
+                <p className="text-sm font-medium truncate">{s.name}</p>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {suggestions.areas.length > 0 && (
+        <div>
+          <div className="px-3 py-1.5 text-xs font-medium text-muted-foreground bg-muted/30 flex items-center gap-1.5">
+            <MapPin className="h-3 w-3" />
+            エリア
+          </div>
+          {suggestions.areas.map((a) => {
+            idx++;
+            const currentIdx = idx;
+            return (
+              <div
+                key={`a-${a.id}`}
+                role="option"
+                aria-selected={currentIdx === activeIndex}
+                className={itemClass(currentIdx)}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  onSelect("area", a);
+                }}
+              >
+                <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate">{a.name}</p>
+                  {a.prefectureName && (
+                    <p className="text-xs text-muted-foreground truncate">{a.prefectureName}</p>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </>
   );
 }

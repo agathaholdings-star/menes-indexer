@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Lock, PenLine, Star, ChevronRight, Crown, Eye, TrendingUp, Flame, Heart, Sparkles, Unlock, Coins, Clock, ThumbsUp, Award, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -45,6 +45,21 @@ export function ReviewList({
 }: ReviewListProps) {
   const [showUnlockModal, setShowUnlockModal] = useState(false);
   const [unlockLoading, setUnlockLoading] = useState<string | null>(null);
+
+  // GA4 dataLayer push helper
+  const pushEvent = useCallback((event: string, params?: Record<string, string | number | boolean>) => {
+    if (typeof window !== "undefined" && (window as any).dataLayer) {
+      (window as any).dataLayer.push({ event, ...params });
+    }
+  }, []);
+
+  // Track modal view
+  useEffect(() => {
+    if (showUnlockModal) {
+      pushEvent("unlock_modal_view", { therapist_id: therapistId || "", therapist_name: therapistName });
+    }
+  }, [showUnlockModal, pushEvent, therapistId, therapistName]);
+
   const getTypeLabel = (id: string) => therapistTypes.find(t => t.id === id)?.label || id;
   const getBodyLabel = (id: string) => bodyTypes.find(b => b.id === id)?.label || id;
   const getServiceLabel = (id: string) => serviceTypes.find(s => s.id === id)?.label || id;
@@ -160,17 +175,32 @@ export function ReviewList({
             </div>
 
             <div className="space-y-3">
+              {/* Primary CTA: 口コミ投稿（無料） */}
               <Button
-                onClick={() => { setShowUnlockModal(false); onWriteReview?.(); }}
-                className="w-full gap-2 h-12 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white"
+                onClick={() => {
+                  pushEvent("unlock_cta_click", { cta_type: "write_review", therapist_id: therapistId || "" });
+                  pushEvent("unlock_method_selected", { method: "write_review" });
+                  setShowUnlockModal(false);
+                  onWriteReview?.();
+                }}
+                className="w-full gap-2 h-14 text-base font-bold bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-lg"
               >
-                <PenLine className="h-4 w-4" />あなたの体験を投稿して5クレジットGET<ChevronRight className="h-4 w-4 ml-auto" />
+                <PenLine className="h-5 w-5" />
+                <span className="flex flex-col items-start leading-tight">
+                  <span>口コミを書いて無料で読む</span>
+                  <span className="text-[10px] font-normal opacity-80">1件投稿で5件の口コミが読める</span>
+                </span>
+                <ChevronRight className="h-5 w-5 ml-auto flex-shrink-0" />
               </Button>
+
+              {/* Secondary CTA: 単品購入 */}
               {therapistId && (
                 <Button
                   variant="outline"
-                  className="w-full gap-2 h-10 border-pink-300 text-pink-600 hover:bg-pink-50 bg-transparent"
+                  className="w-full gap-2 h-11 border-pink-300 text-pink-600 hover:bg-pink-50 bg-transparent font-medium"
                   onClick={async () => {
+                    pushEvent("unlock_cta_click", { cta_type: "single_purchase", therapist_id: therapistId || "" });
+                    pushEvent("unlock_method_selected", { method: "single_purchase" });
                     const res = await fetch("/api/checkout/single-unlock", {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
@@ -180,16 +210,32 @@ export function ReviewList({
                     if (data.url) window.location.href = data.url;
                   }}
                 >
-                  <CreditCard className="h-4 w-4" />¥1,000で永久アンロック
+                  <CreditCard className="h-4 w-4" />¥1,000でこのセラピストを永久アンロック
                 </Button>
               )}
+
+              {/* Tertiary CTA: 有料会員 */}
               <Link href="/pricing" className="block">
-                <Button variant="outline" className="w-full gap-2 h-10 text-muted-foreground hover:text-foreground bg-transparent">
-                  <Crown className="h-4 w-4" />有料会員になって読み放題（開発中）
+                <Button
+                  variant="ghost"
+                  className="w-full gap-2 h-9 text-xs text-muted-foreground hover:text-foreground"
+                  onClick={() => {
+                    pushEvent("unlock_cta_click", { cta_type: "premium_membership", therapist_id: therapistId || "" });
+                    pushEvent("unlock_method_selected", { method: "premium_membership" });
+                  }}
+                >
+                  <Crown className="h-3.5 w-3.5" />有料会員で読み放題（開発中）
                 </Button>
               </Link>
+
               <Link href="/login" className="block">
-                <Button variant="ghost" className="w-full text-muted-foreground h-10">既に会員の方はこちら</Button>
+                <Button
+                  variant="ghost"
+                  className="w-full text-muted-foreground h-9 text-xs"
+                  onClick={() => pushEvent("unlock_cta_click", { cta_type: "login", therapist_id: therapistId || "" })}
+                >
+                  既に会員の方はこちら
+                </Button>
               </Link>
             </div>
           </div>
