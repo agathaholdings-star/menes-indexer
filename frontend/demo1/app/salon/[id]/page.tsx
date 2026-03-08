@@ -147,6 +147,7 @@ function toFrontendReview(r: Record<string, unknown>): Review {
     realCount: (r.real_count as number) || 0,
     fakeCount: (r.fake_count as number) || 0,
     viewCount: (r.view_count as number) || 0,
+    verificationImagePath: (r.verification_image_path as string) || null,
   };
 }
 

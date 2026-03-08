@@ -147,6 +147,7 @@ export default async function TherapistPage({ params }: TherapistPageProps) {
     fakeCount: r.fake_count || 0,
     viewCount: r.view_count || 0,
     helpfulCount: r.helpful_count || 0,
+    verificationImagePath: r.verification_image_path || null,
   }));
 
   const reviewStructuredData = (dbReviews || []).slice(0, 5).reduce<Record<string, unknown>[]>((items, r: any) => {

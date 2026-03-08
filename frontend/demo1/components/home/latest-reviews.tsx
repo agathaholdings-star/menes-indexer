@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Star, PenSquare, Clock, Eye, ArrowRight } from "lucide-react";
+import { Star, PenSquare, Clock, Eye, ArrowRight, Lock } from "lucide-react";
+import { useTier } from "@/lib/hooks/use-tier";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +20,8 @@ interface LatestReview {
 export function LatestReviews() {
   const [reviews, setReviews] = useState<LatestReview[]>([]);
   const [loading, setLoading] = useState(true);
+  const { permissions } = useTier();
+  const isLocked = !permissions.canViewReviewBody;
 
   useEffect(() => {
     async function fetchLatest() {
@@ -123,16 +126,28 @@ export function LatestReviews() {
                   </div>
 
                   {/* スコア円 */}
-                  <div className="relative w-14 h-14 flex-shrink-0">
-                    <svg className="w-14 h-14 -rotate-90" viewBox="0 0 36 36">
-                      <path d="M18 2.0845a 15.9155 15.9155 0 0 1 0 31.831a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#e5e7eb" strokeWidth="3" />
-                      <path d="M18 2.0845a 15.9155 15.9155 0 0 1 0 31.831a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#2563eb" strokeWidth="3" strokeDasharray={`${scorePercent}, 100`} strokeLinecap="round" />
-                    </svg>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <span className="text-base font-bold text-primary leading-none">{r.score}</span>
-                      <span className="text-[7px] text-muted-foreground">/ 100</span>
+                  {isLocked ? (
+                    <div className="relative w-14 h-14 flex-shrink-0">
+                      <svg className="w-14 h-14 -rotate-90" viewBox="0 0 36 36">
+                        <path d="M18 2.0845a 15.9155 15.9155 0 0 1 0 31.831a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#e5e7eb" strokeWidth="3" />
+                      </svg>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center">
+                        <Lock className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-[7px] text-muted-foreground">非公開</span>
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="relative w-14 h-14 flex-shrink-0">
+                      <svg className="w-14 h-14 -rotate-90" viewBox="0 0 36 36">
+                        <path d="M18 2.0845a 15.9155 15.9155 0 0 1 0 31.831a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#e5e7eb" strokeWidth="3" />
+                        <path d="M18 2.0845a 15.9155 15.9155 0 0 1 0 31.831a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#2563eb" strokeWidth="3" strokeDasharray={`${scorePercent}, 100`} strokeLinecap="round" />
+                      </svg>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center">
+                        <span className="text-base font-bold text-primary leading-none">{r.score}</span>
+                        <span className="text-[7px] text-muted-foreground">/ 100</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Link>

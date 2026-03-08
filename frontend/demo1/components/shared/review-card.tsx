@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Star, Lock, Crown, Clock, Eye, ThumbsUp, ChevronRight, ArrowRight } from "lucide-react";
+import { Star, Lock, Crown, Clock, Eye, ThumbsUp, ChevronRight, ArrowRight, ShieldCheck, Camera } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -34,13 +34,31 @@ export function ReviewCard({ review, isBlurred = false, showTherapist = true, va
   const serviceLabel = serviceTypes.find((s) => s.id === review.serviceType)?.label || review.serviceType;
   const formattedDate = formatDate(review.createdAt);
   const scorePercent = review.score;
+  const isVerified = !!review.verificationImagePath;
 
-  // A-3a pattern for both variants
   return (
-    <Card className="overflow-hidden shadow-md">
+    <Card className="overflow-hidden shadow-md relative">
+      {/* Pattern C: リッチバッジ（右上） */}
+      {isVerified && (
+        <div className="absolute top-2 right-2 z-10">
+          <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-gradient-to-r from-yellow-500 to-amber-500 text-white text-[10px] font-bold shadow-lg">
+            <Camera className="h-3 w-3" />
+            REAL
+          </div>
+        </div>
+      )}
+
       {/* バナー: サロン名 + セラピスト名 */}
       <div className="bg-gradient-to-r from-primary to-blue-600 px-5 py-3">
-        <h3 className="text-white font-bold text-base">{review.shopName || "サロン"}</h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-white font-bold text-base">{review.shopName || "サロン"}</h3>
+          {/* Pattern B: アイコン+テキスト付きバッジ（バナー内） */}
+          {isVerified && (
+            <Badge className="bg-yellow-400/30 text-yellow-100 border-0 text-[10px] gap-1 hover:bg-yellow-400/40">
+              <ShieldCheck className="h-3 w-3" />確認済みレビュー
+            </Badge>
+          )}
+        </div>
         <p className="text-blue-100 text-sm mt-0.5">
           <span className="text-white font-bold">{review.therapistName}</span> さんの口コミ体験レポート
         </p>
@@ -65,6 +83,12 @@ export function ReviewCard({ review, isBlurred = false, showTherapist = true, va
                 No Image
               </div>
             )}
+            {/* Pattern A: シンプルテキストバッジ（画像下） */}
+            {isVerified && (
+              <Badge className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-white border-0 text-[10px] whitespace-nowrap gap-0.5">
+                <ShieldCheck className="h-2.5 w-2.5" />スクショ確認済み
+              </Badge>
+            )}
           </div>
           <div className="flex-1 flex flex-col justify-between">
             <div>
@@ -85,17 +109,29 @@ export function ReviewCard({ review, isBlurred = false, showTherapist = true, va
                   <p className="flex items-center gap-1 mt-0.5"><Clock className="h-3 w-3" />{formattedDate}</p>
                 )}
               </div>
-              {/* スコア円 */}
-              <div className="relative w-16 h-16">
-                <svg className="w-16 h-16 -rotate-90" viewBox="0 0 36 36">
-                  <path d="M18 2.0845a 15.9155 15.9155 0 0 1 0 31.831a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#e5e7eb" strokeWidth="3" />
-                  <path d="M18 2.0845a 15.9155 15.9155 0 0 1 0 31.831a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#2563eb" strokeWidth="3" strokeDasharray={`${scorePercent}, 100`} strokeLinecap="round" />
-                </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-lg font-bold text-primary leading-none">{review.score}</span>
-                  <span className="text-[8px] text-muted-foreground">/ 100</span>
+              {/* スコア円: isBlurred なら非表示 */}
+              {isBlurred ? (
+                <div className="relative w-16 h-16">
+                  <svg className="w-16 h-16 -rotate-90" viewBox="0 0 36 36">
+                    <path d="M18 2.0845a 15.9155 15.9155 0 0 1 0 31.831a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#e5e7eb" strokeWidth="3" />
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <Lock className="h-5 w-5 text-muted-foreground" />
+                    <span className="text-[8px] text-muted-foreground">非公開</span>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="relative w-16 h-16">
+                  <svg className="w-16 h-16 -rotate-90" viewBox="0 0 36 36">
+                    <path d="M18 2.0845a 15.9155 15.9155 0 0 1 0 31.831a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#e5e7eb" strokeWidth="3" />
+                    <path d="M18 2.0845a 15.9155 15.9155 0 0 1 0 31.831a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#2563eb" strokeWidth="3" strokeDasharray={`${scorePercent}, 100`} strokeLinecap="round" />
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-lg font-bold text-primary leading-none">{review.score}</span>
+                    <span className="text-[8px] text-muted-foreground">/ 100</span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -104,9 +140,18 @@ export function ReviewCard({ review, isBlurred = false, showTherapist = true, va
         <div className="px-5 py-2 bg-blue-50/50 border-b flex items-center justify-between">
           <div className="flex items-center gap-1">
             <span className="text-xs text-muted-foreground mr-1">オススメ度</span>
-            {[...Array(5)].map((_, i) => (
-              <Star key={i} className={`h-4 w-4 ${i < Math.floor(review.score / 20) ? "fill-yellow-400 text-yellow-400" : "text-gray-200"}`} />
-            ))}
+            {isBlurred ? (
+              <>
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="h-4 w-4 text-gray-200" />
+                ))}
+                <span className="text-[10px] text-muted-foreground ml-1">アンロックで表示</span>
+              </>
+            ) : (
+              [...Array(5)].map((_, i) => (
+                <Star key={i} className={`h-4 w-4 ${i < Math.floor(review.score / 20) ? "fill-yellow-400 text-yellow-400" : "text-gray-200"}`} />
+              ))
+            )}
           </div>
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
             {(review.viewCount || 0) > 0 && (
@@ -130,17 +175,8 @@ export function ReviewCard({ review, isBlurred = false, showTherapist = true, va
             </div>
             <div className="relative px-5">
               <div className="select-none pointer-events-none text-sm leading-relaxed space-y-3" style={{ filter: "blur(5px)" }}>
-                {(() => {
-                  const blurTexts = [review.commentService, review.commentStyle, review.commentServiceDetail, review.commentCost, review.commentRevisit].filter(Boolean);
-                  return blurTexts.length > 0 ? blurTexts.slice(0, 2).map((t, i) => (
-                    <p key={i}>{t}</p>
-                  )) : (
-                    <>
-                      <p>会話がとても楽しく、施術も丁寧。時間があっという間に過ぎました。技術もしっかりしていてコリがほぐれました。</p>
-                      <p>シャワー浴びて横になったら、足からマッサージスタート。本格的すぎて全然ドキドキしなかった。</p>
-                    </>
-                  );
-                })()}
+                <p>会話がとても楽しく、施術も丁寧。時間があっという間に過ぎました。技術もしっかりしていてコリがほぐれました。</p>
+                <p>シャワー浴びて横になったら、足からマッサージスタート。本格的すぎて全然ドキドキしなかった。</p>
               </div>
               <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/60 to-background" />
               <div className="absolute inset-0 flex items-center justify-center">

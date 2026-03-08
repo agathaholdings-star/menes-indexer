@@ -3,7 +3,8 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { TherapistImage } from "@/components/shared/therapist-image";
-import { Star, MapPin, Clock, Users, MessageSquare, SlidersHorizontal, Crown, Navigation } from "lucide-react";
+import { Star, MapPin, Clock, Users, MessageSquare, SlidersHorizontal, Crown, Navigation, Lock } from "lucide-react";
+import { useTier } from "@/lib/hooks/use-tier";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -68,6 +69,8 @@ export function ShopListPageClient({
   const [sortBy, setSortBy] = useState("ranking");
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [selectedStyles, setSelectedStyles] = useState<string[]>([]);
+  const { permissions } = useTier();
+  const isScoreLocked = !permissions.canViewReviewBody;
 
   const getShopTherapists = (shopId: string) => allTherapists.filter(t => t.shopId === shopId).slice(0, 3);
 
@@ -251,10 +254,17 @@ export function ShopListPageClient({
                                   <h3 className="font-bold text-lg">{shop.name}</h3>
                                 </div>
                                 {shop.averageScore > 0 && (
-                                  <div className="flex items-center gap-1 bg-primary/10 px-2 py-1 rounded shrink-0">
-                                    <Star className="h-4 w-4 fill-primary text-primary" />
-                                    <span className="font-bold text-primary">{shop.averageScore.toFixed(1)}</span>
-                                  </div>
+                                  isScoreLocked ? (
+                                    <div className="flex items-center gap-1 bg-muted px-2 py-1 rounded shrink-0">
+                                      <Lock className="h-3.5 w-3.5 text-muted-foreground" />
+                                      <span className="font-bold text-muted-foreground">? ?</span>
+                                    </div>
+                                  ) : (
+                                    <div className="flex items-center gap-1 bg-primary/10 px-2 py-1 rounded shrink-0">
+                                      <Star className="h-4 w-4 fill-primary text-primary" />
+                                      <span className="font-bold text-primary">{shop.averageScore.toFixed(1)}</span>
+                                    </div>
+                                  )
                                 )}
                               </div>
 

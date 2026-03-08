@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { TherapistImage } from "@/components/shared/therapist-image";
-import { Star, MessageSquare } from "lucide-react";
+import { Star, MessageSquare, Lock } from "lucide-react";
+import { useTier } from "@/lib/hooks/use-tier";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { Therapist } from "@/lib/data";
@@ -15,6 +16,8 @@ interface TherapistCardProps {
 
 export function TherapistCard({ therapist, showShop = true, size = "md" }: TherapistCardProps) {
   const imageHeight = size === "sm" ? "h-40" : size === "lg" ? "h-64" : "h-52";
+  const { permissions } = useTier();
+  const isLocked = !permissions.canViewReviewBody;
 
   return (
     <Link href={`/therapist/${therapist.id}`}>
@@ -46,10 +49,17 @@ export function TherapistCard({ therapist, showShop = true, size = "md" }: Thera
           </div>
           {(therapist.averageScore > 0 || therapist.reviewCount > 0) && (
             <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-1 text-primary">
-                <Star className="h-4 w-4 fill-current" />
-                <span className="font-bold">{therapist.averageScore}点</span>
-              </div>
+              {isLocked ? (
+                <div className="flex items-center gap-1 text-muted-foreground">
+                  <Lock className="h-3.5 w-3.5" />
+                  <span className="text-xs">非公開</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1 text-primary">
+                  <Star className="h-4 w-4 fill-current" />
+                  <span className="font-bold">{therapist.averageScore}点</span>
+                </div>
+              )}
               <div className="flex items-center gap-1 text-muted-foreground">
                 <MessageSquare className="h-3 w-3" />
                 <span className="text-xs">{therapist.reviewCount}件</span>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { Lock, PenLine, Star, ChevronRight, Crown, Eye, TrendingUp, Flame, Heart, Sparkles, Unlock, Coins, Clock, ThumbsUp, Award, CreditCard } from "lucide-react";
+import { Lock, PenLine, Star, ChevronRight, Crown, Eye, TrendingUp, Flame, Heart, Sparkles, Unlock, Coins, Clock, ThumbsUp, Award, CreditCard, ShieldCheck, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -95,7 +95,7 @@ export function ReviewList({
             therapistAge={therapistAge}
             therapistImage={therapistImage}
             shopName={shopName}
-            isPremium={index === 0}
+            isVerified={!!review.verificationImagePath}
             reviewCredits={reviewCredits}
           />
         ))}
@@ -260,7 +260,7 @@ function ReviewCardA3a({
   therapistAge,
   therapistImage,
   shopName,
-  isPremium = false,
+  isVerified = false,
   reviewCredits = 0,
 }: {
   review: Review;
@@ -274,7 +274,7 @@ function ReviewCardA3a({
   therapistAge: number;
   therapistImage: string;
   shopName: string;
-  isPremium?: boolean;
+  isVerified?: boolean;
   reviewCredits?: number;
 }) {
   const scorePercent = review.score;
@@ -283,10 +283,28 @@ function ReviewCardA3a({
     : "";
 
   return (
-    <Card className="overflow-hidden shadow-md">
+    <Card className="overflow-hidden shadow-md relative">
+      {/* Pattern C: リッチバッジ（右上） */}
+      {isVerified && (
+        <div className="absolute top-2 right-2 z-10">
+          <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-gradient-to-r from-yellow-500 to-amber-500 text-white text-[10px] font-bold shadow-lg">
+            <Camera className="h-3 w-3" />
+            REAL
+          </div>
+        </div>
+      )}
+
       {/* バナー: サロン名 + セラピスト名 */}
       <div className="bg-gradient-to-r from-primary to-blue-600 px-5 py-3">
-        <h3 className="text-white font-bold text-base">{shopName || "サロン"}</h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-white font-bold text-base">{shopName || "サロン"}</h3>
+          {/* Pattern B: アイコン+テキスト付きバッジ（バナー内） */}
+          {isVerified && (
+            <Badge className="bg-yellow-400/30 text-yellow-100 border-0 text-[10px] gap-1 hover:bg-yellow-400/40">
+              <ShieldCheck className="h-3 w-3" />確認済みレビュー
+            </Badge>
+          )}
+        </div>
         <p className="text-blue-100 text-sm mt-0.5">
           <span className="text-white font-bold">{therapistName}{therapistAge > 0 ? ` (${therapistAge})` : ""}</span> さんの口コミ体験レポート
         </p>
@@ -303,9 +321,10 @@ function ReviewCardA3a({
               className="w-28 h-28 rounded-xl object-cover shadow-md"
               onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder.svg"; }}
             />
-            {isPremium && (
-              <Badge className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-gradient-to-r from-yellow-500 to-amber-500 text-white border-0 text-[10px] whitespace-nowrap">
-                <Crown className="h-2.5 w-2.5 mr-0.5" />プレミアム口コミ
+            {/* Pattern A: シンプルテキストバッジ（画像下） */}
+            {isVerified && (
+              <Badge className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-white border-0 text-[10px] whitespace-nowrap gap-0.5">
+                <ShieldCheck className="h-2.5 w-2.5" />スクショ確認済み
               </Badge>
             )}
           </div>
@@ -330,17 +349,29 @@ function ReviewCardA3a({
                   </p>
                 )}
               </div>
-              {/* スコア円 */}
-              <div className="relative w-16 h-16">
-                <svg className="w-16 h-16 -rotate-90" viewBox="0 0 36 36">
-                  <path d="M18 2.0845a 15.9155 15.9155 0 0 1 0 31.831a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#e5e7eb" strokeWidth="3" />
-                  <path d="M18 2.0845a 15.9155 15.9155 0 0 1 0 31.831a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#2563eb" strokeWidth="3" strokeDasharray={`${scorePercent}, 100`} strokeLinecap="round" />
-                </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-lg font-bold text-primary leading-none">{review.score}</span>
-                  <span className="text-[8px] text-muted-foreground">/ 100</span>
+              {/* スコア円: isLocked なら非表示 */}
+              {isLocked ? (
+                <div className="relative w-16 h-16">
+                  <svg className="w-16 h-16 -rotate-90" viewBox="0 0 36 36">
+                    <path d="M18 2.0845a 15.9155 15.9155 0 0 1 0 31.831a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#e5e7eb" strokeWidth="3" />
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <Lock className="h-5 w-5 text-muted-foreground" />
+                    <span className="text-[8px] text-muted-foreground">非公開</span>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="relative w-16 h-16">
+                  <svg className="w-16 h-16 -rotate-90" viewBox="0 0 36 36">
+                    <path d="M18 2.0845a 15.9155 15.9155 0 0 1 0 31.831a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#e5e7eb" strokeWidth="3" />
+                    <path d="M18 2.0845a 15.9155 15.9155 0 0 1 0 31.831a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#2563eb" strokeWidth="3" strokeDasharray={`${scorePercent}, 100`} strokeLinecap="round" />
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-lg font-bold text-primary leading-none">{review.score}</span>
+                    <span className="text-[8px] text-muted-foreground">/ 100</span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -349,9 +380,18 @@ function ReviewCardA3a({
         <div className="px-5 py-2 bg-blue-50/50 border-b flex items-center justify-between">
           <div className="flex items-center gap-1">
             <span className="text-xs text-muted-foreground mr-1">オススメ度</span>
-            {[...Array(5)].map((_, i) => (
-              <Star key={i} className={`h-4 w-4 ${i < Math.floor(review.score / 20) ? "fill-yellow-400 text-yellow-400" : "text-gray-200"}`} />
-            ))}
+            {isLocked ? (
+              <>
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="h-4 w-4 text-gray-200" />
+                ))}
+                <span className="text-[10px] text-muted-foreground ml-1">アンロックで表示</span>
+              </>
+            ) : (
+              [...Array(5)].map((_, i) => (
+                <Star key={i} className={`h-4 w-4 ${i < Math.floor(review.score / 20) ? "fill-yellow-400 text-yellow-400" : "text-gray-200"}`} />
+              ))
+            )}
           </div>
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
             {(review.viewCount || 0) > 0 && (

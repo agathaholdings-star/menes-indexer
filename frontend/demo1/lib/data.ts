@@ -178,6 +178,7 @@ export interface Review {
   helpfulCount?: number;
   reviewerLevel?: number;
   therapistImageUrl?: string;
+  verificationImagePath?: string | null;
 }
 
 export interface User {

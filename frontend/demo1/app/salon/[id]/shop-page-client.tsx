@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Star, MapPin, Clock, ExternalLink, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
+import { Star, MapPin, Clock, ExternalLink, ChevronLeft, ChevronRight, ChevronDown, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -111,10 +111,17 @@ export function ShopPageClient({ shop, therapists, shopReviews, officialUrl, are
                     <div className="flex-1">
                       <div className="flex items-start justify-between mb-4">
                         <h1 className="text-2xl font-bold">{shop.name}</h1>
-                        <div className="flex items-center gap-1 bg-primary/10 px-3 py-1 rounded">
-                          <Star className="h-5 w-5 fill-primary text-primary" />
-                          <span className="font-bold text-lg text-primary">{shop.averageScore}</span>
-                        </div>
+                        {permissions.canViewReviewBody ? (
+                          <div className="flex items-center gap-1 bg-primary/10 px-3 py-1 rounded">
+                            <Star className="h-5 w-5 fill-primary text-primary" />
+                            <span className="font-bold text-lg text-primary">{shop.averageScore}</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1 bg-muted px-3 py-1 rounded">
+                            <Lock className="h-4 w-4 text-muted-foreground" />
+                            <span className="font-bold text-lg text-muted-foreground">? ?</span>
+                          </div>
+                        )}
                       </div>
 
                       <div className="space-y-2 text-sm">
