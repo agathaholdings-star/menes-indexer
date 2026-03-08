@@ -331,6 +331,15 @@ function SearchContent() {
   const [selectedArea, setSelectedArea] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [shopName, setShopName] = useState("");
+
+  // URLのqパラメータが変わったらqueryを同期して再検索
+  useEffect(() => {
+    setQuery(initialQuery);
+    setShopName(initialQuery);
+    setSearchTriggered((n) => n + 1);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialQuery]);
+
   const [selectedTypes, setSelectedTypes] = useState<string[]>(
     initialType ? [initialType] : []
   );
@@ -504,13 +513,13 @@ function SearchContent() {
                     </div>
                   </div>
 
-                  {/* サロン名 */}
+                  {/* セラピスト名・サロン名 */}
                   <div>
-                    <label className="text-sm font-medium mb-1.5 block">サロン名</label>
+                    <label className="text-sm font-medium mb-1.5 block">セラピスト名・サロン名</label>
                     <Input
-                      placeholder="サロン名で検索"
-                      value={shopName}
-                      onChange={(e) => setShopName(e.target.value)}
+                      placeholder="セラピスト名・サロン名で検索"
+                      value={query}
+                      onChange={(e) => { setQuery(e.target.value); setShopName(e.target.value); }}
                     />
                   </div>
 

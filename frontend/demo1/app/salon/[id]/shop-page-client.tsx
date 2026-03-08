@@ -134,7 +134,9 @@ export function ShopPageClient({ shop, therapists, shopReviews, officialUrl, are
                         ))}
                       </div>
 
-                      <p className="mt-4 text-sm text-muted-foreground">{shop.description}</p>
+                      {shop.description && (
+                        <p className="mt-4 text-sm text-muted-foreground">{shop.description}</p>
+                      )}
 
                       {officialUrl && (
                         <Button className="mt-4 gap-2" asChild>

@@ -59,7 +59,7 @@ export default async function AreaIndexPage() {
     }
   }
 
-  const regions = regionOrder.filter((r) => regionData[r]);
+  const regions = regionOrder.filter((r) => regionData[r] && regionData[r].length > 0);
   const totalAreas = (areas || []).length;
   const totalShops = (areas || []).reduce((sum, a) => sum + (a.salon_count ?? 0), 0);
 

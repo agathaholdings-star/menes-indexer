@@ -15,7 +15,7 @@ import { ProfileTable } from "@/components/therapist/profile-table";
 
 import { ReviewList } from "@/components/therapist/review-list";
 import { Recommendations } from "@/components/therapist/recommendations";
-import { ReviewWizardModal } from "@/components/review/review-wizard-modal";
+import { ReviewWizardModal, type PrefillContext } from "@/components/review/review-wizard-modal";
 import { useTier } from "@/lib/hooks/use-tier";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
 import type { Therapist, Review } from "@/lib/data";
@@ -30,10 +30,12 @@ interface SalonInfo {
 interface TherapistPageClientProps {
   therapist: Therapist;
   reviews: Review[];
+  areaName?: string;
+  prefName?: string;
   salonInfo?: SalonInfo;
 }
 
-export function TherapistPageClient({ therapist, reviews, salonInfo }: TherapistPageClientProps) {
+export function TherapistPageClient({ therapist, reviews, areaName, prefName, salonInfo }: TherapistPageClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -117,11 +119,11 @@ export function TherapistPageClient({ therapist, reviews, salonInfo }: Therapist
             </Link>
             <span className="mx-2">/</span>
             <Link href={`/area/${therapist.area}`} className="hover:text-foreground">
-              {therapist.area}
+              {prefName || therapist.area}
             </Link>
             <span className="mx-2">/</span>
             <Link href={`/area/${therapist.area}/${therapist.district}`} className="hover:text-foreground">
-              {therapist.district}
+              {areaName || therapist.district}
             </Link>
             <span className="mx-2">/</span>
             <Link href={`/salon/${therapist.shopId}`} className="hover:text-foreground">
@@ -327,7 +329,13 @@ export function TherapistPageClient({ therapist, reviews, salonInfo }: Therapist
       <ReviewWizardModal
         open={isReviewModalOpen}
         onOpenChange={(open) => { setIsReviewModalOpen(open); if (!open) setReviewForThisTherapist(false); }}
-        preselectedTherapistId={reviewForThisTherapist ? therapist.id : undefined}
+        prefill={reviewForThisTherapist ? {
+          therapistId: therapist.id,
+          therapistName: therapist.name,
+          salonId: therapist.shopId,
+          salonName: therapist.shopName,
+          areaName: therapist.area,
+        } : undefined}
       />
     </div>
   );

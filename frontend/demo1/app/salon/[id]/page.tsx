@@ -67,7 +67,7 @@ function toFrontendShop(
       ? `${dbShop.base_duration || 60}分 ¥${dbShop.base_price.toLocaleString()}〜`
       : "",
     genres: dbShop.service_tags || [],
-    description: dbShop.description || (dbShop as Record<string, unknown>).salon_overview as string || "",
+    description: dbShop.description || dbShop.salon_overview || "",
     therapistCount: stats?.therapist_count ?? 0,
     reviewCount,
     averageScore: avgScore,
