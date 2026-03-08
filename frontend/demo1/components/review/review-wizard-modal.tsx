@@ -632,7 +632,6 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
                 setShowMissingReport(false);
                 setMissingTherapistName("");
                 setShopStepSkipped(false);
-                setDirectSearchMode(false);
                 setDirectShopSearch("");
                 setDirectSearchResults([]);
                 setVerificationImage(null);
@@ -839,8 +838,11 @@ function StepArea({
   directSearchResults: DBShop[];
   onSelectShop: (shop: DBShop) => void;
 }) {
-  // Show prefectures with shops first, then all
-  const topAreas = prefecturesWithShops.slice(0, 8);
+  // Show prefectures with shops first; fall back to popular prefectures if none have shop data
+  const popularPrefectures = ["東京都", "大阪府", "神奈川県", "愛知県", "福岡県", "北海道", "京都府", "埼玉県"];
+  const topAreas = prefecturesWithShops.length > 0
+    ? prefecturesWithShops.slice(0, 8)
+    : allAreas.filter(a => popularPrefectures.includes(a)).slice(0, 8).map(name => ({ name, shop_count: 0 }));
   const displayAreas = showAllAreas ? allAreas : topAreas.map(p => p.name);
   const shopCounts = new Map(prefecturesWithShops.map(p => [p.name, p.shop_count]));
   const hasSearchQuery = directShopSearch.length > 0;
@@ -903,7 +905,7 @@ function StepArea({
             エリアから選ぶ
           </h4>
 
-          {prefecturesWithShops.length === 0 && allAreas.length === 0 ? (
+          {allAreas.length === 0 ? (
             <div className="grid grid-cols-2 gap-3">
               {[...Array(4)].map((_, i) => (
                 <div key={i} className="h-14 rounded-xl bg-muted animate-pulse" />
@@ -943,9 +945,9 @@ function StepArea({
               他のエリアを表示（{allAreas.length}都道府県）
             </button>
           )}
-          {displayAreas.length === 0 && (
+          {displayAreas.length === 0 && allAreas.length > 0 && (
             <p className="text-sm text-muted-foreground text-center py-4">
-              店舗データを準備中です。上の検索をお試しください。
+              「店舗名で検索」または「他のエリアを表示」からお探しください。
             </p>
           )}
         </>

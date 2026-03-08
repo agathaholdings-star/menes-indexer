@@ -118,14 +118,22 @@ export function TherapistPageClient({ therapist, reviews, areaName, prefName, sa
               トップ
             </Link>
             <span className="mx-2">/</span>
-            <Link href={`/area/${therapist.area}`} className="hover:text-foreground">
-              {prefName || therapist.area}
-            </Link>
-            <span className="mx-2">/</span>
-            <Link href={`/area/${therapist.area}/${therapist.district}`} className="hover:text-foreground">
-              {areaName || therapist.district}
-            </Link>
-            <span className="mx-2">/</span>
+            {prefName && (
+              <>
+                <Link href={`/area/${therapist.area}`} className="hover:text-foreground">
+                  {prefName}
+                </Link>
+                <span className="mx-2">/</span>
+              </>
+            )}
+            {areaName && (
+              <>
+                <Link href={`/area/${therapist.area}/${therapist.district}`} className="hover:text-foreground">
+                  {areaName}
+                </Link>
+                <span className="mx-2">/</span>
+              </>
+            )}
             <Link href={`/salon/${therapist.shopId}`} className="hover:text-foreground">
               {therapist.shopName}
             </Link>

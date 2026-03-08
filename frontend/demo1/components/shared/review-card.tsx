@@ -121,7 +121,12 @@ export function ReviewCard({ review, isBlurred = false, showTherapist = true, va
         {isBlurred ? (
           <>
             <div className="px-5 pt-4 pb-2">
-              <p className="text-sm leading-relaxed">{review.commentFirstImpression.slice(0, 80)}...</p>
+              {(() => {
+                const previewText = review.commentFirstImpression || review.commentReason || review.commentStyle || review.commentService || "";
+                return previewText ? (
+                  <p className="text-sm leading-relaxed">{previewText.slice(0, 80)}...</p>
+                ) : null;
+              })()}
             </div>
             <div className="relative px-5">
               <div className="select-none pointer-events-none text-sm leading-relaxed space-y-3" style={{ filter: "blur(5px)" }}>

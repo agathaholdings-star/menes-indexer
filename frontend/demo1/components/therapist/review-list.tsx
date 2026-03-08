@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Lock, PenLine, Star, ChevronRight, Crown, Eye, TrendingUp, Flame, Heart, Sparkles, Unlock, Coins, Clock, ThumbsUp, Award, ArrowRight, CreditCard } from "lucide-react";
+import { Lock, PenLine, Star, ChevronRight, Crown, Eye, TrendingUp, Flame, Heart, Sparkles, Unlock, Coins, Clock, ThumbsUp, Award, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -347,16 +347,6 @@ function ReviewCardA3a({
               </div>
             </div>
 
-            {/* セラピスト詳細リンク */}
-            {therapistId && (
-              <div className="p-4 border-t mt-4">
-                <Link href={`/therapist/${therapistId}`}>
-                  <Button className="w-full gap-2 bg-gradient-to-r from-primary to-blue-600" size="lg">
-                    このセラピストの詳細を見る<ArrowRight className="h-4 w-4" />
-                  </Button>
-                </Link>
-              </div>
-            )}
           </>
         ) : (
           /* フルコンテンツ */

@@ -205,7 +205,7 @@ export function ShopPageClient({ shop, therapists, shopReviews, officialUrl, are
               <Card>
                 <CardHeader>
                   <div className="flex items-center justify-between">
-                    <CardTitle>店舗の口コミ</CardTitle>
+                    <CardTitle>在籍セラピストの口コミ</CardTitle>
                     {shopReviews.length > 0 && (
                       <span className="text-sm text-muted-foreground">{shopReviews.length}件</span>
                     )}

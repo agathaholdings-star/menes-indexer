@@ -39,10 +39,10 @@ export async function generateMetadata({ params }: ShopPageProps): Promise<Metad
   if (therapistCount > 0) statsTexts.push(`セラピスト${therapistCount}名`);
   const statsText = statsTexts.length > 0 ? `${statsTexts.join("・")}掲載。` : "";
 
-  const desc = `${name}${areaText}の口コミ体験談。${statsText}${priceText}施術内容やサービスの質、セラピストの評判をリアルな口コミで比較できます。`;
+  const desc = `${name}${areaText}の在籍セラピスト口コミ・体験談一覧。${statsText}${priceText}施術内容やサービスの質、セラピストの評判をリアルな口コミで比較できます。`;
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://menes-skr.com";
   return {
-    title: dbShop.seo_title || `${name}の口コミ体験談`,
+    title: dbShop.seo_title || `${name}の口コミ・体験談一覧`,
     description: desc,
     alternates: { canonical: `${baseUrl}/salon/${dbShop.id}` },
   };

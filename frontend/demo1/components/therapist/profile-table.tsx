@@ -13,19 +13,13 @@ export function ProfileTable({ therapist }: ProfileTableProps) {
     therapist.profile.hip ? `H${therapist.profile.hip}` : null,
   ].filter(Boolean).join(" ");
 
-  // source_url がリスト系ページ（/staff, /cast, /therapist, /girl で終わる）の場合はラベルを変える
-  const listingPagePattern = /\/(staff|cast|therapist|girl)\/?$/i;
-  const sourceUrlLabel = therapist.source_url && listingPagePattern.test(therapist.source_url)
-    ? "公式サイト"
-    : "セラピストページURL";
-
   const profileItems: { label: string; value: string; isLink?: boolean; href?: string; isExternalLink?: boolean }[] = [
     { label: "在籍店舗", value: therapist.shopName, isLink: true, href: `/salon/${therapist.shopId}` },
     ...(therapist.age > 0 ? [{ label: "年齢", value: `${therapist.age}歳` }] : []),
     ...(therapist.profile.height ? [{ label: "身長", value: `T${therapist.profile.height}` }] : []),
     ...(threeSizes ? [{ label: "スリーサイズ", value: threeSizes }] : []),
     ...(therapist.profile.cup ? [{ label: "カップ", value: therapist.profile.cup }] : []),
-    ...(therapist.source_url ? [{ label: sourceUrlLabel, value: therapist.source_url, isExternalLink: true }] : []),
+    ...(therapist.source_url ? [{ label: "公式ページ", value: therapist.source_url, isExternalLink: true }] : []),
   ];
 
   return (
@@ -68,9 +62,9 @@ export function ProfileTable({ therapist }: ProfileTableProps) {
                       href={item.value}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-primary hover:underline break-all text-xs"
+                      className="text-primary hover:underline text-sm"
                     >
-                      {item.value}
+                      公式ページを見る
                     </a>
                   ) : (
                     item.value
