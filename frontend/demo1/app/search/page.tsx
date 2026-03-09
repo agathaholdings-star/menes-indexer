@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, Suspense } from "react";
+import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import Link from "next/link";
 import { TherapistImage } from "@/components/shared/therapist-image";
 import { useSearchParams } from "next/navigation";
@@ -16,6 +16,7 @@ import {
   Sparkles,
   X,
   Loader2,
+  SlidersHorizontal,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -399,6 +400,26 @@ function SearchContent() {
 
   // モーダル
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [filtersExpanded, setFiltersExpanded] = useState(false);
+  const [filterHidden, setFilterHidden] = useState(false);
+  const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentY = window.scrollY;
+      if (currentY > 200 && currentY > lastScrollY.current) {
+        // スクロールダウン → フィルター非表示
+        setFilterHidden(true);
+        setFiltersExpanded(false);
+      } else if (currentY < lastScrollY.current) {
+        // スクロールアップ → フィルター表示
+        setFilterHidden(false);
+      }
+      lastScrollY.current = currentY;
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
   const [upgradeType, setUpgradeType] = useState<"score" | "skr" | "hr" | "discovery">("score");
 
   // 権限チェック（実際のティアから判定）
@@ -473,7 +494,7 @@ function SearchContent() {
 
         <main className="container mx-auto px-4 py-6">
           {/* 検索フォーム（Sticky） */}
-          <div className="sticky top-0 z-40 bg-background pb-4 border-b mb-6">
+          <div className={`sticky top-0 z-40 bg-background pb-4 border-b mb-6 transition-transform duration-300 ${filterHidden ? "-translate-y-full" : "translate-y-0"}`}>
             <Card>
               <CardContent className="p-4 space-y-4">
                 {/* 基本フィルター */}
@@ -547,57 +568,78 @@ function SearchContent() {
                   </div>
                 </div>
 
-                {/* タイプ */}
-                <div>
-                  <label className="text-sm font-medium mb-2 block">タイプ</label>
-                  <div className="flex flex-wrap gap-2">
-                    {therapistTypes.map((type) => (
-                      <label
-                        key={type.id}
-                        className={`flex items-center gap-2 px-3 py-1.5 rounded-full border cursor-pointer transition-colors ${
-                          selectedTypes.includes(type.id)
-                            ? "bg-primary text-primary-foreground border-primary"
-                            : "bg-background hover:bg-muted"
-                        }`}
-                      >
-                        <Checkbox
-                          checked={selectedTypes.includes(type.id)}
-                          onCheckedChange={() => toggleType(type.id)}
-                          className="hidden"
-                        />
-                        <span className="text-sm">{type.label}</span>
-                      </label>
-                    ))}
-                  </div>
+                {/* モバイル: 絞り込みトグルボタン */}
+                <div className="md:hidden flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => setFiltersExpanded(!filtersExpanded)}
+                  >
+                    <SlidersHorizontal className="h-4 w-4" />
+                    絞り込み
+                    {(selectedTypes.length > 0 || selectedStyles.length > 0) && (
+                      <Badge variant="secondary" className="ml-1 h-5 w-5 p-0 flex items-center justify-center text-xs">
+                        {selectedTypes.length + selectedStyles.length}
+                      </Badge>
+                    )}
+                    <ChevronDown className={`h-4 w-4 transition-transform ${filtersExpanded ? "rotate-180" : ""}`} />
+                  </Button>
                 </div>
 
-                {/* スタイル */}
-                <div>
-                  <label className="text-sm font-medium mb-2 block">スタイル</label>
-                  <div className="flex flex-wrap gap-2">
-                    {styleOptions.map((style) => (
-                      <label
-                        key={style.id}
-                        className={`flex items-center gap-2 px-3 py-1.5 rounded-full border cursor-pointer transition-colors ${
-                          selectedStyles.includes(style.id)
-                            ? "bg-primary text-primary-foreground border-primary"
-                            : "bg-background hover:bg-muted"
-                        }`}
-                      >
-                        <Checkbox
-                          checked={selectedStyles.includes(style.id)}
-                          onCheckedChange={() => toggleStyle(style.id)}
-                          className="hidden"
-                        />
-                        <span className="text-sm">{style.label}</span>
-                      </label>
-                    ))}
+                {/* タイプ・スタイル（モバイルでは折りたたみ、デスクトップは常時表示） */}
+                <div className={`space-y-4 ${filtersExpanded ? "" : "hidden md:block"}`}>
+                  {/* タイプ */}
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">タイプ</label>
+                    <div className="flex flex-wrap gap-2">
+                      {therapistTypes.map((type) => (
+                        <label
+                          key={type.id}
+                          className={`flex items-center gap-2 px-3 py-1.5 rounded-full border cursor-pointer transition-colors ${
+                            selectedTypes.includes(type.id)
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "bg-background hover:bg-muted"
+                          }`}
+                        >
+                          <Checkbox
+                            checked={selectedTypes.includes(type.id)}
+                            onCheckedChange={() => toggleType(type.id)}
+                            className="hidden"
+                          />
+                          <span className="text-sm">{type.label}</span>
+                        </label>
+                      ))}
+                    </div>
                   </div>
-                </div>
 
-                {/* 有料フィルター */}
-                <div className="flex flex-wrap items-center gap-4 pt-2 border-t">
-                  {/* 点数フィルター */}
+                  {/* スタイル */}
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">スタイル</label>
+                    <div className="flex flex-wrap gap-2">
+                      {styleOptions.map((style) => (
+                        <label
+                          key={style.id}
+                          className={`flex items-center gap-2 px-3 py-1.5 rounded-full border cursor-pointer transition-colors ${
+                            selectedStyles.includes(style.id)
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "bg-background hover:bg-muted"
+                          }`}
+                        >
+                          <Checkbox
+                            checked={selectedStyles.includes(style.id)}
+                            onCheckedChange={() => toggleStyle(style.id)}
+                            className="hidden"
+                          />
+                          <span className="text-sm">{style.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* 有料フィルター */}
+                  <div className="flex flex-wrap items-center gap-4 pt-2 border-t">
+                    {/* 点数フィルター */}
                   <div className="flex items-center gap-2">
                     {canUseScoreFilter ? (
                       <Select value={scoreFilter} onValueChange={setScoreFilter}>
@@ -706,6 +748,7 @@ function SearchContent() {
                     <X className="h-4 w-4" />
                     クリア
                   </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>

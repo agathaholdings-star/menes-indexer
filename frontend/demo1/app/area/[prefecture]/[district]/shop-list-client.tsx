@@ -3,14 +3,12 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { TherapistImage } from "@/components/shared/therapist-image";
-import { Star, MapPin, Clock, Users, MessageSquare, SlidersHorizontal, Crown, Navigation, Lock } from "lucide-react";
+import { Star, MapPin, Clock, Users, MessageSquare, Crown, Navigation, Lock } from "lucide-react";
 import { useTier } from "@/lib/hooks/use-tier";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import type { Shop, Therapist, TherapistType, BodyType } from "@/lib/data";
@@ -67,8 +65,6 @@ export function ShopListPageClient({
   seoDescription,
 }: ShopListPageClientProps) {
   const [sortBy, setSortBy] = useState("ranking");
-  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
-  const [selectedStyles, setSelectedStyles] = useState<string[]>([]);
   const { permissions } = useTier();
   const isScoreLocked = !permissions.canViewReviewBody;
 
@@ -80,73 +76,9 @@ export function ShopListPageClient({
       sorted.sort((a, b) => (a.rank ?? 999) - (b.rank ?? 999));
     } else if (sortBy === "reviews") {
       sorted.sort((a, b) => b.reviewCount - a.reviewCount);
-    } else if (sortBy === "score") {
-      sorted.sort((a, b) => b.averageScore - a.averageScore);
     }
     return sorted;
   }, [shops, sortBy]);
-
-  const toggleType = (typeId: string) => {
-    setSelectedTypes(prev =>
-      prev.includes(typeId) ? prev.filter(t => t !== typeId) : [...prev, typeId]
-    );
-  };
-
-  const toggleStyle = (styleId: string) => {
-    setSelectedStyles(prev =>
-      prev.includes(styleId) ? prev.filter(s => s !== styleId) : [...prev, styleId]
-    );
-  };
-
-  const activeFilterCount = selectedTypes.length + selectedStyles.length;
-
-  const filterContent = (
-    <div className="space-y-4">
-      <div>
-        <h3 className="text-sm font-medium mb-2">並び替え</h3>
-        <Select value={sortBy} onValueChange={setSortBy}>
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="ranking">おすすめ順</SelectItem>
-            <SelectItem value="reviews">口コミ数順</SelectItem>
-            <SelectItem value="score">平均点順</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div>
-        <h3 className="text-sm font-medium mb-2">タイプ</h3>
-        <div className="space-y-2">
-          {therapistTypes.map(type => (
-            <label key={type.id} className="flex items-center gap-2 cursor-pointer">
-              <Checkbox
-                checked={selectedTypes.includes(type.id)}
-                onCheckedChange={() => toggleType(type.id)}
-              />
-              <span className="text-sm">{type.label}</span>
-            </label>
-          ))}
-        </div>
-      </div>
-
-      <div>
-        <h3 className="text-sm font-medium mb-2">スタイル</h3>
-        <div className="space-y-2">
-          {bodyTypes.map(body => (
-            <label key={body.id} className="flex items-center gap-2 cursor-pointer">
-              <Checkbox
-                checked={selectedStyles.includes(body.id)}
-                onCheckedChange={() => toggleStyle(body.id)}
-              />
-              <span className="text-sm">{body.label}</span>
-            </label>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -178,50 +110,21 @@ export function ShopListPageClient({
             </div>
           )}
 
-          <div className="flex flex-col gap-6 lg:flex-row">
-            {/* Mobile Filter Button */}
-            <div className="lg:hidden">
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button variant="outline" className="w-full">
-                    <SlidersHorizontal className="h-4 w-4 mr-2" />
-                    絞り込み
-                    {activeFilterCount > 0 && (
-                      <Badge variant="default" className="ml-2 h-5 min-w-5 px-1.5 text-xs">
-                        {activeFilterCount}
-                      </Badge>
-                    )}
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="left" className="w-80 overflow-y-auto">
-                  <SheetHeader>
-                    <SheetTitle className="flex items-center gap-2">
-                      <SlidersHorizontal className="h-4 w-4" />
-                      絞り込み
-                    </SheetTitle>
-                  </SheetHeader>
-                  <div className="px-1 pb-6">
-                    {filterContent}
-                  </div>
-                </SheetContent>
-              </Sheet>
-            </div>
+          {/* 並び替え */}
+          <div className="flex items-center gap-3 mb-4">
+            <span className="text-sm text-muted-foreground">並び替え</span>
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ranking">おすすめ順</SelectItem>
+                <SelectItem value="reviews">口コミ数順</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-            {/* Desktop Filters - Sidebar */}
-            <aside className="hidden lg:block lg:w-64 shrink-0">
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2 mb-4">
-                    <SlidersHorizontal className="h-4 w-4" />
-                    <h2 className="font-semibold">絞り込み</h2>
-                  </div>
-                  {filterContent}
-                </CardContent>
-              </Card>
-            </aside>
-
-            {/* Shop List */}
-            <div className="flex-1 space-y-4">
+          <div className="space-y-4">
               {sortedShops.length === 0 ? (
                 <Card>
                   <CardContent className="p-8 text-center text-muted-foreground">
@@ -346,7 +249,6 @@ export function ShopListPageClient({
                   );
                 })
               )}
-            </div>
           </div>
 
           {/* 近隣エリアのメンズエステ */}
