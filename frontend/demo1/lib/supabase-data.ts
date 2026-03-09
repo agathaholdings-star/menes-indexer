@@ -139,19 +139,42 @@ export async function getAllAreasGrouped(): Promise<{
     }
   }
 
-  // Popular areas: top 12 by salon_count
-  const allAreaItems: (AreaItem & { name: string })[] = areas
-    .map((a) => {
+  // Popular areas: 手動キュレーション（主要都市の人気エリア）
+  const CURATED_AREAS: { prefSlug: string; slug: string }[] = [
+    // 東京
+    { prefSlug: "tokyo", slug: "shinjuku" },
+    { prefSlug: "tokyo", slug: "ikebukuro" },
+    { prefSlug: "tokyo", slug: "ebisu" },
+    { prefSlug: "tokyo", slug: "shibuya" },
+    { prefSlug: "tokyo", slug: "gotanda" },
+    { prefSlug: "tokyo", slug: "shinbashi" },
+    // 神奈川
+    { prefSlug: "kanagawa", slug: "yokohama" },
+    { prefSlug: "kanagawa", slug: "kawasaki" },
+    // 大阪
+    { prefSlug: "osaka", slug: "nipponbashi" },
+    { prefSlug: "osaka", slug: "umeda" },
+    { prefSlug: "osaka", slug: "osakaminami" },
+    // 愛知
+    { prefSlug: "aichi", slug: "nagoya" },
+    { prefSlug: "aichi", slug: "sakae" },
+    // 福岡
+    { prefSlug: "fukuoka", slug: "hakata" },
+    { prefSlug: "fukuoka", slug: "nakasu" },
+    // 北海道
+    { prefSlug: "hokkaido", slug: "hokkaido-sapporo-city" },
+  ];
+
+  const areaLookup = new Map(
+    areas.map((a) => {
       const pref = prefMap.get(a.prefecture_id);
-      return {
-        name: a.name,
-        slug: a.slug,
-        prefSlug: pref?.slug || "",
-        salon_count: a.salon_count ?? 0,
-      };
+      return [`${pref?.slug}/${a.slug}`, { name: a.name, slug: a.slug, prefSlug: pref?.slug || "", salon_count: a.salon_count ?? 0 }];
     })
-    .sort((a, b) => b.salon_count - a.salon_count)
-    .slice(0, 12);
+  );
+
+  const allAreaItems: (AreaItem & { name: string })[] = CURATED_AREAS
+    .map((c) => areaLookup.get(`${c.prefSlug}/${c.slug}`))
+    .filter((a): a is AreaItem & { name: string } => a !== undefined);
 
   const regionOrder = REGION_ORDER.filter((r) => grouped[r]);
 

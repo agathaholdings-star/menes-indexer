@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Search, MapPin, ChevronDown, Sparkles } from "lucide-react";
+import { Search, MapPin, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -43,22 +43,13 @@ export function HeroSection() {
       </div>
 
       <div className="relative z-10 mx-auto max-w-2xl text-center">
-        {/* Badge */}
-        <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-sm">
-          <Sparkles className="h-3 w-3" />
-          次世代メンズエステ口コミサービス
-        </div>
-
         {/* Main Copy */}
         <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl text-balance leading-tight">
-          名前を知らなくても、タイプで<span className="relative">
-            <span className="relative z-10">"発見"</span>
-            <span className="absolute bottom-0 left-0 right-0 h-2 bg-white/30 -z-0" />
-          </span>できる
+          メンズエステの<br className="sm:hidden" />口コミ・体験談
         </h1>
 
         <p className="mt-3 text-sm text-white/80">
-          清楚系、ギャル系、アイドル系...好みのタイプから、あなたにぴったりのセラピストが見つかる
+          全国8,700店舗以上のリアルな口コミを掲載。あなたの街のサロン情報をチェック
         </p>
 
         {/* Search Bar */}
