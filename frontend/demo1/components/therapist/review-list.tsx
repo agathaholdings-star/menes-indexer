@@ -31,6 +31,9 @@ interface ReviewListProps {
   shopName?: string;
 }
 
+// フラグ: 課金CTAを表示するか（口コミ数が十分溜まったらtrueに戻す）
+const SHOW_PAID_OPTIONS = false;
+
 export function ReviewList({
   reviews,
   unlockedReviewIds = new Set(),
@@ -151,6 +154,7 @@ export function ReviewList({
                 </div>
               </div>
 
+              {SHOW_PAID_OPTIONS && (
               <div>
                 <p className="text-center text-sm font-medium mb-3">- 有料会員 -</p>
                 <div className="flex items-center justify-center gap-1 text-xs">
@@ -165,6 +169,7 @@ export function ReviewList({
                   </div>
                 </div>
               </div>
+              )}
             </div>
 
             <div className="bg-muted/50 rounded-lg p-4 mb-4 text-sm text-muted-foreground space-y-2">
@@ -193,8 +198,8 @@ export function ReviewList({
                 <ChevronRight className="h-5 w-5 ml-auto flex-shrink-0" />
               </Button>
 
-              {/* Secondary CTA: 単品購入 */}
-              {therapistId && (
+              {/* Secondary CTA: 単品購入（SHOW_PAID_OPTIONS で制御） */}
+              {SHOW_PAID_OPTIONS && therapistId && (
                 <Button
                   variant="outline"
                   className="w-full gap-2 h-11 border-pink-300 text-pink-600 hover:bg-pink-50 bg-transparent font-medium"
@@ -214,7 +219,8 @@ export function ReviewList({
                 </Button>
               )}
 
-              {/* Tertiary CTA: 有料会員 */}
+              {/* Tertiary CTA: 有料会員（SHOW_PAID_OPTIONS で制御） */}
+              {SHOW_PAID_OPTIONS && (
               <Link href="/pricing" className="block">
                 <Button
                   variant="ghost"
@@ -227,6 +233,7 @@ export function ReviewList({
                   <Crown className="h-3.5 w-3.5" />有料会員で読み放題（開発中）
                 </Button>
               </Link>
+              )}
 
               <Link href="/login" className="block">
                 <Button

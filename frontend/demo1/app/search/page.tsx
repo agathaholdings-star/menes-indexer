@@ -170,7 +170,7 @@ function SearchContent() {
   // セラピスト検索結果（DBから取得 + reviewsフィルタ）
   const [dbTherapists, setDbTherapists] = useState<DBTherapist[]>([]);
   const [therapistLoading, setTherapistLoading] = useState(true);
-  const [searchTriggered, setSearchTriggered] = useState(0);
+  const [searchTriggered, setSearchTriggered] = useState(1);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
   const [currentOffset, setCurrentOffset] = useState(0);
@@ -672,8 +672,7 @@ function SearchContent() {
                     )}
                   </div>
 
-                  {/* SKRフィルター（未ログインには非表示） */}
-                  {authUser && (
+                  {/* SKRフィルター（全ユーザーに表示、未解放時はロック） */}
                   <div className="flex items-center gap-2">
                     {canUseSKRFilter ? (
                       <label className="flex items-center gap-2 cursor-pointer">
@@ -698,15 +697,13 @@ function SearchContent() {
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>スタンダードプランで解放</p>
+                          <p>口コミ2件投稿で解放</p>
                         </TooltipContent>
                       </Tooltip>
                     )}
                   </div>
-                  )}
 
-                  {/* HRフィルター（未ログインには非表示） */}
-                  {authUser && (
+                  {/* HRフィルター（全ユーザーに表示、未解放時はロック） */}
                   <div className="flex items-center gap-2">
                     {canUseHRFilter ? (
                       <label className="flex items-center gap-2 cursor-pointer">
@@ -731,12 +728,11 @@ function SearchContent() {
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>VIPプランで解放</p>
+                          <p>口コミ3件投稿で解放</p>
                         </TooltipContent>
                       </Tooltip>
                     )}
                   </div>
-                  )}
 
                   {/* クリアボタン */}
                   <Button

@@ -1,5 +1,8 @@
 "use client";
 
+// フラグ: 課金CTAを表示するか（口コミ数が十分溜まったらtrueに戻す）
+const SHOW_PAID_OPTIONS = false;
+
 import { PenSquare, Coins, CreditCard, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -71,23 +74,25 @@ export function UnlockModal({
               </Button>
             )}
 
-            {/* Divider */}
-            <div className="flex items-center gap-3">
-              <Separator className="flex-1" />
-              <span className="text-xs text-muted-foreground">または</span>
-              <Separator className="flex-1" />
-            </div>
-
-            {/* Secondary option - Single purchase */}
-            <div className="text-center">
-              <a
-                href={`/api/checkout/single-unlock?therapist_id=${therapistId}`}
-                className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <CreditCard className="h-3.5 w-3.5" />
-                ¥1,000で永久アンロック
-              </a>
-            </div>
+            {/* Divider + Single purchase（SHOW_PAID_OPTIONS で制御） */}
+            {SHOW_PAID_OPTIONS && (
+              <>
+                <div className="flex items-center gap-3">
+                  <Separator className="flex-1" />
+                  <span className="text-xs text-muted-foreground">または</span>
+                  <Separator className="flex-1" />
+                </div>
+                <div className="text-center">
+                  <a
+                    href={`/api/checkout/single-unlock?therapist_id=${therapistId}`}
+                    className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <CreditCard className="h-3.5 w-3.5" />
+                    ¥1,000で永久アンロック
+                  </a>
+                </div>
+              </>
+            )}
           </div>
         ) : (
           /* Not logged in state */

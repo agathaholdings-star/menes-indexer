@@ -277,7 +277,7 @@ export function SiteHeader() {
           {/* Logo */}
           <Link href="/" className="flex shrink-0 flex-col">
             <span className="text-2xl font-black tracking-tight text-primary leading-none">SKR</span>
-            <span className="hidden text-[10px] font-medium text-muted-foreground sm:inline">メンズエステ口コミ・レビュー</span>
+            <span className="hidden text-[10px] font-medium text-muted-foreground sm:inline">メンズエステの口コミ体験談サイト</span>
           </Link>
 
           {/* Search Bar - Desktop */}

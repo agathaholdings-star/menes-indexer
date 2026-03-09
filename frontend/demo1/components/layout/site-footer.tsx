@@ -9,10 +9,10 @@ export function SiteFooter() {
           <div>
             <Link href="/" className="flex flex-col">
               <span className="text-2xl font-black tracking-tight text-primary leading-none">SKR</span>
-              <span className="text-[10px] font-medium text-muted-foreground">メンズエステ口コミ・レビュー</span>
+              <span className="text-[10px] font-medium text-muted-foreground">メンズエステの口コミ体験談サイト</span>
             </Link>
             <p className="mt-3 text-sm text-muted-foreground">
-              メンズエステの口コミ・体験談サイト
+              メンズエステの口コミ体験談サイト
             </p>
           </div>
 

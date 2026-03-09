@@ -50,7 +50,16 @@ export function useTier() {
   };
 
   const effectiveTier: EffectiveTier = authUser ? getEffectiveTier(tierUser) : "free";
-  const permissions = tierPermissions[effectiveTier];
+  const basePermissions = tierPermissions[effectiveTier];
+
+  // 投稿数ベースの機能解放オーバーライド（SKR: 2件以上, HR: 3件以上）
+  const permissions = {
+    ...basePermissions,
+    canUseSKRFilter: basePermissions.canUseSKRFilter || totalReviewCount >= 2,
+    canUseHRFilter: basePermissions.canUseHRFilter || totalReviewCount >= 3,
+    canUseSKRList: basePermissions.canUseSKRList || totalReviewCount >= 2,
+    canUseHRList: basePermissions.canUseHRList || totalReviewCount >= 3,
+  };
 
   return {
     effectiveTier,

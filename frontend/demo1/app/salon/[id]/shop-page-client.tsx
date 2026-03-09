@@ -226,7 +226,17 @@ export function ShopPageClient({ shop, therapists, shopReviews, officialUrl, are
                   ) : (
                     <div className="space-y-4">
                       {shopReviews.slice(0, 3).map(review => (
-                        <ReviewCard key={review.id} review={review} isBlurred={isReviewBlurred} therapistImageUrl={review.therapistImageUrl} />
+                        <ReviewCard
+                          key={review.id}
+                          review={review}
+                          isBlurred={isReviewBlurred}
+                          therapistImageUrl={review.therapistImageUrl}
+                          onBlurClick={() => {
+                            if (review.therapistId) {
+                              window.location.href = `/therapist/${review.therapistId}`;
+                            }
+                          }}
+                        />
                       ))}
                     </div>
                   )}
