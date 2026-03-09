@@ -11,6 +11,8 @@ import { therapistTypes } from "@/lib/data";
 import { supabaseAdmin as supabase } from "@/lib/supabase-admin";
 import { cleanTherapistName } from "@/lib/therapist-utils";
 
+export const revalidate = 3600;
+
 interface DBTherapist {
   id: number;
   name: string;

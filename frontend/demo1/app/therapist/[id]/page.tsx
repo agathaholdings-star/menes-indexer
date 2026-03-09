@@ -21,13 +21,11 @@ export async function generateMetadata({ params }: TherapistPageProps): Promise<
     .eq("id", Number(id))
     .single();
   if (!data) return {};
-  const { data: shop } = await supabase
-    .from("salons")
-    .select("display_name, name")
-    .eq("id", data.salon_id)
-    .single();
+  const [{ data: shop }, areaInfo] = await Promise.all([
+    supabase.from("salons").select("display_name, name").eq("id", data.salon_id).single(),
+    getShopAreaInfo(data.salon_id),
+  ]);
   const shopName = shop?.display_name || shop?.name || "";
-  const areaInfo = await getShopAreaInfo(data.salon_id);
   const areaText = areaInfo ? `（${areaInfo.areaName}）` : "";
 
   // スペック情報を組み立て
@@ -63,22 +61,14 @@ export default async function TherapistPage({ params }: TherapistPageProps) {
     notFound();
   }
 
-  const { data: shop } = await supabase
-    .from("salons")
-    .select("name, display_name, business_hours, base_price, base_duration, access")
-    .eq("id", dbTherapist.salon_id)
-    .single();
-
   const { name: parsedName, age: parsedAge } = parseNameAge(dbTherapist.name, dbTherapist.age);
-  const areaInfo = await getShopAreaInfo(dbTherapist.salon_id);
 
-  // レビューをDBから取得（投稿者プロフィールも結合）
-  const { data: dbReviews } = await supabase
-    .from("reviews")
-    .select("*, profiles:user_id(nickname, total_review_count)")
-    .eq("therapist_id", Number(id))
-    .eq("moderation_status", "approved")
-    .order("created_at", { ascending: false });
+  // サロン情報・エリア情報・レビューを並列取得
+  const [{ data: shop }, areaInfo, { data: dbReviews }] = await Promise.all([
+    supabase.from("salons").select("name, display_name, business_hours, base_price, base_duration, access").eq("id", dbTherapist.salon_id).single(),
+    getShopAreaInfo(dbTherapist.salon_id),
+    supabase.from("reviews").select("*, profiles:user_id(nickname, total_review_count)").eq("therapist_id", Number(id)).eq("moderation_status", "approved").order("created_at", { ascending: false }).limit(100),
+  ]);
 
   const reviewCount = (dbReviews || []).length;
   const averageScore = reviewCount > 0

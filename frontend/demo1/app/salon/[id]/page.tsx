@@ -19,11 +19,11 @@ export async function generateMetadata({ params }: ShopPageProps): Promise<Metad
   const dbShop = isNumeric ? await getShopById(Number(id)) : await getShopBySlug(id);
   if (!dbShop) return {};
   const name = dbShop.display_name || dbShop.name;
-  const areaInfo = await getShopAreaInfo(dbShop.id);
+  const [areaInfo, statsMap] = await Promise.all([
+    getShopAreaInfo(dbShop.id),
+    getSalonReviewStatsBatch([dbShop.id]),
+  ]);
   const areaText = areaInfo ? `（${areaInfo.areaName}）` : "";
-
-  // 口コミ件数・セラピスト数を取得
-  const statsMap = await getSalonReviewStatsBatch([dbShop.id]);
   const stats = statsMap.get(dbShop.id);
   const reviewCount = stats?.review_count ?? 0;
   const therapistCount = stats?.therapist_count ?? 0;
@@ -164,30 +164,20 @@ export default async function ShopPage({ params }: ShopPageProps) {
     notFound();
   }
 
-  // 口コミ統計をバッチ取得
-  const statsMap = await getSalonReviewStatsBatch([dbShop.id]);
+  // 独立した4クエリを並列実行
+  const [statsMap, dbTherapists, areaInfo, { data: reviewRows }] = await Promise.all([
+    getSalonReviewStatsBatch([dbShop.id]),
+    getTherapistsByShopId(dbShop.id),
+    getShopAreaInfo(dbShop.id),
+    supabase.from("reviews").select("*, therapists(name, image_urls)").eq("salon_id", dbShop.id).eq("moderation_status", "approved").order("created_at", { ascending: false }).limit(50),
+  ]);
+
   const stats = statsMap.get(dbShop.id);
-
   const shop = toFrontendShop(dbShop, stats);
-
-  // セラピスト取得
-  const dbTherapists = await getTherapistsByShopId(dbShop.id);
   const therapists = dbTherapists.map((t) =>
     toFrontendTherapist(t, shop.name)
   );
   shop.therapistCount = therapists.length;
-
-  // エリア情報取得（パンくず用）
-  const areaInfo = await getShopAreaInfo(dbShop.id);
-
-  // 口コミ取得（approved のみ）+ セラピスト名をjoin
-  const { data: reviewRows } = await supabase
-    .from("reviews")
-    .select("*, therapists(name, image_urls)")
-    .eq("salon_id", dbShop.id)
-    .eq("moderation_status", "approved")
-    .order("created_at", { ascending: false })
-    .limit(50);
 
   const shopReviews: Review[] = (reviewRows || []).map((r) => {
     const row = r as Record<string, unknown>;

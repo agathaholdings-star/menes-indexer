@@ -78,12 +78,12 @@ export default async function ShopListPage({ params }: ShopListPageProps) {
     notFound();
   }
 
-  // サロン基本情報を取得
-  const dbShops = await getShopsByAreaSlug(district);
+  // サロン基本情報とランキングデータを並列取得
+  const [dbShops, rankingData] = await Promise.all([
+    getShopsByAreaSlug(district),
+    getRankedSalonsByArea(area.id),
+  ]);
   const shopMap = new Map(dbShops.map((s) => [s.id, s]));
-
-  // ランキングデータを取得（RPC）
-  const rankingData = await getRankedSalonsByArea(area.id);
 
   // statsMapとrankMapを作成
   const statsMap = new Map<number, SalonRankingStats>();
@@ -101,17 +101,17 @@ export default async function ShopListPage({ params }: ShopListPageProps) {
     shops.push(toFrontendShop(dbShop, r, rank++));
   }
 
-  // 最新口コミプレビューをバッチ取得
+  // 最新口コミプレビューと近隣エリアリンクを並列取得
   const allSalonIds = dbShops.map((s) => s.id);
-  const latestReviewsMap = await getLatestReviewsBySalonIds(allSalonIds);
+  const [latestReviewsMap, nearbyAreas] = await Promise.all([
+    getLatestReviewsBySalonIds(allSalonIds),
+    getNearbyAreas(area.nearby_areas ?? null, area.prefecture_id),
+  ]);
   // シリアライズ可能な形式に変換（Map → Record）
   const latestReviews: Record<string, SalonLatestReview> = {};
   for (const [salonId, review] of latestReviewsMap) {
     latestReviews[String(salonId)] = review;
   }
-
-  // 近隣エリアリンクを取得
-  const nearbyAreas = await getNearbyAreas(area.nearby_areas ?? null, area.prefecture_id);
 
   // RPCに含まれなかったサロン（is_active=falseなど）を末尾に追加
   const rankedIds = new Set(rankingData.map((r) => r.salon_id));

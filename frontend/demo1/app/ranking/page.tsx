@@ -5,6 +5,9 @@ export const metadata: Metadata = {
   title: "セラピストランキング",
   description: "メンズエステの人気セラピストランキング。口コミ評価の高いセラピストを一覧で確認できます。",
 };
+
+export const revalidate = 3600;
+
 import { TherapistImage } from "@/components/shared/therapist-image";
 import { Trophy, ChevronRight, Star, TrendingUp, Medal } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,7 +31,8 @@ async function getRankings(): Promise<RankedTherapist[]> {
   // レビューをセラピストごとに集計
   const { data: reviewAgg } = await supabase
     .from("reviews")
-    .select("therapist_id, score");
+    .select("therapist_id, score")
+    .eq("moderation_status", "approved");
 
   if (!reviewAgg || reviewAgg.length === 0) return [];
 

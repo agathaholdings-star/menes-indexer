@@ -243,40 +243,31 @@ export async function getShopAreaInfo(shopId: number): Promise<{
   prefName: string;
   prefSlug: string;
 } | null> {
-  let { data: shopArea } = await supabase
+  // Single query with nested joins: salon_areas → areas → prefectures
+  let { data } = await supabase
     .from("salon_areas")
-    .select("area_id")
+    .select("area_id, areas(name, slug, prefecture_id, prefectures(name, slug))")
     .eq("salon_id", shopId)
     .eq("is_primary", true)
     .limit(1)
     .single();
 
-  if (!shopArea) {
+  if (!data) {
     // fallback: any area
     const { data: anyArea } = await supabase
       .from("salon_areas")
-      .select("area_id")
+      .select("area_id, areas(name, slug, prefecture_id, prefectures(name, slug))")
       .eq("salon_id", shopId)
       .limit(1)
       .single();
     if (!anyArea) return null;
-    shopArea = anyArea;
+    data = anyArea;
   }
 
-  const { data: area } = await supabase
-    .from("areas")
-    .select("name, slug, prefecture_id")
-    .eq("id", shopArea.area_id)
-    .single();
-
+  const area = data.areas as any;
   if (!area) return null;
 
-  const { data: pref } = await supabase
-    .from("prefectures")
-    .select("name, slug")
-    .eq("id", area.prefecture_id)
-    .single();
-
+  const pref = area.prefectures as any;
   if (!pref) return null;
 
   return {
