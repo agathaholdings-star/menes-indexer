@@ -5,6 +5,15 @@ import { getShopById, getShopBySlug, getTherapistsByShopId, getShopAreaInfo, get
 import { supabaseAdmin as supabase } from "@/lib/supabase-admin";
 
 export const revalidate = 3600;
+
+export async function generateStaticParams() {
+  const { data } = await supabase
+    .from("salons")
+    .select("id")
+    .eq("is_active", true);
+  return (data || []).map((s) => ({ id: String(s.id) }));
+}
+
 import type { Shop as DbShop, Therapist as DbTherapist } from "@/types/database";
 import type { Shop, Therapist, Review } from "@/lib/data";
 import { parseNameAge } from "@/lib/therapist-utils";

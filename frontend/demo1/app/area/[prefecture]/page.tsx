@@ -9,6 +9,14 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { Sidebar } from "@/components/layout/sidebar";
 import { getPrefectureBySlug, getAreasByPrefectureId } from "@/lib/supabase-data";
+import { supabaseAdmin as supabase } from "@/lib/supabase-admin";
+
+export async function generateStaticParams() {
+  const { data } = await supabase
+    .from("prefectures")
+    .select("slug");
+  return (data || []).map((p) => ({ prefecture: p.slug }));
+}
 
 export async function generateMetadata({
   params,

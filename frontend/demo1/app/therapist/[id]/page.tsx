@@ -5,6 +5,16 @@ import { supabaseAdmin as supabase } from "@/lib/supabase-admin";
 import type { Therapist, Review } from "@/lib/data";
 
 export const revalidate = 3600;
+
+export async function generateStaticParams() {
+  const { data } = await supabase
+    .from("reviews")
+    .select("therapist_id")
+    .eq("moderation_status", "approved");
+  const uniqueIds = [...new Set((data || []).map((r) => r.therapist_id))];
+  return uniqueIds.map((id) => ({ id: String(id) }));
+}
+
 import { parseNameAge } from "@/lib/therapist-utils";
 import { getShopAreaInfo } from "@/lib/supabase-data";
 

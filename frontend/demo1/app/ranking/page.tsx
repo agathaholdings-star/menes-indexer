@@ -60,38 +60,30 @@ async function getRankings(): Promise<RankedTherapist[]> {
 
   if (ranked.length === 0) return [];
 
-  // セラピスト詳細を取得
+  // セラピスト詳細+サロン名を1クエリで取得（join）
   const therapistIds = ranked.map((r) => r.therapist_id);
   const { data: therapists } = await supabase
     .from("therapists")
-    .select("id, name, age, image_urls, salon_id")
+    .select("id, name, age, image_urls, salon_id, salons(name, display_name)")
     .in("id", therapistIds);
 
   if (!therapists) return [];
 
-  // 店舗名を取得
-  const shopIds = [...new Set(therapists.map((t) => t.salon_id))];
-  const { data: shops } = await supabase
-    .from("salons")
-    .select("id, display_name, name")
-    .in("id", shopIds);
-
-  const shopMap = new Map(
-    (shops || []).map((s) => [s.id, s.display_name || s.name])
-  );
   const therapistMap = new Map(therapists.map((t) => [t.id, t]));
 
   return ranked
     .map((r) => {
       const t = therapistMap.get(r.therapist_id);
       if (!t) return null;
+      const salonsRaw = t.salons as unknown as { name: string; display_name: string | null } | { name: string; display_name: string | null }[] | null;
+      const salon = Array.isArray(salonsRaw) ? salonsRaw[0] : salonsRaw;
       return {
         id: t.id,
         name: t.name,
         age: t.age,
         image_urls: t.image_urls as string[] | null,
         salon_id: t.salon_id,
-        shop_name: shopMap.get(t.salon_id) || "",
+        shop_name: salon?.display_name || salon?.name || "",
         review_count: r.review_count,
         avg_score: r.avg_score,
       };
