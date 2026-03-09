@@ -93,6 +93,19 @@ export async function GET() {
     .order("created_at", { ascending: false })
     .limit(100);
 
+  // Fetch contact submissions
+  const [contactSubmissions, newContactCount] = await Promise.all([
+    supabaseAdmin
+      .from("contact_submissions")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(100),
+    supabaseAdmin
+      .from("contact_submissions")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "new"),
+  ]);
+
   return NextResponse.json({
     stats: {
       shops: shopCount.count ?? 0,
@@ -100,9 +113,11 @@ export async function GET() {
       reviews: reviewCount.count ?? 0,
       users: userCount.count ?? 0,
       pending: pendingCount.count ?? 0,
+      new_contacts: newContactCount.count ?? 0,
     },
     reviews: enrichedReviews,
     users: users ?? [],
+    contacts: contactSubmissions.data ?? [],
   });
 }
 
@@ -245,6 +260,30 @@ export async function POST(req: NextRequest) {
         .from("reviews")
         .delete()
         .eq("id", review_id);
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ ok: true });
+    }
+
+    case "update_contact_status": {
+      const { contact_id, status } = body;
+      const updateData: Record<string, any> = { status };
+      if (status === "resolved" || status === "closed") {
+        updateData.resolved_at = new Date().toISOString();
+      }
+      const { error } = await supabaseAdmin
+        .from("contact_submissions")
+        .update(updateData)
+        .eq("id", contact_id);
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ ok: true });
+    }
+
+    case "delete_contact": {
+      const { contact_id } = body;
+      const { error } = await supabaseAdmin
+        .from("contact_submissions")
+        .delete()
+        .eq("id", contact_id);
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
       return NextResponse.json({ ok: true });
     }

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Shield, Trash2, Eye, CheckCircle, XCircle, Clock, MessageCircle, Star, Users, ShieldCheck, ImageIcon, X } from "lucide-react";
+import { Shield, Trash2, Eye, CheckCircle, XCircle, Clock, MessageCircle, Star, Users, ShieldCheck, ImageIcon, X, Mail, Lightbulb, Inbox } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +34,8 @@ import { useAuth } from "@/lib/auth-context";
 
 type ModerationStatus = "pending" | "approved" | "rejected";
 type ReviewFilter = ModerationStatus | "all";
+type ContactStatus = "new" | "in_progress" | "resolved" | "closed";
+type ContactFilter = ContactStatus | "all";
 
 interface ReviewRow {
   id: string;
@@ -75,6 +77,17 @@ interface UserRow {
   created_at: string;
 }
 
+interface ContactRow {
+  id: number;
+  type: "removal" | "feature-request" | "general";
+  name: string | null;
+  email: string | null;
+  metadata: Record<string, any>;
+  status: ContactStatus;
+  created_at: string;
+  resolved_at: string | null;
+}
+
 const STATUS_LABELS: Record<ModerationStatus, string> = {
   pending: "承認待ち",
   approved: "承認済み",
@@ -85,6 +98,26 @@ const STATUS_BADGE_VARIANT: Record<ModerationStatus, "default" | "secondary" | "
   pending: "outline",
   approved: "default",
   rejected: "destructive",
+};
+
+const CONTACT_TYPE_LABELS: Record<string, { label: string; icon: typeof Mail }> = {
+  removal: { label: "削除依頼", icon: Trash2 },
+  "feature-request": { label: "機能追加", icon: Lightbulb },
+  general: { label: "一般", icon: Mail },
+};
+
+const CONTACT_STATUS_LABELS: Record<ContactStatus, string> = {
+  new: "新規",
+  in_progress: "対応中",
+  resolved: "解決済み",
+  closed: "クローズ",
+};
+
+const CONTACT_STATUS_BADGE: Record<ContactStatus, "default" | "secondary" | "destructive" | "outline"> = {
+  new: "destructive",
+  in_progress: "outline",
+  resolved: "default",
+  closed: "secondary",
 };
 
 async function adminAction(action: string, params: Record<string, any> = {}) {
@@ -102,8 +135,10 @@ export default function AdminPage() {
   const [reviews, setReviews] = useState<ReviewRow[]>([]);
   const [threads, setThreads] = useState<ThreadRow[]>([]);
   const [users, setUsers] = useState<UserRow[]>([]);
+  const [contacts, setContacts] = useState<ContactRow[]>([]);
+  const [contactFilter, setContactFilter] = useState<ContactFilter>("new");
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ shops: 0, therapists: 0, reviews: 0, users: 0, pending: 0 });
+  const [stats, setStats] = useState({ shops: 0, therapists: 0, reviews: 0, users: 0, pending: 0, new_contacts: 0 });
   const [deleteTarget, setDeleteTarget] = useState<{ type: string; id: number | string } | null>(null);
   const [reviewFilter, setReviewFilter] = useState<ReviewFilter>("pending");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -135,6 +170,7 @@ export default function AdminPage() {
       );
       setThreads(data.threads || []);
       setUsers((data.users as UserRow[]) || []);
+      setContacts((data.contacts as ContactRow[]) || []);
       setLoading(false);
     }
 
@@ -187,6 +223,9 @@ export default function AdminPage() {
     } else if (type === "thread") {
       await adminAction("delete_thread", { thread_id: id });
       setThreads((prev) => prev.filter((t) => t.id !== id));
+    } else if (type === "contact") {
+      await handleDeleteContact();
+      return;
     }
     setDeleteTarget(null);
   };
@@ -229,6 +268,38 @@ export default function AdminPage() {
       setPreviewImageUrl(result.url);
     }
   };
+
+  const handleContactStatus = async (contactId: number, status: ContactStatus) => {
+    setActionLoading(`contact-${contactId}`);
+    const result = await adminAction("update_contact_status", { contact_id: contactId, status });
+    if (result.ok) {
+      setContacts((prev) =>
+        prev.map((c) => (c.id === contactId ? { ...c, status } : c))
+      );
+      if (status !== "new") {
+        setStats((prev) => ({ ...prev, new_contacts: Math.max(0, prev.new_contacts - 1) }));
+      }
+    }
+    setActionLoading(null);
+  };
+
+  const handleDeleteContact = async () => {
+    if (!deleteTarget || deleteTarget.type !== "contact") return;
+    const contactId = deleteTarget.id as number;
+    const result = await adminAction("delete_contact", { contact_id: contactId });
+    if (result.ok) {
+      const deleted = contacts.find((c) => c.id === contactId);
+      setContacts((prev) => prev.filter((c) => c.id !== contactId));
+      if (deleted?.status === "new") {
+        setStats((prev) => ({ ...prev, new_contacts: Math.max(0, prev.new_contacts - 1) }));
+      }
+    }
+    setDeleteTarget(null);
+  };
+
+  const filteredContacts = contactFilter === "all"
+    ? contacts
+    : contacts.filter((c) => c.status === contactFilter);
 
   const filteredReviews = reviewFilter === "all"
     ? reviews
@@ -303,6 +374,15 @@ export default function AdminPage() {
             <TabsTrigger value="threads" className="gap-1">
               <MessageCircle className="h-4 w-4" />
               掲示板
+            </TabsTrigger>
+            <TabsTrigger value="contacts" className="gap-1">
+              <Inbox className="h-4 w-4" />
+              お問い合わせ
+              {stats.new_contacts > 0 && (
+                <Badge variant="destructive" className="ml-1 h-5 px-1.5 text-xs">
+                  {stats.new_contacts}
+                </Badge>
+              )}
             </TabsTrigger>
             <TabsTrigger value="users" className="gap-1">
               <Users className="h-4 w-4" />
@@ -526,6 +606,120 @@ export default function AdminPage() {
             ))}
           </TabsContent>
 
+          {/* Contacts tab */}
+          <TabsContent value="contacts" className="mt-4">
+            <div className="flex gap-2 mb-4">
+              {(["new", "in_progress", "resolved", "closed", "all"] as ContactFilter[]).map((f) => (
+                <Button
+                  key={f}
+                  variant={contactFilter === f ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setContactFilter(f)}
+                  className={contactFilter !== f ? "bg-transparent" : ""}
+                >
+                  {f === "all" ? "全て" : CONTACT_STATUS_LABELS[f as ContactStatus]}
+                  {f === "new" && stats.new_contacts > 0 && (
+                    <Badge variant="destructive" className="ml-1 h-4 px-1 text-xs">
+                      {stats.new_contacts}
+                    </Badge>
+                  )}
+                </Button>
+              ))}
+            </div>
+
+            <div className="space-y-3">
+              {filteredContacts.length === 0 && !loading && (
+                <p className="text-center text-muted-foreground py-8">お問い合わせがありません</p>
+              )}
+              {filteredContacts.map((c) => {
+                const typeInfo = CONTACT_TYPE_LABELS[c.type] || { label: c.type, icon: Mail };
+                const TypeIcon = typeInfo.icon;
+                return (
+                  <Card key={c.id}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <TypeIcon className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-semibold">{typeInfo.label}</span>
+                          <Badge variant={CONTACT_STATUS_BADGE[c.status]}>
+                            {CONTACT_STATUS_LABELS[c.status]}
+                          </Badge>
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          {c.created_at && new Date(c.created_at).toLocaleString("ja-JP")}
+                        </span>
+                      </div>
+
+                      <div className="text-sm space-y-1 mb-3">
+                        {c.name && <p><span className="font-medium">名前:</span> {c.name}</p>}
+                        {c.email && <p><span className="font-medium">メール:</span> <a href={`mailto:${c.email}`} className="text-primary underline">{c.email}</a></p>}
+                      </div>
+
+                      {/* Metadata fields */}
+                      <div className="text-sm space-y-1 border-l-2 border-muted pl-3 mb-3">
+                        {c.type === "removal" && (
+                          <>
+                            {c.metadata.relationship && <p><span className="font-medium text-xs">関係:</span> <span className="text-muted-foreground">{c.metadata.relationship === "therapist" ? "セラピスト本人" : c.metadata.relationship === "salon_owner" ? "サロン運営者" : "その他"}</span></p>}
+                            {c.metadata.target_name && <p><span className="font-medium text-xs">対象:</span> <span className="text-muted-foreground">{c.metadata.target_name}</span></p>}
+                            {c.metadata.target_url && <p><span className="font-medium text-xs">URL:</span> <a href={c.metadata.target_url} className="text-primary underline text-muted-foreground" target="_blank" rel="noopener noreferrer">{c.metadata.target_url}</a></p>}
+                            {c.metadata.reason && <p><span className="font-medium text-xs">理由:</span> <span className="text-muted-foreground">{c.metadata.reason === "privacy" ? "プライバシー" : c.metadata.reason === "retired" ? "引退" : c.metadata.reason === "incorrect" ? "情報誤り" : c.metadata.reason}</span></p>}
+                          </>
+                        )}
+                        {c.type === "feature-request" && (
+                          <>
+                            {c.metadata.category && <p><span className="font-medium text-xs">カテゴリ:</span> <span className="text-muted-foreground">{{ new_feature: "新機能の追加", improvement: "既存機能の改善", usability: "使いにくい点の報告", bug: "不具合の報告", other: "その他" }[c.metadata.category] || c.metadata.category}</span></p>}
+                            {c.metadata.title && <p><span className="font-medium text-xs">タイトル:</span> <span className="text-muted-foreground">{c.metadata.title}</span></p>}
+                          </>
+                        )}
+                        {c.type === "general" && c.metadata.subject && (
+                          <p><span className="font-medium text-xs">件名:</span> <span className="text-muted-foreground">{c.metadata.subject}</span></p>
+                        )}
+                        {c.metadata.body && <p><span className="font-medium text-xs">内容:</span> <span className="text-muted-foreground whitespace-pre-wrap">{c.metadata.body}</span></p>}
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex items-center gap-2 pt-3 border-t flex-wrap">
+                        {c.status === "new" && (
+                          <Button
+                            variant="default"
+                            size="sm"
+                            disabled={actionLoading === `contact-${c.id}`}
+                            onClick={() => handleContactStatus(c.id, "in_progress")}
+                            className="gap-1"
+                          >
+                            <Clock className="h-3.5 w-3.5" />
+                            対応中にする
+                          </Button>
+                        )}
+                        {(c.status === "new" || c.status === "in_progress") && (
+                          <Button
+                            variant="default"
+                            size="sm"
+                            disabled={actionLoading === `contact-${c.id}`}
+                            onClick={() => handleContactStatus(c.id, "resolved")}
+                            className="gap-1 bg-green-600 hover:bg-green-700"
+                          >
+                            <CheckCircle className="h-3.5 w-3.5" />
+                            解決済み
+                          </Button>
+                        )}
+                        <div className="flex-1" />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => setDeleteTarget({ type: "contact", id: c.id })}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </TabsContent>
+
           {/* Users tab */}
           <TabsContent value="users" className="space-y-3 mt-4">
             {users.map((u) => (
@@ -588,6 +782,7 @@ export default function AdminPage() {
             <AlertDialogDescription>
               {deleteTarget?.type === "review" && "この口コミを削除します。この操作は取り消せません。"}
               {deleteTarget?.type === "thread" && "このスレッドと全ての返信を削除します。この操作は取り消せません。"}
+              {deleteTarget?.type === "contact" && "このお問い合わせを削除します。この操作は取り消せません。"}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
