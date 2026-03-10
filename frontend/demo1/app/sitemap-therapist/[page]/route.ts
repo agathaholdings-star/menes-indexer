@@ -1,7 +1,6 @@
 import { supabaseAdmin as supabase } from "@/lib/supabase-admin";
 import { toSitemapXml, xmlResponse, BASE_URL } from "@/lib/sitemap-utils";
 
-export const dynamic = "force-dynamic";
 export const revalidate = 86400;
 
 const PAGE_SIZE = 5000;
@@ -11,7 +10,7 @@ export async function GET(
   { params }: { params: Promise<{ page: string }> }
 ) {
   const { page } = await params;
-  const pageIndex = parseInt(page, 10) - 1; // URL is 1-based, query is 0-based
+  const pageIndex = parseInt(page, 10) - 1;
   if (isNaN(pageIndex) || pageIndex < 0) {
     return new Response("Not Found", { status: 404 });
   }
@@ -33,7 +32,7 @@ export async function GET(
     url: `${BASE_URL}/therapist/${t.id}`,
     lastModified: t.updated_at ? new Date(t.updated_at) : now,
     changeFrequency: "weekly" as const,
-    priority: t.review_count > 0 ? 0.6 : 0.5,
+    priority: (t.review_count ?? 0) > 0 ? 0.6 : 0.5,
   }));
 
   return xmlResponse(toSitemapXml(entries));

@@ -15,6 +15,14 @@ const nextConfig = {
       },
     ],
   },
+  async rewrites() {
+    return [
+      {
+        source: "/sitemap-therapist-:page(\\d+).xml",
+        destination: "/sitemap-therapist/:page",
+      },
+    ];
+  },
   async headers() {
     return [
       {
