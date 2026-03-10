@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { TherapistImage } from "@/components/shared/therapist-image";
 import { ChevronRight, Star, MapPin, PenSquare } from "lucide-react";
@@ -12,6 +13,21 @@ import { supabaseAdmin as supabase } from "@/lib/supabase-admin";
 import { cleanTherapistName } from "@/lib/therapist-utils";
 
 export const revalidate = 3600;
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ type: string }>;
+}): Promise<Metadata> {
+  const { type } = await params;
+  const typeInfo = therapistTypes.find((t) => t.id === type);
+  const typeName = typeInfo?.label || decodeURIComponent(type);
+  return {
+    title: `${typeName}系セラピスト`,
+    description: `${typeName}系のメンズエステセラピスト一覧。口コミ評価の高い${typeName}系セラピストを探せます。`,
+    alternates: { canonical: `/type/${type}` },
+  };
+}
 
 interface DBTherapist {
   id: number;

@@ -8,6 +8,7 @@ import { SiteFooter } from "@/components/layout/site-footer";
 export const metadata: Metadata = {
   title: "お問い合わせ",
   description: "メンエスSKRへのお問い合わせ窓口一覧。掲載削除依頼、機能追加リクエスト、一般的なお問い合わせはこちらから。",
+  alternates: { canonical: "/contact" },
 };
 
 const contactCategories = [

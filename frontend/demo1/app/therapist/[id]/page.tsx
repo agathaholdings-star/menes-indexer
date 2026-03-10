@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { TherapistPageClient } from "./therapist-page-client";
 import { supabaseAdmin as supabase } from "@/lib/supabase-admin";
 import type { Therapist, Review } from "@/lib/data";
+import { TherapistImage } from "@/components/shared/therapist-image";
 
 export const revalidate = 3600;
 
@@ -49,6 +51,7 @@ export async function generateMetadata({ params }: TherapistPageProps): Promise<
   return {
     title: `${shopName}「${data.name}」の口コミや評判が分かる体験談`,
     description: desc,
+    alternates: { canonical: `/therapist/${id}` },
   };
 }
 
@@ -73,11 +76,12 @@ export default async function TherapistPage({ params }: TherapistPageProps) {
 
   const { name: parsedName, age: parsedAge } = parseNameAge(dbTherapist.name, dbTherapist.age);
 
-  // サロン情報・エリア情報・レビューを並列取得
-  const [{ data: shop }, areaInfo, { data: dbReviews }] = await Promise.all([
+  // サロン情報・エリア情報・レビュー・同サロンセラピストを並列取得
+  const [{ data: shop }, areaInfo, { data: dbReviews }, { data: sameShopTherapists }] = await Promise.all([
     supabase.from("salons").select("name, display_name, business_hours, base_price, base_duration, access").eq("id", dbTherapist.salon_id).single(),
     getShopAreaInfo(dbTherapist.salon_id),
-    supabase.from("reviews").select("*, profiles:user_id(nickname, total_review_count)").eq("therapist_id", Number(id)).eq("moderation_status", "approved").order("created_at", { ascending: false }).limit(100),
+    supabase.from("reviews").select("*, profiles:reviews_user_id_fkey(nickname, total_review_count)").eq("therapist_id", Number(id)).eq("moderation_status", "approved").order("created_at", { ascending: false }).limit(100),
+    supabase.from("therapists").select("id, name, age, image_urls").eq("salon_id", dbTherapist.salon_id).neq("id", Number(id)).eq("status", "active").order("review_count", { ascending: false, nullsFirst: false }).limit(8),
   ]);
 
   const reviewCount = (dbReviews || []).length;
@@ -265,6 +269,31 @@ export default async function TherapistPage({ params }: TherapistPageProps) {
           access: shop?.access || null,
         }}
       />
+      {/* SSR: 同サロンセラピスト（Googlebot可視） */}
+      {sameShopTherapists && sameShopTherapists.length > 0 && (
+        <div className="container mx-auto px-4 pb-8">
+          <div className="max-w-4xl">
+            <h2 className="text-lg font-bold mb-4">{therapist.shopName}の他のセラピスト</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {sameShopTherapists.map((t: any) => {
+                const images = t.image_urls || [];
+                const displayName = t.name.replace(/\s*\(\d{2}\)$/, "");
+                return (
+                  <Link key={t.id} href={`/therapist/${t.id}`} className="group">
+                    <div className="relative h-36 rounded-lg overflow-hidden">
+                      <TherapistImage src={images[0]} alt={displayName} fill className="object-cover group-hover:scale-105 transition-transform" />
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
+                        <p className="font-bold text-sm text-white">{displayName}</p>
+                        {t.age && <p className="text-xs text-white/80">{t.age}歳</p>}
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

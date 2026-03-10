@@ -37,6 +37,7 @@ export async function generateMetadata({
   return {
     title: `${area.name}のおすすめメンズエステランキング`,
     description: area.meta_description || defaultDescription,
+    alternates: { canonical: `/area/${prefecture}/${district}` },
   };
 }
 

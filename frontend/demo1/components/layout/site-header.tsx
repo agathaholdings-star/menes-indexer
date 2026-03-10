@@ -336,6 +336,12 @@ export function SiteHeader() {
                 エリア検索
               </Link>
             </Button>
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/ranking">
+                <Star className="mr-1 h-4 w-4" />
+                ランキング
+              </Link>
+            </Button>
           </nav>
 
           {/* Auth & CTA */}
@@ -640,6 +646,12 @@ export function SiteHeader() {
                       <Link href="/area">
                         <MapPin className="mr-2 h-4 w-4" />
                         エリア検索
+                      </Link>
+                    </Button>
+                    <Button variant="ghost" className="justify-start" asChild>
+                      <Link href="/ranking">
+                        <Star className="mr-2 h-4 w-4" />
+                        ランキング
                       </Link>
                     </Button>
                   </nav>

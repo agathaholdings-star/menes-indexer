@@ -35,6 +35,22 @@ export function SiteFooter() {
                   ランキング
                 </Link>
               </li>
+              <li>
+                <Link href="/search" className="text-muted-foreground hover:text-foreground">
+                  セラピスト検索
+                </Link>
+              </li>
+            </ul>
+            <h3 className="mb-3 mt-6 font-semibold">タイプから探す</h3>
+            <ul className="space-y-2 text-sm">
+              <li><Link href="/type/1" className="text-muted-foreground hover:text-foreground">清楚系</Link></li>
+              <li><Link href="/type/2" className="text-muted-foreground hover:text-foreground">素人系</Link></li>
+              <li><Link href="/type/3" className="text-muted-foreground hover:text-foreground">ギャル系</Link></li>
+              <li><Link href="/type/4" className="text-muted-foreground hover:text-foreground">モデル系</Link></li>
+              <li><Link href="/type/5" className="text-muted-foreground hover:text-foreground">ロリ系</Link></li>
+              <li><Link href="/type/6" className="text-muted-foreground hover:text-foreground">女優系</Link></li>
+              <li><Link href="/type/7" className="text-muted-foreground hover:text-foreground">夜職系</Link></li>
+              <li><Link href="/type/8" className="text-muted-foreground hover:text-foreground">熟女系</Link></li>
             </ul>
           </div>
 

@@ -10,6 +10,7 @@ import { supabaseAdmin as supabase } from "@/lib/supabase-admin";
 export const metadata: Metadata = {
   title: "エリア一覧",
   description: "全国のメンズエステをエリアから探す。関東・関西・東海など7地方、821エリアのメンズエステ店舗情報を掲載。",
+  alternates: { canonical: "/area" },
 };
 
 const regionOrder = ["関東", "関西", "東海", "北海道・東北", "北陸・甲信越", "中国・四国", "九州・沖縄"];

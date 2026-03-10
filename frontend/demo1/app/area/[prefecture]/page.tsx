@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { MapPin, ChevronRight, Store } from "lucide-react";
+import { MapPin, ChevronRight, Store, Star } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { TherapistImage } from "@/components/shared/therapist-image";
 
 export const revalidate = 86400;
 import { SiteHeader } from "@/components/layout/site-header";
@@ -29,6 +30,7 @@ export async function generateMetadata({
   return {
     title: `${pref.name}のメンズエステ`,
     description: `${pref.name}のメンズエステをエリア別に探せます。口コミ体験談・料金・施術内容・セラピストの評判を比較して、自分に合ったサロンを見つけよう。`,
+    alternates: { canonical: `/area/${prefecture}` },
   };
 }
 
@@ -44,7 +46,17 @@ export default async function AreaPrefecturePage({
     notFound();
   }
 
-  const areas = await getAreasByPrefectureId(pref.id);
+  const [areas, popularTherapists] = await Promise.all([
+    getAreasByPrefectureId(pref.id),
+    supabase
+      .from("therapists")
+      .select("id, name, age, image_urls, review_count, salons!inner(id, name, display_name, salon_areas!inner(areas!inner(prefecture_id)))")
+      .eq("salons.salon_areas.areas.prefecture_id", pref.id)
+      .gt("review_count", 0)
+      .order("review_count", { ascending: false })
+      .limit(8)
+      .then(({ data }) => data || []),
+  ]);
 
   const totalSalonCount = areas.reduce((sum, a) => sum + (a.salon_count || 0), 0);
 
@@ -138,6 +150,45 @@ export default async function AreaPrefecturePage({
                 ))}
               </div>
             </section>
+
+            {/* Popular Therapists in Prefecture */}
+            {popularTherapists.length > 0 && (
+              <section className="mb-8">
+                <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                  <Star className="h-5 w-5 text-primary" />
+                  {pref.name}の人気セラピスト
+                </h2>
+                <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
+                  {popularTherapists.map((t: any) => {
+                    const images = t.image_urls || [];
+                    const salonName = t.salons?.display_name || t.salons?.name || "";
+                    const displayName = t.name.replace(/\s*\(\d{2}\)$/, "");
+                    return (
+                      <Link key={t.id} href={`/therapist/${t.id}`}>
+                        <Card className="hover:shadow-md transition-shadow overflow-hidden">
+                          <div className="relative h-36 w-full overflow-hidden">
+                            <TherapistImage
+                              src={images[0]}
+                              alt={displayName}
+                              fill
+                              className="object-cover"
+                            />
+                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
+                              <p className="font-bold text-sm text-white">{displayName}</p>
+                              {t.age && <p className="text-xs text-white/80">{t.age}歳</p>}
+                            </div>
+                          </div>
+                          <CardContent className="p-2">
+                            <p className="text-xs text-muted-foreground truncate">{salonName}</p>
+                            <p className="text-xs text-primary">{t.review_count}件の口コミ</p>
+                          </CardContent>
+                        </Card>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
           </div>
 
           {/* Sidebar */}

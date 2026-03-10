@@ -36,6 +36,9 @@ export const metadata: Metadata = {
     description: 'メンズエステの口コミ・体験談ならメンエスSKR',
     images: ['/og-image.png'],
   },
+  alternates: {
+    canonical: 'https://menes-skr.com',
+  },
   robots: {
     index: true,
     follow: true,

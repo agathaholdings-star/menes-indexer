@@ -4,6 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "セラピストランキング",
   description: "メンズエステの人気セラピストランキング。口コミ評価の高いセラピストを一覧で確認できます。",
+  alternates: { canonical: "/ranking" },
 };
 
 export const revalidate = 3600;
