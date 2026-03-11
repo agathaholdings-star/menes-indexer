@@ -137,6 +137,7 @@ BEGIN
     WHERE t.salon_id = sa.salon_id AND r.moderation_status = 'approved'
   ) lr ON true
   WHERE sa.area_id = p_area_id
+    AND s.published_at IS NOT NULL
   ORDER BY
     ranking_score DESC,
     COALESCE(s.review_count, 0) DESC,
@@ -166,7 +167,7 @@ AS $$
     COALESCE(s.avg_score, 0)::numeric,
     COALESCE(s.therapist_count, 0)::int
   FROM salons s
-  WHERE s.id = ANY(p_salon_ids) AND s.is_active = true;
+  WHERE s.id = ANY(p_salon_ids) AND s.is_active = true AND s.published_at IS NOT NULL;
 $$;
 
 -- 6. VIEW 廃止

@@ -42,6 +42,7 @@ async function getTopReviewedSalons() {
       salon_areas!inner(areas!inner(name))
     `)
     .gt("review_count", 0)
+    .not("published_at", "is", null)
     .order("review_count", { ascending: false })
     .limit(8);
 

@@ -19,7 +19,8 @@ export async function GET(
 
   const { data: therapists } = await supabase
     .from("therapists")
-    .select("id, updated_at, review_count")
+    .select("id, updated_at, review_count, salons!inner(published_at)")
+    .not("salons.published_at", "is", null)
     .order("review_count", { ascending: false, nullsFirst: false })
     .order("id")
     .range(pageIndex * PAGE_SIZE, (pageIndex + 1) * PAGE_SIZE - 1);

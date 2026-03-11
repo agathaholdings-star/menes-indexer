@@ -9,6 +9,7 @@ export async function GET() {
   const { data: salons } = await supabase
     .from("salons")
     .select("id, updated_at")
+    .not("published_at", "is", null)
     .order("id");
 
   const entries = (salons || []).map((s) => ({

@@ -17,6 +17,7 @@ export async function GET(req: NextRequest) {
       .from("salons")
       .select("id, name, display_name, access, image_url, slug")
       .eq("is_active", true)
+      .not("published_at", "is", null)
       .or(`display_name.ilike.%${search}%,name.ilike.%${search}%`)
       .limit(limit);
     return NextResponse.json(data ?? []);
@@ -30,7 +31,8 @@ export async function GET(req: NextRequest) {
       .from("salons")
       .select("id, name, display_name, slug, image_url, access, description")
       .in("id", idArr)
-      .eq("is_active", true);
+      .eq("is_active", true)
+      .not("published_at", "is", null);
     return NextResponse.json(data ?? []);
   }
 
@@ -53,7 +55,8 @@ export async function GET(req: NextRequest) {
       .from("salons")
       .select("id, name, display_name, slug, image_url, access, description")
       .in("id", salonIds)
-      .eq("is_active", true);
+      .eq("is_active", true)
+      .not("published_at", "is", null);
     if (data && data.length > 0) {
       const { data: counts } = await supabaseAdmin
         .from("therapists")
@@ -84,7 +87,8 @@ export async function GET(req: NextRequest) {
       .from("salons")
       .select("id, name, display_name, slug, image_url, access, description")
       .in("id", salonIds)
-      .eq("is_active", true);
+      .eq("is_active", true)
+      .not("published_at", "is", null);
     // Attach therapist_count per salon
     if (data && data.length > 0) {
       const { data: counts } = await supabaseAdmin
@@ -122,7 +126,8 @@ export async function GET(req: NextRequest) {
       .from("salons")
       .select("id, name, display_name, slug, image_url, access, description")
       .in("id", salonIds)
-      .eq("is_active", true);
+      .eq("is_active", true)
+      .not("published_at", "is", null);
     return NextResponse.json(data ?? []);
   }
 
@@ -131,6 +136,7 @@ export async function GET(req: NextRequest) {
     .from("salons")
     .select("id, name, display_name, slug, access")
     .eq("is_active", true)
+      .not("published_at", "is", null)
     .limit(limit);
 
   return NextResponse.json(data ?? []);

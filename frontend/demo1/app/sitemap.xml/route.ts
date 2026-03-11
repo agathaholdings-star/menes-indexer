@@ -15,7 +15,8 @@ export async function GET() {
   ] = await Promise.all([
     supabase
       .from("therapists")
-      .select("id", { count: "exact", head: true }),
+      .select("id, salons!inner(published_at)", { count: "exact", head: true })
+      .not("salons.published_at", "is", null),
     supabase
       .from("areas")
       .select("updated_at")

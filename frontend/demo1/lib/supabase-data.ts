@@ -206,7 +206,8 @@ export async function getShopsByAreaSlug(areaSlug: string): Promise<Shop[]> {
     .from("salons")
     .select("*")
     .in("id", salonIds)
-    .eq("is_active", true);
+    .eq("is_active", true)
+    .not("published_at", "is", null);
 
   if (!shops) return [];
 

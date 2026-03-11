@@ -52,6 +52,7 @@ export async function GET(req: NextRequest) {
       .from("salons")
       .select("id, name, display_name, slug")
       .or(`name.ilike.${pattern},display_name.ilike.${pattern}`)
+      .not("published_at", "is", null)
       .limit(MAX_PER_CATEGORY),
 
     supabaseAdmin

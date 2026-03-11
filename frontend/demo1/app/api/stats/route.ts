@@ -6,7 +6,8 @@ export async function GET() {
     supabaseAdmin
       .from("salons")
       .select("*", { count: "exact", head: true })
-      .eq("is_active", true),
+      .eq("is_active", true)
+      .not("published_at", "is", null),
     supabaseAdmin
       .from("areas")
       .select("*", { count: "exact", head: true })
