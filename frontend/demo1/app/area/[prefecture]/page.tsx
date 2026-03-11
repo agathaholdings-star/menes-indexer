@@ -28,7 +28,7 @@ export async function generateMetadata({
   const pref = await getPrefectureBySlug(prefecture);
   if (!pref) return {};
   return {
-    title: `${pref.name}のメンズエステ`,
+    title: `${pref.name}のメンズエステ一覧`,
     description: `${pref.name}のメンズエステをエリア別に探せます。口コミ体験談・料金・施術内容・セラピストの評判を比較して、自分に合ったサロンを見つけよう。`,
     alternates: { canonical: `/area/${prefecture}` },
   };
