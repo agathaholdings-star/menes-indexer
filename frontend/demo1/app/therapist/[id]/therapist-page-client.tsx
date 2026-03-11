@@ -157,6 +157,7 @@ export function TherapistPageClient({ therapist, reviews, areaName, prefName, sa
                           alt={therapist.name}
                           fill
                           className="object-cover"
+                          priority={currentImageIndex === 0}
                         />
                         {therapist.images.length > 1 && (
                           <>
