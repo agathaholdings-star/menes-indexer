@@ -28,7 +28,7 @@ interface ReviewListProps {
   therapistName?: string;
   therapistAge?: number;
   therapistImage?: string;
-  shopName?: string;
+  salonName?: string;
 }
 
 // フラグ: 課金CTAを表示するか（口コミ数が十分溜まったらtrueに戻す）
@@ -44,7 +44,7 @@ export function ReviewList({
   therapistName = "セラピスト",
   therapistAge = 0,
   therapistImage = "/placeholder.svg?height=100&width=100",
-  shopName = "",
+  salonName = "",
 }: ReviewListProps) {
   const [showUnlockModal, setShowUnlockModal] = useState(false);
   const [unlockLoading, setUnlockLoading] = useState<string | null>(null);
@@ -97,7 +97,7 @@ export function ReviewList({
             therapistName={therapistName}
             therapistAge={therapistAge}
             therapistImage={therapistImage}
-            shopName={shopName}
+            salonName={salonName}
             isVerified={!!review.verificationImagePath}
             reviewCredits={reviewCredits}
           />
@@ -266,7 +266,7 @@ function ReviewCardA3a({
   therapistName,
   therapistAge,
   therapistImage,
-  shopName,
+  salonName,
   isVerified = false,
   reviewCredits = 0,
 }: {
@@ -280,7 +280,7 @@ function ReviewCardA3a({
   therapistName: string;
   therapistAge: number;
   therapistImage: string;
-  shopName: string;
+  salonName: string;
   isVerified?: boolean;
   reviewCredits?: number;
 }) {
@@ -304,7 +304,7 @@ function ReviewCardA3a({
       {/* バナー: サロン名 + セラピスト名 */}
       <div className="bg-gradient-to-r from-primary to-blue-600 px-5 py-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-white font-bold text-base">{shopName || "サロン"}</h3>
+          <h3 className="text-white font-bold text-base">{salonName || "サロン"}</h3>
           {/* Pattern B: アイコン+テキスト付きバッジ（バナー内） */}
           {isVerified && (
             <Badge className="bg-yellow-400/30 text-yellow-100 border-0 text-[10px] gap-1 hover:bg-yellow-400/40">

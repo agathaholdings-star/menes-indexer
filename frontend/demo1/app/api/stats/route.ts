@@ -2,7 +2,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import { NextResponse } from "next/server";
 
 export async function GET() {
-  const [shopCount, areaCount, prefCount] = await Promise.all([
+  const [salonCount, areaCount, prefCount] = await Promise.all([
     supabaseAdmin
       .from("salons")
       .select("*", { count: "exact", head: true })
@@ -17,7 +17,7 @@ export async function GET() {
   ]);
 
   return NextResponse.json({
-    shopCount: shopCount.count ?? 0,
+    salonCount: salonCount.count ?? 0,
     areaCount: areaCount.count ?? 0,
     prefCount: prefCount.count ?? 0,
   });

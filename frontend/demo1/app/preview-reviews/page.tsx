@@ -13,7 +13,7 @@ const mockReview = {
   therapistName: "あおい",
   therapistAge: 28,
   therapistImage: "http://127.0.0.1:54321/storage/v1/object/public/therapist-images/3059/210069/001.webp",
-  shopName: "SALON BLANCA (サロンブランカ)",
+  salonName: "SALON BLANCA (サロンブランカ)",
   score: 75,
   typeLabel: "女優系",
   bodyLabel: "スレンダー",
@@ -131,7 +131,7 @@ function PatternA3a() {
     <Card className="overflow-hidden shadow-md">
       {/* バナー: 2行構成 */}
       <div className="bg-gradient-to-r from-primary to-blue-600 px-5 py-3">
-        <h3 className="text-white font-bold text-base">{mockReview.shopName}</h3>
+        <h3 className="text-white font-bold text-base">{mockReview.salonName}</h3>
         <p className="text-blue-100 text-sm mt-0.5">
           <span className="text-white font-bold">{mockReview.therapistName} ({mockReview.therapistAge})</span> さんの口コミ体験レポート
         </p>
@@ -189,7 +189,7 @@ function PatternA3b() {
       {/* バナー: 1行統合 */}
       <div className="bg-gradient-to-r from-primary to-blue-600 px-5 py-3 flex items-center justify-between">
         <h3 className="text-white font-bold text-sm">
-          {mockReview.shopName} — {mockReview.therapistName} ({mockReview.therapistAge})
+          {mockReview.salonName} — {mockReview.therapistName} ({mockReview.therapistAge})
         </h3>
         <Badge className="bg-white/20 text-white border-0 text-[10px] flex-shrink-0 ml-2">
           <Flame className="h-2.5 w-2.5 mr-0.5 text-orange-300" />HOT
@@ -244,7 +244,7 @@ function PatternA3c() {
     <Card className="overflow-hidden shadow-md">
       {/* バナー: セラピスト名主役 */}
       <div className="bg-gradient-to-r from-primary to-blue-600 px-5 py-4">
-        <p className="text-blue-200 text-xs">{mockReview.shopName}</p>
+        <p className="text-blue-200 text-xs">{mockReview.salonName}</p>
         <h3 className="text-white font-bold text-xl mt-0.5">
           {mockReview.therapistName} ({mockReview.therapistAge})
           <span className="text-blue-200 font-normal text-sm ml-2">の口コミ体験レポート</span>

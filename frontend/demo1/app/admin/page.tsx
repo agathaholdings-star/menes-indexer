@@ -138,7 +138,7 @@ export default function AdminPage() {
   const [contacts, setContacts] = useState<ContactRow[]>([]);
   const [contactFilter, setContactFilter] = useState<ContactFilter>("new");
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ shops: 0, therapists: 0, reviews: 0, users: 0, pending: 0, new_contacts: 0 });
+  const [stats, setStats] = useState({ salons: 0, therapists: 0, reviews: 0, users: 0, pending: 0, new_contacts: 0 });
   const [deleteTarget, setDeleteTarget] = useState<{ type: string; id: number | string } | null>(null);
   const [reviewFilter, setReviewFilter] = useState<ReviewFilter>("pending");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -344,7 +344,7 @@ export default function AdminPage() {
         {/* Stats cards */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
           {[
-            { label: "店舗", value: stats.shops, icon: "🏪" },
+            { label: "店舗", value: stats.salons, icon: "🏪" },
             { label: "セラピスト", value: stats.therapists, icon: "👤" },
             { label: "口コミ", value: stats.reviews, icon: "⭐" },
             { label: "承認待ち", value: stats.pending, icon: "⏳" },

@@ -117,7 +117,7 @@ export default async function TypePage({
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {typeTherapists.map((therapist) => {
                     const imageUrl = therapist.image_urls?.[0];
-                    const shopName = therapist.salons?.display_name || therapist.salons?.name || "";
+                    const salonName = therapist.salons?.display_name || therapist.salons?.name || "";
                     const displayName = cleanTherapistName(therapist.name);
                     return (
                       <Link key={therapist.id} href={`/therapist/${therapist.id}`}>
@@ -137,7 +137,7 @@ export default async function TypePage({
                           </div>
                           <CardContent className="p-4">
                             <h3 className="font-bold">{displayName}</h3>
-                            <p className="text-sm text-muted-foreground">{shopName}</p>
+                            <p className="text-sm text-muted-foreground">{salonName}</p>
                           </CardContent>
                         </Card>
                       </Link>

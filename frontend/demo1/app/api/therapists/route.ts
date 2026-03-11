@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
   }
 
   // Area filter: resolve salon IDs
-  let shopIds: number[] | null = null;
+  let salonIds: number[] | null = null;
   if (areaSlug && areaSlug !== "all") {
     const { data: pref } = await supabaseAdmin
       .from("prefectures")
@@ -66,12 +66,12 @@ export async function GET(req: NextRequest) {
           .from("salon_areas")
           .select("salon_id")
           .in("area_id", areaIds);
-        shopIds = [...new Set((saData || []).map((sa) => Number(sa.salon_id)))];
+        salonIds = [...new Set((saData || []).map((sa) => Number(sa.salon_id)))];
       } else {
-        shopIds = [];
+        salonIds = [];
       }
     }
-    if (shopIds && shopIds.length === 0) {
+    if (salonIds && salonIds.length === 0) {
       return NextResponse.json([]);
     }
   }
@@ -88,8 +88,8 @@ export async function GET(req: NextRequest) {
     q = q.ilike("name", `%${name}%`);
   }
 
-  if (shopIds) {
-    q = q.in("salon_id", shopIds);
+  if (salonIds) {
+    q = q.in("salon_id", salonIds);
   }
 
   if (ids) {

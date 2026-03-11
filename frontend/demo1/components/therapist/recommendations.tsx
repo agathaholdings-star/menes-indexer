@@ -23,12 +23,12 @@ interface SimilarTherapist {
 
 export function Recommendations({ therapist }: RecommendationsProps) {
   const [similar, setSimilar] = useState<SimilarTherapist[]>([]);
-  const [shopName, setShopName] = useState(therapist.shopName);
+  const [salonName, setShopName] = useState(therapist.salonName);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchSimilar() {
-      const salonId = Number(therapist.shopId);
+      const salonId = Number(therapist.salonId);
       if (!salonId) {
         setLoading(false);
         return;
@@ -47,7 +47,7 @@ export function Recommendations({ therapist }: RecommendationsProps) {
     }
 
     fetchSimilar();
-  }, [therapist.shopId, therapist.id]);
+  }, [therapist.salonId, therapist.id]);
 
   if (loading) return null;
   if (similar.length === 0) return null;
@@ -57,7 +57,7 @@ export function Recommendations({ therapist }: RecommendationsProps) {
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-lg">
           <Sparkles className="h-5 w-5 text-primary" />
-          {shopName}の他のセラピスト
+          {salonName}の他のセラピスト
         </CardTitle>
       </CardHeader>
       <CardContent>

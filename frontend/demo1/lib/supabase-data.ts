@@ -191,27 +191,27 @@ export async function getShopsByAreaSlug(areaSlug: string): Promise<Shop[]> {
   if (!area) return [];
 
   // salon_areasからsalon_idを取得
-  const { data: shopAreaRows } = await supabase
+  const { data: salonAreaRows } = await supabase
     .from("salon_areas")
     .select("salon_id, display_order")
     .eq("area_id", area.id)
     .order("display_order", { ascending: true });
 
-  if (!shopAreaRows || shopAreaRows.length === 0) return [];
+  if (!salonAreaRows || salonAreaRows.length === 0) return [];
 
-  const shopIds = shopAreaRows.map((sa) => sa.salon_id);
+  const salonIds = salonAreaRows.map((sa) => sa.salon_id);
 
   // salonsを取得
   const { data: shops } = await supabase
     .from("salons")
     .select("*")
-    .in("id", shopIds)
+    .in("id", salonIds)
     .eq("is_active", true);
 
   if (!shops) return [];
 
   // display_order順にソート
-  const orderMap = new Map(shopAreaRows.map((sa) => [sa.salon_id, sa.display_order]));
+  const orderMap = new Map(salonAreaRows.map((sa) => [sa.salon_id, sa.display_order]));
   return shops.sort((a, b) => (orderMap.get(a.id) || 0) - (orderMap.get(b.id) || 0));
 }
 
@@ -237,7 +237,7 @@ export async function getShopBySlug(slug: string): Promise<Shop | null> {
 // Shop Area Info (for breadcrumbs)
 // =============================================================================
 
-export async function getShopAreaInfo(shopId: number): Promise<{
+export async function getSalonAreaInfo(salonId: number): Promise<{
   areaName: string;
   areaSlug: string;
   prefName: string;
@@ -247,7 +247,7 @@ export async function getShopAreaInfo(shopId: number): Promise<{
   let { data } = await supabase
     .from("salon_areas")
     .select("area_id, areas(name, slug, prefecture_id, prefectures(name, slug))")
-    .eq("salon_id", shopId)
+    .eq("salon_id", salonId)
     .eq("is_primary", true)
     .limit(1)
     .single();
@@ -257,7 +257,7 @@ export async function getShopAreaInfo(shopId: number): Promise<{
     const { data: anyArea } = await supabase
       .from("salon_areas")
       .select("area_id, areas(name, slug, prefecture_id, prefectures(name, slug))")
-      .eq("salon_id", shopId)
+      .eq("salon_id", salonId)
       .limit(1)
       .single();
     if (!anyArea) return null;
@@ -282,11 +282,11 @@ export async function getShopAreaInfo(shopId: number): Promise<{
 // Therapists
 // =============================================================================
 
-export async function getTherapistsByShopId(shopId: number) {
+export async function getTherapistsBySalonId(salonId: number) {
   const { data } = await supabase
     .from("therapists")
     .select("*")
-    .eq("salon_id", shopId)
+    .eq("salon_id", salonId)
     .eq("status", "active")
     .neq("name", "THERAPISTセラピスト")
     .order("id", { ascending: true });

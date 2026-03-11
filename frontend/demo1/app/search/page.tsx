@@ -331,7 +331,7 @@ function SearchContent() {
   const [sortBy, setSortBy] = useState("newest");
   const [selectedArea, setSelectedArea] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState("");
-  const [shopName, setShopName] = useState("");
+  const [salonName, setShopName] = useState("");
 
   // URLのqパラメータが変わったらqueryを同期して再検索
   useEffect(() => {
@@ -446,7 +446,7 @@ function SearchContent() {
       !query ||
       t.name.includes(query) ||
       t.shop_name.includes(query);
-    const matchesShop = !shopName || t.shop_name.includes(shopName);
+    const matchesShop = !salonName || t.shop_name.includes(salonName);
     return matchesQuery && matchesShop;
   });
 

@@ -35,7 +35,7 @@ export function TherapistCard({ therapist, showShop = true, size = "md" }: Thera
               {therapist.age > 0 && <span className="text-sm opacity-80">({therapist.age})</span>}
             </div>
             {showShop && (
-              <p className="text-xs text-white/80">{therapist.shopName}</p>
+              <p className="text-xs text-white/80">{therapist.salonName}</p>
             )}
           </div>
         </div>

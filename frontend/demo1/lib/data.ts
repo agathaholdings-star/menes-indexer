@@ -114,8 +114,8 @@ export interface Therapist {
   id: string;
   name: string;
   age: number;
-  shopId: string;
-  shopName: string;
+  salonId: string;
+  salonName: string;
   area: string;
   district: string;
   images: string[];
@@ -149,7 +149,7 @@ export interface Review {
   id: string;
   therapistId: string;
   therapistName: string;
-  shopName: string;
+  salonName: string;
   score: number;
   typeId: string;
   bodyType: string;

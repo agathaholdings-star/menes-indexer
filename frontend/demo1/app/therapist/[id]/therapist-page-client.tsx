@@ -134,8 +134,8 @@ export function TherapistPageClient({ therapist, reviews, areaName, prefName, sa
                 <span className="mx-2">/</span>
               </>
             )}
-            <Link href={`/salon/${therapist.shopId}`} className="hover:text-foreground">
-              {therapist.shopName}
+            <Link href={`/salon/${therapist.salonId}`} className="hover:text-foreground">
+              {therapist.salonName}
             </Link>
             <span className="mx-2">/</span>
             <span className="text-foreground">{therapist.name}</span>
@@ -216,8 +216,8 @@ export function TherapistPageClient({ therapist, reviews, areaName, prefName, sa
                               <span className="text-muted-foreground">({therapist.age})</span>
                             )}
                           </div>
-                          <Link href={`/salon/${therapist.shopId}`} className="text-primary hover:underline">
-                            {therapist.shopName}
+                          <Link href={`/salon/${therapist.salonId}`} className="text-primary hover:underline">
+                            {therapist.salonName}
                           </Link>
                           {therapist.reviewCount > 0 && (
                             <div className="mt-2">
@@ -299,7 +299,7 @@ export function TherapistPageClient({ therapist, reviews, areaName, prefName, sa
                   therapistName={therapist.name}
                   therapistAge={therapist.age}
                   therapistImage={therapist.images[0]}
-                  shopName={therapist.shopName}
+                  salonName={therapist.salonName}
                 />
               )}
 
@@ -340,8 +340,8 @@ export function TherapistPageClient({ therapist, reviews, areaName, prefName, sa
         prefill={reviewForThisTherapist ? {
           therapistId: therapist.id,
           therapistName: therapist.name,
-          salonId: therapist.shopId,
-          salonName: therapist.shopName,
+          salonId: therapist.salonId,
+          salonName: therapist.salonName,
           areaName: therapist.area,
         } : undefined}
       />

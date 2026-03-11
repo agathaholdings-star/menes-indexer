@@ -42,17 +42,17 @@ export async function GET(req: NextRequest) {
       .eq("prefecture_id", parseInt(prefectureId, 10));
     if (!areaRows || areaRows.length === 0) return NextResponse.json([]);
     const areaIds = areaRows.map(a => a.id);
-    const { data: shopAreaRows } = await supabaseAdmin
+    const { data: salonAreaRows } = await supabaseAdmin
       .from("salon_areas")
       .select("salon_id")
       .in("area_id", areaIds)
       .limit(limit);
-    if (!shopAreaRows || shopAreaRows.length === 0) return NextResponse.json([]);
-    const shopIds = [...new Set(shopAreaRows.map(sa => sa.salon_id))];
+    if (!salonAreaRows || salonAreaRows.length === 0) return NextResponse.json([]);
+    const salonIds = [...new Set(salonAreaRows.map(sa => sa.salon_id))];
     const { data } = await supabaseAdmin
       .from("salons")
       .select("id, name, display_name, slug, image_url, access, description")
-      .in("id", shopIds)
+      .in("id", salonIds)
       .eq("is_active", true);
     if (data && data.length > 0) {
       const { data: counts } = await supabaseAdmin
@@ -72,18 +72,18 @@ export async function GET(req: NextRequest) {
 
   // Fetch by area_id via salon_areas
   if (areaId) {
-    const { data: shopAreaRows } = await supabaseAdmin
+    const { data: salonAreaRows } = await supabaseAdmin
       .from("salon_areas")
       .select("salon_id")
       .eq("area_id", parseInt(areaId, 10))
       .order("display_order", { ascending: true })
       .limit(limit);
-    if (!shopAreaRows || shopAreaRows.length === 0) return NextResponse.json([]);
-    const shopIds = shopAreaRows.map((sa) => sa.salon_id);
+    if (!salonAreaRows || salonAreaRows.length === 0) return NextResponse.json([]);
+    const salonIds = salonAreaRows.map((sa) => sa.salon_id);
     const { data } = await supabaseAdmin
       .from("salons")
       .select("id, name, display_name, slug, image_url, access, description")
-      .in("id", shopIds)
+      .in("id", salonIds)
       .eq("is_active", true);
     // Attach therapist_count per salon
     if (data && data.length > 0) {
@@ -110,18 +110,18 @@ export async function GET(req: NextRequest) {
       .eq("slug", areaSlug)
       .single();
     if (!area) return NextResponse.json([]);
-    const { data: shopAreaRows } = await supabaseAdmin
+    const { data: salonAreaRows } = await supabaseAdmin
       .from("salon_areas")
       .select("salon_id, display_order")
       .eq("area_id", area.id)
       .order("display_order", { ascending: true })
       .limit(limit);
-    if (!shopAreaRows || shopAreaRows.length === 0) return NextResponse.json([]);
-    const shopIds = shopAreaRows.map((sa) => sa.salon_id);
+    if (!salonAreaRows || salonAreaRows.length === 0) return NextResponse.json([]);
+    const salonIds = salonAreaRows.map((sa) => sa.salon_id);
     const { data } = await supabaseAdmin
       .from("salons")
       .select("id, name, display_name, slug, image_url, access, description")
-      .in("id", shopIds)
+      .in("id", salonIds)
       .eq("is_active", true);
     return NextResponse.json(data ?? []);
   }

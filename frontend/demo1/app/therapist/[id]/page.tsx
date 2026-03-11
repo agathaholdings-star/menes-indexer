@@ -18,7 +18,7 @@ export async function generateStaticParams() {
 }
 
 import { parseNameAge } from "@/lib/therapist-utils";
-import { getShopAreaInfo } from "@/lib/supabase-data";
+import { getSalonAreaInfo } from "@/lib/supabase-data";
 
 interface TherapistPageProps {
   params: Promise<{ id: string }>;
@@ -35,9 +35,9 @@ export async function generateMetadata({ params }: TherapistPageProps): Promise<
   if (!data) return {};
   const [{ data: shop }, areaInfo] = await Promise.all([
     supabase.from("salons").select("display_name, name").eq("id", data.salon_id).single(),
-    getShopAreaInfo(data.salon_id),
+    getSalonAreaInfo(data.salon_id),
   ]);
-  const shopName = shop?.display_name || shop?.name || "";
+  const salonName = shop?.display_name || shop?.name || "";
   const areaText = areaInfo ? `（${areaInfo.areaName}）` : "";
 
   // スペック情報を組み立て
@@ -47,9 +47,9 @@ export async function generateMetadata({ params }: TherapistPageProps): Promise<
   if (data.cup) specs.push(`${data.cup}カップ`);
   const specText = specs.length > 0 ? `（${specs.join("・")}）` : "";
 
-  const desc = `${shopName}${areaText}の${data.name}${specText}の口コミ体験談。サービスの質や施術内容、密着度、雰囲気などリアルな評判を掲載。`;
+  const desc = `${salonName}${areaText}の${data.name}${specText}の口コミ体験談。サービスの質や施術内容、密着度、雰囲気などリアルな評判を掲載。`;
   return {
-    title: `${shopName}「${data.name}」の口コミや評判が分かる体験談`,
+    title: `${salonName}「${data.name}」の口コミや評判が分かる体験談`,
     description: desc,
     alternates: { canonical: `/therapist/${id}` },
   };
@@ -79,7 +79,7 @@ export default async function TherapistPage({ params }: TherapistPageProps) {
   // サロン情報・エリア情報・レビュー・同サロンセラピストを並列取得
   const [{ data: shop }, areaInfo, { data: dbReviews }, { data: sameShopTherapists }] = await Promise.all([
     supabase.from("salons").select("name, display_name, business_hours, base_price, base_duration, access").eq("id", dbTherapist.salon_id).single(),
-    getShopAreaInfo(dbTherapist.salon_id),
+    getSalonAreaInfo(dbTherapist.salon_id),
     supabase.from("reviews").select("*, profiles:reviews_user_id_fkey(nickname, total_review_count)").eq("therapist_id", Number(id)).eq("moderation_status", "approved").order("created_at", { ascending: false }).limit(100),
     supabase.from("therapists").select("id, name, age, image_urls").eq("salon_id", dbTherapist.salon_id).neq("id", Number(id)).eq("status", "active").order("review_count", { ascending: false, nullsFirst: false }).limit(8),
   ]);
@@ -93,8 +93,8 @@ export default async function TherapistPage({ params }: TherapistPageProps) {
     id: String(dbTherapist.id),
     name: parsedName,
     age: parsedAge,
-    shopId: String(dbTherapist.salon_id),
-    shopName: shop?.display_name || shop?.name || "",
+    salonId: String(dbTherapist.salon_id),
+    salonName: shop?.display_name || shop?.name || "",
     area: areaInfo?.prefSlug || "",
     district: areaInfo?.areaSlug || "",
     images: (dbTherapist.image_urls as string[]) || [],
@@ -123,7 +123,7 @@ export default async function TherapistPage({ params }: TherapistPageProps) {
     id: r.id,
     therapistId: String(r.therapist_id),
     therapistName: therapist.name,
-    shopName: therapist.shopName,
+    salonName: therapist.salonName,
     score: r.score || 0,
     typeId: r.looks_type_id ? String(r.looks_type_id) : "",
     bodyType: r.body_type_id ? String(r.body_type_id) : "",
@@ -190,9 +190,9 @@ export default async function TherapistPage({ params }: TherapistPageProps) {
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
-    name: therapist.shopName || therapist.name,
+    name: therapist.salonName || therapist.name,
     image: therapist.images.length > 0 ? therapist.images : undefined,
-    description: `${therapist.name}${therapist.age ? `（${therapist.age}歳）` : ""}${therapist.shopName ? `（${therapist.shopName}）` : ""}${therapist.comment ? ` ${therapist.comment}` : ""}`,
+    description: `${therapist.name}${therapist.age ? `（${therapist.age}歳）` : ""}${therapist.salonName ? `（${therapist.salonName}）` : ""}${therapist.comment ? ` ${therapist.comment}` : ""}`,
     url: `${baseUrl}/therapist/${therapist.id}`,
     address: areaInfo
       ? { "@type": "PostalAddress", addressRegion: areaInfo.prefName, addressLocality: areaInfo.areaName }
@@ -225,10 +225,10 @@ export default async function TherapistPage({ params }: TherapistPageProps) {
       item: `${baseUrl}/area/${areaInfo.prefSlug}/${areaInfo.areaSlug}`,
     });
   }
-  if (therapist.shopName && therapist.shopId) {
+  if (therapist.salonName && therapist.salonId) {
     breadcrumbItems.push({
-      name: therapist.shopName,
-      item: `${baseUrl}/salon/${therapist.shopId}`,
+      name: therapist.salonName,
+      item: `${baseUrl}/salon/${therapist.salonId}`,
     });
   }
   breadcrumbItems.push({
@@ -273,7 +273,7 @@ export default async function TherapistPage({ params }: TherapistPageProps) {
       {sameShopTherapists && sameShopTherapists.length > 0 && (
         <div className="container mx-auto px-4 pb-8">
           <div className="max-w-4xl">
-            <h2 className="text-lg font-bold mb-4">{therapist.shopName}の他のセラピスト</h2>
+            <h2 className="text-lg font-bold mb-4">{therapist.salonName}の他のセラピスト</h2>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {sameShopTherapists.map((t: any) => {
                 const images = t.image_urls || [];

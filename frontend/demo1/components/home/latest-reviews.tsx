@@ -78,7 +78,7 @@ export function LatestReviews() {
   return (
     <section className="mt-8 space-y-4">
       {reviews.map((r) => {
-        const shopName = r.therapists?.salons?.name || "サロン";
+        const salonName = r.therapists?.salons?.name || "サロン";
         const therapistName = r.therapists?.name || "不明";
         const imageUrl = r.therapists?.image_urls?.[0] || null;
         const scorePercent = r.score;
@@ -88,7 +88,7 @@ export function LatestReviews() {
           <Card key={r.id} className="overflow-hidden shadow-md">
             {/* バナー: サロン名 + セラピスト名 */}
             <div className="bg-gradient-to-r from-primary to-blue-600 px-5 py-2.5">
-              <h3 className="text-white font-bold text-sm">{shopName}</h3>
+              <h3 className="text-white font-bold text-sm">{salonName}</h3>
               <p className="text-blue-100 text-xs mt-0.5">
                 <span className="text-white font-bold">{therapistName}</span> さんの口コミ体験レポート
               </p>

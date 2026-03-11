@@ -51,7 +51,7 @@ export function ReviewCard({ review, isBlurred = false, showTherapist = true, va
       {/* バナー: サロン名 + セラピスト名 */}
       <div className="bg-gradient-to-r from-primary to-blue-600 px-5 py-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-white font-bold text-base">{review.shopName || "サロン"}</h3>
+          <h3 className="text-white font-bold text-base">{review.salonName || "サロン"}</h3>
           {/* Pattern B: アイコン+テキスト付きバッジ（バナー内） */}
           {isVerified && (
             <Badge className="bg-yellow-400/30 text-yellow-100 border-0 text-[10px] gap-1 hover:bg-yellow-400/40">

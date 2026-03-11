@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronRight, TrendingUp } from "lucide-react";
 
-interface PopularShop {
+interface PopularSalon {
   id: number;
   name: string;
   display_name: string | null;
@@ -21,7 +21,7 @@ interface AreaSection {
   areaName: string;
   areaSlug: string;
   prefSlug: string;
-  shops: PopularShop[];
+  salons: PopularSalon[];
 }
 
 // 人気エリア定義（検索ボリューム上位から各リージョン代表を選出）
@@ -48,15 +48,15 @@ function AreaSectionCard({ section, defaultOpen }: { section: AreaSection; defau
       {isOpen && (
         <div className="p-4 bg-background">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {section.shops.map((shop) => (
-              <div key={shop.id} className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+            {section.salons.map((salon) => (
+              <div key={salon.id} className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
                 <div className="relative">
                   <span className="absolute top-2 left-2 bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded z-10">
-                    {shop.display_name || shop.name}
+                    {salon.display_name || salon.name}
                   </span>
                   <Image
-                    src={shop.image_url || "/placeholder.svg"}
-                    alt={shop.display_name || shop.name}
+                    src={salon.image_url || "/placeholder.svg"}
+                    alt={salon.display_name || salon.name}
                     width={400}
                     height={200}
                     className="w-full h-32 object-cover"
@@ -64,15 +64,15 @@ function AreaSectionCard({ section, defaultOpen }: { section: AreaSection; defau
                   />
                 </div>
                 <div className="p-3">
-                  {shop.access && (
-                    <p className="text-xs text-muted-foreground mb-1">{shop.access}</p>
+                  {salon.access && (
+                    <p className="text-xs text-muted-foreground mb-1">{salon.access}</p>
                   )}
-                  {shop.description && (
+                  {salon.description && (
                     <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                      {shop.description}
+                      {salon.description}
                     </p>
                   )}
-                  <Link href={`/salon/${shop.id}`}>
+                  <Link href={`/salon/${salon.id}`}>
                     <Button variant="outline" className="w-full text-primary border-primary hover:bg-primary/5 bg-transparent">
                       口コミと店舗詳細を見る
                       <ChevronRight className="h-4 w-4 ml-1" />
@@ -96,7 +96,7 @@ function AreaSectionCard({ section, defaultOpen }: { section: AreaSection; defau
   );
 }
 
-export function AreaPopularShops() {
+export function AreaPopularSalons() {
   const [sections, setSections] = useState<AreaSection[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -123,14 +123,14 @@ export function AreaPopularShops() {
         if (!prefSlug) continue;
 
         const salonsRes = await fetch(`/api/salons?area_id=${area.id}&limit=4`);
-        const shops = await salonsRes.json();
-        if (!Array.isArray(shops) || shops.length === 0) continue;
+        const salons = await salonsRes.json();
+        if (!Array.isArray(salons) || salons.length === 0) continue;
 
         results.push({
           areaName: area.name,
           areaSlug: area.slug,
           prefSlug,
-          shops: shops as PopularShop[],
+          salons: salons as PopularSalon[],
         });
       }
 

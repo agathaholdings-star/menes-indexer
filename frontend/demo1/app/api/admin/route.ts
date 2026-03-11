@@ -41,7 +41,7 @@ export async function GET() {
   }
 
   // Fetch stats
-  const [shopCount, therapistCount, reviewCount, userCount, pendingCount] =
+  const [salonCount, therapistCount, reviewCount, userCount, pendingCount] =
     await Promise.all([
       supabaseAdmin.from("salons").select("id", { count: "exact", head: true }),
       supabaseAdmin.from("therapists").select("id", { count: "exact", head: true }),
@@ -65,23 +65,23 @@ export async function GET() {
   let enrichedReviews = reviews ?? [];
   if (enrichedReviews.length > 0) {
     const therapistIds = [...new Set(enrichedReviews.map((r) => r.therapist_id))];
-    const shopIds = [...new Set(enrichedReviews.map((r) => r.salon_id))];
+    const salonIds = [...new Set(enrichedReviews.map((r) => r.salon_id))];
     const userIds = [...new Set(enrichedReviews.map((r) => r.user_id))];
 
     const [therapists, shops, profiles] = await Promise.all([
       supabaseAdmin.from("therapists").select("id, name").in("id", therapistIds),
-      supabaseAdmin.from("salons").select("id, display_name, name").in("id", shopIds),
+      supabaseAdmin.from("salons").select("id, display_name, name").in("id", salonIds),
       supabaseAdmin.from("profiles").select("id, nickname").in("id", userIds),
     ]);
 
     const therapistMap = new Map((therapists.data ?? []).map((t) => [t.id, t.name]));
-    const shopMap = new Map((shops.data ?? []).map((s) => [s.id, s.display_name || s.name]));
+    const salonMap = new Map((shops.data ?? []).map((s) => [s.id, s.display_name || s.name]));
     const userMap = new Map((profiles.data ?? []).map((p) => [p.id, p.nickname || "名無し"]));
 
     enrichedReviews = enrichedReviews.map((r) => ({
       ...r,
       therapist_name: therapistMap.get(r.therapist_id) || `ID:${r.therapist_id}`,
-      shop_name: shopMap.get(r.salon_id) || `ID:${r.salon_id}`,
+      shop_name: salonMap.get(r.salon_id) || `ID:${r.salon_id}`,
       user_nickname: userMap.get(r.user_id) || "不明",
     }));
   }
@@ -108,7 +108,7 @@ export async function GET() {
 
   return NextResponse.json({
     stats: {
-      shops: shopCount.count ?? 0,
+      salons: salonCount.count ?? 0,
       therapists: therapistCount.count ?? 0,
       reviews: reviewCount.count ?? 0,
       users: userCount.count ?? 0,

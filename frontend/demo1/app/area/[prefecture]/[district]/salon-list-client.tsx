@@ -14,7 +14,7 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import type { Shop, Therapist, TherapistType, BodyType } from "@/lib/data";
 import type { SalonLatestReview, NearbyAreaLink } from "@/lib/supabase-data";
 
-interface ShopListPageClientProps {
+interface SalonListPageClientProps {
   prefecture: string;
   district: string;
   decodedPrefecture: string;
@@ -50,7 +50,7 @@ function RankBadge({ rank }: { rank: number }) {
   );
 }
 
-export function ShopListPageClient({
+export function SalonListPageClient({
   prefecture,
   district,
   decodedPrefecture,
@@ -63,12 +63,12 @@ export function ShopListPageClient({
   nearbyAreas = [],
   prefectureSlug,
   seoDescription,
-}: ShopListPageClientProps) {
+}: SalonListPageClientProps) {
   const [sortBy, setSortBy] = useState("ranking");
   const { permissions } = useTier();
   const isScoreLocked = !permissions.canViewReviewBody;
 
-  const getShopTherapists = (shopId: string) => allTherapists.filter(t => t.shopId === shopId).slice(0, 3);
+  const getSalonTherapists = (salonId: string) => allTherapists.filter(t => t.salonId === salonId).slice(0, 3);
 
   const sortedShops = useMemo(() => {
     const sorted = [...shops];
@@ -133,7 +133,7 @@ export function ShopListPageClient({
                 </Card>
               ) : (
                 sortedShops.map(shop => {
-                  const shopTherapists = getShopTherapists(shop.id);
+                  const salonTherapists = getSalonTherapists(shop.id);
                   return (
                     <Link key={shop.id} href={`/salon/${shop.id}`}>
                       <Card className="transition-all hover:shadow-md hover:border-primary/20">
@@ -229,11 +229,11 @@ export function ShopListPageClient({
                                 </div>
                               )}
 
-                              {shopTherapists.length > 0 && (
+                              {salonTherapists.length > 0 && (
                                 <div className="flex items-center gap-2 mt-3">
                                   <span className="text-xs text-muted-foreground">人気セラピスト:</span>
                                   <div className="flex -space-x-2">
-                                    {shopTherapists.map(t => (
+                                    {salonTherapists.map(t => (
                                       <div key={t.id} className="relative w-8 h-8 rounded-full overflow-hidden border-2 border-card">
                                         <TherapistImage src={t.images[0]} alt={t.name} fill className="object-cover" />
                                       </div>

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ShopPageClient } from "./shop-page-client";
-import { getShopById, getShopBySlug, getTherapistsByShopId, getShopAreaInfo, getSalonReviewStatsBatch } from "@/lib/supabase-data";
+import { getShopById, getShopBySlug, getTherapistsBySalonId, getSalonAreaInfo, getSalonReviewStatsBatch } from "@/lib/supabase-data";
 import { supabaseAdmin as supabase } from "@/lib/supabase-admin";
 
 export const revalidate = 3600;
@@ -25,21 +25,21 @@ interface ShopPageProps {
 export async function generateMetadata({ params }: ShopPageProps): Promise<Metadata> {
   const { id } = await params;
   const isNumeric = /^\d+$/.test(id);
-  const dbShop = isNumeric ? await getShopById(Number(id)) : await getShopBySlug(id);
-  if (!dbShop) return {};
-  const name = dbShop.display_name || dbShop.name;
+  const dbSalon = isNumeric ? await getShopById(Number(id)) : await getShopBySlug(id);
+  if (!dbSalon) return {};
+  const name = dbSalon.display_name || dbSalon.name;
   const [areaInfo, statsMap] = await Promise.all([
-    getShopAreaInfo(dbShop.id),
-    getSalonReviewStatsBatch([dbShop.id]),
+    getSalonAreaInfo(dbSalon.id),
+    getSalonReviewStatsBatch([dbSalon.id]),
   ]);
   const areaText = areaInfo ? `（${areaInfo.areaName}）` : "";
-  const stats = statsMap.get(dbShop.id);
+  const stats = statsMap.get(dbSalon.id);
   const reviewCount = stats?.review_count ?? 0;
   const therapistCount = stats?.therapist_count ?? 0;
 
   // 料金情報
-  const priceText = dbShop.base_price
-    ? `料金${dbShop.base_duration || 60}分${dbShop.base_price.toLocaleString()}円〜。`
+  const priceText = dbSalon.base_price
+    ? `料金${dbSalon.base_duration || 60}分${dbSalon.base_price.toLocaleString()}円〜。`
     : "";
 
   // 動的な統計テキスト
@@ -51,51 +51,51 @@ export async function generateMetadata({ params }: ShopPageProps): Promise<Metad
   const desc = `${name}${areaText}の在籍セラピスト口コミ・体験談一覧。${statsText}${priceText}施術内容やサービスの質、セラピストの評判をリアルな口コミで比較できます。`;
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://menes-skr.com";
   return {
-    title: dbShop.seo_title || `${name}の口コミ・体験談一覧`,
+    title: `${name}の口コミ体験談`,
     description: desc,
-    alternates: { canonical: `${baseUrl}/salon/${dbShop.id}` },
+    alternates: { canonical: `${baseUrl}/salon/${dbSalon.id}` },
   };
 }
 
 // DBのShop → フロントのShop型
 function toFrontendShop(
-  dbShop: DbShop,
+  dbSalon: DbShop,
   stats?: { review_count: number; avg_score: number; therapist_count: number }
 ): Shop {
   const reviewCount = stats?.review_count ?? 0;
   const avgScore = stats?.avg_score ?? 0;
 
   return {
-    id: String(dbShop.id),
-    name: dbShop.display_name || dbShop.name,
+    id: String(dbSalon.id),
+    name: dbSalon.display_name || dbSalon.name,
     area: "",
     district: "",
-    access: dbShop.access || "",
-    hours: dbShop.business_hours || "",
-    priceRange: dbShop.base_price
-      ? `${dbShop.base_duration || 60}分 ¥${dbShop.base_price.toLocaleString()}〜`
+    access: dbSalon.access || "",
+    hours: dbSalon.business_hours || "",
+    priceRange: dbSalon.base_price
+      ? `${dbSalon.base_duration || 60}分 ¥${dbSalon.base_price.toLocaleString()}〜`
       : "",
-    genres: dbShop.service_tags || [],
-    description: dbShop.description || dbShop.salon_overview || "",
+    genres: dbSalon.service_tags || [],
+    description: dbSalon.description || dbSalon.salon_overview || "",
     therapistCount: stats?.therapist_count ?? 0,
     reviewCount,
     averageScore: avgScore,
     rating: avgScore,
-    thumbnail: dbShop.image_url || "/placeholder.svg",
-    images: dbShop.image_url ? [dbShop.image_url] : [],
+    thumbnail: dbSalon.image_url || "/placeholder.svg",
+    images: dbSalon.image_url ? [dbSalon.image_url] : [],
     courses: [],
   };
 }
 
 // DBのTherapist → フロントのTherapist型
-function toFrontendTherapist(t: DbTherapist, shopName: string): Therapist {
+function toFrontendTherapist(t: DbTherapist, salonName: string): Therapist {
   const { name, age } = parseNameAge(t.name, t.age);
   return {
     id: String(t.id),
     name,
     age,
-    shopId: String(t.salon_id),
-    shopName,
+    salonId: String(t.salon_id),
+    salonName,
     area: "",
     district: "",
     images: (t.image_urls as string[]) || [],
@@ -131,7 +131,7 @@ function toFrontendReview(r: Record<string, unknown>): Review {
     id: String(r.id),
     therapistId: String(r.therapist_id),
     therapistName: "",
-    shopName: "",
+    salonName: "",
     score: (r.score as number) || 0,
     typeId: r.looks_type_id ? String(r.looks_type_id) : "",
     bodyType: r.body_type_id ? String(r.body_type_id) : "",
@@ -165,24 +165,24 @@ export default async function ShopPage({ params }: ShopPageProps) {
 
   // IDが数値ならIDで検索、そうでなければslugで検索
   const isNumeric = /^\d+$/.test(id);
-  const dbShop = isNumeric
+  const dbSalon = isNumeric
     ? await getShopById(Number(id))
     : await getShopBySlug(id);
 
-  if (!dbShop) {
+  if (!dbSalon) {
     notFound();
   }
 
   // 独立した4クエリを並列実行
   const [statsMap, dbTherapists, areaInfo, { data: reviewRows }] = await Promise.all([
-    getSalonReviewStatsBatch([dbShop.id]),
-    getTherapistsByShopId(dbShop.id),
-    getShopAreaInfo(dbShop.id),
-    supabase.from("reviews").select("*, therapists(name, image_urls)").eq("salon_id", dbShop.id).eq("moderation_status", "approved").order("created_at", { ascending: false }).limit(50),
+    getSalonReviewStatsBatch([dbSalon.id]),
+    getTherapistsBySalonId(dbSalon.id),
+    getSalonAreaInfo(dbSalon.id),
+    supabase.from("reviews").select("*, therapists(name, image_urls)").eq("salon_id", dbSalon.id).eq("moderation_status", "approved").order("created_at", { ascending: false }).limit(50),
   ]);
 
-  const stats = statsMap.get(dbShop.id);
-  const shop = toFrontendShop(dbShop, stats);
+  const stats = statsMap.get(dbSalon.id);
+  const shop = toFrontendShop(dbSalon, stats);
   const therapists = dbTherapists.map((t) =>
     toFrontendTherapist(t, shop.name)
   );
@@ -195,7 +195,7 @@ export default async function ShopPage({ params }: ShopPageProps) {
     if (therapistData?.name) {
       review.therapistName = therapistData.name;
     }
-    review.shopName = shop.name;
+    review.salonName = shop.name;
     review.therapistImageUrl = therapistData?.image_urls?.[0] || undefined;
     return review;
   });
@@ -261,7 +261,7 @@ export default async function ShopPage({ params }: ShopPageProps) {
         shop={shop}
         therapists={therapists}
         shopReviews={shopReviews}
-        officialUrl={dbShop.official_url || null}
+        officialUrl={dbSalon.official_url || null}
         areaName={areaInfo?.areaName || ""}
         areaSlug={areaInfo?.areaSlug || ""}
         prefName={areaInfo?.prefName || ""}
