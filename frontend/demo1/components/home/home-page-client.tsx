@@ -6,7 +6,9 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { HeroSection } from "@/components/home/hero-section";
 import { AreaGrid } from "@/components/home/area-grid";
 import { LatestReviews } from "@/components/home/latest-reviews";
+import type { LatestReview } from "@/components/home/latest-reviews";
 import { TopReviewedSalons } from "@/components/home/top-reviewed-salons";
+import type { SalonWithReviewCount } from "@/components/home/top-reviewed-salons";
 import { ReviewCtaBanner } from "@/components/home/review-cta-banner";
 import type { AreasGrouped, AreaItem } from "@/lib/supabase-data";
 
@@ -14,9 +16,11 @@ interface HomePageClientProps {
   areasGrouped: AreasGrouped;
   popularAreas: (AreaItem & { name: string })[];
   regionOrder: string[];
+  latestReviews: LatestReview[];
+  topReviewedSalons: SalonWithReviewCount[];
 }
 
-export function HomePageClient({ areasGrouped, popularAreas, regionOrder }: HomePageClientProps) {
+export function HomePageClient({ areasGrouped, popularAreas, regionOrder, latestReviews, topReviewedSalons }: HomePageClientProps) {
   return (
       <div className="min-h-screen flex flex-col bg-background">
         <SiteHeader />
@@ -37,8 +41,8 @@ export function HomePageClient({ areasGrouped, popularAreas, regionOrder }: Home
                   popularAreas={popularAreas}
                   regionOrder={regionOrder}
                 />
-                <LatestReviews />
-                <TopReviewedSalons />
+                <LatestReviews reviews={latestReviews} />
+                <TopReviewedSalons salons={topReviewedSalons} />
                 <ReviewCtaBanner />
               </div>
 

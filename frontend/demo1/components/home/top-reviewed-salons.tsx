@@ -1,12 +1,9 @@
-"use client";
-
-import { useState, useEffect } from "react";
 import Link from "next/link";
 import { MessageSquare, MapPin, Users, ArrowRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
-interface SalonWithReviewCount {
+export interface SalonWithReviewCount {
   id: number;
   name: string;
   display_name: string | null;
@@ -16,43 +13,11 @@ interface SalonWithReviewCount {
   area_name: string | null;
 }
 
-export function TopReviewedSalons() {
-  const [salons, setSalons] = useState<SalonWithReviewCount[]>([]);
-  const [loading, setLoading] = useState(true);
+interface TopReviewedSalonsProps {
+  salons: SalonWithReviewCount[];
+}
 
-  useEffect(() => {
-    async function fetchTopSalons() {
-      try {
-        const res = await fetch("/api/salons/top-reviewed?limit=8");
-        const data = await res.json();
-        setSalons(Array.isArray(data) ? data : []);
-      } catch {
-        setSalons([]);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchTopSalons();
-  }, []);
-
-  if (loading) {
-    return (
-      <section>
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <MessageSquare className="h-5 w-5 text-primary" />
-              口コミが多いサロン
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6 text-center text-sm text-muted-foreground">
-            読み込み中...
-          </CardContent>
-        </Card>
-      </section>
-    );
-  }
-
+export function TopReviewedSalons({ salons }: TopReviewedSalonsProps) {
   if (salons.length === 0) return null;
 
   return (

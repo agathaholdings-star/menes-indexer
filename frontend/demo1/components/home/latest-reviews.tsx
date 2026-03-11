@@ -1,14 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Star, PenSquare, Clock, Eye, ArrowRight, Lock } from "lucide-react";
+import { PenSquare, Clock, Lock } from "lucide-react";
 import { useTier } from "@/lib/hooks/use-tier";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 
-interface LatestReview {
+export interface LatestReview {
   id: string;
   score: number;
   comment_first_impression: string;
@@ -17,41 +15,13 @@ interface LatestReview {
   therapists: { name: string; image_urls: string[] | null; salon_id: number; salons: { name: string } | null } | null;
 }
 
-export function LatestReviews() {
-  const [reviews, setReviews] = useState<LatestReview[]>([]);
-  const [loading, setLoading] = useState(true);
+interface LatestReviewsProps {
+  reviews: LatestReview[];
+}
+
+export function LatestReviews({ reviews }: LatestReviewsProps) {
   const { permissions } = useTier();
   const isLocked = !permissions.canViewReviewBody;
-
-  useEffect(() => {
-    async function fetchLatest() {
-      try {
-        const res = await fetch("/api/reviews/latest?limit=5");
-        const data = await res.json();
-        setReviews(Array.isArray(data) ? data : []);
-      } catch {
-        setReviews([]);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchLatest();
-  }, []);
-
-  if (loading) {
-    return (
-      <section className="mt-8">
-        <Card>
-          <div className="bg-gradient-to-r from-primary to-blue-600 px-5 py-3">
-            <h3 className="text-white font-bold text-base">新着口コミ</h3>
-          </div>
-          <CardContent className="p-6 text-center text-sm text-muted-foreground">
-            読み込み中...
-          </CardContent>
-        </Card>
-      </section>
-    );
-  }
 
   if (reviews.length === 0) {
     return (
