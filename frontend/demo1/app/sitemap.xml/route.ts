@@ -43,7 +43,7 @@ export async function GET() {
   const therapistLastmod = latestTherapist?.updated_at ?? new Date().toISOString();
 
   const sitemaps = [
-    { loc: `${BASE_URL}/sitemap-page.xml`, lastmod: new Date().toISOString() },
+    { loc: `${BASE_URL}/sitemap-page.xml`, lastmod: therapistLastmod },
     { loc: `${BASE_URL}/sitemap-area.xml`, lastmod: areaLastmod },
     { loc: `${BASE_URL}/sitemap-salon.xml`, lastmod: salonLastmod },
     ...Array.from({ length: therapistFileCount }, (_, i) => ({
