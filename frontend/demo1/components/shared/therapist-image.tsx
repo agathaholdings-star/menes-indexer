@@ -8,10 +8,24 @@ type TherapistImageProps = Omit<ImageProps, "src"> & {
   src: string | null | undefined;
 };
 
+const SUPABASE_STORAGE_BASE = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/`;
+
+function normalizeStorageUrl(url: string): string {
+  // ローカルSupabase URL → 環境に合わせたStorage URLに変換
+  if (url.startsWith("http://127.0.0.1:54321/storage/v1/object/public/")) {
+    return url.replace(
+      "http://127.0.0.1:54321/storage/v1/object/public/",
+      SUPABASE_STORAGE_BASE
+    );
+  }
+  return url;
+}
+
 export function TherapistImage({ src, alt, ...props }: TherapistImageProps) {
   const [error, setError] = useState(false);
+  const normalizedSrc = src ? normalizeStorageUrl(src) : src;
 
-  if (!src || error) {
+  if (!normalizedSrc || error) {
     return (
       <div
         className="bg-muted flex flex-col items-center justify-center text-muted-foreground"
@@ -29,7 +43,7 @@ export function TherapistImage({ src, alt, ...props }: TherapistImageProps) {
 
   return (
     <Image
-      src={src}
+      src={normalizedSrc}
       alt={alt ?? ""}
       onError={() => setError(true)}
       {...props}

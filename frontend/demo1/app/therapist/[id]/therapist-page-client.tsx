@@ -14,7 +14,6 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { ProfileTable } from "@/components/therapist/profile-table";
 
 import { ReviewList } from "@/components/therapist/review-list";
-import { Recommendations } from "@/components/therapist/recommendations";
 import { ReviewWizardModal, type PrefillContext } from "@/components/review/review-wizard-modal";
 import { useTier } from "@/lib/hooks/use-tier";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
@@ -27,15 +26,23 @@ interface SalonInfo {
   access: string | null;
 }
 
+interface SameShopTherapist {
+  id: number;
+  name: string;
+  age: number | null;
+  imageUrl: string | null;
+}
+
 interface TherapistPageClientProps {
   therapist: Therapist;
   reviews: Review[];
   areaName?: string;
   prefName?: string;
   salonInfo?: SalonInfo;
+  sameShopTherapists?: SameShopTherapist[];
 }
 
-export function TherapistPageClient({ therapist, reviews, areaName, prefName, salonInfo }: TherapistPageClientProps) {
+export function TherapistPageClient({ therapist, reviews, areaName, prefName, salonInfo, sameShopTherapists }: TherapistPageClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -304,8 +311,28 @@ export function TherapistPageClient({ therapist, reviews, areaName, prefName, sa
                 />
               )}
 
-              {/* Recommendations */}
-              <Recommendations therapist={therapist} />
+              {/* 同サロンセラピスト（SSRデータ） */}
+              {sameShopTherapists && sameShopTherapists.length > 0 && (
+                <div className="mt-6">
+                  <h2 className="text-lg font-bold mb-4">{therapist.salonName}の他のセラピスト</h2>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {sameShopTherapists.map((t) => {
+                      const displayName = t.name.replace(/\s*\(\d{2}\)$/, "");
+                      return (
+                        <Link key={t.id} href={`/therapist/${t.id}`} className="group">
+                          <div className="relative h-36 rounded-lg overflow-hidden">
+                            <TherapistImage src={t.imageUrl} alt={displayName} fill className="object-cover group-hover:scale-105 transition-transform" />
+                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
+                              <p className="font-bold text-sm text-white">{displayName}</p>
+                              {t.age && <p className="text-xs text-white/80">{t.age}歳</p>}
+                            </div>
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Sidebar */}

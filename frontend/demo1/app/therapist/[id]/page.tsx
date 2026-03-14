@@ -81,7 +81,11 @@ export default async function TherapistPage({ params }: TherapistPageProps) {
     supabase.from("salons").select("name, display_name, business_hours, base_price, base_duration, access").eq("id", dbTherapist.salon_id).single(),
     getSalonAreaInfo(dbTherapist.salon_id),
     supabase.from("reviews").select("*, profiles:reviews_user_id_fkey(nickname, total_review_count)").eq("therapist_id", Number(id)).eq("moderation_status", "approved").order("created_at", { ascending: false }).limit(100),
-    supabase.from("therapists").select("id, name, age, image_urls").eq("salon_id", dbTherapist.salon_id).neq("id", Number(id)).eq("status", "active").order("review_count", { ascending: false, nullsFirst: false }).limit(8),
+    supabase.from("therapists").select("id, name, age, image_urls").eq("salon_id", dbTherapist.salon_id).neq("id", Number(id)).eq("status", "active")
+      .not("name", "ilike", "%プロフィール%").not("name", "ilike", "%profile%").not("name", "ilike", "%THERAPIST%")
+      .not("name", "ilike", "%セラピスト%").not("name", "ilike", "%キャスト紹介%").not("name", "ilike", "%在籍表%")
+      .not("name", "ilike", "%staff%").not("name", "ilike", "%ランキング%").not("name", "eq", "---")
+      .order("review_count", { ascending: false, nullsFirst: false }).limit(8),
   ]);
 
   const reviewCount = (dbReviews || []).length;
@@ -268,32 +272,13 @@ export default async function TherapistPage({ params }: TherapistPageProps) {
           baseDuration: shop?.base_duration || null,
           access: shop?.access || null,
         }}
+        sameShopTherapists={(sameShopTherapists || []).map((t: any) => ({
+          id: t.id,
+          name: t.name,
+          age: t.age,
+          imageUrl: (t.image_urls || [])[0] || null,
+        }))}
       />
-      {/* SSR: 同サロンセラピスト（Googlebot可視） */}
-      {sameShopTherapists && sameShopTherapists.length > 0 && (
-        <div className="container mx-auto px-4 pb-8">
-          <div className="max-w-4xl">
-            <h2 className="text-lg font-bold mb-4">{therapist.salonName}の他のセラピスト</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {sameShopTherapists.map((t: any) => {
-                const images = t.image_urls || [];
-                const displayName = t.name.replace(/\s*\(\d{2}\)$/, "");
-                return (
-                  <Link key={t.id} href={`/therapist/${t.id}`} className="group">
-                    <div className="relative h-36 rounded-lg overflow-hidden">
-                      <TherapistImage src={images[0]} alt={displayName} fill className="object-cover group-hover:scale-105 transition-transform" />
-                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
-                        <p className="font-bold text-sm text-white">{displayName}</p>
-                        {t.age && <p className="text-xs text-white/80">{t.age}歳</p>}
-                      </div>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }
