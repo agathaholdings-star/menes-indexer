@@ -50,10 +50,28 @@ export async function generateMetadata({ params }: ShopPageProps): Promise<Metad
 
   const desc = `${name}${areaText}の在籍セラピスト口コミ体験談一覧。${statsText}${priceText}施術内容やサービスの質、セラピストの評判をリアルな口コミで比較できます。`;
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://menes-skr.com";
+  const titleText = `${name}の口コミ体験談`;
+  const pageUrl = `${baseUrl}/salon/${dbSalon.id}`;
+  const ogImage = dbSalon.image_url || `${baseUrl}/og-image.png`;
   return {
-    title: `${name}の口コミ体験談`,
+    title: titleText,
     description: desc,
     alternates: { canonical: `${baseUrl}/salon/${dbSalon.id}` },
+    openGraph: {
+      title: titleText,
+      description: desc,
+      url: pageUrl,
+      images: [{ url: ogImage }],
+      type: "article",
+      siteName: "メンエスSKR",
+      locale: "ja_JP",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: titleText,
+      description: desc,
+      images: [ogImage],
+    },
   };
 }
 

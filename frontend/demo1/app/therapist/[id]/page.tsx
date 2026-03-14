@@ -42,7 +42,7 @@ export async function generateMetadata({ params }: TherapistPageProps): Promise<
   if (!/^\d+$/.test(id)) return {};
   const { data } = await supabase
     .from("therapists")
-    .select("name, age, salon_id, height, cup")
+    .select("name, age, salon_id, height, cup, image_urls")
     .eq("id", Number(id))
     .single();
   if (!data) return {};
@@ -60,10 +60,30 @@ export async function generateMetadata({ params }: TherapistPageProps): Promise<
   const specText = specs.length > 0 ? `（${specs.join("・")}）` : "";
 
   const desc = `${salonName}${areaText}の${data.name}${specText}の口コミ体験談。サービスの質や施術内容、密着度、雰囲気などリアルな評判を掲載。`;
+  const titleText = `${salonName}「${data.name}」の口コミや評判が分かる体験談`;
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://menes-skr.com";
+  const pageUrl = `${baseUrl}/therapist/${id}`;
+  const images = (data.image_urls as string[]) || [];
+  const ogImage = images.length > 0 ? images[0] : `${baseUrl}/og-image.png`;
   return {
-    title: `${salonName}「${data.name}」の口コミや評判が分かる体験談`,
+    title: titleText,
     description: desc,
     alternates: { canonical: `/therapist/${id}` },
+    openGraph: {
+      title: titleText,
+      description: desc,
+      url: pageUrl,
+      images: [{ url: ogImage }],
+      type: "article",
+      siteName: "メンエスSKR",
+      locale: "ja_JP",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: titleText,
+      description: desc,
+      images: [ogImage],
+    },
   };
 }
 

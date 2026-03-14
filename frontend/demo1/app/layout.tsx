@@ -48,7 +48,7 @@ export const metadata: Metadata = {
     images: ['/og-image.png'],
   },
   alternates: {
-    canonical: 'https://menes-skr.com',
+    canonical: 'https://menes-skr.com/',
   },
   robots: {
     index: true,
