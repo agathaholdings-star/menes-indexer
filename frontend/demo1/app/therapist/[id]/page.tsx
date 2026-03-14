@@ -431,7 +431,16 @@ export default async function TherapistPage({ params }: TherapistPageProps) {
                             ))}
                           </div>
                         </section>
-                      ) : null
+                      ) : (
+                        <Card>
+                          <CardContent className="p-8 text-center">
+                            <h3 className="text-lg font-bold mb-2">このセラピストの口コミを最初に投稿しませんか?</h3>
+                            <p className="text-sm text-muted-foreground mb-4">
+                              口コミを投稿すると5クレジット獲得(スクショ付きで10クレジット)
+                            </p>
+                          </CardContent>
+                        </Card>
+                      )
                     }
                   >
                     <ReviewsSection

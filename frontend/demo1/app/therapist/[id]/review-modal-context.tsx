@@ -25,9 +25,11 @@ export function ReviewModalProvider({ children, defaultPrefill }: ReviewModalPro
   const [prefill, setPrefill] = useState<PrefillContext | undefined>(undefined);
 
   const openModal = useCallback((p?: PrefillContext) => {
-    setPrefill(p || defaultPrefill);
+    // p=undefined → 汎用投稿フロー（他のセラピストも選べる）
+    // p=prefill → 特定セラピスト向け
+    setPrefill(p);
     setIsOpen(true);
-  }, [defaultPrefill]);
+  }, []);
 
   return (
     <ReviewModalContext.Provider value={{ openModal }}>
