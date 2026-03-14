@@ -244,6 +244,19 @@ export default async function TherapistPage({ params }: TherapistPageProps) {
     review: reviewStructuredData.length > 0 ? reviewStructuredData : undefined,
   };
 
+  // ペイウォール構造化データ（Google推奨）
+  const paywallJsonLd = reviewCount > 0 ? {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: `${salonName}「${therapist.name}」の口コミや評判が分かる体験談`,
+    isAccessibleForFree: false,
+    hasPart: reviews.map((r) => ({
+      "@type": "WebPageElement",
+      isAccessibleForFree: false,
+      cssSelector: `[data-review-id="${r.id}"]`,
+    })),
+  } : null;
+
   const breadcrumbItems: { name: string; item: string }[] = [
     { name: "トップ", item: baseUrl },
   ];
@@ -291,6 +304,12 @@ export default async function TherapistPage({ params }: TherapistPageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd).replace(/</g, "\\u003c") }}
       />
+      {paywallJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(paywallJsonLd).replace(/</g, "\\u003c") }}
+        />
+      )}
 
       <ReviewModalProvider defaultPrefill={prefill}>
         <div className="min-h-screen flex flex-col bg-background">
@@ -405,7 +424,7 @@ export default async function TherapistPage({ params }: TherapistPageProps) {
                           <h2 className="text-lg font-bold mb-4">{therapist.name}の口コミ ({reviewCount}件)</h2>
                           <div className="space-y-4">
                             {reviews.map((review) => (
-                              <article key={`ssr-${review.id}`} className="overflow-hidden shadow-md rounded-lg border bg-card">
+                              <article key={`ssr-${review.id}`} data-review-id={review.id} className="overflow-hidden shadow-md rounded-lg border bg-card">
                                 <div className="bg-gradient-to-r from-primary to-blue-600 px-5 py-3">
                                   <h3 className="text-white font-bold text-base">{salonName || "サロン"}</h3>
                                   <p className="text-blue-100 text-sm mt-0.5">
