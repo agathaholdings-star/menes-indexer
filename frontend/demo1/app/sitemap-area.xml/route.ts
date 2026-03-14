@@ -1,7 +1,7 @@
 import { supabaseAdmin as supabase } from "@/lib/supabase-admin";
 import { toSitemapXml, xmlResponse, BASE_URL } from "@/lib/sitemap-utils";
 
-export const revalidate = 86400;
+export const revalidate = 3600;
 
 export async function GET() {
   // 都道府県（サロンがあるエリアを持つ県のみ）+ 各県の最新エリア更新日

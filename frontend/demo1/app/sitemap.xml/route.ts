@@ -1,7 +1,7 @@
 import { supabaseAdmin as supabase } from "@/lib/supabase-admin";
 import { toSitemapIndexXml, xmlResponse, BASE_URL } from "@/lib/sitemap-utils";
 
-export const revalidate = 86400;
+export const revalidate = 3600;
 
 const THERAPISTS_PER_FILE = 5000;
 
