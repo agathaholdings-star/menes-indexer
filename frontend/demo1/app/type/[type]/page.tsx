@@ -23,8 +23,8 @@ export async function generateMetadata({
   const typeInfo = therapistTypes.find((t) => t.id === type);
   const typeName = typeInfo?.label || decodeURIComponent(type);
   return {
-    title: `${typeName}系セラピスト`,
-    description: `${typeName}系のメンズエステセラピスト一覧。口コミ評価の高い${typeName}系セラピストを探せます。`,
+    title: `${typeName}セラピスト`,
+    description: `${typeName}のメンズエステセラピスト一覧。口コミ評価の高い${typeName}セラピストを探せます。`,
     alternates: { canonical: `/type/${type}` },
   };
 }
@@ -78,7 +78,7 @@ export default async function TypePage({
             ホーム
           </Link>
           <ChevronRight className="h-4 w-4" />
-          <span className="text-foreground">{typeName}系セラピスト</span>
+          <span className="text-foreground">{typeName}セラピスト</span>
         </nav>
 
         <div className="flex flex-col lg:flex-row gap-8">
@@ -91,7 +91,7 @@ export default async function TypePage({
                   <div className="text-4xl">{typeInfo.icon}</div>
                 )}
                 <div>
-                  <h1 className="text-2xl font-bold">{typeName}系セラピスト</h1>
+                  <h1 className="text-2xl font-bold">{typeName}セラピスト</h1>
                   <p className="text-muted-foreground">
                     {typeTherapists.length > 0
                       ? `${typeTherapists.length}名のセラピストが登録中`
@@ -150,7 +150,7 @@ export default async function TypePage({
               <div className="text-center py-16">
                 <PenSquare className="h-16 w-16 mx-auto text-muted-foreground mb-6" />
                 <h2 className="text-xl font-bold mb-2">
-                  まだ{typeName}系のデータがありません
+                  まだ{typeName}のデータがありません
                 </h2>
                 <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                   口コミを投稿するとセラピストのタイプが記録され、このページに表示されます。
