@@ -208,7 +208,7 @@ export default async function TherapistPage({ params }: TherapistPageProps) {
       r.comment_reason, r.comment_first_impression, r.comment_style,
       r.comment_service, r.comment_service_detail, r.comment_cost,
       r.comment_revisit, r.comment_advice,
-    ].filter(Boolean).join(" ").slice(0, 300);
+    ].filter(Boolean).join(" ").slice(0, 80);
     if (!reviewBody && !r.score) return items;
     items.push({
       "@type": "Review",
@@ -442,30 +442,19 @@ export default async function TherapistPage({ params }: TherapistPageProps) {
                                     {review.createdAt && <p className="mt-0.5">{review.createdAt}</p>}
                                   </div>
                                 </div>
-                                {/* Real review text - blurred via CSS. Googlebot reads text despite blur. */}
-                                <div className="px-5 pt-4 pb-4 space-y-3 text-sm select-none" style={{ filter: "blur(5px)" }}>
-                                  {review.commentFirstImpression && (
-                                    <div><p className="font-medium text-xs text-muted-foreground mb-1">顔の印象</p><p className="leading-relaxed">{review.commentFirstImpression}</p></div>
-                                  )}
-                                  {review.commentStyle && (
-                                    <div><p className="font-medium text-xs text-muted-foreground mb-1">スタイル</p><p className="leading-relaxed">{review.commentStyle}</p></div>
-                                  )}
-                                  {review.commentService && (
-                                    <div><p className="font-medium text-xs text-muted-foreground mb-1">施術の流れ</p><p className="leading-relaxed">{review.commentService}</p></div>
-                                  )}
-                                  {review.commentServiceDetail && (
-                                    <div><p className="font-medium text-xs text-muted-foreground mb-1">どこまでいけた</p><p className="leading-relaxed">{review.commentServiceDetail}</p></div>
-                                  )}
-                                  {review.commentCost && (
-                                    <div><p className="font-medium text-xs text-muted-foreground mb-1">お値段</p><p className="leading-relaxed">{review.commentCost}</p></div>
-                                  )}
-                                  {review.commentRevisit && (
-                                    <div><p className="font-medium text-xs text-muted-foreground mb-1">また行きたい？</p><p className="leading-relaxed">{review.commentRevisit}</p></div>
-                                  )}
-                                  {review.commentAdvice && (
-                                    <div><p className="font-medium text-xs text-muted-foreground mb-1">アドバイス</p><p className="leading-relaxed">{review.commentAdvice}</p></div>
-                                  )}
-                                </div>
+                                {/* Review preview - SSRでは冒頭80文字のみ出力（コンテンツ保護） */}
+                                {(() => {
+                                  const previewText = [
+                                    review.commentFirstImpression, review.commentStyle, review.commentService,
+                                    review.commentServiceDetail, review.commentCost, review.commentRevisit, review.commentAdvice,
+                                  ].filter(Boolean).join(" ");
+                                  const truncated = previewText.length > 80 ? previewText.slice(0, 80) + "…" : previewText;
+                                  return truncated ? (
+                                    <div className="px-5 pt-4 pb-4 text-sm select-none" style={{ filter: "blur(5px)" }}>
+                                      <p className="leading-relaxed">{truncated}</p>
+                                    </div>
+                                  ) : null;
+                                })()}
                               </article>
                             ))}
                           </div>
