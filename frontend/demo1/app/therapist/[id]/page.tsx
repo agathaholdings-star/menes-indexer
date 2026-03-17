@@ -1,3 +1,4 @@
+import { cache } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -24,6 +25,23 @@ import { HydrationSwitch } from "./hydration-switch";
 
 export const revalidate = 3600;
 
+// React cache: dedup Supabase queries between generateMetadata and page render
+const getTherapistCore = cache(async (id: number) => {
+  const { data: dbTherapist } = await supabase
+    .from("therapists")
+    .select("*")
+    .eq("id", id)
+    .single();
+  if (!dbTherapist) return null;
+
+  const [{ data: shop }, areaInfo] = await Promise.all([
+    supabase.from("salons").select("name, display_name, business_hours, base_price, base_duration, access").eq("id", dbTherapist.salon_id).single(),
+    getSalonAreaInfo(dbTherapist.salon_id),
+  ]);
+
+  return { dbTherapist, shop: shop || null, areaInfo };
+});
+
 export async function generateStaticParams() {
   const { data } = await supabase
     .from("reviews")
@@ -40,16 +58,10 @@ interface TherapistPageProps {
 export async function generateMetadata({ params }: TherapistPageProps): Promise<Metadata> {
   const { id } = await params;
   if (!/^\d+$/.test(id)) return {};
-  const { data } = await supabase
-    .from("therapists")
-    .select("name, age, salon_id, height, cup, image_urls")
-    .eq("id", Number(id))
-    .single();
-  if (!data) return {};
-  const [{ data: shop }, areaInfo] = await Promise.all([
-    supabase.from("salons").select("display_name, name").eq("id", data.salon_id).single(),
-    getSalonAreaInfo(data.salon_id),
-  ]);
+  const coreData = await getTherapistCore(Number(id));
+  if (!coreData) return {};
+
+  const { dbTherapist: data, shop, areaInfo } = coreData;
   const salonName = shop?.display_name || shop?.name || "";
   const areaText = areaInfo ? `（${areaInfo.areaName}）` : "";
 
@@ -106,21 +118,15 @@ export default async function TherapistPage({ params }: TherapistPageProps) {
     notFound();
   }
 
-  const { data: dbTherapist } = await supabase
-    .from("therapists")
-    .select("*")
-    .eq("id", Number(id))
-    .single();
-
-  if (!dbTherapist) {
+  const coreData = await getTherapistCore(Number(id));
+  if (!coreData) {
     notFound();
   }
 
+  const { dbTherapist, shop, areaInfo } = coreData;
   const { name: parsedName, age: parsedAge } = parseNameAge(dbTherapist.name, dbTherapist.age);
 
-  const [{ data: shop }, areaInfo, { data: dbReviews }, { data: sameShopTherapists }] = await Promise.all([
-    supabase.from("salons").select("name, display_name, business_hours, base_price, base_duration, access").eq("id", dbTherapist.salon_id).single(),
-    getSalonAreaInfo(dbTherapist.salon_id),
+  const [{ data: dbReviews }, { data: sameShopTherapists }] = await Promise.all([
     supabase.from("reviews").select("*, profiles:reviews_user_id_fkey(nickname, total_review_count)").eq("therapist_id", Number(id)).eq("moderation_status", "approved").order("created_at", { ascending: false }).limit(100),
     supabase.from("therapists").select("id, name, age, image_urls").eq("salon_id", dbTherapist.salon_id).neq("id", Number(id)).eq("status", "active")
       .not("name", "ilike", "%プロフィール%").not("name", "ilike", "%profile%").not("name", "ilike", "%THERAPIST%")
