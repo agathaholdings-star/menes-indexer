@@ -1,5 +1,3 @@
-"use client";
-
 /**
  * SEOコンテンツセクション - page_contentsテーブルのデータを描画
  * AI生成コンテンツ（guide, highlights, area_info, salon_overview）用

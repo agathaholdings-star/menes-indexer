@@ -103,6 +103,7 @@ export default async function ShopListPage({ params }: ShopListPageProps) {
       .eq("entity_id", area.id)
       .then(({ data }) => data || []),
   ]);
+  const seoMap = Object.fromEntries((seoContents || []).map(c => [c.content_key, c]));
   const salonMap = new Map(dbSalons.map((s) => [s.id, s]));
 
   // statsMapとrankMapを作成
@@ -188,16 +189,16 @@ export default async function ShopListPage({ params }: ShopListPageProps) {
         seoDescription={area.seo_description ?? undefined}
         seoContentHtml={
           <>
-            {seoContents.find((c) => c.content_key === "guide") && (
+            {seoMap["guide"] && (
               <SeoContentSection
-                title={seoContents.find((c) => c.content_key === "guide")!.title}
-                body={seoContents.find((c) => c.content_key === "guide")!.body}
+                title={seoMap["guide"].title}
+                body={seoMap["guide"].body}
               />
             )}
-            {seoContents.find((c) => c.content_key === "area_info") && (
+            {seoMap["area_info"] && (
               <SeoContentSection
-                title={seoContents.find((c) => c.content_key === "area_info")!.title}
-                body={seoContents.find((c) => c.content_key === "area_info")!.body}
+                title={seoMap["area_info"].title}
+                body={seoMap["area_info"].body}
               />
             )}
             <FaqSection

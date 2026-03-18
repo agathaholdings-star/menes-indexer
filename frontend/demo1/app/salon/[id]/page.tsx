@@ -201,6 +201,7 @@ export default async function ShopPage({ params }: ShopPageProps) {
     supabase.from("page_contents").select("content_key, title, body").eq("page_type", "salon").eq("entity_id", dbSalon.id).then(({ data }) => data || []),
   ]);
 
+  const seoMap = Object.fromEntries((seoContents || []).map(c => [c.content_key, c]));
   const stats = statsMap.get(dbSalon.id);
   const shop = toFrontendShop(dbSalon, stats);
   const therapists = dbTherapists.map((t) =>
@@ -288,10 +289,10 @@ export default async function ShopPage({ params }: ShopPageProps) {
         prefSlug={areaInfo?.prefSlug || ""}
         seoContentHtml={
           <>
-            {seoContents.find((c) => c.content_key === "salon_overview") && (
+            {seoMap["salon_overview"] && (
               <SeoContentSection
-                title={seoContents.find((c) => c.content_key === "salon_overview")!.title}
-                body={seoContents.find((c) => c.content_key === "salon_overview")!.body}
+                title={seoMap["salon_overview"].title}
+                body={seoMap["salon_overview"].body}
               />
             )}
             <SalonGuideSection
