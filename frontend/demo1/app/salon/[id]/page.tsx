@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ShopPageClient } from "./shop-page-client";
 import { getShopById, getShopBySlug, getTherapistsBySalonId, getSalonAreaInfo, getSalonReviewStatsBatch } from "@/lib/supabase-data";
 import { supabaseAdmin as supabase } from "@/lib/supabase-admin";
+import { SeoContentSection, SalonGuideSection, FaqSection } from "@/components/shared/seo-content-section";
 
 export const revalidate = 3600;
 
@@ -192,11 +193,12 @@ export default async function ShopPage({ params }: ShopPageProps) {
   }
 
   // 独立した4クエリを並列実行
-  const [statsMap, dbTherapists, areaInfo, { data: reviewRows }] = await Promise.all([
+  const [statsMap, dbTherapists, areaInfo, { data: reviewRows }, seoContents] = await Promise.all([
     getSalonReviewStatsBatch([dbSalon.id]),
     getTherapistsBySalonId(dbSalon.id),
     getSalonAreaInfo(dbSalon.id),
     supabase.from("reviews").select("*, therapists(name, image_urls)").eq("salon_id", dbSalon.id).eq("moderation_status", "approved").order("created_at", { ascending: false }).limit(50),
+    supabase.from("page_contents").select("content_key, title, body").eq("page_type", "salon").eq("entity_id", dbSalon.id).then(({ data }) => data || []),
   ]);
 
   const stats = statsMap.get(dbSalon.id);
@@ -284,6 +286,44 @@ export default async function ShopPage({ params }: ShopPageProps) {
         areaSlug={areaInfo?.areaSlug || ""}
         prefName={areaInfo?.prefName || ""}
         prefSlug={areaInfo?.prefSlug || ""}
+        seoContentHtml={
+          <>
+            {seoContents.find((c) => c.content_key === "salon_overview") && (
+              <SeoContentSection
+                title={seoContents.find((c) => c.content_key === "salon_overview")!.title}
+                body={seoContents.find((c) => c.content_key === "salon_overview")!.body}
+              />
+            )}
+            <SalonGuideSection
+              salonName={shop.name}
+              basePrice={dbSalon.base_price}
+              businessHours={dbSalon.business_hours}
+              access={dbSalon.access}
+              officialUrl={dbSalon.official_url}
+            />
+            <FaqSection
+              title={`${shop.name}の口コミでよくある質問`}
+              items={[
+                {
+                  question: `${shop.name}の予約方法は？`,
+                  answer: `${shop.name}は完全予約制です。電話またはWEB予約でご予約ください。${dbSalon.official_url ? `公式サイト: ${dbSalon.official_url}` : ""}`,
+                },
+                {
+                  question: `${shop.name}の料金はいくらから？`,
+                  answer: `${shop.name}の基本料金は60分${dbSalon.base_price ? dbSalon.base_price.toLocaleString() + "円〜" : "要確認"}です。コース時間やオプションによって異なります。`,
+                },
+                {
+                  question: `${shop.name}の営業時間は？`,
+                  answer: `${shop.name}の営業時間は${dbSalon.business_hours || "店舗にお問い合わせください"}です。`,
+                },
+                {
+                  question: `指名料はかかる？`,
+                  answer: `メンズエステでは一般的に1,000円〜3,000円程度の指名料がかかります。${shop.name}の詳しい料金は予約時にご確認ください。`,
+                },
+              ]}
+            />
+          </>
+        }
       />
     </>
   );

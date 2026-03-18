@@ -1,7 +1,7 @@
 # 作業ルール
 
-- コミット時: CLAUDE.md に要点、詳細は `docs/DEVELOPMENT_LOG.md` に記録
-- コンテキスト80%超で新チャット切り替えを提案
+- コミット時: メモリ更新もセットで行う（ユーザーCLAUDE.mdのSession Lifecycle参照）
+- プロジェクト固有の詳細は `docs/DEVELOPMENT_LOG.md` にも記録
 - 画像複数枚はコンテキスト消費大、注意
 - スクレイピングHTMLは必ずgzip保存（`html_cache/{id}.html.gz`）
 - セラピスト抽出の成功判定: 有効name + 有効source_url でDB保存完了

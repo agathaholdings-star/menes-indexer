@@ -26,9 +26,10 @@ interface ShopPageClientProps {
   areaSlug?: string;
   prefName?: string;
   prefSlug?: string;
+  seoContentHtml?: React.ReactNode;
 }
 
-export function ShopPageClient({ shop, therapists, shopReviews, officialUrl, areaName, areaSlug, prefName, prefSlug }: ShopPageClientProps) {
+export function ShopPageClient({ shop, therapists, shopReviews, officialUrl, areaName, areaSlug, prefName, prefSlug, seoContentHtml }: ShopPageClientProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [therapistDisplayCount, setTherapistDisplayCount] = useState(THERAPISTS_PER_PAGE);
   const { permissions } = useTier();
@@ -242,6 +243,9 @@ export function ShopPageClient({ shop, therapists, shopReviews, officialUrl, are
                   )}
                 </CardContent>
               </Card>
+
+              {/* SEO Content (メインカラム内、サイドバーと横並び) */}
+              {seoContentHtml && seoContentHtml}
             </div>
 
             {/* Sidebar */}

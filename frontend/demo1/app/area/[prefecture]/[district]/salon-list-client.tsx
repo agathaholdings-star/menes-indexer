@@ -27,6 +27,7 @@ interface SalonListPageClientProps {
   nearbyAreas?: NearbyAreaLink[];
   prefectureSlug?: string;
   seoDescription?: string;
+  seoContentHtml?: React.ReactNode;
 }
 
 function RankBadge({ rank }: { rank: number }) {
@@ -63,6 +64,7 @@ export function SalonListPageClient({
   nearbyAreas = [],
   prefectureSlug,
   seoDescription,
+  seoContentHtml,
 }: SalonListPageClientProps) {
   const [sortBy, setSortBy] = useState("ranking");
   const { permissions } = useTier();
@@ -277,6 +279,12 @@ export function SalonListPageClient({
                 ))}
               </div>
             </section>
+          )}
+          {/* SEO Content */}
+          {seoContentHtml && (
+            <div className="max-w-4xl mt-8">
+              {seoContentHtml}
+            </div>
           )}
         </div>
       </main>

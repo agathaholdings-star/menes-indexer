@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { SiteHeader } from "@/components/layout/site-header";
 import { Sidebar } from "@/components/layout/sidebar";
 import { SiteFooter } from "@/components/layout/site-footer";
+import { TherapistGuideSection, FaqSection } from "@/components/shared/seo-content-section";
 import { ProfileTable } from "@/components/therapist/profile-table";
 import { parseNameAge } from "@/lib/therapist-utils";
 import { getSalonAreaInfo } from "@/lib/supabase-data";
@@ -35,7 +36,7 @@ const getTherapistCore = cache(async (id: number) => {
   if (!dbTherapist) return null;
 
   const [{ data: shop }, areaInfo] = await Promise.all([
-    supabase.from("salons").select("name, display_name, business_hours, base_price, base_duration, access").eq("id", dbTherapist.salon_id).single(),
+    supabase.from("salons").select("name, display_name, business_hours, base_price, base_duration, access, official_url").eq("id", dbTherapist.salon_id).single(),
     getSalonAreaInfo(dbTherapist.salon_id),
   ]);
 
@@ -126,13 +127,14 @@ export default async function TherapistPage({ params }: TherapistPageProps) {
   const { dbTherapist, shop, areaInfo } = coreData;
   const { name: parsedName, age: parsedAge } = parseNameAge(dbTherapist.name, dbTherapist.age);
 
-  const [{ data: dbReviews }, { data: sameShopTherapists }] = await Promise.all([
+  const [{ data: dbReviews }, { data: sameShopTherapists }, salonSummaryData] = await Promise.all([
     supabase.from("reviews").select("*, profiles:reviews_user_id_fkey(nickname, total_review_count)").eq("therapist_id", Number(id)).eq("moderation_status", "approved").order("created_at", { ascending: false }).limit(100),
     supabase.from("therapists").select("id, name, age, image_urls").eq("salon_id", dbTherapist.salon_id).neq("id", Number(id)).eq("status", "active")
       .not("name", "ilike", "%プロフィール%").not("name", "ilike", "%profile%").not("name", "ilike", "%THERAPIST%")
       .not("name", "ilike", "%セラピスト%").not("name", "ilike", "%キャスト紹介%").not("name", "ilike", "%在籍表%")
       .not("name", "ilike", "%staff%").not("name", "ilike", "%ランキング%").not("name", "eq", "---")
       .order("review_count", { ascending: false, nullsFirst: false }).limit(8),
+    supabase.from("page_contents").select("body").eq("page_type", "salon").eq("entity_id", dbTherapist.salon_id).eq("content_key", "salon_summary").limit(1).then(({ data }) => data?.[0]?.body || null),
   ]);
 
   const reviewCount = (dbReviews || []).length;
@@ -488,6 +490,51 @@ export default async function TherapistPage({ params }: TherapistPageProps) {
                       areaSlug={therapist.area}
                     />
                   </HydrationSwitch>
+
+                  {/* SEO Template Sections */}
+                  <TherapistGuideSection
+                    therapistName={parsedName}
+                    salonName={salonName}
+                    basePrice={shop?.base_price}
+                    baseDuration={shop?.base_duration}
+                    businessHours={shop?.business_hours}
+                    access={shop?.access}
+                    officialUrl={shop?.official_url}
+                    salonSummary={salonSummaryData}
+                  />
+                  <FaqSection
+                    title={`${salonName}の${parsedName}さんの口コミや評判でよくある質問`}
+                    items={[
+                      {
+                        question: `${salonName}で${parsedName}さんの予約方法は？`,
+                        answer: `${salonName}は完全予約制です。電話またはWEB予約でご予約の上、${parsedName}さんをご指名ください。${shop?.official_url ? `公式サイト: ${shop.official_url}` : ""}`,
+                      },
+                      {
+                        question: `${parsedName}さんの料金はいくらから？`,
+                        answer: `${salonName}の基本料金は60分${shop?.base_price ? shop.base_price.toLocaleString() + "円〜" : "要確認"}です。指名料が別途かかる場合があります。`,
+                      },
+                      {
+                        question: `${salonName}にはどんな服装で行く？`,
+                        answer: "普段着で問題ありません。施術着は店舗に用意されています。貴重品は最小限にしておくと安心です。",
+                      },
+                      {
+                        question: `${salonName}でシャワーは使える？`,
+                        answer: "ほとんどのメンズエステでは施術前後にシャワーを利用できます。タオルやアメニティも用意されていることが多いです。",
+                      },
+                      {
+                        question: `${parsedName}さんの施術時間はどれくらい？`,
+                        answer: "コース時間には受付・着替え・シャワーの時間も含まれます。実際の施術時間はコース時間より若干短くなることがあります。初めての方は90分以上のコースがおすすめです。",
+                      },
+                      {
+                        question: `${salonName}の予約キャンセルはできる？`,
+                        answer: "キャンセルポリシーは店舗により異なります。無断キャンセルは迷惑になるため、予定が変わった場合は早めに連絡しましょう。",
+                      },
+                      {
+                        question: `${salonName}の支払い方法は？`,
+                        answer: "支払い方法は店舗により異なります。現金のみの店舗も多いため、予約時に確認しておくと安心です。",
+                      },
+                    ]}
+                  />
 
                   {/* Same-shop therapists - SSR */}
                   {sameShopTherapists && sameShopTherapists.length > 0 && (

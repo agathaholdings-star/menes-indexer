@@ -5,6 +5,7 @@ import { SalonListPageClient } from "./salon-list-client";
 import { getPrefectureBySlug, getAreaBySlug, getShopsByAreaSlug, getRankedSalonsByArea, getLatestReviewsBySalonIds, getNearbyAreas } from "@/lib/supabase-data";
 import type { SalonLatestReview, NearbyAreaLink } from "@/lib/supabase-data";
 import { supabaseAdmin as supabase } from "@/lib/supabase-admin";
+import { SeoContentSection, FaqSection } from "@/components/shared/seo-content-section";
 
 export const revalidate = 3600;
 
@@ -92,9 +93,15 @@ export default async function ShopListPage({ params }: ShopListPageProps) {
   }
 
   // サロン基本情報とランキングデータを並列取得
-  const [dbSalons, rankingData] = await Promise.all([
+  const [dbSalons, rankingData, seoContents] = await Promise.all([
     getShopsByAreaSlug(district),
     getRankedSalonsByArea(area.id),
+    supabase
+      .from("page_contents")
+      .select("content_key, title, body")
+      .eq("page_type", "area")
+      .eq("entity_id", area.id)
+      .then(({ data }) => data || []),
   ]);
   const salonMap = new Map(dbSalons.map((s) => [s.id, s]));
 
@@ -179,6 +186,43 @@ export default async function ShopListPage({ params }: ShopListPageProps) {
         nearbyAreas={nearbyAreas}
         prefectureSlug={prefecture}
         seoDescription={area.seo_description ?? undefined}
+        seoContentHtml={
+          <>
+            {seoContents.find((c) => c.content_key === "guide") && (
+              <SeoContentSection
+                title={seoContents.find((c) => c.content_key === "guide")!.title}
+                body={seoContents.find((c) => c.content_key === "guide")!.body}
+              />
+            )}
+            {seoContents.find((c) => c.content_key === "area_info") && (
+              <SeoContentSection
+                title={seoContents.find((c) => c.content_key === "area_info")!.title}
+                body={seoContents.find((c) => c.content_key === "area_info")!.body}
+              />
+            )}
+            <FaqSection
+              title={`${area.name}のメンズエステ よくある質問`}
+              items={[
+                {
+                  question: `${area.name}で口コミ評価の高いメンズエステは？`,
+                  answer: `${area.name}エリアのメンズエステは当サイトのランキングで確認できます。口コミ評価をもとにしたランキングを参考にしてください。`,
+                },
+                {
+                  question: `${area.name}のメンズエステの料金相場は？`,
+                  answer: `${area.name}エリアの料金相場は60分で12,000円〜20,000円程度です。店舗やコースによって異なります。`,
+                },
+                {
+                  question: `${area.name}で深夜営業しているお店は？`,
+                  answer: `${area.name}エリアでは翌5時まで営業している店舗が多数あります。各店舗の営業時間は店舗ページでご確認ください。`,
+                },
+                {
+                  question: `${area.name}のメンズエステの店舗数は？`,
+                  answer: `${area.name}エリアには${area.salon_count || 0}店舗のメンズエステが掲載されています。`,
+                },
+              ]}
+            />
+          </>
+        }
       />
     </>
   );

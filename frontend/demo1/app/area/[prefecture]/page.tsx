@@ -11,6 +11,7 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { Sidebar } from "@/components/layout/sidebar";
 import { getPrefectureBySlug, getAreasByPrefectureId } from "@/lib/supabase-data";
 import { supabaseAdmin as supabase } from "@/lib/supabase-admin";
+import { SeoContentSection, FaqSection } from "@/components/shared/seo-content-section";
 
 export async function generateStaticParams() {
   const { data } = await supabase
@@ -46,7 +47,7 @@ export default async function AreaPrefecturePage({
     notFound();
   }
 
-  const [areas, popularTherapists] = await Promise.all([
+  const [areas, popularTherapists, seoContents] = await Promise.all([
     getAreasByPrefectureId(pref.id),
     supabase
       .from("therapists")
@@ -56,7 +57,16 @@ export default async function AreaPrefecturePage({
       .order("review_count", { ascending: false })
       .limit(8)
       .then(({ data }) => data || []),
+    supabase
+      .from("page_contents")
+      .select("content_key, title, body")
+      .eq("page_type", "prefecture")
+      .eq("entity_id", pref.id)
+      .then(({ data }) => data || []),
   ]);
+
+  const seoGuide = seoContents.find((c) => c.content_key === "guide");
+  const seoHighlights = seoContents.find((c) => c.content_key === "highlights");
 
   const totalSalonCount = areas.reduce((sum, a) => sum + (a.salon_count || 0), 0);
 
@@ -189,6 +199,42 @@ export default async function AreaPrefecturePage({
                 </div>
               </section>
             )}
+
+            {/* SEO Content Sections */}
+            {seoGuide && (
+              <SeoContentSection title={seoGuide.title} body={seoGuide.body} />
+            )}
+            {seoHighlights && (
+              <SeoContentSection title={seoHighlights.title} body={seoHighlights.body} />
+            )}
+
+            {/* FAQ (テンプレート) */}
+            <FaqSection
+              title={`${pref.name}のメンズエステ よくある質問`}
+
+              items={[
+                {
+                  question: `${pref.name}で一番サロンが多いエリアは？`,
+                  answer: `${pref.name}のメンズエステは各エリアに店舗が点在しています。当サイトのエリア一覧から、店舗数の多いエリアを確認できます。`,
+                },
+                {
+                  question: `${pref.name}のメンズエステの料金相場は？`,
+                  answer: `${pref.name}のメンズエステの料金は、60分で12,000円〜20,000円程度が一般的です。エリアや店舗のグレードによって異なります。`,
+                },
+                {
+                  question: `初めてでも利用しやすいエリアは？`,
+                  answer: `駅近で口コミ評価の高いエリアがおすすめです。当サイトの口コミを参考に、自分に合ったエリアを探してみてください。`,
+                },
+                {
+                  question: `深夜営業しているエリアは？`,
+                  answer: `${pref.name}の多くのメンズエステは深夜まで営業しています。翌5時まで営業している店舗も多数あります。`,
+                },
+                {
+                  question: `予約なしでも行ける？`,
+                  answer: `ほとんどのメンズエステは完全予約制です。事前に電話またはWEB予約を入れてから来店しましょう。`,
+                },
+              ]}
+            />
           </div>
 
           {/* Sidebar */}
