@@ -1,0 +1,78 @@
+{
+  "entity_type": "salon",
+  "entity_id": 9600,
+  "entity_name": "マイ",
+  "keyword": "マイ 口コミ",
+  "results": [
+    {
+      "position": 1,
+      "title": "Google マップでクチコミと評価を追加、編集、削除する - Android",
+      "url": "https://support.google.com/maps/answer/6230175?hl=ja&co=GENIE.Platform%3DAndroid",
+      "description": "自分のクチコミを確認 Google マップでは、ユーザーが訪れた場所についてクチコミを投稿できます。また、その場所について、「静か」「ロマンティック」「改装中」 ...",
+      "domain": "support.google.com"
+    },
+    {
+      "position": 2,
+      "title": "レビュー - 楽天市場",
+      "url": "https://manager.review.rakuten.co.jp/",
+      "description": null,
+      "domain": "manager.review.rakuten.co.jp"
+    },
+    {
+      "position": 3,
+      "title": "My Review - Google Play のアプリ",
+      "url": "https://play.google.com/store/apps/details?id=com.takanakonbu.myreview&hl=ja",
+      "description": "2025/10/04 — 「MyReview」は、ユーザーが自分だけの視点と基準で、あらゆる体験を深く記録し、管理するためのパーソナルなレビューデータベースです。 あなたが本当に ...",
+      "domain": "play.google.com"
+    },
+    {
+      "position": 4,
+      "title": "【楽天市場】ヘルプ・お問い合わせ 【みんなのレビュー】my ...",
+      "url": "https://ichiba-smp.faq.rakuten.net/detail/000010887",
+      "description": "今まで投稿したレビューの確認・管理やレビュアー番付の確認、レビュー未投稿の購入商品一覧の確認・投稿ページへのアクセス、など様々なことができるページです。",
+      "domain": "ichiba-smp.faq.rakuten.net"
+    },
+    {
+      "position": 5,
+      "title": "マイクチコミページ リリースのお知らせ - 楽天トラベル",
+      "url": "https://travel.rakuten.co.jp/info/my_review/",
+      "description": "楽天トラベルではこのたび、これまでに投稿いただいたクチコミをまとめて振り返り・編集できる「マイクチコミページ」をリリースしました。クチコミの編集を手軽に ...",
+      "domain": "travel.rakuten.co.jp"
+    },
+    {
+      "position": 6,
+      "title": "Googleマイビジネスで口コミを集めるときやってはいけない ...",
+      "url": "https://jp.can-ly.com/column/gpb/google-review-campaign/",
+      "description": "2022/04/28 — 口コミを集めるためにキャンペーンを実施しても良い？ · 口コミを宣伝目的で使用しないでください。 · 否定的な口コミの投稿を妨げたり、禁止したり、肯定 ...",
+      "domain": "jp.can-ly.com"
+    },
+    {
+      "position": 7,
+      "title": "Googleの自分が書いた口コミを確認する方法ってありますか？",
+      "url": "https://detail.chiebukuro.yahoo.co.jp/qa/question_detail/q14215854009",
+      "description": "2019/11/05 — ログインしている状態で Googleマップを開き、 メニュー → 自分の投稿 → クチコミを選ぶと過去に投稿したすべてのクチコミを確認できるようになってい ...",
+      "domain": "detail.chiebukuro.yahoo.co.jp"
+    },
+    {
+      "position": 8,
+      "title": "Myレビュー一覧とはなんですか。",
+      "url": "https://faq.booklive.jp/faq/show/3164?category_id=103&return_path=%2Fcategory%2Fshow%2F103%3Fpage%3D1%26site_domain%3Dbooklive%26sort%3Dsort_adjust_value%26sort_order%3Ddesc&site_domain=booklive",
+      "description": "My レビュー一覧は投稿したレビューを確認することができるページです。 Myレビュー一覧.",
+      "domain": "faq.booklive.jp"
+    },
+    {
+      "position": 9,
+      "title": "自分のお店の口コミをGoogleで見る方法【2025年版ガイド】",
+      "url": "https://embedsocial.jp/blog/how-to-see-my-google-reviews/",
+      "description": "2025/09/30 — 「口コミ」タブをクリックして、すべてのGoogleクチコミにアクセスします。 すべてのGoogleビジネスの口コミをフィルタリング、並べ替え、確認します。",
+      "domain": "embedsocial.jp"
+    },
+    {
+      "position": 10,
+      "title": "口コミについて",
+      "url": "https://yourmystar.my.site.com/usersupport/s/topic/0TO5j0000004k2cGAA/%E5%8F%A3%E3%82%B3%E3%83%9F%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6",
+      "description": "口コミ について · 口コミの書き方を教えてください · 口コミを投稿後に修正、または削除したい · 口コミ投稿ガイドラインとは？ · 口コミ評価はどのように算出されていますか？",
+      "domain": "yourmystar.my.site.com"
+    }
+  ]
+}

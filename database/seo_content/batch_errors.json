@@ -1,0 +1,6 @@
+[
+  {
+    "task": "salon/3212/salon_overview",
+    "error": "Error code: 500 - {'type': 'error', 'error': {'type': 'api_error', 'message': 'Internal server error'}, 'request_id': 'req_011CZAq9MmowxuxhjhcCoxez'}"
+  }
+]

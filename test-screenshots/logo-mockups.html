@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SKR Logo Mockups</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+JP:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', 'Noto Sans JP', sans-serif; background: #f5f5f5; padding: 40px; }
+h1 { font-size: 28px; margin-bottom: 10px; color: #111; }
+h2 { font-size: 20px; margin: 40px 0 20px; color: #333; border-bottom: 2px solid #2563eb; padding-bottom: 8px; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 1200px; }
+.card {
+  background: white; border-radius: 12px; padding: 32px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  display: flex; flex-direction: column; align-items: flex-start; gap: 16px;
+}
+.card .label { font-size: 13px; color: #888; font-weight: 500; }
+.logo { display: flex; align-items: center; gap: 10px; }
+.logo-sub { display: flex; flex-direction: column; }
+
+/* ==================== */
+/* Pattern A: Stripe風ボールドテキスト */
+.p-a .mark {
+  font-size: 32px; font-weight: 900; letter-spacing: -1px;
+  background: linear-gradient(135deg, #635bff, #0a2540);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+
+/* Pattern B: 角丸アイコン + テキスト（現行ベース改良） */
+.p-b .icon {
+  width: 38px; height: 38px; background: #2563eb; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-weight: 800; font-size: 15px; letter-spacing: -0.5px;
+}
+.p-b .text { font-size: 22px; font-weight: 800; color: #0f172a; letter-spacing: -0.5px; }
+
+/* Pattern C: 丸アイコン + モダン */
+.p-c .icon {
+  width: 36px; height: 36px; background: #0f172a; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-weight: 700; font-size: 13px; letter-spacing: 0.5px;
+}
+.p-c .text { font-size: 22px; font-weight: 700; color: #0f172a; }
+
+/* Pattern D: スラッシュ区切り */
+.p-d .mark {
+  font-size: 28px; font-weight: 900; color: #0f172a; letter-spacing: -1px;
+}
+.p-d .slash { color: #2563eb; margin: 0 2px; }
+
+/* Pattern E: ミニマル＋アクセントライン */
+.p-e .mark {
+  font-size: 26px; font-weight: 800; color: #0f172a; letter-spacing: 2px;
+  border-left: 4px solid #2563eb; padding-left: 10px;
+}
+
+/* ===== サブタイトル付き ===== */
+
+/* Pattern F: Stripe風 + サブタイトル */
+.p-f .mark {
+  font-size: 30px; font-weight: 900; letter-spacing: -1px;
+  background: linear-gradient(135deg, #635bff, #0a2540);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  line-height: 1.1;
+}
+.p-f .sub {
+  font-size: 11px; color: #64748b; font-weight: 500; letter-spacing: 0.5px; margin-top: 2px;
+}
+
+/* Pattern G: アイコン + サブタイトル右寄せ */
+.p-g .icon {
+  width: 40px; height: 40px; background: linear-gradient(135deg, #2563eb, #1d4ed8); border-radius: 11px;
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-weight: 800; font-size: 15px; letter-spacing: -0.5px;
+  flex-shrink: 0;
+}
+.p-g .text { font-size: 22px; font-weight: 800; color: #0f172a; line-height: 1.1; letter-spacing: -0.5px; }
+.p-g .sub { font-size: 10.5px; color: #64748b; font-weight: 500; letter-spacing: 0.3px; margin-top: 1px; }
+
+/* Pattern H: 丸アイコン + サブタイトル */
+.p-h .icon {
+  width: 38px; height: 38px; background: #0f172a; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: #60a5fa; font-weight: 700; font-size: 13px; letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+.p-h .text { font-size: 21px; font-weight: 700; color: #0f172a; line-height: 1.1; }
+.p-h .sub { font-size: 10.5px; color: #94a3b8; font-weight: 500; margin-top: 1px; }
+
+/* Pattern I: テキストオンリー + サブタイトル下線 */
+.p-i .mark {
+  font-size: 28px; font-weight: 900; color: #0f172a; letter-spacing: -1px; line-height: 1.1;
+}
+.p-i .accent { color: #2563eb; }
+.p-i .sub {
+  font-size: 10.5px; color: #64748b; font-weight: 500; margin-top: 3px;
+  border-bottom: 2px solid #e2e8f0; padding-bottom: 3px;
+}
+
+/* Pattern J: アクセントライン + サブタイトル */
+.p-j .wrapper {
+  border-left: 4px solid #2563eb; padding-left: 10px;
+}
+.p-j .mark {
+  font-size: 24px; font-weight: 800; color: #0f172a; letter-spacing: 1.5px; line-height: 1.1;
+}
+.p-j .sub {
+  font-size: 10px; color: #94a3b8; font-weight: 500; letter-spacing: 0.5px; margin-top: 2px;
+}
+
+/* Header simulation */
+.header-sim {
+  background: white; border-radius: 12px; padding: 14px 24px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  display: flex; align-items: center; gap: 20px;
+  border: 1px solid #e5e7eb;
+  margin-top: 8px;
+}
+.search-mock {
+  flex: 1; max-width: 360px; height: 38px; background: #f8fafc;
+  border: 1px solid #e2e8f0; border-radius: 8px;
+  display: flex; align-items: center; padding: 0 12px;
+  font-size: 13px; color: #94a3b8;
+}
+.sep { width: 1px; height: 24px; background: #e2e8f0; }
+
+/* Dark variant preview */
+.dark-row { background: #0f172a; border-radius: 12px; padding: 14px 24px; margin-top: 8px;
+  display: flex; align-items: center; gap: 20px; }
+</style>
+</head>
+<body>
+
+<h1>SKR Logo Mockups</h1>
+<p style="color:#666; margin-bottom: 8px;">10 patterns: 5 without subtitle / 5 with subtitle</p>
+
+<!-- ============ WITHOUT SUBTITLE ============ -->
+<h2>A. サブタイトルなし (5 patterns)</h2>
+<div class="grid">
+
+  <!-- Pattern A -->
+  <div class="card">
+    <div class="label">Pattern A — Stripe風グラデーション</div>
+    <div class="logo p-a">
+      <span class="mark">SKR</span>
+    </div>
+    <div class="header-sim">
+      <div class="logo p-a"><span class="mark" style="font-size:26px;">SKR</span></div>
+      <div class="sep"></div>
+      <div class="search-mock">Q 店舗名・セラピスト名で検索</div>
+    </div>
+  </div>
+
+  <!-- Pattern B -->
+  <div class="card">
+    <div class="label">Pattern B — 角丸アイコン + ボールドテキスト</div>
+    <div class="logo p-b">
+      <div class="icon">S</div>
+      <span class="text">SKR</span>
+    </div>
+    <div class="header-sim">
+      <div class="logo p-b">
+        <div class="icon" style="width:32px;height:32px;font-size:13px;">S</div>
+        <span class="text" style="font-size:20px;">SKR</span>
+      </div>
+      <div class="sep"></div>
+      <div class="search-mock">Q 店舗名・セラピスト名で検索</div>
+    </div>
+  </div>
+
+  <!-- Pattern C -->
+  <div class="card">
+    <div class="label">Pattern C — サークルアイコン + モダン</div>
+    <div class="logo p-c">
+      <div class="icon">SKR</div>
+      <span class="text">メンエスSKR</span>
+    </div>
+    <div class="header-sim">
+      <div class="logo p-c">
+        <div class="icon" style="width:30px;height:30px;font-size:11px;">SKR</div>
+        <span class="text" style="font-size:18px;">メンエスSKR</span>
+      </div>
+      <div class="sep"></div>
+      <div class="search-mock">Q 店舗名・セラピスト名で検索</div>
+    </div>
+  </div>
+
+  <!-- Pattern D -->
+  <div class="card">
+    <div class="label">Pattern D — スラッシュ区切り</div>
+    <div class="logo p-d">
+      <span class="mark">メンエス<span class="slash">/</span>SKR</span>
+    </div>
+    <div class="header-sim">
+      <div class="logo p-d">
+        <span class="mark" style="font-size:22px;">メンエス<span class="slash">/</span>SKR</span>
+      </div>
+      <div class="sep"></div>
+      <div class="search-mock">Q 店舗名・セラピスト名で検索</div>
+    </div>
+  </div>
+
+  <!-- Pattern E -->
+  <div class="card">
+    <div class="label">Pattern E — ミニマル + アクセントライン</div>
+    <div class="logo p-e">
+      <span class="mark">SKR</span>
+    </div>
+    <div class="header-sim">
+      <div class="logo p-e">
+        <span class="mark" style="font-size:22px; border-width:3px; padding-left:8px;">SKR</span>
+      </div>
+      <div class="sep"></div>
+      <div class="search-mock">Q 店舗名・セラピスト名で検索</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ WITH SUBTITLE ============ -->
+<h2>B. サブタイトルあり (5 patterns)</h2>
+<div class="grid">
+
+  <!-- Pattern F -->
+  <div class="card">
+    <div class="label">Pattern F — Stripe風 + サブタイトル</div>
+    <div class="logo-sub p-f">
+      <span class="mark">SKR</span>
+      <span class="sub">メンズエステの口コミ・レビュー</span>
+    </div>
+    <div class="header-sim">
+      <div class="logo-sub p-f">
+        <span class="mark" style="font-size:24px;">SKR</span>
+        <span class="sub" style="font-size:9.5px;">メンズエステの口コミ・レビュー</span>
+      </div>
+      <div class="sep"></div>
+      <div class="search-mock">Q 店舗名・セラピスト名で検索</div>
+    </div>
+  </div>
+
+  <!-- Pattern G -->
+  <div class="card">
+    <div class="label">Pattern G — 角丸アイコン + サブタイトル</div>
+    <div class="logo p-g">
+      <div class="icon">S</div>
+      <div class="logo-sub">
+        <span class="text">SKR</span>
+        <span class="sub">メンズエステの口コミサイト</span>
+      </div>
+    </div>
+    <div class="header-sim">
+      <div class="logo p-g">
+        <div class="icon" style="width:34px;height:34px;font-size:13px;border-radius:9px;">S</div>
+        <div class="logo-sub">
+          <span class="text" style="font-size:19px;">SKR</span>
+          <span class="sub" style="font-size:9px;">メンズエステの口コミサイト</span>
+        </div>
+      </div>
+      <div class="sep"></div>
+      <div class="search-mock">Q 店舗名・セラピスト名で検索</div>
+    </div>
+  </div>
+
+  <!-- Pattern H -->
+  <div class="card">
+    <div class="label">Pattern H — ダークサークル + サブタイトル</div>
+    <div class="logo p-h">
+      <div class="icon">S</div>
+      <div class="logo-sub">
+        <span class="text">メンエスSKR</span>
+        <span class="sub">口コミで見つける、あなたのセラピスト</span>
+      </div>
+    </div>
+    <div class="header-sim">
+      <div class="logo p-h">
+        <div class="icon" style="width:32px;height:32px;font-size:12px;">S</div>
+        <div class="logo-sub">
+          <span class="text" style="font-size:17px;">メンエスSKR</span>
+          <span class="sub" style="font-size:9px;">口コミで見つける、あなたのセラピスト</span>
+        </div>
+      </div>
+      <div class="sep"></div>
+      <div class="search-mock">Q 店舗名・セラピスト名で検索</div>
+    </div>
+  </div>
+
+  <!-- Pattern I -->
+  <div class="card">
+    <div class="label">Pattern I — テキストオンリー + アクセント</div>
+    <div class="logo-sub p-i">
+      <span class="mark">メンエス<span class="accent">SKR</span></span>
+      <span class="sub">メンズエステ口コミ・レビュー</span>
+    </div>
+    <div class="header-sim">
+      <div class="logo-sub p-i">
+        <span class="mark" style="font-size:22px;">メンエス<span class="accent">SKR</span></span>
+        <span class="sub" style="font-size:9px;">メンズエステ口コミ・レビュー</span>
+      </div>
+      <div class="sep"></div>
+      <div class="search-mock">Q 店舗名・セラピスト名で検索</div>
+    </div>
+  </div>
+
+  <!-- Pattern J -->
+  <div class="card">
+    <div class="label">Pattern J — アクセントライン + サブタイトル</div>
+    <div class="p-j">
+      <div class="wrapper">
+        <div class="mark">SKR</div>
+        <div class="sub">メンズエステの口コミ・発見</div>
+      </div>
+    </div>
+    <div class="header-sim">
+      <div class="p-j">
+        <div class="wrapper" style="border-width:3px; padding-left:8px;">
+          <div class="mark" style="font-size:20px; letter-spacing:1px;">SKR</div>
+          <div class="sub" style="font-size:9px;">メンズエステの口コミ・発見</div>
+        </div>
+      </div>
+      <div class="sep"></div>
+      <div class="search-mock">Q 店舗名・セラピスト名で検索</div>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top: 48px; padding: 24px; background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+  <h3 style="margin-bottom: 16px; font-size: 16px; color: #333;">Favicon Preview (16x16 / 32x32)</h3>
+  <div style="display: flex; gap: 32px; align-items: center; flex-wrap: wrap;">
+    <!-- Favicon A: Gradient S -->
+    <div style="text-align:center;">
+      <div style="width:32px;height:32px;background:linear-gradient(135deg,#635bff,#0a2540);border-radius:7px;display:flex;align-items:center;justify-content:center;color:white;font-weight:900;font-size:18px;font-family:Inter;">S</div>
+      <div style="font-size:10px;color:#888;margin-top:4px;">A/F</div>
+    </div>
+    <!-- Favicon B: Blue square -->
+    <div style="text-align:center;">
+      <div style="width:32px;height:32px;background:#2563eb;border-radius:7px;display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:18px;font-family:Inter;">S</div>
+      <div style="font-size:10px;color:#888;margin-top:4px;">B/G</div>
+    </div>
+    <!-- Favicon C: Dark circle -->
+    <div style="text-align:center;">
+      <div style="width:32px;height:32px;background:#0f172a;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:11px;font-family:Inter;letter-spacing:0.5px;">SKR</div>
+      <div style="font-size:10px;color:#888;margin-top:4px;">C/H</div>
+    </div>
+    <!-- Favicon D: Bold text -->
+    <div style="text-align:center;">
+      <div style="width:32px;height:32px;background:#0f172a;border-radius:7px;display:flex;align-items:center;justify-content:center;color:white;font-weight:900;font-size:11px;font-family:Inter;letter-spacing:-0.5px;">SKR</div>
+      <div style="font-size:10px;color:#888;margin-top:4px;">D/I</div>
+    </div>
+    <!-- Favicon E: Line accent -->
+    <div style="text-align:center;">
+      <div style="width:32px;height:32px;background:white;border:2px solid #0f172a;border-left:4px solid #2563eb;border-radius:5px;display:flex;align-items:center;justify-content:center;color:#0f172a;font-weight:800;font-size:11px;font-family:Inter;letter-spacing:0.5px;">SKR</div>
+      <div style="font-size:10px;color:#888;margin-top:4px;">E/J</div>
+    </div>
+  </div>
+</div>
+
+<p style="margin-top: 32px; color: #999; font-size: 12px;">Generated for menes-skr.com logo exploration</p>
+
+</body>
+</html>

@@ -1,0 +1,169 @@
+- generic:
+  - generic:
+    - banner:
+      - generic:
+        - link:
+          - /url: /
+          - generic:
+            - generic: ME
+          - generic: メンエスSKR
+        - generic:
+          - generic:
+            - img
+            - searchbox
+        - navigation:
+          - link:
+            - /url: /search
+            - img
+            - text: セラピスト検索
+          - link:
+            - /url: /area/tokyo
+            - img
+            - text: エリア検索
+          - link:
+            - /url: /ranking
+            - img
+            - text: ランキング
+        - generic:
+          - button:
+            - img
+            - text: 口コミ投稿
+          - generic:
+            - button:
+              - img
+            - button:
+              - generic:
+                - generic: フ
+              - img
+    - main
+    - contentinfo:
+      - generic:
+        - generic:
+          - generic:
+            - link:
+              - /url: /
+              - generic:
+                - generic: ME
+              - generic: メンエスSKR
+            - paragraph: メンズエステの口コミ・体験談サイト
+          - generic:
+            - heading [level=3]: サイトマップ
+            - list:
+              - listitem:
+                - link:
+                  - /url: /
+                  - text: トップページ
+              - listitem:
+                - link:
+                  - /url: /area
+                  - text: エリア検索
+              - listitem:
+                - link:
+                  - /url: /ranking
+                  - text: ランキング
+          - generic:
+            - heading [level=3]: 会員メニュー
+            - list:
+              - listitem:
+                - link:
+                  - /url: /login
+                  - text: ログイン
+              - listitem:
+                - link:
+                  - /url: /login?tab=register
+                  - text: 新規登録
+              - listitem:
+                - link:
+                  - /url: /pricing
+                  - text: 料金プラン
+              - listitem:
+                - link:
+                  - /url: /mypage
+                  - text: マイページ
+          - generic:
+            - heading [level=3]: 運営情報
+            - list:
+              - listitem:
+                - link:
+                  - /url: /legal/tokushoho
+                  - text: 特定商取引法に基づく表記
+              - listitem:
+                - link:
+                  - /url: /legal/terms
+                  - text: 利用規約
+              - listitem:
+                - link:
+                  - /url: /legal/privacy
+                  - text: プライバシーポリシー
+              - listitem:
+                - link:
+                  - /url: /contact
+                  - text: お問い合わせ
+        - generic:
+          - paragraph: 株式会社AGATHA
+          - paragraph: 〒107-0061 東京都港区北青山1-3-1-3階
+          - paragraph: © 2026 メンエスSKR. All rights reserved.
+  - button "Open Next.js Dev Tools" [ref=e6] [cursor=pointer]:
+    - img [ref=e7]
+  - alert
+  - dialog "口コミ投稿" [ref=e11]:
+    - heading "口コミ投稿" [level=2] [ref=e14]
+    - generic [ref=e28]:
+      - heading "エリアを選択" [level=3] [ref=e29]
+      - paragraph [ref=e30]: メンズエステのあるエリアを選んでください
+      - button "店舗名で直接検索" [active] [ref=e31]:
+        - img [ref=e32]
+        - generic [ref=e35]: 店舗名で直接検索
+      - generic [ref=e42]:
+        - button "東京都(4039)" [ref=e43]:
+          - img [ref=e44]
+          - generic [ref=e47]:
+            - text: 東京都
+            - generic [ref=e48]: (4039)
+        - button "大阪府(1423)" [ref=e49]:
+          - img [ref=e50]
+          - generic [ref=e53]:
+            - text: 大阪府
+            - generic [ref=e54]: (1423)
+        - button "神奈川県(1519)" [ref=e55]:
+          - img [ref=e56]
+          - generic [ref=e59]:
+            - text: 神奈川県
+            - generic [ref=e60]: (1519)
+        - button "埼玉県(1225)" [ref=e61]:
+          - img [ref=e62]
+          - generic [ref=e65]:
+            - text: 埼玉県
+            - generic [ref=e66]: (1225)
+        - button "千葉県(999)" [ref=e67]:
+          - img [ref=e68]
+          - generic [ref=e71]:
+            - text: 千葉県
+            - generic [ref=e72]: (999)
+        - button "北海道(138)" [ref=e73]:
+          - img [ref=e74]
+          - generic [ref=e77]:
+            - text: 北海道
+            - generic [ref=e78]: (138)
+        - button "愛知県(2286)" [ref=e79]:
+          - img [ref=e80]
+          - generic [ref=e83]:
+            - text: 愛知県
+            - generic [ref=e84]: (2286)
+        - button "宮城県(186)" [ref=e85]:
+          - img [ref=e86]
+          - generic [ref=e89]:
+            - text: 宮城県
+            - generic [ref=e90]: (186)
+      - button "他のエリアを表示（47都道府県）" [ref=e91]
+    - generic [ref=e38]:
+      - button "戻る" [disabled]:
+        - img
+        - text: 戻る
+      - generic [ref=e39]: 1 / 11
+      - button "次へ" [disabled]:
+        - text: 次へ
+        - img
+    - button "Close" [ref=e40]:
+      - img
+      - generic [ref=e41]: Close

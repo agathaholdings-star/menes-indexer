@@ -1,0 +1,78 @@
+{
+  "entity_type": "salon",
+  "entity_id": 5978,
+  "entity_name": "おすすめ",
+  "keyword": "おすすめ 口コミ",
+  "results": [
+    {
+      "position": 1,
+      "title": "マイベスト - おすすめ商品比較サービス",
+      "url": "https://my-best.com/",
+      "description": "ベストな商品、選ぶなら. 徹底した自社検証と専門家の声をもとにおすすめ情報を用意しました. 家電 · パソコン・周辺機器 · コスメ・化粧品 · ビューティー・ヘルス.",
+      "domain": "my-best.com"
+    },
+    {
+      "position": 2,
+      "title": "口コミ・レビュー・ランキング・新商品情報【シェアビュー】",
+      "url": "https://shareview.jp/",
+      "description": "【シェアビュー】口コミ・レビュー・ランキング・新商品情報。使った人の本音の口コミ・評価・評判。今注目の食品・日用品が分かる総合情報サイト。",
+      "domain": "shareview.jp"
+    },
+    {
+      "position": 3,
+      "title": "ReviCoポータル（レビコ）| リアルな口コミ・公式サイトの ...",
+      "url": "https://www.revico.jp/",
+      "description": "【ReviCoポータル】ギフト・コスメ・お菓子・家具などの商品の口コミが見れる総合情報ポータルサイト。口コミで話題の高評価商品をランキングで探せたり、みんなが ...",
+      "domain": "www.revico.jp"
+    },
+    {
+      "position": 4,
+      "title": "会社の評判、口コミ、年収から転職・就職情報まで分かるエン ...",
+      "url": "https://en-hyouban.com/",
+      "description": "3,000万件以上の社員・元社員による口コミ・評価を掲載。会社の「リアル」が分かります。学生の方にも就活・新卒の企業研究で利用されています。",
+      "domain": "en-hyouban.com"
+    },
+    {
+      "position": 5,
+      "title": "価格.com - 「買ってよかった」をすべてのひとに。",
+      "url": "https://kakaku.com/",
+      "description": "「買ってよかった！」と思えるお買い物は価格.comから！ パソコンや家電から、ファッション、食品に至るまで、あらゆる製品・サービスを、販売価格やクチコミ情報、 ...",
+      "domain": "kakaku.com"
+    },
+    {
+      "position": 6,
+      "title": "みん評 - みんなが気になる、本音の口コミサイト",
+      "url": "https://minhyo.jp/",
+      "description": "みん評は、利用者の体験に基づく本音の口コミサイトです。ユーザーから投稿された30万件以上の口コミ・評判に加え、気になるトラブルの実態や対策をまとめたQ&Aも掲載 ...",
+      "domain": "minhyo.jp"
+    },
+    {
+      "position": 7,
+      "title": "アットコスメ（@cosme）｜日本最大のコスメ・化粧品の ...",
+      "url": "https://www.cosme.net/",
+      "description": "【アットコスメ】日本最大級のコスメ・化粧品・美容の総合情報サイト。口コミで話題の人気商品をランキングで探せたり、スキンケアやメイクの最新トレンドに出会える。",
+      "domain": "www.cosme.net"
+    },
+    {
+      "position": 8,
+      "title": "サクラチェッカー ｜ ステマ やらせ サクラ評価 口コミが丸 ...",
+      "url": "https://sakura-checker.jp/",
+      "description": "サクラ/ステマ/やらせ口コミを除いた本当の評価が分かるサクラチェッカー。Amazonや楽天などECショップのやらせ・サクラ評価を見抜き安心なお買い物！",
+      "domain": "sakura-checker.jp"
+    },
+    {
+      "position": 9,
+      "title": "LIPS｜コスメ・美容・メイクの口コミアプリ｜リップス",
+      "url": "https://lipscosme.com/",
+      "description": "日本最大級のコスメ・美容サービスLIPS[リップス]で自分にぴったりのコスメを見つけてお得に購入しよう！リアルなクチコミから魅力的なコスメに出会えたり、おしゃれな ...",
+      "domain": "lipscosme.com"
+    },
+    {
+      "position": 10,
+      "title": "360LiFE(サンロクマル) | LDK・家電批評・MONOQLOの ...",
+      "url": "https://360life.shinyusha.co.jp/",
+      "description": "360LiFEは『LDK』『家電批評』『MONOQLO』など、広告なしで商品比較テストする雑誌の公式サイトです。編集者とプロが忖度なしの本音で選んだおすすめベストバイが ...",
+      "domain": "360life.shinyusha.co.jp"
+    }
+  ]
+}

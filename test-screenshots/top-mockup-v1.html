@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SKR — メンズエステ口コミ・レビュー</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+JP:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', 'Noto Sans JP', sans-serif; background: #f8fafc; color: #0f172a; }
+
+/* ========== HEADER ========== */
+.header {
+  position: sticky; top: 0; z-index: 50;
+  background: white; border-bottom: 1px solid #e5e7eb;
+  height: 64px; display: flex; align-items: center;
+}
+.header-inner {
+  max-width: 1280px; margin: 0 auto; width: 100%; padding: 0 16px;
+  display: flex; align-items: center; gap: 16px;
+}
+.logo-link { display: flex; flex-direction: column; text-decoration: none; flex-shrink: 0; }
+.logo-mark { font-size: 24px; font-weight: 900; color: #1a56db; letter-spacing: -1px; line-height: 1.1; }
+.logo-sub { font-size: 10px; color: #64748b; font-weight: 500; letter-spacing: 0.3px; line-height: 1; }
+
+.header-sep { width: 1px; height: 28px; background: #e2e8f0; flex-shrink: 0; }
+
+.search-bar {
+  flex: 1; max-width: 480px; position: relative; display: flex; align-items: center;
+}
+.search-bar input {
+  width: 100%; height: 38px; padding: 0 12px 0 36px;
+  border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px;
+  background: #f8fafc; outline: none; font-family: inherit;
+}
+.search-bar input::placeholder { color: #94a3b8; }
+.search-bar input:focus { border-color: #1a56db; background: white; }
+.search-icon {
+  position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+  width: 16px; height: 16px; color: #94a3b8;
+}
+
+.nav-links { display: flex; align-items: center; gap: 4px; margin-left: auto; }
+.nav-btn {
+  display: flex; align-items: center; gap: 4px; padding: 6px 12px;
+  border: none; background: none; border-radius: 6px; font-size: 13px;
+  color: #475569; cursor: pointer; font-family: inherit; font-weight: 500;
+  text-decoration: none; white-space: nowrap;
+}
+.nav-btn:hover { background: #f1f5f9; }
+.cta-btn {
+  display: flex; align-items: center; gap: 4px; padding: 8px 16px;
+  background: #1a56db; color: white; border: none; border-radius: 8px;
+  font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit;
+  white-space: nowrap;
+}
+.cta-btn:hover { background: #1347b8; }
+.auth-links { display: flex; align-items: center; gap: 8px; }
+.login-btn {
+  padding: 6px 12px; background: none; border: none; font-size: 13px;
+  color: #475569; cursor: pointer; font-family: inherit; font-weight: 500;
+  text-decoration: none;
+}
+.register-btn {
+  padding: 6px 14px; background: white; border: 1px solid #e2e8f0;
+  border-radius: 8px; font-size: 13px; color: #0f172a; cursor: pointer;
+  font-family: inherit; font-weight: 500; text-decoration: none;
+}
+
+/* ========== HERO ========== */
+.hero {
+  position: relative; overflow: hidden;
+  background: linear-gradient(135deg, #1a56db, rgba(37,99,235,0.9), rgba(37,99,235,0.8));
+  border-radius: 16px; padding: 32px; margin-top: 16px;
+}
+.hero-bg {
+  position: absolute; inset: 0; opacity: 0.1;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fillRule='evenodd'%3E%3Cg fill='%23ffffff' fillOpacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+.hero-content { position: relative; z-index: 1; max-width: 640px; margin: 0 auto; text-align: center; }
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,0.2); color: white; padding: 6px 12px;
+  border-radius: 999px; font-size: 12px; font-weight: 500;
+  backdrop-filter: blur(4px); margin-bottom: 16px;
+}
+.hero h1 { font-size: 28px; font-weight: 700; color: white; line-height: 1.3; letter-spacing: -0.5px; }
+.hero h1 .underline-word { position: relative; }
+.hero h1 .underline-word::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+  height: 8px; background: rgba(255,255,255,0.3); z-index: -1;
+}
+.hero p { margin-top: 12px; font-size: 14px; color: rgba(255,255,255,0.8); }
+
+.hero-search {
+  margin-top: 24px; max-width: 560px; margin-left: auto; margin-right: auto;
+  background: white; border-radius: 12px; padding: 6px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+  display: flex; align-items: center; gap: 0;
+}
+.hero-area-btn {
+  display: flex; align-items: center; gap: 6px; padding: 10px 16px;
+  background: none; border: none; font-size: 14px; color: #0f172a;
+  cursor: pointer; font-family: inherit; white-space: nowrap;
+}
+.hero-search .sep { width: 1px; height: 32px; background: #e2e8f0; flex-shrink: 0; }
+.hero-search input {
+  flex: 1; height: 40px; padding: 0 12px 0 36px; border: none;
+  font-size: 15px; outline: none; font-family: inherit; background: transparent;
+  min-width: 0;
+}
+.hero-search input::placeholder { color: #94a3b8; }
+.hero-search-icon { position: absolute; left: 12px; color: #94a3b8; }
+.hero-search .input-wrap { position: relative; flex: 1; display: flex; align-items: center; }
+.hero-search-btn {
+  padding: 10px 28px; background: #1a56db; color: white; border: none;
+  border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer;
+  font-family: inherit; white-space: nowrap;
+}
+
+.hero-stats {
+  margin-top: 24px; display: flex; justify-content: center; gap: 32px;
+  color: rgba(255,255,255,0.8);
+}
+.hero-stats .stat { text-align: center; }
+.hero-stats .stat-num { font-size: 20px; font-weight: 700; color: white; }
+.hero-stats .stat-label { font-size: 11px; }
+.hero-stats .stat-sep { width: 1px; height: 32px; background: rgba(255,255,255,0.2); }
+.hero-glow1 { position: absolute; right: -80px; top: -80px; width: 320px; height: 320px; border-radius: 50%; background: rgba(255,255,255,0.1); filter: blur(48px); }
+.hero-glow2 { position: absolute; left: -80px; bottom: -80px; width: 320px; height: 320px; border-radius: 50%; background: rgba(255,255,255,0.1); filter: blur(48px); }
+
+/* ========== MAIN LAYOUT ========== */
+.main-wrap { max-width: 1280px; margin: 0 auto; padding: 0 16px; }
+.two-col { display: flex; gap: 32px; margin-top: 24px; }
+.main-col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 24px; }
+.sidebar-col { width: 320px; flex-shrink: 0; }
+
+/* ========== CTA BANNER ========== */
+.cta-banner {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  border: 1px solid #fbbf24; border-radius: 12px; padding: 16px 20px;
+  display: flex; align-items: center; gap: 12px;
+}
+.cta-banner-icon { font-size: 28px; flex-shrink: 0; }
+.cta-banner h3 { font-size: 14px; font-weight: 700; color: #92400e; }
+.cta-banner p { font-size: 12px; color: #a16207; margin-top: 2px; }
+
+/* ========== SECTION CARD ========== */
+.section-card {
+  background: white; border-radius: 12px; padding: 20px;
+  border: 1px solid #e5e7eb;
+}
+.section-title {
+  font-size: 16px; font-weight: 700; margin-bottom: 16px;
+  display: flex; align-items: center; gap: 8px;
+}
+
+/* ========== TYPE GRID ========== */
+.type-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.type-card {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 12px 8px; border-radius: 10px; background: #f8fafc;
+  border: 1px solid #e2e8f0; cursor: pointer; text-decoration: none; color: inherit;
+  transition: all 0.15s;
+}
+.type-card:hover { border-color: #1a56db; background: #e8f0fe; }
+.type-emoji { font-size: 28px; }
+.type-label { font-size: 12px; font-weight: 600; color: #475569; }
+
+/* ========== AREA POPULAR ========== */
+.area-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.area-tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 6px 14px; background: #f1f5f9; border: 1px solid #e2e8f0;
+  border-radius: 999px; font-size: 13px; color: #475569; font-weight: 500;
+  cursor: pointer; text-decoration: none; transition: all 0.15s;
+}
+.area-tag:hover { border-color: #1a56db; color: #1a56db; background: #e8f0fe; }
+.area-tag .count { font-size: 11px; color: #94a3b8; font-weight: 400; }
+
+/* ========== REVIEW CARDS ========== */
+.review-list { display: flex; flex-direction: column; gap: 12px; }
+.review-card {
+  display: flex; gap: 12px; padding: 12px; border-radius: 10px;
+  background: #f8fafc; border: 1px solid #f1f5f9;
+}
+.review-avatar {
+  width: 40px; height: 40px; border-radius: 50%; background: #e2e8f0;
+  flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 600; color: #64748b;
+}
+.review-meta { font-size: 11px; color: #94a3b8; margin-bottom: 4px; }
+.review-stars { color: #f59e0b; font-size: 12px; letter-spacing: 1px; }
+.review-text { font-size: 13px; color: #475569; line-height: 1.5; margin-top: 4px; }
+.review-therapist { font-size: 12px; font-weight: 600; color: #1a56db; margin-top: 4px; }
+
+/* ========== SIDEBAR ========== */
+.sidebar-card {
+  background: white; border-radius: 12px; padding: 16px;
+  border: 1px solid #e5e7eb; margin-bottom: 16px;
+}
+.sidebar-title { font-size: 14px; font-weight: 700; margin-bottom: 12px; }
+.ranking-item {
+  display: flex; align-items: center; gap: 10px; padding: 8px 0;
+  border-bottom: 1px solid #f1f5f9; font-size: 13px; color: #475569;
+  text-decoration: none;
+}
+.ranking-item:last-child { border-bottom: none; }
+.ranking-num {
+  width: 22px; height: 22px; border-radius: 6px; display: flex;
+  align-items: center; justify-content: center; font-size: 11px;
+  font-weight: 700; flex-shrink: 0;
+}
+.ranking-num.gold { background: #fef3c7; color: #b45309; }
+.ranking-num.silver { background: #f1f5f9; color: #64748b; }
+.ranking-num.bronze { background: #fed7aa; color: #c2410c; }
+.ranking-num.normal { background: #f8fafc; color: #94a3b8; }
+.ranking-thumb {
+  width: 36px; height: 36px; border-radius: 8px; background: #e2e8f0;
+  flex-shrink: 0; overflow: hidden;
+}
+.ranking-info { flex: 1; min-width: 0; }
+.ranking-name { font-weight: 600; color: #0f172a; font-size: 13px; }
+.ranking-shop { font-size: 11px; color: #94a3b8; }
+
+/* ========== FOOTER ========== */
+.footer { border-top: 1px solid #e5e7eb; background: rgba(248,250,252,0.5); margin-top: 48px; }
+.footer-inner { max-width: 1280px; margin: 0 auto; padding: 48px 16px; }
+.footer-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px; }
+.footer-brand .logo-link { margin-bottom: 12px; }
+.footer-brand p { font-size: 13px; color: #64748b; margin-top: 12px; }
+.footer-col h3 { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+.footer-col ul { list-style: none; }
+.footer-col li { margin-bottom: 8px; }
+.footer-col a { font-size: 13px; color: #64748b; text-decoration: none; }
+.footer-col a:hover { color: #0f172a; }
+.footer-bottom {
+  margin-top: 32px; padding-top: 32px; border-top: 1px solid #e5e7eb;
+  text-align: center; font-size: 13px; color: #94a3b8;
+}
+
+/* ========== SVG ICONS ========== */
+svg.icon { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+</style>
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<header class="header">
+  <div class="header-inner">
+    <a href="/" class="logo-link">
+      <span class="logo-mark">SKR</span>
+      <span class="logo-sub">メンズエステ口コミ・レビュー</span>
+    </a>
+
+    <div class="header-sep"></div>
+
+    <div class="search-bar">
+      <svg class="search-icon icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="search" placeholder="店舗名・セラピスト名で検索">
+    </div>
+
+    <nav class="nav-links">
+      <a href="/search" class="nav-btn">
+        <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        セラピスト検索
+      </a>
+      <a href="/area" class="nav-btn">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+        エリア検索
+      </a>
+    </nav>
+
+    <button class="cta-btn">
+      <svg class="icon" style="color:white;" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      口コミ投稿
+    </button>
+
+    <div class="auth-links">
+      <a href="/login" class="login-btn">ログイン</a>
+      <a href="/register" class="register-btn">新規登録</a>
+    </div>
+  </div>
+</header>
+
+<!-- ===== MAIN ===== -->
+<div class="main-wrap">
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-glow1"></div>
+    <div class="hero-glow2"></div>
+    <div class="hero-content">
+      <div class="hero-badge">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+        次世代メンズエステ口コミサービス
+      </div>
+      <h1>名前を知らなくても、タイプで<span class="underline-word">"発見"</span>できる</h1>
+      <p>清楚系、ギャル系、アイドル系...好みのタイプから、あなたにぴったりのセラピストが見つかる</p>
+
+      <div class="hero-search">
+        <button class="hero-area-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a56db" stroke-width="2" stroke-linecap="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+          全国
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="sep"></div>
+        <div class="input-wrap">
+          <svg class="hero-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="search" placeholder="店舗名・セラピスト名で検索">
+        </div>
+        <button class="hero-search-btn">検索</button>
+      </div>
+
+      <div class="hero-stats">
+        <div class="stat"><div class="stat-num">14,500+</div><div class="stat-label">登録店舗</div></div>
+        <div class="stat-sep"></div>
+        <div class="stat"><div class="stat-num">45万+</div><div class="stat-label">口コミ件数</div></div>
+        <div class="stat-sep"></div>
+        <div class="stat"><div class="stat-num">8</div><div class="stat-label">タイプ分類</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Two Column -->
+  <div class="two-col">
+    <div class="main-col">
+
+      <!-- CTA Banner -->
+      <div class="cta-banner">
+        <div class="cta-banner-icon">&#9997;&#65039;</div>
+        <div>
+          <h3>口コミを書いて、セラピスト情報をアンロック！</h3>
+          <p>1件の投稿で10人分の詳細情報が見れるようになります</p>
+        </div>
+      </div>
+
+      <!-- Type Grid -->
+      <div class="section-card">
+        <div class="section-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1a56db" stroke-width="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+          タイプから探す
+        </div>
+        <div class="type-grid">
+          <a class="type-card"><div class="type-emoji">&#128124;</div><div class="type-label">清楚系</div></a>
+          <a class="type-card"><div class="type-emoji">&#128131;</div><div class="type-label">ギャル系</div></a>
+          <a class="type-card"><div class="type-emoji">&#127775;</div><div class="type-label">アイドル系</div></a>
+          <a class="type-card"><div class="type-emoji">&#128105;</div><div class="type-label">お姉さん系</div></a>
+          <a class="type-card"><div class="type-emoji">&#127800;</div><div class="type-label">癒し系</div></a>
+          <a class="type-card"><div class="type-emoji">&#128170;</div><div class="type-label">スポーティ系</div></a>
+          <a class="type-card"><div class="type-emoji">&#128142;</div><div class="type-label">エレガント系</div></a>
+          <a class="type-card"><div class="type-emoji">&#128049;</div><div class="type-label">小悪魔系</div></a>
+        </div>
+      </div>
+
+      <!-- Popular Areas -->
+      <div class="section-card">
+        <div class="section-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1a56db" stroke-width="2" stroke-linecap="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+          人気エリア
+        </div>
+        <div class="area-tags">
+          <a class="area-tag">新宿 <span class="count">(423)</span></a>
+          <a class="area-tag">池袋 <span class="count">(387)</span></a>
+          <a class="area-tag">渋谷 <span class="count">(312)</span></a>
+          <a class="area-tag">大阪・梅田 <span class="count">(298)</span></a>
+          <a class="area-tag">名古屋 <span class="count">(245)</span></a>
+          <a class="area-tag">横浜 <span class="count">(221)</span></a>
+          <a class="area-tag">福岡・博多 <span class="count">(198)</span></a>
+          <a class="area-tag">五反田 <span class="count">(187)</span></a>
+          <a class="area-tag">神田 <span class="count">(165)</span></a>
+          <a class="area-tag">上野 <span class="count">(154)</span></a>
+          <a class="area-tag">難波 <span class="count">(142)</span></a>
+          <a class="area-tag">札幌 <span class="count">(128)</span></a>
+        </div>
+      </div>
+
+      <!-- Latest Reviews -->
+      <div class="section-card">
+        <div class="section-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1a56db" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          最新の口コミ
+        </div>
+        <div class="review-list">
+          <div class="review-card">
+            <div class="review-avatar">K</div>
+            <div>
+              <div class="review-meta">匿名ユーザー · 3時間前</div>
+              <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+              <div class="review-text">初めて利用しましたが、とても丁寧な接客で大満足でした。施術の腕も確かで、リピート確定です。</div>
+              <div class="review-therapist">&#128101; あおい · 新宿プレミアム</div>
+            </div>
+          </div>
+          <div class="review-card">
+            <div class="review-avatar">T</div>
+            <div>
+              <div class="review-meta">匿名ユーザー · 5時間前</div>
+              <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9734;</div>
+              <div class="review-text">雰囲気がよく、癒されました。もう少し会話があると嬉しいかな。でも技術は文句なしです。</div>
+              <div class="review-therapist">&#128101; みゆき · 池袋リラクゼーション</div>
+            </div>
+          </div>
+          <div class="review-card">
+            <div class="review-avatar">M</div>
+            <div>
+              <div class="review-meta">匿名ユーザー · 8時間前</div>
+              <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+              <div class="review-text">前から気になっていたので行ってみました。期待以上の施術でした。清潔感もあり安心して通えそうです。</div>
+              <div class="review-therapist">&#128101; ゆうな · 渋谷エステ</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar-col">
+      <div class="sidebar-card">
+        <div class="sidebar-title">&#128293; 人気セラピストランキング</div>
+        <a class="ranking-item">
+          <div class="ranking-num gold">1</div>
+          <div class="ranking-thumb"></div>
+          <div class="ranking-info"><div class="ranking-name">あおい</div><div class="ranking-shop">新宿プレミアム</div></div>
+        </a>
+        <a class="ranking-item">
+          <div class="ranking-num silver">2</div>
+          <div class="ranking-thumb"></div>
+          <div class="ranking-info"><div class="ranking-name">みゆき</div><div class="ranking-shop">池袋リラクゼーション</div></div>
+        </a>
+        <a class="ranking-item">
+          <div class="ranking-num bronze">3</div>
+          <div class="ranking-thumb"></div>
+          <div class="ranking-info"><div class="ranking-name">ゆうな</div><div class="ranking-shop">渋谷エステ</div></div>
+        </a>
+        <a class="ranking-item">
+          <div class="ranking-num normal">4</div>
+          <div class="ranking-thumb"></div>
+          <div class="ranking-info"><div class="ranking-name">さくら</div><div class="ranking-shop">大阪メンエス</div></div>
+        </a>
+        <a class="ranking-item">
+          <div class="ranking-num normal">5</div>
+          <div class="ranking-thumb"></div>
+          <div class="ranking-info"><div class="ranking-name">りな</div><div class="ranking-shop">名古屋サロン</div></div>
+        </a>
+      </div>
+
+      <div class="sidebar-card">
+        <div class="sidebar-title">&#128176; 料金プラン</div>
+        <div style="padding: 12px; background: linear-gradient(135deg, #e8f0fe, #ccdcf5); border-radius: 8px; text-align: center;">
+          <div style="font-size: 13px; color: #475569; margin-bottom: 4px;">まずは口コミ投稿から</div>
+          <div style="font-size: 20px; font-weight: 800; color: #1a56db;">無料</div>
+          <div style="font-size: 11px; color: #64748b; margin-top: 4px;">1投稿 = 10人分アンロック</div>
+          <button style="margin-top: 12px; padding: 8px 24px; background: #1a56db; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit;">詳しく見る</button>
+        </div>
+      </div>
+
+      <div class="sidebar-card">
+        <div class="sidebar-title">&#128218; サイトについて</div>
+        <p style="font-size: 13px; color: #64748b; line-height: 1.6;">
+          SKRは、メンズエステの口コミ・レビューサイトです。タイプ別検索やエリア検索で、あなたにぴったりのセラピストが見つかります。
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== FOOTER ===== -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="/" class="logo-link">
+          <span class="logo-mark">SKR</span>
+          <span class="logo-sub">メンズエステ口コミ・レビュー</span>
+        </a>
+        <p>メンズエステの口コミ・体験談サイト</p>
+      </div>
+      <div class="footer-col">
+        <h3>サイトマップ</h3>
+        <ul>
+          <li><a href="/">トップページ</a></li>
+          <li><a href="/area">エリア検索</a></li>
+          <li><a href="/ranking">ランキング</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h3>会員メニュー</h3>
+        <ul>
+          <li><a href="/login">ログイン</a></li>
+          <li><a href="/register">新規登録</a></li>
+          <li><a href="/pricing">料金プラン</a></li>
+          <li><a href="/mypage">マイページ</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h3>運営情報</h3>
+        <ul>
+          <li><a href="/legal/tokushoho">特定商取引法に基づく表記</a></li>
+          <li><a href="/legal/terms">利用規約</a></li>
+          <li><a href="/legal/privacy">プライバシーポリシー</a></li>
+          <li><a href="/contact">お問い合わせ</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 SKR. All rights reserved.</p>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

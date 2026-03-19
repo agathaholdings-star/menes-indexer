@@ -1,0 +1,78 @@
+{
+  "entity_type": "salon",
+  "entity_id": 3424,
+  "entity_name": "まず、titleをデコードして読みやすくします：",
+  "keyword": "まず、titleをデコードして読みやすくします： 口コミ",
+  "results": [
+    {
+      "position": 1,
+      "title": "Sakana AI の間違いを徹底的に査読してみた (Colabコード付き)",
+      "url": "https://note.com/o_ob/n/n2fcc4e927d5a",
+      "description": "なんかみんなSakana AIがやらかした間違いについてワイワイ言っているんで、徹底的に検証してみたら結構面白かったし、勉強にもなったよ！",
+      "domain": "note.com"
+    },
+    {
+      "position": 2,
+      "title": "PD-42DV4",
+      "url": "https://manuals.jvckenwood.com/download/files/LCT1405-001B.pdf",
+      "description": "さまざまな映像入力ソースを、高精細な映像につくり換えて再現するビクター. 独自のデジタル技術です。 ... BS・110度CSデジタル対応アンテナと電話回線を接続し、付属のB- ...",
+      "domain": "manuals.jvckenwood.com"
+    },
+    {
+      "position": 3,
+      "title": "【2025年最新版】無料で使える生成AIツールおすすめ15選",
+      "url": "https://www.hubspot.jp/products/artificial-intelligence/marketing/generative-ai-free",
+      "description": "本記事では、無料で利用できる15の生成AIツールやサイトを「文章生成AI」と「画像生成AI」に分けてご紹介します。 目次. 1. 【無料】文章生成AIツール・サイト10選. 2. 【 ...",
+      "domain": "www.hubspot.jp"
+    },
+    {
+      "position": 4,
+      "title": "iVMS-4200 クライアントソフトウェア",
+      "url": "https://www.irisohyama.co.jp/b2b/camera/manual/pdf/iVMS-4200_manual.pdf",
+      "description": "iVMS-4200 クライアントソフトウェアは、DVR、NVR、IP カメラ、エンコーダー、デコ. ーダ、セキュリティコントロールパネル、ビデオインターコムデバイス、アクセス ...",
+      "domain": "www.irisohyama.co.jp"
+    },
+    {
+      "position": 5,
+      "title": "カンタンサイネージ",
+      "url": "https://dl.mitsubishielectric.co.jp/dl/ldg/wink/ssl/wink_doc/m_contents/wink/D_MENT_DOC/dsm-24_40_40w_50_65l7_ib.pdf",
+      "description": "2023/06/10 — 「取扱説明書」と「保証書」は大切に保存してください。 製造番号は安全確保上重要なものです。お買上げの際は、製品本体および保証書に記載の製造番.",
+      "domain": "dl.mitsubishielectric.co.jp"
+    },
+    {
+      "position": 6,
+      "title": "コードレビューはPvEであってPvPではないという話",
+      "url": "https://tech.iimon.co.jp/entry/2025/09/02/152454",
+      "description": "2025/09/02 — 過激なコメントにならないように日頃から意識はしているのですが、その中でも「伝わるコードレビュー」にて心理的安全性を担保するためのコメントの仕方 ...",
+      "domain": "tech.iimon.co.jp"
+    },
+    {
+      "position": 7,
+      "title": "コミュニケーションを重視した大学英語教育における発信能力の ...",
+      "url": "https://koara.lib.keio.ac.jp/xoonips/modules/xoonips/download.php/0302-0000-0572.pdf?file_id=24623",
+      "description": "Title. コミュニケーションを重視した大学英語教育における発信能力の評価 : 基礎研究と評価モデルの提案. Sub Title. Author. 山中, 司(Yamanaka, Tsukasa).",
+      "domain": "koara.lib.keio.ac.jp"
+    },
+    {
+      "position": 8,
+      "title": "一 般 演 題",
+      "url": "https://www.jsnr.or.jp/information/docs/39_3_jisetsu_0820.pdf",
+      "description": "【目的】. リラクセーション法の1つである受動的筋弛緩法は，筋肉. を緊張させず弛緩させていく技法であるため，負荷がかか. りにくいといわれている。",
+      "domain": "www.jsnr.or.jp"
+    },
+    {
+      "position": 9,
+      "title": "ソリッドステートメモリーカムコーダー - FX6",
+      "url": "https://www.arkvideo.co.jp/_sys/wp-content/uploads/ILME-FX6V_OM_5024458041.pdf",
+      "description": "この取扱説明書には、事故を防ぐための重要な注意事項と製品の取り扱いかたを示してあります。 この取扱説明書をよくお読みのうえ、製品を安全にお使いください。お読みに ...",
+      "domain": "www.arkvideo.co.jp"
+    },
+    {
+      "position": 10,
+      "title": "次",
+      "url": "https://help.pinnaclesys.com/pinnacle/v25/jp/user-guide/pinnacle-studio-25.pdf",
+      "description": "強⼒でクリエイティブなビデオ編集ソフトウェア Pinnacle Studio™25 をお買い上げいた. だきありがとうございます。 ソフトウェアを⼗分に活⽤していただけるよう、 この ...",
+      "domain": "help.pinnaclesys.com"
+    }
+  ]
+}
