@@ -14,10 +14,7 @@ import { supabaseAdmin as supabase } from "@/lib/supabase-admin";
 import { SeoContentSection, FaqSection } from "@/components/shared/seo-content-section";
 
 export async function generateStaticParams() {
-  const { data } = await supabase
-    .from("prefectures")
-    .select("slug");
-  return (data || []).map((p) => ({ prefecture: p.slug }));
+  return [];
 }
 
 export async function generateMetadata({

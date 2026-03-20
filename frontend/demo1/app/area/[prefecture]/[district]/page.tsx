@@ -10,14 +10,7 @@ import { SeoContentSection, FaqSection } from "@/components/shared/seo-content-s
 export const revalidate = 3600;
 
 export async function generateStaticParams() {
-  const { data } = await supabase
-    .from("areas")
-    .select("slug, prefectures(slug)")
-    .gt("salon_count", 0);
-  return (data || []).map((a: any) => ({
-    prefecture: a.prefectures?.slug,
-    district: a.slug,
-  })).filter((p: any) => p.prefecture);
+  return [];
 }
 import type { Shop as DbShop } from "@/types/database";
 import type { Shop } from "@/lib/data";

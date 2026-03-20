@@ -8,11 +8,7 @@ import { SeoContentSection, SalonGuideSection, FaqSection } from "@/components/s
 export const revalidate = 3600;
 
 export async function generateStaticParams() {
-  const { data } = await supabase
-    .from("salons")
-    .select("id")
-    .eq("is_active", true);
-  return (data || []).map((s) => ({ id: String(s.id) }));
+  return [];
 }
 
 import type { Shop as DbShop, Therapist as DbTherapist } from "@/types/database";
