@@ -31,6 +31,7 @@ export function ImageGallery({ images, name }: ImageGalleryProps) {
           src={images[currentImageIndex]}
           alt={name}
           fill
+          sizes="(max-width: 768px) 100vw, 256px"
           className="object-cover"
           priority={currentImageIndex === 0}
         />
@@ -74,6 +75,7 @@ export function ImageGallery({ images, name }: ImageGalleryProps) {
                 src={img}
                 alt=""
                 fill
+                sizes="48px"
                 className="object-cover"
               />
             </button>

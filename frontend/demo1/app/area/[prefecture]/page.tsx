@@ -181,6 +181,7 @@ export default async function AreaPrefecturePage({
                               src={images[0]}
                               alt={displayName}
                               fill
+                              sizes="(max-width: 640px) 50vw, 160px"
                               className="object-cover"
                             />
                             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">

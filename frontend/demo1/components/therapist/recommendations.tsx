@@ -79,6 +79,7 @@ export function Recommendations({ therapist }: RecommendationsProps) {
                         src={images[0]}
                         alt={displayName}
                         fill
+                        sizes="160px"
                         className="object-cover transition-transform hover:scale-105"
                       />
                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">

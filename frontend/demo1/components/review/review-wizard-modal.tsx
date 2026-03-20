@@ -1136,6 +1136,7 @@ function StepTherapist({
                   src={t.image_urls?.[0]}
                   alt={t.name}
                   fill
+                  sizes="80px"
                   className="object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />

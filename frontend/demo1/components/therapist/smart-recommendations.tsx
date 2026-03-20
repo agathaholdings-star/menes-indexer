@@ -75,6 +75,7 @@ export function SmartRecommendations({ excludeSalonId }: SmartRecommendationsPro
                         src={rec.image_url}
                         alt={rec.name}
                         fill
+                        sizes="180px"
                         className="object-cover transition-transform hover:scale-105"
                         unoptimized
                       />

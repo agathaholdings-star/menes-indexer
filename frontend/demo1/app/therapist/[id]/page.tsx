@@ -547,7 +547,7 @@ export default async function TherapistPage({ params }: TherapistPageProps) {
                           return (
                             <Link key={t.id} href={`/therapist/${t.id}`} className="group">
                               <div className="relative h-36 rounded-lg overflow-hidden">
-                                <TherapistImage src={imgUrl} alt={displayName} fill className="object-cover group-hover:scale-105 transition-transform" />
+                                <TherapistImage src={imgUrl} alt={displayName} fill sizes="(max-width: 640px) 50vw, 160px" className="object-cover group-hover:scale-105 transition-transform" />
                                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
                                   <p className="font-bold text-sm text-white">{displayName}</p>
                                   {t.age && <p className="text-xs text-white/80">{t.age}歳</p>}

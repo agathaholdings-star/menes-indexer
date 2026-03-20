@@ -770,6 +770,7 @@ function SearchContent() {
                               src={shop.image_url}
                               alt={shop.display_name || shop.name}
                               fill
+                              sizes="64px"
                               className="object-cover"
                             />
                           </div>
@@ -841,7 +842,7 @@ function SearchContent() {
                       <Link key={t.id} href={`/therapist/${t.id}`} className="w-[150px] flex-shrink-0">
                         <Card className="overflow-hidden hover:shadow-md transition-shadow">
                           <div className="aspect-[3/4] relative bg-muted">
-                            <TherapistImage src={t.image_url} alt={t.name} fill className="object-cover" />
+                            <TherapistImage src={t.image_url} alt={t.name} fill sizes="150px" className="object-cover" />
                             <div className="absolute top-2 right-2">
                               <Badge className="bg-primary/90 text-primary-foreground text-xs gap-1">
                                 <Star className="h-3 w-3 fill-current" />
@@ -894,6 +895,7 @@ function SearchContent() {
                             src={therapist.image_url}
                             alt={therapist.name}
                             fill
+                            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 200px"
                             className="object-cover group-hover:scale-105 transition-transform duration-300"
                           />
                         </div>
@@ -1001,6 +1003,7 @@ function SearchContent() {
                               alt={t.name}
                               width={64}
                               height={80}
+                              sizes="64px"
                               className="w-16 h-20 object-cover rounded"
                             />
                             <div className="flex-1 min-w-0">

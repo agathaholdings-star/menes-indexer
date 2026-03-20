@@ -16,10 +16,17 @@ interface PopularTherapist {
   shop_name: string;
 }
 
-export function PopularTherapists() {
-  const [therapists, setTherapists] = useState<PopularTherapist[]>([]);
+interface PopularTherapistsProps {
+  initialTherapists?: PopularTherapist[];
+}
+
+export function PopularTherapists({ initialTherapists }: PopularTherapistsProps = {}) {
+  const [therapists, setTherapists] = useState<PopularTherapist[]>(initialTherapists ?? []);
 
   useEffect(() => {
+    // Skip fetch if pre-fetched data was provided
+    if (initialTherapists) return;
+
     async function fetchTherapists() {
       const res = await fetch("/api/therapists/recommendations?limit=8");
       const data = await res.json();
@@ -50,7 +57,7 @@ export function PopularTherapists() {
       }
     }
     fetchTherapists();
-  }, []);
+  }, [initialTherapists]);
 
   if (therapists.length === 0) return null;
 
@@ -87,6 +94,7 @@ export function PopularTherapists() {
                         src={therapist.image_url}
                         alt={therapist.name}
                         fill
+                        sizes="160px"
                         className="object-cover transition-transform duration-300 group-hover:scale-105"
                       />
                       {index < 3 && (

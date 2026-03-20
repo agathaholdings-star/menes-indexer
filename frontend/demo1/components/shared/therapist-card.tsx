@@ -27,6 +27,7 @@ export function TherapistCard({ therapist, showShop = true, size = "md" }: Thera
             src={therapist.images[0]}
             alt={therapist.name}
             fill
+            sizes="(max-width: 768px) 50vw, 200px"
             className="object-cover transition-transform group-hover:scale-105"
           />
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">

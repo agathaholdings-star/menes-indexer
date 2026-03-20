@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { TherapistImage } from "@/components/shared/therapist-image";
 import { Crown, TrendingUp, Building2 } from "lucide-react";
@@ -24,56 +24,72 @@ interface SidebarTherapist {
 
 interface SidebarProps {
   prefectureName?: string;
+  initialTherapists?: SidebarTherapist[];
+  initialShops?: SidebarShop[];
 }
 
-export function Sidebar({ prefectureName }: SidebarProps = {}) {
-  const [shops, setShops] = useState<SidebarShop[]>([]);
-  const [therapists, setTherapists] = useState<SidebarTherapist[]>([]);
+function SidebarInner({ prefectureName, initialTherapists, initialShops }: SidebarProps) {
+  const [shops, setShops] = useState<SidebarShop[]>(initialShops ?? []);
+  const [therapists, setTherapists] = useState<SidebarTherapist[]>(initialTherapists ?? []);
 
   useEffect(() => {
+    // Skip fetch if pre-fetched data was provided
+    if (initialTherapists && initialShops) return;
+
     async function fetchData() {
       try {
-        const shopsUrl = prefectureName
-          ? `/api/salons?limit=5&area=${encodeURIComponent(prefectureName)}`
-          : "/api/salons?limit=5";
-        const [shopsRes, therapistsRes] = await Promise.all([
-          fetch(shopsUrl),
-          fetch("/api/therapists/recommendations?limit=5"),
-        ]);
-        const shopsData = await shopsRes.json();
-        const therapistsData = await therapistsRes.json();
+        const fetches: Promise<Response>[] = [];
 
-        if (Array.isArray(shopsData)) setShops(shopsData as SidebarShop[]);
-        if (Array.isArray(therapistsData)) {
-          setTherapists(
-            therapistsData
-              .filter((t: any) => {
-                if (isPlaceholderName(t.name)) return false;
-                const cleaned = cleanTherapistName(t.name);
-                if (cleaned.length > 15) return false;
-                const shop = t.salons as { name: string; display_name: string | null } | null;
-                if (shop && (cleaned === shop.name || cleaned === shop.display_name)) return false;
-                return true;
-              })
-              .slice(0, 5)
-              .map((t: any) => {
-                const imgs = t.image_urls as string[] | null;
-                const shop = t.salons as { name: string; display_name: string | null } | null;
-                return {
-                  id: Number(t.id),
-                  name: cleanTherapistName(t.name),
-                  image_url: imgs?.[0] || null,
-                  shop_name: shop?.display_name || shop?.name || "",
-                };
-              })
-          );
+        if (!initialShops) {
+          const shopsUrl = prefectureName
+            ? `/api/salons?limit=5&area=${encodeURIComponent(prefectureName)}`
+            : "/api/salons?limit=5";
+          fetches.push(fetch(shopsUrl));
+        }
+        if (!initialTherapists) {
+          fetches.push(fetch("/api/therapists/recommendations?limit=5"));
+        }
+
+        const responses = await Promise.all(fetches);
+        let idx = 0;
+
+        if (!initialShops) {
+          const shopsData = await responses[idx++].json();
+          if (Array.isArray(shopsData)) setShops(shopsData as SidebarShop[]);
+        }
+        if (!initialTherapists) {
+          const therapistsData = await responses[idx++].json();
+          if (Array.isArray(therapistsData)) {
+            setTherapists(
+              therapistsData
+                .filter((t: any) => {
+                  if (isPlaceholderName(t.name)) return false;
+                  const cleaned = cleanTherapistName(t.name);
+                  if (cleaned.length > 15) return false;
+                  const shop = t.salons as { name: string; display_name: string | null } | null;
+                  if (shop && (cleaned === shop.name || cleaned === shop.display_name)) return false;
+                  return true;
+                })
+                .slice(0, 5)
+                .map((t: any) => {
+                  const imgs = t.image_urls as string[] | null;
+                  const shop = t.salons as { name: string; display_name: string | null } | null;
+                  return {
+                    id: Number(t.id),
+                    name: cleanTherapistName(t.name),
+                    image_url: imgs?.[0] || null,
+                    shop_name: shop?.display_name || shop?.name || "",
+                  };
+                })
+            );
+          }
         }
       } catch (err) {
         console.error("サイドバーデータ取得エラー:", err);
       }
     }
     fetchData();
-  }, [prefectureName]);
+  }, [prefectureName, initialTherapists, initialShops]);
 
   return (
     <aside className="flex flex-col gap-6">
@@ -112,6 +128,7 @@ export function Sidebar({ prefectureName }: SidebarProps = {}) {
                       src={therapist.image_url}
                       alt={therapist.name}
                       fill
+                      sizes="40px"
                       className="object-cover"
                     />
                   </div>
@@ -171,3 +188,5 @@ export function Sidebar({ prefectureName }: SidebarProps = {}) {
     </aside>
   );
 }
+
+export const Sidebar = React.memo(SidebarInner);

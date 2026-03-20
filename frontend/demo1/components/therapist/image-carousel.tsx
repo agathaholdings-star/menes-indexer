@@ -19,6 +19,7 @@ export function ImageCarousel({ images, name }: ImageCarouselProps) {
           src={images[currentIndex] || "/placeholder.svg"}
           alt={`${name}の写真 ${currentIndex + 1}`}
           fill
+          sizes="(max-width: 768px) 100vw, 400px"
           className="object-cover"
           priority
           unoptimized

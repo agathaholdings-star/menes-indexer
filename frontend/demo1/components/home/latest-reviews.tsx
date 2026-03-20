@@ -5,6 +5,7 @@ import { PenSquare, Clock, Lock } from "lucide-react";
 import { useTier } from "@/lib/hooks/use-tier";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { TherapistImage } from "@/components/shared/therapist-image";
 
 export interface LatestReview {
   id: string;
@@ -68,21 +69,17 @@ export function LatestReviews({ reviews }: LatestReviewsProps) {
               <CardContent className="p-0">
                 <div className="p-4 flex gap-3">
                   {/* セラピスト画像 */}
-                  {imageUrl ? (
-                    <div className="flex-shrink-0">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={imageUrl}
-                        alt={therapistName}
-                        className="w-14 h-14 rounded-lg object-cover"
-                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                      />
-                    </div>
-                  ) : (
-                    <div className="w-14 h-14 rounded-lg bg-muted flex items-center justify-center text-muted-foreground text-[10px] flex-shrink-0">
-                      No Photo
-                    </div>
-                  )}
+                  <div className="relative w-14 h-14 rounded-lg overflow-hidden flex-shrink-0">
+                    <TherapistImage
+                      src={imageUrl}
+                      alt={therapistName}
+                      width={56}
+                      height={56}
+                      className="rounded-lg object-cover"
+                      sizes="56px"
+                      loading="lazy"
+                    />
+                  </div>
 
                   <div className="flex-1 min-w-0">
                     {/* ティーザー */}

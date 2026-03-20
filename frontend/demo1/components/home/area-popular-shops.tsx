@@ -59,7 +59,9 @@ function AreaSectionCard({ section, defaultOpen }: { section: AreaSection; defau
                     alt={salon.display_name || salon.name}
                     width={400}
                     height={200}
+                    sizes="(max-width: 768px) 100vw, 50vw"
                     className="w-full h-32 object-cover"
+                    loading="lazy"
                     unoptimized
                   />
                 </div>

@@ -40,7 +40,11 @@ export async function GET(req: NextRequest) {
 
   const { data } = await q
     .order("created_at", { ascending: false })
-    .limit(500);
+    .limit(50);
 
-  return NextResponse.json((data ?? []).slice(0, limit));
+  return NextResponse.json((data ?? []).slice(0, limit), {
+    headers: {
+      "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
+    },
+  });
 }

@@ -157,6 +157,7 @@ export default async function RankingPage() {
                           src={t.image_urls?.[0]}
                           alt={t.name}
                           fill
+                          sizes="56px"
                           className="object-cover"
                         />
                       </div>

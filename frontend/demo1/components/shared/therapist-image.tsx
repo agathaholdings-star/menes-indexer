@@ -21,7 +21,7 @@ function normalizeStorageUrl(url: string): string {
   return url;
 }
 
-export function TherapistImage({ src, alt, ...props }: TherapistImageProps) {
+export function TherapistImage({ src, alt, sizes, ...props }: TherapistImageProps) {
   const [error, setError] = useState(false);
   const normalizedSrc = src ? normalizeStorageUrl(src) : src;
 
@@ -47,6 +47,7 @@ export function TherapistImage({ src, alt, ...props }: TherapistImageProps) {
       alt={alt ?? ""}
       onError={() => setError(true)}
       unoptimized
+      sizes={sizes ?? (props.fill ? "(max-width: 768px) 100vw, 200px" : undefined)}
       {...props}
     />
   );

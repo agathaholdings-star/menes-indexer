@@ -214,6 +214,28 @@
   animation: badge-pop 0.4s ease-out;
 }
 
+/* Page transition animations */
+@keyframes page-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* View Transition API styles */
+::view-transition-old(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-new(root) {
+  animation: page-fade-in 0.2s ease-out;
+  mix-blend-mode: normal;
+}
+
+/* Fallback fade-in for loading skeletons */
+.animate-page-in {
+  animation: page-fade-in 0.2s ease-out;
+}
+
 /* Safe area padding for iOS */
 .safe-area-pb {
   padding-bottom: max(1rem, env(safe-area-inset-bottom));

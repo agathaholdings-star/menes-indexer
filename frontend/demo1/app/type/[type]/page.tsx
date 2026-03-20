@@ -127,6 +127,7 @@ export default async function TypePage({
                               src={imageUrl}
                               alt={displayName}
                               fill
+                              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 200px"
                               className="object-cover"
                             />
                             <div className="absolute top-2 left-2">

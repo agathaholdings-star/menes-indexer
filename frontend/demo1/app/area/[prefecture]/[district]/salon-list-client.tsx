@@ -147,6 +147,7 @@ export function SalonListPageClient({
                                 src={shop.images[0]}
                                 alt={shop.name}
                                 fill
+                                sizes="(max-width: 640px) 100vw, 192px"
                                 className="object-cover"
                               />
                             </div>
@@ -237,7 +238,7 @@ export function SalonListPageClient({
                                   <div className="flex -space-x-2">
                                     {salonTherapists.map(t => (
                                       <div key={t.id} className="relative w-8 h-8 rounded-full overflow-hidden border-2 border-card">
-                                        <TherapistImage src={t.images[0]} alt={t.name} fill className="object-cover" />
+                                        <TherapistImage src={t.images[0]} alt={t.name} fill sizes="32px" className="object-cover" />
                                       </div>
                                     ))}
                                   </div>
