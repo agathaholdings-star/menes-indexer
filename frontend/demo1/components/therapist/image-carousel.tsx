@@ -21,6 +21,7 @@ export function ImageCarousel({ images, name }: ImageCarouselProps) {
           fill
           className="object-cover"
           priority
+          unoptimized
         />
       </div>
       {images.length > 1 && (

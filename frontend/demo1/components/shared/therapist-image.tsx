@@ -46,6 +46,7 @@ export function TherapistImage({ src, alt, ...props }: TherapistImageProps) {
       src={normalizedSrc}
       alt={alt ?? ""}
       onError={() => setError(true)}
+      unoptimized
       {...props}
     />
   );
