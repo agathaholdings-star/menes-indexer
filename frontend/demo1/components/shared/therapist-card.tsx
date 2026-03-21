@@ -40,34 +40,38 @@ export function TherapistCard({ therapist, showShop = true, size = "md" }: Thera
             )}
           </div>
         </div>
-        <CardContent className="p-3">
-          <div className="mb-2 flex flex-wrap gap-1">
-            {therapist.tags.slice(0, 3).map((tag) => (
-              <Badge key={tag} variant="secondary" className="text-xs">
-                {tag}
-              </Badge>
-            ))}
-          </div>
-          {(therapist.averageScore > 0 || therapist.reviewCount > 0) && (
-            <div className="flex items-center justify-between text-sm">
-              {isLocked ? (
-                <div className="flex items-center gap-1 text-muted-foreground">
-                  <Lock className="h-3.5 w-3.5" />
-                  <span className="text-xs">非公開</span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-1 text-primary">
-                  <Star className="h-4 w-4 fill-current" />
-                  <span className="font-bold">{therapist.averageScore}点</span>
-                </div>
-              )}
-              <div className="flex items-center gap-1 text-muted-foreground">
-                <MessageSquare className="h-3 w-3" />
-                <span className="text-xs">{therapist.reviewCount}件</span>
+        {(therapist.tags.length > 0 || therapist.averageScore > 0 || therapist.reviewCount > 0) && (
+          <CardContent className="p-3">
+            {therapist.tags.length > 0 && (
+              <div className="mb-2 flex flex-wrap gap-1">
+                {therapist.tags.slice(0, 3).map((tag) => (
+                  <Badge key={tag} variant="secondary" className="text-xs">
+                    {tag}
+                  </Badge>
+                ))}
               </div>
-            </div>
-          )}
-        </CardContent>
+            )}
+            {(therapist.averageScore > 0 || therapist.reviewCount > 0) && (
+              <div className="flex items-center justify-between text-sm">
+                {isLocked ? (
+                  <div className="flex items-center gap-1 text-muted-foreground">
+                    <Lock className="h-3.5 w-3.5" />
+                    <span className="text-xs">非公開</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1 text-primary">
+                    <Star className="h-4 w-4 fill-current" />
+                    <span className="font-bold">{therapist.averageScore}点</span>
+                  </div>
+                )}
+                <div className="flex items-center gap-1 text-muted-foreground">
+                  <MessageSquare className="h-3 w-3" />
+                  <span className="text-xs">{therapist.reviewCount}件</span>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        )}
       </Card>
     </Link>
   );

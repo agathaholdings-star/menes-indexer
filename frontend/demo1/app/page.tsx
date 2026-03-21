@@ -20,7 +20,7 @@ async function getLatestReviews() {
   const { data } = await supabaseAdmin
     .from("reviews")
     .select(
-      "id, score, comment_first_impression, created_at, therapist_id, therapists(name, image_urls, salon_id, salons(name))"
+      "id, score, comment_first_impression, comment_service, comment_advice, type_id, body_type, service_type, user_name, view_count, helpful_count, verification_image_path, created_at, therapist_id, therapists(name, image_urls, salon_id, salons(name))"
     )
     .eq("moderation_status", "approved")
     .order("created_at", { ascending: false })
