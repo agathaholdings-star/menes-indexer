@@ -70,62 +70,45 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(enriched, cacheHeaders);
   }
 
-  // Fetch by area_id via salon_areas
+  // Fetch by area_id via inner join
   if (areaId) {
-    const { data: salonAreaRows } = await supabaseAdmin
-      .from("salon_areas")
-      .select("salon_id")
-      .eq("area_id", parseInt(areaId, 10))
-      .order("display_order", { ascending: true })
-      .limit(limit);
-    if (!salonAreaRows || salonAreaRows.length === 0) return NextResponse.json([]);
-    const salonIds = salonAreaRows.map((sa) => sa.salon_id);
     const { data } = await supabaseAdmin
       .from("salons")
-      .select("id, name, display_name, slug, image_url, access, description")
-      .in("id", salonIds)
+      .select("id, name, display_name, slug, image_url, access, description, salon_areas!inner(area_id)")
+      .eq("salon_areas.area_id", parseInt(areaId, 10))
       .eq("is_active", true)
-      .not("published_at", "is", null);
-    // Attach therapist_count per salon
-    if (data && data.length > 0) {
-      const { data: counts } = await supabaseAdmin
-        .from("therapists")
-        .select("salon_id")
-        .in("salon_id", data.map(s => s.id))
-        .eq("status", "active");
-      const countMap = new Map<number, number>();
-      (counts ?? []).forEach((t: any) => {
-        countMap.set(t.salon_id, (countMap.get(t.salon_id) || 0) + 1);
-      });
-      const enriched = data.map(s => ({ ...s, therapist_count: countMap.get(s.id) || 0 }));
-      return NextResponse.json(enriched, cacheHeaders);
-    }
-    return NextResponse.json(data ?? [], cacheHeaders);
+      .not("published_at", "is", null)
+      .limit(limit);
+    if (!data || data.length === 0) return NextResponse.json([], cacheHeaders);
+    const { data: counts } = await supabaseAdmin
+      .from("therapists")
+      .select("salon_id")
+      .in("salon_id", data.map(s => s.id))
+      .eq("status", "active");
+    const countMap = new Map<number, number>();
+    (counts ?? []).forEach((t: any) => {
+      countMap.set(t.salon_id, (countMap.get(t.salon_id) || 0) + 1);
+    });
+    const enriched = data.map(({ salon_areas, ...s }) => ({ ...s, therapist_count: countMap.get(s.id) || 0 }));
+    return NextResponse.json(enriched, cacheHeaders);
   }
 
-  // Fetch by area slug via salon_areas
+  // Fetch by area slug via inner join
   if (areaSlug) {
     const { data: area } = await supabaseAdmin
       .from("areas")
       .select("id")
       .eq("slug", areaSlug)
       .single();
-    if (!area) return NextResponse.json([]);
-    const { data: salonAreaRows } = await supabaseAdmin
-      .from("salon_areas")
-      .select("salon_id, display_order")
-      .eq("area_id", area.id)
-      .order("display_order", { ascending: true })
-      .limit(limit);
-    if (!salonAreaRows || salonAreaRows.length === 0) return NextResponse.json([]);
-    const salonIds = salonAreaRows.map((sa) => sa.salon_id);
+    if (!area) return NextResponse.json([], cacheHeaders);
     const { data } = await supabaseAdmin
       .from("salons")
-      .select("id, name, display_name, slug, image_url, access, description")
-      .in("id", salonIds)
+      .select("id, name, display_name, slug, image_url, access, description, salon_areas!inner(area_id)")
+      .eq("salon_areas.area_id", area.id)
       .eq("is_active", true)
-      .not("published_at", "is", null);
-    return NextResponse.json(data ?? [], cacheHeaders);
+      .not("published_at", "is", null)
+      .limit(limit);
+    return NextResponse.json((data ?? []).map(({ salon_areas, ...s }) => s), cacheHeaders);
   }
 
   // Random or default listing
