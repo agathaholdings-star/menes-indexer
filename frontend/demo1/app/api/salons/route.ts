@@ -44,39 +44,30 @@ export async function GET(req: NextRequest) {
 
   // Fetch by prefecture_id (all salons in prefecture via areas -> salon_areas)
   if (prefectureId) {
-    const { data: areaRows } = await supabaseAdmin
-      .from("areas")
-      .select("id")
-      .eq("prefecture_id", parseInt(prefectureId, 10));
-    if (!areaRows || areaRows.length === 0) return NextResponse.json([]);
-    const areaIds = areaRows.map(a => a.id);
-    const { data: salonAreaRows } = await supabaseAdmin
-      .from("salon_areas")
-      .select("salon_id")
-      .in("area_id", areaIds)
-      .limit(limit);
-    if (!salonAreaRows || salonAreaRows.length === 0) return NextResponse.json([]);
-    const salonIds = [...new Set(salonAreaRows.map(sa => sa.salon_id))];
+    // Use inner join: salons -> salon_areas -> areas to get published salons in one query
     const { data } = await supabaseAdmin
       .from("salons")
-      .select("id, name, display_name, slug, image_url, access, description")
-      .in("id", salonIds)
+      .select("id, name, display_name, slug, image_url, access, description, salon_areas!inner(area_id, areas!inner(prefecture_id))")
+      .eq("salon_areas.areas.prefecture_id", parseInt(prefectureId, 10))
       .eq("is_active", true)
-      .not("published_at", "is", null);
-    if (data && data.length > 0) {
-      const { data: counts } = await supabaseAdmin
-        .from("therapists")
-        .select("salon_id")
-        .in("salon_id", data.map(s => s.id))
-        .eq("status", "active");
-      const countMap = new Map<number, number>();
-      (counts ?? []).forEach((t: any) => {
-        countMap.set(t.salon_id, (countMap.get(t.salon_id) || 0) + 1);
-      });
-      const enriched = data.map(s => ({ ...s, therapist_count: countMap.get(s.id) || 0 }));
-      return NextResponse.json(enriched, cacheHeaders);
-    }
-    return NextResponse.json(data ?? [], cacheHeaders);
+      .not("published_at", "is", null)
+      .limit(limit);
+    if (!data || data.length === 0) return NextResponse.json([], cacheHeaders);
+    // Deduplicate (a salon can appear in multiple areas)
+    const seen = new Set<number>();
+    const unique = data.filter(s => { if (seen.has(s.id)) return false; seen.add(s.id); return true; });
+    // Attach therapist counts
+    const { data: counts } = await supabaseAdmin
+      .from("therapists")
+      .select("salon_id")
+      .in("salon_id", unique.map(s => s.id))
+      .eq("status", "active");
+    const countMap = new Map<number, number>();
+    (counts ?? []).forEach((t: any) => {
+      countMap.set(t.salon_id, (countMap.get(t.salon_id) || 0) + 1);
+    });
+    const enriched = unique.map(({ salon_areas, ...s }) => ({ ...s, therapist_count: countMap.get(s.id) || 0 }));
+    return NextResponse.json(enriched, cacheHeaders);
   }
 
   // Fetch by area_id via salon_areas
