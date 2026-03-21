@@ -526,7 +526,7 @@ export default function AdminPage() {
                       )}
                       {r.comment_advice && (
                         <div>
-                          <span className="font-medium text-xs">その他: </span>
+                          <span className="font-medium text-xs">アドバイス: </span>
                           <span className="text-muted-foreground">{r.comment_advice}</span>
                         </div>
                       )}

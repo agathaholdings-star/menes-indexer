@@ -1450,7 +1450,7 @@ function StepText({
     { key: "q2" as const, label: "Q5. 特に良かった点は？", placeholder: "力加減が絶妙で、肩まわりの凝りが一気に楽になりました。手技のバリエーションも豊富。", min: 30, max: 200, required: true },
     { key: "q4" as const, label: "Q6. 気になった点・改善点は？", placeholder: "強いて言えば、施術中のBGMがもう少し静かだと更にリラックスできたかも。", min: 30, max: 200, required: true },
     { key: "q5" as const, label: "Q7. コスパはどうでしたか？", placeholder: "90分12,000円で大満足。同エリアの他店と比べてもコスパは抜群だと思います。", min: 30, max: 200, required: true },
-    { key: "q7" as const, label: "Q8. その他コメント", placeholder: "お店の清潔感◎。シャワールームも広くて快適でした。アメニティも充実。", min: 0, max: 200, required: false },
+    { key: "q7" as const, label: "Q8. 次に行く人へのアドバイス", placeholder: "予約は早めがおすすめ。シャワールームの清潔感◎。指名料は+1,000円ですが、絶対指名した方がいいです。", min: 0, max: 200, required: false },
   ];
 
   return (
