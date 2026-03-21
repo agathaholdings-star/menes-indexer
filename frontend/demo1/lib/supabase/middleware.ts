@@ -25,42 +25,38 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  // セッションリフレッシュ（重要: getUser を呼ぶことでトークンを更新）
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  // 未ログインで保護ページにアクセスした場合リダイレクト
+  // 保護ページとAuthページのみセッション確認（それ以外はスキップして高速化）
   const protectedPaths = ["/mypage", "/admin"];
-  const isProtected = protectedPaths.some((path) =>
-    request.nextUrl.pathname.startsWith(path)
-  );
-
-  if (!user && isProtected) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    url.searchParams.set("redirect", request.nextUrl.pathname);
-    const response = NextResponse.redirect(url);
-    supabaseResponse.cookies.getAll().forEach((cookie) => {
-      response.cookies.set(cookie.name, cookie.value);
-    });
-    return response;
-  }
-
-  // ログイン済みでログイン/登録ページにアクセスした場合リダイレクト
   const authPaths = ["/login", "/register"];
-  const isAuthPage = authPaths.some((path) =>
-    request.nextUrl.pathname.startsWith(path)
-  );
+  const pathname = request.nextUrl.pathname;
+  const isProtected = protectedPaths.some((path) => pathname.startsWith(path));
+  const isAuthPage = authPaths.some((path) => pathname.startsWith(path));
 
-  if (user && isAuthPage) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/mypage";
-    const response = NextResponse.redirect(url);
-    supabaseResponse.cookies.getAll().forEach((cookie) => {
-      response.cookies.set(cookie.name, cookie.value);
-    });
-    return response;
+  if (isProtected || isAuthPage) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user && isProtected) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      url.searchParams.set("redirect", pathname);
+      const response = NextResponse.redirect(url);
+      supabaseResponse.cookies.getAll().forEach((cookie) => {
+        response.cookies.set(cookie.name, cookie.value);
+      });
+      return response;
+    }
+
+    if (user && isAuthPage) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/mypage";
+      const response = NextResponse.redirect(url);
+      supabaseResponse.cookies.getAll().forEach((cookie) => {
+        response.cookies.set(cookie.name, cookie.value);
+      });
+      return response;
+    }
   }
 
   return supabaseResponse;
