@@ -24,10 +24,20 @@ const nextConfig = {
         source: "/sitemap-therapist-:page(\\d+).xml",
         destination: "/sitemap-therapist/:page",
       },
+      {
+        source: "/img/:path*",
+        destination: "https://oycayfewhqrezvhbbhzm.supabase.co/storage/v1/object/public/:path*",
+      },
     ];
   },
   async headers() {
     return [
+      {
+        source: "/img/:path*",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+        ],
+      },
       {
         source: "/(.*)",
         headers: [

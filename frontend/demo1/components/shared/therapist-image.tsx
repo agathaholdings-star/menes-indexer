@@ -9,14 +9,20 @@ type TherapistImageProps = Omit<ImageProps, "src"> & {
 };
 
 const SUPABASE_STORAGE_BASE = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/`;
+const LOCAL_STORAGE_BASE = "http://127.0.0.1:54321/storage/v1/object/public/";
 
 function normalizeStorageUrl(url: string): string {
-  // ローカルSupabase URL → 環境に合わせたStorage URLに変換
-  if (url.startsWith("http://127.0.0.1:54321/storage/v1/object/public/")) {
-    return url.replace(
-      "http://127.0.0.1:54321/storage/v1/object/public/",
-      SUPABASE_STORAGE_BASE
-    );
+  // ローカル開発環境
+  if (url.startsWith(LOCAL_STORAGE_BASE)) {
+    return url.replace(LOCAL_STORAGE_BASE, SUPABASE_STORAGE_BASE);
+  }
+  // 本番: Supabase Storage URL → /img/ パスに変換（Vercel CDN経由で配信）
+  if (url.startsWith(SUPABASE_STORAGE_BASE)) {
+    return url.replace(SUPABASE_STORAGE_BASE, "/img/");
+  }
+  // oycay... 直指定の場合も変換
+  if (url.includes("supabase.co/storage/v1/object/public/")) {
+    return "/img/" + url.split("/storage/v1/object/public/")[1];
   }
   return url;
 }
