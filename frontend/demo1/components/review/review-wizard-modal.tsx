@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight, Check, Sparkles, Crown, Star, Heart, Smile, Flame, Search, MapPin, AlertCircle, Camera, ImageIcon, Trash2, Gift, Loader2, Mail, Lock, User, Eye, EyeOff, MailCheck } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check, CheckCircle, Sparkles, Crown, Star, Heart, Smile, Flame, Search, MapPin, AlertCircle, Camera, ImageIcon, Trash2, Gift, Loader2, Mail, Lock, User, Eye, EyeOff, MailCheck, ShieldCheck } from "lucide-react";
 import { TherapistImage } from "@/components/shared/therapist-image";
 import { Button } from "@/components/ui/button";
 import {
@@ -1516,19 +1516,43 @@ function StepVerificationImage({
 
   return (
     <div>
-      <h3 className="text-base font-semibold mb-1">予約スクショを添付（任意）</h3>
-      <p className="text-sm text-muted-foreground mb-4">
-        予約スクショを添付すると「認証済み」バッジ + ボーナス5クレジット獲得！スキップしても投稿できます。
-      </p>
+      <h3 className="text-base font-semibold mb-3">予約スクショを添付</h3>
+
+      {/* Incentive banner */}
+      <div className="mb-4 p-4 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+            <ShieldCheck className="h-5 w-5 text-blue-600" />
+          </div>
+          <div>
+            <p className="font-semibold text-sm text-blue-900">スクショ添付で特典ゲット</p>
+            <p className="text-xs text-blue-700 mt-0.5">スキップしても投稿できます</p>
+          </div>
+        </div>
+        <div className="flex gap-4 ml-[52px]">
+          <div className="flex items-center gap-1.5">
+            <ShieldCheck className="h-4 w-4 text-green-600" />
+            <span className="text-xs font-medium text-green-800">「認証済み」バッジ</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Gift className="h-4 w-4 text-amber-600" />
+            <span className="text-xs font-medium text-amber-800">+5 クレジット</span>
+          </div>
+        </div>
+      </div>
 
       {preview ? (
         <div className="space-y-3">
-          <div className="relative rounded-lg overflow-hidden border">
+          <div className="relative rounded-lg overflow-hidden border-2 border-green-300 bg-green-50">
             <img
               src={preview}
               alt="予約スクショプレビュー"
               className="w-full max-h-64 object-contain bg-muted"
             />
+            <div className="absolute top-2 right-2 bg-green-600 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
+              <CheckCircle className="h-3 w-3" />
+              添付済み
+            </div>
           </div>
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted-foreground truncate max-w-[200px]">
@@ -1543,13 +1567,13 @@ function StepVerificationImage({
       ) : (
         <label
           htmlFor="verification-image"
-          className="flex flex-col items-center gap-3 p-8 rounded-xl border-2 border-dashed cursor-pointer hover:border-primary/50 hover:bg-muted/50 transition-colors"
+          className="flex flex-col items-center gap-4 p-8 rounded-xl border-2 border-dashed border-blue-300 cursor-pointer hover:border-blue-500 hover:bg-blue-50/50 transition-colors bg-blue-50/30"
         >
-          <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
-            <Camera className="h-8 w-8 text-muted-foreground" />
+          <div className="h-16 w-16 rounded-full bg-blue-100 flex items-center justify-center">
+            <Camera className="h-8 w-8 text-blue-500" />
           </div>
           <div className="text-center">
-            <p className="font-medium text-sm">タップして画像を選択</p>
+            <p className="font-semibold text-sm text-blue-900">タップして画像を選択</p>
             <p className="text-xs text-muted-foreground mt-1">JPEG, PNG（最大10MB）</p>
           </div>
           <input
