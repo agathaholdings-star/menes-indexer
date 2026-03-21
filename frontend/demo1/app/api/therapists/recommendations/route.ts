@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
 
   const { data } = await q
     .order("created_at", { ascending: false })
-    .limit(50);
+    .limit(Math.max(limit * 3, 30));
 
   return NextResponse.json((data ?? []).slice(0, limit), {
     headers: {

@@ -14,5 +14,8 @@ export async function GET(req: NextRequest) {
     .order("created_at", { ascending: false })
     .limit(limit);
 
-  return NextResponse.json({ data: data ?? [], count: count ?? 0 });
+  return NextResponse.json(
+    { data: data ?? [], count: count ?? 0 },
+    { headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600" } }
+  );
 }

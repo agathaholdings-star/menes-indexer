@@ -44,12 +44,9 @@ const getTherapistCore = cache(async (id: number) => {
 });
 
 export async function generateStaticParams() {
-  const { data } = await supabase
-    .from("reviews")
-    .select("therapist_id")
-    .eq("moderation_status", "approved");
-  const uniqueIds = [...new Set((data || []).map((r) => r.therapist_id))];
-  return uniqueIds.map((id) => ({ id: String(id) }));
+  // ビルド時の静的生成を無効化（Supabase並列クエリでタイムアウトするため）
+  // ISR (revalidate=3600) でオンデマンド生成される
+  return [];
 }
 
 interface TherapistPageProps {

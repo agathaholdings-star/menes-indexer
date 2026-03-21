@@ -13,6 +13,7 @@ import {
   Heart,
   Bell,
   Settings,
+  Shield,
   LogOut,
   Crown,
   Star,
@@ -51,7 +52,7 @@ const emptySuggestions: SuggestResult = { therapists: [], salons: [], areas: [] 
 
 export function SiteHeader() {
   const { user: authUser, loading: authLoading, signOut: authSignOut } = useAuth();
-  const { effectiveTier, membershipType, monthlyReviewCount: tierMonthlyReviewCount, viewPermissionUntil, totalReviewCount, reviewCredits } = useTier();
+  const { effectiveTier, membershipType, monthlyReviewCount: tierMonthlyReviewCount, viewPermissionUntil, totalReviewCount, reviewCredits, isAdmin } = useTier();
   const memberLevel = (membershipType || "free") as "free" | "standard" | "vip";
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -184,19 +185,15 @@ export function SiteHeader() {
 
   const fetchNotifications = useCallback(async () => {
     if (!authUser) return;
-    const supabase = createSupabaseBrowser();
-    const { data } = await supabase
-      .from("notifications")
-      .select("id, type, title, body, link, is_read, created_at")
-      .eq("user_id", authUser.id)
-      .order("created_at", { ascending: false })
-      .limit(10);
+    const res = await fetch("/api/notifications");
+    if (!res.ok) return;
+    const data = await res.json();
     const items = (data || []) as Notification[];
     setNotifications(items);
     setUnreadCount(items.filter((n) => !n.is_read).length);
   }, [authUser]);
 
-  // 初回取得 + 30秒ポーリング（タブ非表示時は停止）
+  // 初回取得 + 60秒ポーリング（タブ非表示時は停止）
   useEffect(() => {
     if (!authUser) return;
     fetchNotifications();
@@ -205,7 +202,7 @@ export function SiteHeader() {
       if (document.visibilityState === "visible") {
         fetchNotifications();
       }
-    }, 30000);
+    }, 60000);
 
     return () => clearInterval(intervalId);
   }, [authUser, fetchNotifications]);
@@ -506,6 +503,14 @@ export function SiteHeader() {
                       </>
                     )}
 
+                    {isAdmin && (
+                      <DropdownMenuItem asChild>
+                        <Link href="/admin" className="cursor-pointer text-primary font-medium">
+                          <Shield className="h-4 w-4 mr-2" />
+                          管理画面
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem asChild>
                       <Link href="/mypage?tab=settings" className="cursor-pointer">
                         <Settings className="h-4 w-4 mr-2" />

@@ -33,7 +33,9 @@ export async function GET() {
     .order("created_at", { ascending: false })
     .limit(30);
 
-  return NextResponse.json(data || []);
+  return NextResponse.json(data || [], {
+    headers: { "Cache-Control": "private, max-age=30" },
+  });
 }
 
 export async function PATCH() {

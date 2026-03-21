@@ -13,6 +13,7 @@ export function useTier() {
   const [totalReviewCount, setTotalReviewCount] = useState(0);
   const [reviewCredits, setReviewCredits] = useState(0);
   const [creditsExpiresAt, setCreditsExpiresAt] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -30,6 +31,7 @@ export function useTier() {
           setTotalReviewCount(data.total_review_count || 0);
           setReviewCredits(data.review_credits || 0);
           setCreditsExpiresAt(data.credits_expires_at || null);
+          setIsAdmin(data.is_admin === true);
         }
         setLoading(false);
       })
@@ -73,5 +75,6 @@ export function useTier() {
     reviewCredits,
     setReviewCredits,
     creditsExpiresAt,
+    isAdmin,
   };
 }

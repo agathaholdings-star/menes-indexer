@@ -17,9 +17,16 @@ export async function GET() {
       .select("*", { count: "exact", head: true }),
   ]);
 
-  return NextResponse.json({
-    salonCount: salonCount.count ?? 0,
-    areaCount: areaCount.count ?? 0,
-    prefCount: prefCount.count ?? 0,
-  });
+  return NextResponse.json(
+    {
+      salonCount: salonCount.count ?? 0,
+      areaCount: areaCount.count ?? 0,
+      prefCount: prefCount.count ?? 0,
+    },
+    {
+      headers: {
+        "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=7200",
+      },
+    }
+  );
 }

@@ -11,6 +11,12 @@ export async function GET(req: NextRequest) {
   const random = searchParams.get("random");
   const limit = Math.min(parseInt(searchParams.get("limit") || "50", 10), 200);
 
+  const cacheHeaders = {
+    headers: {
+      "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
+    },
+  };
+
   // Search by name
   if (search) {
     const { data } = await supabaseAdmin
@@ -20,7 +26,7 @@ export async function GET(req: NextRequest) {
       .not("published_at", "is", null)
       .or(`display_name.ilike.%${search}%,name.ilike.%${search}%`)
       .limit(limit);
-    return NextResponse.json(data ?? []);
+    return NextResponse.json(data ?? [], cacheHeaders);
   }
 
   // Fetch by specific IDs
@@ -33,7 +39,7 @@ export async function GET(req: NextRequest) {
       .in("id", idArr)
       .eq("is_active", true)
       .not("published_at", "is", null);
-    return NextResponse.json(data ?? []);
+    return NextResponse.json(data ?? [], cacheHeaders);
   }
 
   // Fetch by prefecture_id (all salons in prefecture via areas -> salon_areas)
@@ -68,9 +74,9 @@ export async function GET(req: NextRequest) {
         countMap.set(t.salon_id, (countMap.get(t.salon_id) || 0) + 1);
       });
       const enriched = data.map(s => ({ ...s, therapist_count: countMap.get(s.id) || 0 }));
-      return NextResponse.json(enriched);
+      return NextResponse.json(enriched, cacheHeaders);
     }
-    return NextResponse.json(data ?? []);
+    return NextResponse.json(data ?? [], cacheHeaders);
   }
 
   // Fetch by area_id via salon_areas
@@ -101,9 +107,9 @@ export async function GET(req: NextRequest) {
         countMap.set(t.salon_id, (countMap.get(t.salon_id) || 0) + 1);
       });
       const enriched = data.map(s => ({ ...s, therapist_count: countMap.get(s.id) || 0 }));
-      return NextResponse.json(enriched);
+      return NextResponse.json(enriched, cacheHeaders);
     }
-    return NextResponse.json(data ?? []);
+    return NextResponse.json(data ?? [], cacheHeaders);
   }
 
   // Fetch by area slug via salon_areas
@@ -128,7 +134,7 @@ export async function GET(req: NextRequest) {
       .in("id", salonIds)
       .eq("is_active", true)
       .not("published_at", "is", null);
-    return NextResponse.json(data ?? []);
+    return NextResponse.json(data ?? [], cacheHeaders);
   }
 
   // Random or default listing
@@ -139,5 +145,5 @@ export async function GET(req: NextRequest) {
       .not("published_at", "is", null)
     .limit(limit);
 
-  return NextResponse.json(data ?? []);
+  return NextResponse.json(data ?? [], cacheHeaders);
 }

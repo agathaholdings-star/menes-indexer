@@ -12,15 +12,32 @@ import type { SalonWithReviewCount } from "@/components/home/top-reviewed-salons
 import { ReviewCtaBanner } from "@/components/home/review-cta-banner";
 import type { AreasGrouped, AreaItem } from "@/lib/supabase-data";
 
+interface SidebarTherapist {
+  id: number;
+  name: string;
+  image_url: string | null;
+  shop_name: string;
+}
+
+interface SidebarShop {
+  id: number;
+  name: string;
+  display_name: string | null;
+  slug: string | null;
+  access: string | null;
+}
+
 interface HomePageClientProps {
   areasGrouped: AreasGrouped;
   popularAreas: (AreaItem & { name: string })[];
   regionOrder: string[];
   latestReviews: LatestReview[];
   topReviewedSalons: SalonWithReviewCount[];
+  initialSidebarTherapists?: SidebarTherapist[];
+  initialSidebarShops?: SidebarShop[];
 }
 
-export function HomePageClient({ areasGrouped, popularAreas, regionOrder, latestReviews, topReviewedSalons }: HomePageClientProps) {
+export function HomePageClient({ areasGrouped, popularAreas, regionOrder, latestReviews, topReviewedSalons, initialSidebarTherapists, initialSidebarShops }: HomePageClientProps) {
   return (
       <div className="min-h-screen flex flex-col bg-background">
         <SiteHeader />
@@ -49,7 +66,7 @@ export function HomePageClient({ areasGrouped, popularAreas, regionOrder, latest
               {/* Sidebar */}
               <div className="lg:w-80 lg:shrink-0">
                 <div className="lg:sticky lg:top-24">
-                  <Sidebar />
+                  <Sidebar initialTherapists={initialSidebarTherapists} initialShops={initialSidebarShops} />
                 </div>
               </div>
             </div>
