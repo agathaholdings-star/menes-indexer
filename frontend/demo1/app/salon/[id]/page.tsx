@@ -206,6 +206,15 @@ export default async function ShopPage({ params }: ShopPageProps) {
   );
   shop.therapistCount = therapists.length;
 
+  // サロン画像がない場合、在籍セラピストの1人目の画像をフォールバック
+  if (shop.images.length === 0 && therapists.length > 0) {
+    const fallbackImage = therapists.find(t => t.images.length > 0)?.images[0];
+    if (fallbackImage) {
+      shop.images = [fallbackImage];
+      shop.thumbnail = fallbackImage;
+    }
+  }
+
   const shopReviews: Review[] = (reviewRows || []).map((r) => {
     const row = r as Record<string, unknown>;
     const review = toFrontendReview(row);
