@@ -55,7 +55,7 @@ interface ReviewWizardModalProps {
   monthlyReviewCount?: number;
 }
 
-const TOTAL_STEPS = 12; // 0-10: review steps, 11: registration (guest only)
+const TOTAL_STEPS = 13; // 0-11: review steps, 12: registration (guest only)
 
 const typeIcons: Record<string, React.ElementType> = {
   idol: Sparkles,
@@ -77,7 +77,7 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
   const router = useRouter();
 
   const hasPreselected = preselectedTherapistId != null || prefill != null;
-  const [step, setStep] = useState(hasPreselected ? 3 : 0);
+  const [step, setStep] = useState(hasPreselected ? 4 : 0);
   const [showAllAreas, setShowAllAreas] = useState(false);
   const [selectedArea, setSelectedArea] = useState<string | null>(null);
   const [salonSearch, setShopSearch] = useState("");
@@ -116,7 +116,7 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
   const [screenshotUploadFailed, setScreenshotUploadFailed] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Guest registration state (step 11)
+  // Guest registration state (step 12)
   const [guestForm, setGuestForm] = useState({ nickname: "", email: "", password: "" });
   const [guestAgreed, setGuestAgreed] = useState(false);
   const [showGuestPassword, setShowGuestPassword] = useState(false);
@@ -129,6 +129,8 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
   // DB state
   const [prefectures, setPrefectures] = useState<{ id: number; name: string }[]>([]);
   const [prefecturesWithSalons, setPrefecturesWithSalons] = useState<{ id: number; name: string; salon_count: number }[]>([]);
+  const [selectedDistrict, setSelectedDistrict] = useState<{ id: number; name: string } | null>(null);
+  const [dbAreas, setDbAreas] = useState<{ id: number; name: string; salon_count: number }[]>([]);
   const [dbSalons, setDbSalons] = useState<DBShop[]>([]);
   const [dbTherapists, setDbTherapists] = useState<DBTherapist[]>([]);
   const [directSalonSearch, setDirectShopSearch] = useState("");
@@ -195,15 +197,29 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
     return () => clearTimeout(timer);
   }, [directSalonSearch]);
 
-  // Fetch shops when area (prefecture) selected
+  // Fetch areas when prefecture selected
   useEffect(() => {
-    if (!selectedArea) { setDbSalons([]); return; }
-    const fetchShops = async () => {
+    if (!selectedArea) { setDbAreas([]); return; }
+    const fetchAreas = async () => {
       const prefecture = prefectures.find(p => p.name === selectedArea)
         || prefectures.find(p => p.name === prefectureShortNames[selectedArea])
         || prefectures.find(p => p.name.startsWith(selectedArea));
       if (!prefecture) return;
-      const salonsRes = await fetch(`/api/salons?prefecture_id=${prefecture.id}&limit=200`);
+      const res = await fetch(`/api/areas?prefecture_id=${prefecture.id}`);
+      if (!res.ok) { setDbAreas([]); return; }
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setDbAreas(data.filter((a: any) => (a.salon_count || 0) > 0).map((a: any) => ({ id: a.id, name: a.name, salon_count: a.salon_count || 0 })));
+      }
+    };
+    fetchAreas();
+  }, [selectedArea, prefectures]);
+
+  // Fetch shops when district (area) selected
+  useEffect(() => {
+    if (!selectedDistrict) { setDbSalons([]); return; }
+    const fetchShops = async () => {
+      const salonsRes = await fetch(`/api/salons?area_id=${selectedDistrict.id}&limit=50`);
       if (!salonsRes.ok) { setDbSalons([]); return; }
       const salons = await salonsRes.json();
       if (!Array.isArray(salons) || salons.length === 0) { setDbSalons([]); return; }
@@ -212,7 +228,7 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
       setDbSalons(uniqueSalons.map((s: any) => ({ id: s.id, name: s.name, display_name: s.display_name, access: s.access, therapist_count: s.therapist_count ?? 0 })));
     };
     fetchShops();
-  }, [selectedArea, prefectures]);
+  }, [selectedDistrict]);
 
   // Fetch therapists when shop selected
   useEffect(() => {
@@ -233,7 +249,7 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
     setSelectedSalonId(Number(prefill.salonId));
     setShopStepSkipped(true);
     setPrefillUsed(true);
-    setStep(3);
+    setStep(4);
   }, [open, prefill]);
 
   // Handle preselected therapist (legacy) - fetch directly by ID
@@ -249,7 +265,7 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
         setSelectedTherapistId(found.id);
         setSelectedSalonId(found.salon_id);
         setShopStepSkipped(true);
-        setStep(3);
+        setStep(4);
       }
     };
     fetchPreselected();
@@ -413,10 +429,10 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
   };
 
   const handleNext = async () => {
-    // step 10 (画像アップロード) の次:
+    // step 11 (画像アップロード) の次:
     // - ログイン済み → DB保存して完了
-    // - 未ログイン → step 11 (登録フォーム) へ
-    if (step === 10) {
+    // - 未ログイン → step 12 (登録フォーム) へ
+    if (step === 11) {
       if (authUser) {
         // ログイン済み: 従来通りDB保存
         if (!selectedSalonId || !selectedTherapistId) return;
@@ -438,42 +454,47 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
         }
       } else {
         // 未ログイン: 登録ステップへ
-        setStep(11);
+        setStep(12);
       }
       return;
     }
 
-    // step 11 (登録フォーム) の送信
-    if (step === 11) {
+    // step 12 (登録フォーム) の送信
+    if (step === 12) {
       await handleGuestSubmit();
       return;
     }
 
     // その他のステップ: 次へ進む
-    if (step < 10) {
+    if (step < 11) {
       setStep(step + 1);
     }
   };
 
   const handleBack = () => {
-    // prefill使用時: step 3で戻るとprefill解除してstep 0へ
-    if (prefillUsed && step <= 3) {
+    // prefill使用時: step 4で戻るとprefill解除してstep 0へ
+    if (prefillUsed && step <= 4) {
       setPrefillUsed(false);
       setShopStepSkipped(false);
       setSelectedArea(null);
+      setSelectedDistrict(null);
       setSelectedSalonId(null);
       setSelectedTherapistId(null);
       setStep(0);
       return;
     }
-    // legacy preselected時はstep 3が最初なので、それ以前には戻れない
-    if (hasPreselected && !prefill && step <= 3) return;
+    // legacy preselected時はstep 4が最初なので、それ以前には戻れない
+    if (hasPreselected && !prefill && step <= 4) return;
     if (step > 0) {
-      // 直接検索でstep 1をスキップした場合、step 2→step 0に戻る
-      if (step === 2 && salonStepSkipped) {
+      // 直接検索でstep 1,2をスキップした場合、step 3→step 0に戻る
+      if (step === 3 && salonStepSkipped) {
         setShopStepSkipped(false);
         setSelectedSalonId(null);
         setStep(0);
+      } else if (step === 2) {
+        // Going back from salon step: clear district
+        setSelectedDistrict(null);
+        setStep(1);
       } else {
         setStep(step - 1);
       }
@@ -483,46 +504,56 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
   // Auto-advance when selection is made
   const handleAreaSelect = (area: string) => {
     setSelectedArea(area);
+    setSelectedDistrict(null);
     setSelectedSalonId(null);
     setSelectedTherapistId(null);
     setTimeout(() => setStep(1), 300);
   };
 
-  const handleSalonSelect = (salonId: number) => {
-    setSelectedSalonId(salonId);
+  const handleDistrictSelect = (district: { id: number; name: string }) => {
+    setSelectedDistrict(district);
+    setSelectedSalonId(null);
     setSelectedTherapistId(null);
     setTimeout(() => setStep(2), 300);
   };
 
+  const handleSalonSelect = (salonId: number) => {
+    setSelectedSalonId(salonId);
+    setSelectedTherapistId(null);
+    setTimeout(() => setStep(3), 300);
+  };
+
   const handleTherapistSelect = (therapistId: number) => {
     setSelectedTherapistId(therapistId);
-    setTimeout(() => setStep(3), 300);
+    setTimeout(() => setStep(4), 300);
   };
 
   const handleTypeSelect = (typeId: string) => {
     setSelectedType(typeId);
-    setTimeout(() => setStep(4), 300);
+    setTimeout(() => setStep(5), 300);
   };
 
   const handleBodySelect = (bodyId: string) => {
     setSelectedBody(bodyId);
-    setTimeout(() => setStep(5), 300);
+    setTimeout(() => setStep(6), 300);
   };
 
   const handleCupSelect = (cupId: string) => {
     setSelectedCup(cupId);
-    setTimeout(() => setStep(6), 300);
+    setTimeout(() => setStep(7), 300);
   };
 
   const handleServiceSelect = (serviceId: string) => {
     setSelectedService(serviceId);
-    setTimeout(() => setStep(7), 300);
+    setTimeout(() => setStep(8), 300);
   };
 
   const handleClose = () => {
-    setStep(hasPreselected ? 3 : 0);
+    setStep(hasPreselected ? 4 : 0);
     setShowAllAreas(false);
     setSelectedArea(null);
+    setSelectedDistrict(null);
+    setDbAreas([]);
     setShopSearch("");
     setTherapistSearch("");
     setSelectedSalonId(prefill ? Number(prefill.salonId) : null);
@@ -554,17 +585,18 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
   const canProceed = () => {
     switch (step) {
       case 0: return selectedArea !== null;
-      case 1: return selectedSalonId !== null;
-      case 2: return selectedTherapistId !== null;
-      case 3: return selectedType !== null;
-      case 4: return selectedBody !== null;
-      case 5: return selectedCup !== null;
-      case 6: return selectedService !== null;
-      case 7: return true; // Ratings are optional
-      case 8: return true; // Score always has default
-      case 9: return reviewText.q0.trim().length >= 50 && reviewText.q1.trim().length >= 50 && reviewText.q2.trim().length >= 50 && reviewText.q3.trim().length >= 50 && reviewText.q4.trim().length >= 50 && reviewText.q5.trim().length >= 20 && reviewText.q6.trim().length >= 50;
-      case 10: return true; // 画像は任意なので常にtrue
-      case 11: return guestForm.nickname.trim() !== "" && guestForm.email.trim() !== "" && guestForm.password.length >= 6 && guestAgreed;
+      case 1: return selectedDistrict !== null;
+      case 2: return selectedSalonId !== null;
+      case 3: return selectedTherapistId !== null;
+      case 4: return selectedType !== null;
+      case 5: return selectedBody !== null;
+      case 6: return selectedCup !== null;
+      case 7: return selectedService !== null;
+      case 8: return true; // Ratings are optional
+      case 9: return true; // Score always has default
+      case 10: return reviewText.q0.trim().length >= 50 && reviewText.q1.trim().length >= 50 && reviewText.q2.trim().length >= 50 && reviewText.q3.trim().length >= 50 && reviewText.q4.trim().length >= 50 && reviewText.q5.trim().length >= 20 && reviewText.q6.trim().length >= 50;
+      case 11: return true; // 画像は任意なので常にtrue
+      case 12: return guestForm.nickname.trim() !== "" && guestForm.email.trim() !== "" && guestForm.password.length >= 6 && guestAgreed;
       default: return false;
     }
   };
@@ -582,11 +614,11 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
 
         {/* Progress Bar */}
         {!isComplete && !showEmailConfirmation && (() => {
-          const skippedSteps = hasPreselected ? 3 : salonStepSkipped ? 1 : 0;
+          const skippedSteps = hasPreselected ? 4 : salonStepSkipped ? 2 : 0;
           // For logged-in users, total is 11 (steps 0-10); for guests, 12 (steps 0-11)
           const effectiveTotalSteps = authUser ? TOTAL_STEPS - 1 : TOTAL_STEPS;
           const totalSteps = effectiveTotalSteps - skippedSteps;
-          const currentStep = hasPreselected ? step - 3 : salonStepSkipped && step >= 2 ? step - 1 : step;
+          const currentStep = hasPreselected ? step - 4 : salonStepSkipped && step >= 3 ? step - 2 : step;
           return (
             <div className="flex gap-1 px-6 pt-4">
               {Array.from({ length: totalSteps }).map((_, i) => (
@@ -634,6 +666,8 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
                 setShowMissingReport(false);
                 setMissingTherapistName("");
                 setShopStepSkipped(false);
+                setSelectedDistrict(null);
+                setDbAreas([]);
                 setDirectShopSearch("");
                 setDirectSearchResults([]);
                 setVerificationImage(null);
@@ -660,11 +694,19 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
                   onSelectSalon={(shop) => {
                     setSelectedSalonId(shop.id);
                     setShopStepSkipped(true);
-                    setTimeout(() => setStep(2), 300);
+                    setTimeout(() => setStep(3), 300);
                   }}
                 />
               )}
               {step === 1 && (
+                <StepDistrict
+                  dbAreas={dbAreas}
+                  selectedDistrict={selectedDistrict}
+                  onSelect={handleDistrictSelect}
+                  selectedArea={selectedArea}
+                />
+              )}
+              {step === 2 && (
                 <StepShop
                   salonSearch={salonSearch}
                   setShopSearch={setShopSearch}
@@ -674,7 +716,7 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
                   selectedArea={selectedArea}
                 />
               )}
-              {step === 2 && (
+              {step === 3 && (
                 <StepTherapist
                   therapistSearch={therapistSearch}
                   setTherapistSearch={setTherapistSearch}
@@ -688,7 +730,7 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
                   selectedSalonId={selectedSalonId}
                 />
               )}
-              {step === 3 && (
+              {step === 4 && (
                 <>
                   {prefillUsed && prefill && (
                     <div className="mb-4 p-3 rounded-lg bg-primary/5 border border-primary/20 text-sm">
@@ -701,31 +743,31 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
                   <StepType selectedType={selectedType} onSelect={handleTypeSelect} />
                 </>
               )}
-              {step === 4 && (
+              {step === 5 && (
                 <StepBody selectedBody={selectedBody} onSelect={handleBodySelect} />
               )}
-              {step === 5 && (
+              {step === 6 && (
                 <StepCup selectedCup={selectedCup} onSelect={handleCupSelect} />
               )}
-              {step === 6 && (
+              {step === 7 && (
                 <StepService selectedService={selectedService} onSelect={handleServiceSelect} />
               )}
-              {step === 7 && (
+              {step === 8 && (
                 <StepRatings
                   ratings={ratings}
                   onChangeRating={(key, value) => setRatings(prev => ({ ...prev, [key]: value }))}
                 />
               )}
-              {step === 8 && (
+              {step === 9 && (
                 <StepScore score={score} onChangeScore={setScore} />
               )}
-              {step === 9 && (
+              {step === 10 && (
                 <StepText
                   reviewText={reviewText}
                   onChange={(key, value) => setReviewText(prev => ({ ...prev, [key]: value }))}
                 />
               )}
-              {step === 10 && (
+              {step === 11 && (
                 <StepVerificationImage
                   image={verificationImage}
                   preview={verificationPreview}
@@ -745,7 +787,7 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
                   }}
                 />
               )}
-              {step === 11 && (
+              {step === 12 && (
                 showEmailConfirmation ? (
                   <div className="text-center py-8">
                     <div className="relative mx-auto mb-6 w-20 h-20">
@@ -787,7 +829,7 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
             <Button
               variant="ghost"
               onClick={handleBack}
-              disabled={prefillUsed ? step < 3 : (hasPreselected && !prefill) ? step <= 3 : step === 0}
+              disabled={prefillUsed ? step < 4 : (hasPreselected && !prefill) ? step <= 4 : step === 0}
               className="gap-1"
             >
               <ChevronLeft className="h-4 w-4" />
@@ -795,19 +837,19 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
             </Button>
             <span className="text-sm text-muted-foreground">
               {(() => {
-                const skipped = hasPreselected ? 3 : salonStepSkipped && step >= 2 ? 1 : 0;
+                const skipped = hasPreselected ? 4 : salonStepSkipped && step >= 3 ? 2 : 0;
                 const effectiveTotal = authUser ? TOTAL_STEPS - 1 : TOTAL_STEPS;
-                const total = effectiveTotal - (hasPreselected ? 3 : salonStepSkipped ? 1 : 0);
+                const total = effectiveTotal - (hasPreselected ? 4 : salonStepSkipped ? 2 : 0);
                 return `${step - skipped + 1} / ${total}`;
               })()}
             </span>
             <Button onClick={handleNext} disabled={!canProceed() || submitting} className="gap-1">
               {submitting ? "投稿中..." :
-                step === 11 ? "登録して投稿する" :
-                step === 10 && authUser ? "投稿する" :
-                step === 10 && !authUser ? "次へ" :
+                step === 12 ? "登録して投稿する" :
+                step === 11 && authUser ? "投稿する" :
+                step === 11 && !authUser ? "次へ" :
                 "次へ"}
-              {step < 10 && !submitting && <ChevronRight className="h-4 w-4" />}
+              {step < 11 && !submitting && <ChevronRight className="h-4 w-4" />}
             </Button>
           </div>
         )}
@@ -958,7 +1000,57 @@ function StepArea({
   );
 }
 
-// Step 1: Shop Selection
+// Step 1: District (Area) Selection
+function StepDistrict({
+  dbAreas,
+  selectedDistrict,
+  onSelect,
+  selectedArea,
+}: {
+  dbAreas: { id: number; name: string; salon_count: number }[];
+  selectedDistrict: { id: number; name: string } | null;
+  onSelect: (district: { id: number; name: string }) => void;
+  selectedArea: string | null;
+}) {
+  return (
+    <div>
+      <h3 className="text-base font-semibold mb-1">エリアを選択</h3>
+      <p className="text-sm text-muted-foreground mb-4">
+        {selectedArea}のエリアを選んでください
+      </p>
+      {dbAreas.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+          <Loader2 className="h-6 w-6 animate-spin mb-2" />
+          <p className="text-sm">エリアを読み込み中...</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-3 max-h-80 overflow-y-auto">
+          {dbAreas.map((area) => (
+            <button
+              key={area.id}
+              type="button"
+              onClick={() => onSelect({ id: area.id, name: area.name })}
+              className={cn(
+                "flex items-center justify-center gap-2 p-4 rounded-xl border-2 transition-all",
+                selectedDistrict?.id === area.id
+                  ? "border-primary bg-primary/5 ring-2 ring-primary/20"
+                  : "border-border hover:border-primary/50 hover:bg-muted/50"
+              )}
+            >
+              <MapPin className="h-4 w-4 text-primary shrink-0" />
+              <div className="text-left">
+                <span className="font-medium">{area.name}</span>
+                <span className="text-xs text-muted-foreground ml-1">({area.salon_count})</span>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Step 2: Shop Selection
 function StepShop({
   salonSearch,
   setShopSearch,
