@@ -488,40 +488,40 @@ export default function AdminPage() {
                           <span className="text-muted-foreground">{r.comment_reason}</span>
                         </div>
                       )}
-                      {r.comment_service && (
-                        <div>
-                          <span className="font-medium text-xs">施術・サービス: </span>
-                          <span className="text-muted-foreground">{r.comment_service}</span>
-                        </div>
-                      )}
-                      {r.comment_revisit && (
-                        <div>
-                          <span className="font-medium text-xs">リピート意向: </span>
-                          <span className="text-muted-foreground">{r.comment_revisit}</span>
-                        </div>
-                      )}
                       {r.comment_first_impression && (
                         <div>
-                          <span className="font-medium text-xs">第一印象: </span>
+                          <span className="font-medium text-xs">顔の印象: </span>
                           <span className="text-muted-foreground">{r.comment_first_impression}</span>
                         </div>
                       )}
                       {r.comment_style && (
                         <div>
-                          <span className="font-medium text-xs">良かった点: </span>
+                          <span className="font-medium text-xs">スタイル: </span>
                           <span className="text-muted-foreground">{r.comment_style}</span>
+                        </div>
+                      )}
+                      {r.comment_service && (
+                        <div>
+                          <span className="font-medium text-xs">施術の流れ: </span>
+                          <span className="text-muted-foreground">{r.comment_service}</span>
                         </div>
                       )}
                       {r.comment_service_detail && (
                         <div>
-                          <span className="font-medium text-xs">気になった点: </span>
+                          <span className="font-medium text-xs">どこまでいけた: </span>
                           <span className="text-muted-foreground">{r.comment_service_detail}</span>
                         </div>
                       )}
                       {r.comment_cost && (
                         <div>
-                          <span className="font-medium text-xs">コスパ: </span>
+                          <span className="font-medium text-xs">金額・コスパ: </span>
                           <span className="text-muted-foreground">{r.comment_cost}</span>
+                        </div>
+                      )}
+                      {r.comment_revisit && (
+                        <div>
+                          <span className="font-medium text-xs">再訪意欲: </span>
+                          <span className="text-muted-foreground">{r.comment_revisit}</span>
                         </div>
                       )}
                       {r.comment_advice && (

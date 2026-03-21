@@ -560,7 +560,7 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
       case 6: return selectedService !== null;
       case 7: return true; // Ratings are optional
       case 8: return true; // Score always has default
-      case 9: return reviewText.q0.trim().length >= 30 && reviewText.q1.trim().length >= 30 && reviewText.q2.trim().length >= 30 && reviewText.q3.trim().length >= 30 && reviewText.q4.trim().length >= 30 && reviewText.q5.trim().length >= 30 && reviewText.q6.trim().length >= 30;
+      case 9: return reviewText.q0.trim().length >= 50 && reviewText.q1.trim().length >= 50 && reviewText.q2.trim().length >= 50 && reviewText.q3.trim().length >= 50 && reviewText.q4.trim().length >= 50 && reviewText.q5.trim().length >= 20 && reviewText.q6.trim().length >= 50;
       case 10: return true; // 画像は任意なので常にtrue
       case 11: return guestForm.nickname.trim() !== "" && guestForm.email.trim() !== "" && guestForm.password.length >= 6 && guestAgreed;
       default: return false;
@@ -1443,20 +1443,20 @@ function StepText({
   onChange: (key: keyof typeof reviewText, value: string) => void;
 }) {
   const questions = [
-    { key: "q0" as const, label: "Q1. 行ったきっかけは？", placeholder: "ネットの口コミで高評価だったので初来店。指名なしで予約しました。", min: 30, max: 200, required: true },
-    { key: "q3" as const, label: "Q2. 施術内容・サービスはどうでしたか？", placeholder: "アロマの香りが心地よく、指圧の強さも都度確認してくれて安心でした。会話のテンポも良く、あっという間の90分。", min: 30, max: 300, required: true },
-    { key: "q6" as const, label: "Q3. また行きたいと思いますか？", placeholder: "確実にリピートします。次回は指名して120分で予約する予定です！", min: 30, max: 200, required: true },
-    { key: "q1" as const, label: "Q4. 第一印象は？", placeholder: "写真通りの清楚な雰囲気で、笑顔が素敵。部屋に入った瞬間に緊張がほぐれました。", min: 30, max: 200, required: true },
-    { key: "q2" as const, label: "Q5. 特に良かった点は？", placeholder: "力加減が絶妙で、肩まわりの凝りが一気に楽になりました。手技のバリエーションも豊富。", min: 30, max: 200, required: true },
-    { key: "q4" as const, label: "Q6. 気になった点・改善点は？", placeholder: "強いて言えば、施術中のBGMがもう少し静かだと更にリラックスできたかも。", min: 30, max: 200, required: true },
-    { key: "q5" as const, label: "Q7. コスパはどうでしたか？", placeholder: "90分12,000円で大満足。同エリアの他店と比べてもコスパは抜群だと思います。", min: 30, max: 200, required: true },
-    { key: "q7" as const, label: "Q8. 次に行く人へのアドバイス", placeholder: "予約は早めがおすすめ。シャワールームの清潔感◎。指名料は+1,000円ですが、絶対指名した方がいいです。", min: 0, max: 200, required: false },
+    { key: "q0" as const, label: "Q1. きっかけは？（なぜこのセラピストを選んだか）", placeholder: "ネットの口コミで高評価だったので初来店。写真の雰囲気が好みだったのと、90分コースの評判が良かったので指名なしで予約した。", min: 50, max: 300, required: true },
+    { key: "q1" as const, label: "Q2. 顔の印象は？", placeholder: "写真よりも実物の方が可愛い。清楚系で笑顔が自然。化粧薄めでナチュラルな感じ。写真のギャップはほぼなくて安心した。", min: 50, max: 300, required: true },
+    { key: "q2" as const, label: "Q3. スタイル・体型は？", placeholder: "細身でスレンダー。肌がすべすべで触り心地が良い。胸は写真通りで盛ってない感じ。身長は160前後で小柄。", min: 50, max: 300, required: true },
+    { key: "q3" as const, label: "Q4. 施術の流れは？", placeholder: "うつ伏せから丁寧にほぐしてくれて、力加減も都度確認。密着度が徐々に上がっていく感じで自然だった。鼠径部のストレッチも丁寧。あっという間の90分。", min: 50, max: 300, required: true },
+    { key: "q4" as const, label: "Q5. どこまでいけた？（寛容度）", placeholder: "SKR寄り。自然な流れで距離が縮まった。無理な交渉はしてないけど、雰囲気で察してくれる感じ。", min: 50, max: 300, required: true },
+    { key: "q5" as const, label: "Q6. 金額・コスパは？", placeholder: "アロマ90分 12,000円＋指名料1,000円。トータル13,000円。このエリアだと相場通りだけど、内容考えたらコスパは良い方。", min: 20, max: 300, required: true },
+    { key: "q6" as const, label: "Q7. また行きたい？", placeholder: "確実にリピートする。次は120分で予約する予定。指名必須。予約取りづらくなる前に通い詰めたい。", min: 50, max: 300, required: true },
+    { key: "q7" as const, label: "Q8. 後から行く人へのアドバイス", placeholder: "予約は平日夕方が取りやすい。シャワー室きれい。駐車場ないので電車推奨。指名料かかるけど絶対指名した方がいい。", min: 0, max: 300, required: false },
   ];
 
   return (
     <div className="space-y-4">
       <h3 className="text-base font-semibold mb-1">最後に感想を教えて</h3>
-      <p className="text-sm text-muted-foreground">Q1〜Q7は必須（30字以上）です。Q8は任意ですが、書くほど他のユーザーの参考になります。</p>
+      <p className="text-sm text-muted-foreground">Q1〜Q7は必須（50字以上）です。Q8は任意ですが、書くほど他のユーザーの参考になります。</p>
       {questions.map((q) => (
         <div key={q.key}>
           <label htmlFor={q.key} className="block text-sm font-medium mb-1">
