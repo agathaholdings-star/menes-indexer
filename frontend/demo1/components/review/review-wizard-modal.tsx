@@ -207,7 +207,9 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
       if (!salonsRes.ok) { setDbSalons([]); return; }
       const salons = await salonsRes.json();
       if (!Array.isArray(salons) || salons.length === 0) { setDbSalons([]); return; }
-      setDbSalons(salons.map((s: any) => ({ id: s.id, name: s.name, display_name: s.display_name, access: s.access, therapist_count: s.therapist_count ?? 0 })));
+      const seen = new Set();
+      const uniqueSalons = salons.filter((s: any) => { if (seen.has(s.id)) return false; seen.add(s.id); return true; });
+      setDbSalons(uniqueSalons.map((s: any) => ({ id: s.id, name: s.name, display_name: s.display_name, access: s.access, therapist_count: s.therapist_count ?? 0 })));
     };
     fetchShops();
   }, [selectedArea, prefectures]);
@@ -1690,9 +1692,9 @@ function StepRegistration({
             onCheckedChange={(checked) => setGuestAgreed(checked === true)}
           />
           <Label htmlFor="guest-terms" className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
-            <Link href="/terms" target="_blank" className="text-primary hover:underline">利用規約</Link>
+            <Link href="/legal/terms" target="_blank" className="text-primary hover:underline">利用規約</Link>
             {" "}と{" "}
-            <Link href="/privacy" target="_blank" className="text-primary hover:underline">プライバシーポリシー</Link>
+            <Link href="/legal/privacy" target="_blank" className="text-primary hover:underline">プライバシーポリシー</Link>
             {" "}に同意します
           </Label>
         </div>
