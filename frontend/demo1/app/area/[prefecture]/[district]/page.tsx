@@ -7,7 +7,7 @@ import type { SalonLatestReview, NearbyAreaLink } from "@/lib/supabase-data";
 import { supabaseAdmin as supabase } from "@/lib/supabase-admin";
 import { SeoContentSection, FaqSection } from "@/components/shared/seo-content-section";
 
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 export async function generateStaticParams() {
   return [];

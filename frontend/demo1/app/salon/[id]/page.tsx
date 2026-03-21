@@ -5,7 +5,7 @@ import { getShopById, getShopBySlug, getTherapistsBySalonId, getSalonAreaInfo, g
 import { supabaseAdmin as supabase } from "@/lib/supabase-admin";
 import { SeoContentSection, SalonGuideSection, FaqSection } from "@/components/shared/seo-content-section";
 
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 export async function generateStaticParams() {
   return [];

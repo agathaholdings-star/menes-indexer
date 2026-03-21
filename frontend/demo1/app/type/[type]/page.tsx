@@ -12,7 +12,7 @@ import { therapistTypes } from "@/lib/data";
 import { supabaseAdmin as supabase } from "@/lib/supabase-admin";
 import { cleanTherapistName } from "@/lib/therapist-utils";
 
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 export async function generateMetadata({
   params,

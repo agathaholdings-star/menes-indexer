@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/ranking" },
 };
 
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 import { TherapistImage } from "@/components/shared/therapist-image";
 import { Trophy, ChevronRight, Star, TrendingUp, Medal } from "lucide-react";

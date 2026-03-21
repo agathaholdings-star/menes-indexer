@@ -24,7 +24,7 @@ import { WriteReviewTrigger } from "./write-review-trigger";
 import { ReviewModalProvider } from "./review-modal-context";
 import { HydrationSwitch } from "./hydration-switch";
 
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 // React cache: dedup Supabase queries between generateMetadata and page render
 const getTherapistCore = cache(async (id: number) => {
