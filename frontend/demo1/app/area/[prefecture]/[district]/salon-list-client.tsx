@@ -12,7 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import type { Shop, Therapist, TherapistType, BodyType } from "@/lib/data";
-import type { SalonLatestReview, NearbyAreaLink } from "@/lib/supabase-data";
+import type { SalonLatestReview, NearbyAreaLink, SidebarTherapist, SidebarShop } from "@/lib/supabase-data";
+import { Sidebar } from "@/components/layout/sidebar";
 
 interface SalonListPageClientProps {
   prefecture: string;
@@ -28,6 +29,8 @@ interface SalonListPageClientProps {
   prefectureSlug?: string;
   seoDescription?: string;
   seoContentHtml?: React.ReactNode;
+  initialSidebarTherapists?: SidebarTherapist[];
+  initialSidebarShops?: SidebarShop[];
 }
 
 function RankBadge({ rank }: { rank: number }) {
@@ -65,6 +68,8 @@ export function SalonListPageClient({
   prefectureSlug,
   seoDescription,
   seoContentHtml,
+  initialSidebarTherapists,
+  initialSidebarShops,
 }: SalonListPageClientProps) {
   const [sortBy, setSortBy] = useState("ranking");
   const { permissions } = useTier();
@@ -99,6 +104,9 @@ export function SalonListPageClient({
             <span className="text-foreground">{decodedDistrict}</span>
           </nav>
 
+          <div className="flex flex-col gap-8 lg:flex-row">
+          {/* Main Column */}
+          <div className="flex-1">
           <div className="mb-6">
             <h1 className="text-2xl font-bold">{decodedDistrict}のメンズエステ おすすめランキング</h1>
             <p className="text-sm text-muted-foreground mt-1">
@@ -283,10 +291,19 @@ export function SalonListPageClient({
           )}
           {/* SEO Content */}
           {seoContentHtml && (
-            <div className="max-w-4xl mt-8">
+            <div className="mt-8">
               {seoContentHtml}
             </div>
           )}
+          </div>{/* end Main Column */}
+
+          {/* Sidebar */}
+          <div className="hidden lg:block lg:w-80 lg:shrink-0">
+            <div className="lg:sticky lg:top-24">
+              <Sidebar initialTherapists={initialSidebarTherapists} initialShops={initialSidebarShops} />
+            </div>
+          </div>
+          </div>{/* end flex row */}
         </div>
       </main>
 

@@ -1,6 +1,6 @@
 import "server-only";
 import { supabaseAdmin as supabase } from "./supabase-admin";
-import { excludePlaceholderNames } from "./therapist-utils";
+import { excludePlaceholderNames, cleanTherapistName, isPlaceholderName } from "./therapist-utils";
 import type { Prefecture, Area, Shop } from "@/types/database";
 
 // =============================================================================
@@ -381,6 +381,78 @@ export async function getSalonReviewStatsBatch(
     }
   }
   return result;
+}
+
+// =============================================================================
+// Sidebar Data (server-side prefetch to eliminate client-side API calls)
+// =============================================================================
+
+export interface SidebarTherapist {
+  id: number;
+  name: string;
+  image_url: string | null;
+  shop_name: string;
+}
+
+export interface SidebarShop {
+  id: number;
+  name: string;
+  display_name: string | null;
+  slug: string | null;
+  access: string | null;
+}
+
+export async function getSidebarData(): Promise<{
+  therapists: SidebarTherapist[];
+  salons: SidebarShop[];
+}> {
+  const [{ data: rawTherapists }, { data: rawSalons }] = await Promise.all([
+    supabase
+      .from("therapists")
+      .select("id, name, image_urls, salons(name, display_name)")
+      .eq("status", "active")
+      .not("published_at", "is", null)
+      .order("published_at", { ascending: false })
+      .limit(30),
+    supabase
+      .from("salons")
+      .select("id, name, display_name, slug, access")
+      .eq("is_active", true)
+      .not("published_at", "is", null)
+      .order("review_count", { ascending: false })
+      .limit(5),
+  ]);
+
+  const therapists = (rawTherapists ?? [])
+    .filter((t: any) => {
+      if (!t.name || isPlaceholderName(t.name)) return false;
+      const cleaned = cleanTherapistName(t.name);
+      if (cleaned.length > 15) return false;
+      const shop = t.salons as { name: string; display_name: string | null } | null;
+      if (shop && (cleaned === shop.name || cleaned === shop.display_name)) return false;
+      return true;
+    })
+    .slice(0, 5)
+    .map((t: any) => {
+      const imgs = t.image_urls as string[] | null;
+      const shop = t.salons as { name: string; display_name: string | null } | null;
+      return {
+        id: Number(t.id),
+        name: cleanTherapistName(t.name),
+        image_url: imgs?.[0] || null,
+        shop_name: shop?.display_name || shop?.name || "",
+      };
+    });
+
+  const salons = (rawSalons ?? []).map((s: any) => ({
+    id: Number(s.id),
+    name: s.name as string,
+    display_name: s.display_name as string | null,
+    slug: s.slug as string | null,
+    access: s.access as string | null,
+  }));
+
+  return { therapists, salons };
 }
 
 // =============================================================================

@@ -17,7 +17,7 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { TherapistGuideSection, FaqSection } from "@/components/shared/seo-content-section";
 import { ProfileTable } from "@/components/therapist/profile-table";
 import { parseNameAge } from "@/lib/therapist-utils";
-import { getSalonAreaInfo } from "@/lib/supabase-data";
+import { getSalonAreaInfo, getSidebarData } from "@/lib/supabase-data";
 import { ImageGallery } from "./image-gallery";
 import { ReviewsSection } from "./reviews-section";
 import { WriteReviewTrigger } from "./write-review-trigger";
@@ -124,7 +124,7 @@ export default async function TherapistPage({ params }: TherapistPageProps) {
   const { dbTherapist, shop, areaInfo } = coreData;
   const { name: parsedName, age: parsedAge } = parseNameAge(dbTherapist.name, dbTherapist.age);
 
-  const [{ data: dbReviews }, { data: sameShopTherapists }, salonSummaryData] = await Promise.all([
+  const [{ data: dbReviews }, { data: sameShopTherapists }, salonSummaryData, sidebarData] = await Promise.all([
     supabase.from("reviews").select("*, profiles:reviews_user_id_fkey(nickname, total_review_count)").eq("therapist_id", Number(id)).eq("moderation_status", "approved").order("created_at", { ascending: false }).limit(100),
     supabase.from("therapists").select("id, name, age, image_urls").eq("salon_id", dbTherapist.salon_id).neq("id", Number(id)).eq("status", "active")
       .not("name", "ilike", "%プロフィール%").not("name", "ilike", "%profile%").not("name", "ilike", "%THERAPIST%")
@@ -132,6 +132,7 @@ export default async function TherapistPage({ params }: TherapistPageProps) {
       .not("name", "ilike", "%staff%").not("name", "ilike", "%ランキング%").not("name", "eq", "---")
       .order("review_count", { ascending: false, nullsFirst: false }).limit(8),
     supabase.from("page_contents").select("body").eq("page_type", "salon").eq("entity_id", dbTherapist.salon_id).eq("content_key", "salon_summary").limit(1).then(({ data }) => data?.[0]?.body || null),
+    getSidebarData(),
   ]);
 
   const reviewCount = (dbReviews || []).length;
@@ -561,7 +562,7 @@ export default async function TherapistPage({ params }: TherapistPageProps) {
                 {/* Sidebar */}
                 <div className="hidden lg:block lg:w-80 lg:shrink-0">
                   <div className="lg:sticky lg:top-24">
-                    <Sidebar prefectureName={therapist.area} />
+                    <Sidebar prefectureName={therapist.area} initialTherapists={sidebarData.therapists} initialShops={sidebarData.salons} />
                   </div>
                 </div>
               </div>

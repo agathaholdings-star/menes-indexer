@@ -272,7 +272,7 @@ export function SiteHeader() {
       <header className="sticky top-0 z-50 border-b bg-card">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4">
           {/* Logo */}
-          <Link href="/" className="flex shrink-0 flex-col">
+          <Link href="/" prefetch={false} className="flex shrink-0 flex-col">
             <span className="text-2xl font-black tracking-tight text-primary leading-none">SKR</span>
             <span className="hidden text-[10px] font-medium text-muted-foreground sm:inline">メンズエステの口コミ体験談サイト</span>
           </Link>
@@ -322,19 +322,19 @@ export function SiteHeader() {
           {/* Navigation - Desktop */}
           <nav className="hidden items-center gap-1 lg:flex">
             <Button variant="ghost" size="sm" asChild>
-              <Link href="/search">
+              <Link href="/search" prefetch={false}>
                 <Search className="mr-1 h-4 w-4" />
                 セラピスト検索
               </Link>
             </Button>
             <Button variant="ghost" size="sm" asChild>
-              <Link href="/area">
+              <Link href="/area" prefetch={false}>
                 <MapPin className="mr-1 h-4 w-4" />
                 エリア検索
               </Link>
             </Button>
             <Button variant="ghost" size="sm" asChild>
-              <Link href="/ranking">
+              <Link href="/ranking" prefetch={false}>
                 <Star className="mr-1 h-4 w-4" />
                 ランキング
               </Link>
@@ -384,6 +384,7 @@ export function SiteHeader() {
                           <Link
                             key={n.id}
                             href={n.link || "/mypage"}
+                            prefetch={false}
                             className={`block px-4 py-3 border-b last:border-0 hover:bg-muted/50 transition-colors ${!n.is_read ? "bg-primary/5" : ""}`}
                           >
                             <p className="text-sm font-medium">{n.title}</p>
@@ -397,6 +398,7 @@ export function SiteHeader() {
                     </div>
                     <Link
                       href="/notifications"
+                      prefetch={false}
                       className="block text-center py-2 text-sm text-primary hover:underline border-t"
                     >
                       すべての通知を見る
@@ -472,19 +474,19 @@ export function SiteHeader() {
                     </div>
 
                     <DropdownMenuItem asChild>
-                      <Link href="/mypage" className="cursor-pointer">
+                      <Link href="/mypage" prefetch={false} className="cursor-pointer">
                         <User className="h-4 w-4 mr-2" />
                         マイページ
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link href="/mypage?tab=reviews" className="cursor-pointer">
+                      <Link href="/mypage?tab=reviews" prefetch={false} className="cursor-pointer">
                         <PenSquare className="h-4 w-4 mr-2" />
                         投稿した口コミ
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link href="/mypage?tab=favorites" className="cursor-pointer">
+                      <Link href="/mypage?tab=favorites" prefetch={false} className="cursor-pointer">
                         <Heart className="h-4 w-4 mr-2" />
                         お気に入り
                       </Link>
@@ -494,7 +496,7 @@ export function SiteHeader() {
                     {memberLevel !== "vip" && (
                       <>
                         <DropdownMenuItem asChild>
-                          <Link href="/pricing" className="cursor-pointer text-primary font-medium">
+                          <Link href="/pricing" prefetch={false} className="cursor-pointer text-primary font-medium">
                             <Crown className="h-4 w-4 mr-2" />
                             {memberLevel === "free" ? "有料会員になる" : "VIPにアップグレード"}
                           </Link>
@@ -505,14 +507,14 @@ export function SiteHeader() {
 
                     {isAdmin && (
                       <DropdownMenuItem asChild>
-                        <Link href="/admin" className="cursor-pointer text-primary font-medium">
+                        <Link href="/admin" prefetch={false} className="cursor-pointer text-primary font-medium">
                           <Shield className="h-4 w-4 mr-2" />
                           管理画面
                         </Link>
                       </DropdownMenuItem>
                     )}
                     <DropdownMenuItem asChild>
-                      <Link href="/mypage?tab=settings" className="cursor-pointer">
+                      <Link href="/mypage?tab=settings" prefetch={false} className="cursor-pointer">
                         <Settings className="h-4 w-4 mr-2" />
                         設定
                       </Link>
@@ -531,13 +533,13 @@ export function SiteHeader() {
               /* Logged Out State */
               <div className="hidden items-center gap-2 sm:flex">
                 <Button variant="ghost" size="sm" asChild>
-                  <Link href="/login">
+                  <Link href="/login" prefetch={false}>
                     <LogIn className="mr-1 h-4 w-4" />
                     ログイン
                   </Link>
                 </Button>
                 <Button variant="outline" size="sm" asChild>
-                  <Link href="/register">新規登録</Link>
+                  <Link href="/register" prefetch={false}>新規登録</Link>
                 </Button>
               </div>
             )}
@@ -642,19 +644,19 @@ export function SiteHeader() {
                   {/* Mobile Navigation */}
                   <nav className="flex flex-col gap-1">
                     <Button variant="ghost" className="justify-start" asChild>
-                      <Link href="/search">
+                      <Link href="/search" prefetch={false}>
                         <Search className="mr-2 h-4 w-4" />
                         セラピスト検索
                       </Link>
                     </Button>
                     <Button variant="ghost" className="justify-start" asChild>
-                      <Link href="/area">
+                      <Link href="/area" prefetch={false}>
                         <MapPin className="mr-2 h-4 w-4" />
                         エリア検索
                       </Link>
                     </Button>
                     <Button variant="ghost" className="justify-start" asChild>
-                      <Link href="/ranking">
+                      <Link href="/ranking" prefetch={false}>
                         <Star className="mr-2 h-4 w-4" />
                         ランキング
                       </Link>
@@ -667,19 +669,19 @@ export function SiteHeader() {
                         <p className="text-xs text-muted-foreground mb-2 px-1">マイページ</p>
                         <nav className="flex flex-col gap-1">
                           <Button variant="ghost" className="justify-start" asChild>
-                            <Link href="/mypage">
+                            <Link href="/mypage" prefetch={false}>
                               <User className="mr-2 h-4 w-4" />
                               ダッシュボード
                             </Link>
                           </Button>
                           <Button variant="ghost" className="justify-start" asChild>
-                            <Link href="/mypage?tab=favorites">
+                            <Link href="/mypage?tab=favorites" prefetch={false}>
                               <Heart className="mr-2 h-4 w-4" />
                               お気に入り
                             </Link>
                           </Button>
                           <Button variant="ghost" className="justify-between" asChild>
-                            <Link href="/notifications">
+                            <Link href="/notifications" prefetch={false}>
                               <span className="flex items-center">
                                 <Bell className="mr-2 h-4 w-4" />
                                 通知
@@ -707,10 +709,10 @@ export function SiteHeader() {
                   {!isLoggedIn && (
                     <div className="flex flex-col gap-2">
                       <Button variant="outline" asChild>
-                        <Link href="/login">ログイン</Link>
+                        <Link href="/login" prefetch={false}>ログイン</Link>
                       </Button>
                       <Button asChild>
-                        <Link href="/register">新規登録</Link>
+                        <Link href="/register" prefetch={false}>新規登録</Link>
                       </Button>
                     </div>
                   )}
@@ -719,7 +721,7 @@ export function SiteHeader() {
                     <div className="border-t pt-4 flex flex-col gap-2">
                       {memberLevel !== "vip" && (
                         <Button variant="outline" className="text-primary border-primary bg-transparent" asChild>
-                          <Link href="/pricing">
+                          <Link href="/pricing" prefetch={false}>
                             <Crown className="mr-2 h-4 w-4" />
                             {memberLevel === "free" ? "有料会員になる" : "VIPにアップグレード"}
                           </Link>

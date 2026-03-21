@@ -9,7 +9,7 @@ export const revalidate = 86400;
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { Sidebar } from "@/components/layout/sidebar";
-import { getPrefectureBySlug, getAreasByPrefectureId } from "@/lib/supabase-data";
+import { getPrefectureBySlug, getAreasByPrefectureId, getSidebarData } from "@/lib/supabase-data";
 import { supabaseAdmin as supabase } from "@/lib/supabase-admin";
 import { SeoContentSection, FaqSection } from "@/components/shared/seo-content-section";
 
@@ -44,7 +44,7 @@ export default async function AreaPrefecturePage({
     notFound();
   }
 
-  const [areas, popularTherapists, seoContents] = await Promise.all([
+  const [areas, popularTherapists, seoContents, sidebarData] = await Promise.all([
     getAreasByPrefectureId(pref.id),
     supabase
       .from("therapists")
@@ -60,6 +60,7 @@ export default async function AreaPrefecturePage({
       .eq("page_type", "prefecture")
       .eq("entity_id", pref.id)
       .then(({ data }) => data || []),
+    getSidebarData(),
   ]);
 
   const seoGuide = seoContents.find((c) => c.content_key === "guide");
@@ -237,7 +238,7 @@ export default async function AreaPrefecturePage({
 
           {/* Sidebar */}
           <aside className="hidden lg:block w-full lg:w-80 flex-shrink-0">
-            <Sidebar prefectureName={pref.name} />
+            <Sidebar prefectureName={pref.name} initialTherapists={sidebarData.therapists} initialShops={sidebarData.salons} />
           </aside>
         </div>
       </main>

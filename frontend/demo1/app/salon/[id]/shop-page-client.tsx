@@ -14,6 +14,7 @@ import { TherapistCard } from "@/components/shared/therapist-card";
 import { ReviewCard } from "@/components/shared/review-card";
 import { useTier } from "@/lib/hooks/use-tier";
 import type { Shop, Therapist, Review } from "@/lib/data";
+import type { SidebarTherapist, SidebarShop } from "@/lib/supabase-data";
 
 const THERAPISTS_PER_PAGE = 16;
 
@@ -27,9 +28,11 @@ interface ShopPageClientProps {
   prefName?: string;
   prefSlug?: string;
   seoContentHtml?: React.ReactNode;
+  initialSidebarTherapists?: SidebarTherapist[];
+  initialSidebarShops?: SidebarShop[];
 }
 
-export function ShopPageClient({ shop, therapists, shopReviews, officialUrl, areaName, areaSlug, prefName, prefSlug, seoContentHtml }: ShopPageClientProps) {
+export function ShopPageClient({ shop, therapists, shopReviews, officialUrl, areaName, areaSlug, prefName, prefSlug, seoContentHtml, initialSidebarTherapists, initialSidebarShops }: ShopPageClientProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [therapistDisplayCount, setTherapistDisplayCount] = useState(THERAPISTS_PER_PAGE);
   const { permissions } = useTier();
@@ -251,7 +254,7 @@ export function ShopPageClient({ shop, therapists, shopReviews, officialUrl, are
             {/* Sidebar */}
             <div className="lg:w-80 lg:shrink-0">
               <div className="lg:sticky lg:top-24">
-                <Sidebar prefectureName={prefName || ""} />
+                <Sidebar prefectureName={prefName || ""} initialTherapists={initialSidebarTherapists} initialShops={initialSidebarShops} />
               </div>
             </div>
           </div>

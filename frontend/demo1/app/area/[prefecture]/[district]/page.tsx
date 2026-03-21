@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { therapistTypes, bodyTypes } from "@/lib/data";
 import { SalonListPageClient } from "./salon-list-client";
-import { getPrefectureBySlug, getAreaBySlug, getShopsByAreaSlug, getRankedSalonsByArea, getLatestReviewsBySalonIds, getNearbyAreas } from "@/lib/supabase-data";
+import { getPrefectureBySlug, getAreaBySlug, getShopsByAreaSlug, getRankedSalonsByArea, getLatestReviewsBySalonIds, getNearbyAreas, getSidebarData } from "@/lib/supabase-data";
 import type { SalonLatestReview, NearbyAreaLink } from "@/lib/supabase-data";
 import { supabaseAdmin as supabase } from "@/lib/supabase-admin";
 import { SeoContentSection, FaqSection } from "@/components/shared/seo-content-section";
@@ -86,7 +86,7 @@ export default async function ShopListPage({ params }: ShopListPageProps) {
   }
 
   // サロン基本情報とランキングデータを並列取得
-  const [dbSalons, rankingData, seoContents] = await Promise.all([
+  const [dbSalons, rankingData, seoContents, sidebarData] = await Promise.all([
     getShopsByAreaSlug(district),
     getRankedSalonsByArea(area.id),
     supabase
@@ -95,6 +95,7 @@ export default async function ShopListPage({ params }: ShopListPageProps) {
       .eq("page_type", "area")
       .eq("entity_id", area.id)
       .then(({ data }) => data || []),
+    getSidebarData(),
   ]);
   const seoMap = Object.fromEntries((seoContents || []).map(c => [c.content_key, c]));
   const salonMap = new Map(dbSalons.map((s) => [s.id, s]));
@@ -180,6 +181,8 @@ export default async function ShopListPage({ params }: ShopListPageProps) {
         nearbyAreas={nearbyAreas}
         prefectureSlug={prefecture}
         seoDescription={area.seo_description ?? undefined}
+        initialSidebarTherapists={sidebarData.therapists}
+        initialSidebarShops={sidebarData.salons}
         seoContentHtml={
           <>
             {seoMap["guide"] && (

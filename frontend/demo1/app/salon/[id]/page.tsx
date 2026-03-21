@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ShopPageClient } from "./shop-page-client";
-import { getShopById, getShopBySlug, getTherapistsBySalonId, getSalonAreaInfo, getSalonReviewStatsBatch } from "@/lib/supabase-data";
+import { getShopById, getShopBySlug, getTherapistsBySalonId, getSalonAreaInfo, getSalonReviewStatsBatch, getSidebarData } from "@/lib/supabase-data";
 import { supabaseAdmin as supabase } from "@/lib/supabase-admin";
 import { SeoContentSection, SalonGuideSection, FaqSection } from "@/components/shared/seo-content-section";
 
@@ -188,13 +188,14 @@ export default async function ShopPage({ params }: ShopPageProps) {
     notFound();
   }
 
-  // 独立した4クエリを並列実行
-  const [statsMap, dbTherapists, areaInfo, { data: reviewRows }, seoContents] = await Promise.all([
+  // 独立した5クエリを並列実行
+  const [statsMap, dbTherapists, areaInfo, { data: reviewRows }, seoContents, sidebarData] = await Promise.all([
     getSalonReviewStatsBatch([dbSalon.id]),
     getTherapistsBySalonId(dbSalon.id),
     getSalonAreaInfo(dbSalon.id),
     supabase.from("reviews").select("*, therapists(name, image_urls)").eq("salon_id", dbSalon.id).eq("moderation_status", "approved").order("created_at", { ascending: false }).limit(50),
     supabase.from("page_contents").select("content_key, title, body").eq("page_type", "salon").eq("entity_id", dbSalon.id).then(({ data }) => data || []),
+    getSidebarData(),
   ]);
 
   const seoMap = Object.fromEntries((seoContents || []).map(c => [c.content_key, c]));
@@ -283,6 +284,8 @@ export default async function ShopPage({ params }: ShopPageProps) {
         areaSlug={areaInfo?.areaSlug || ""}
         prefName={areaInfo?.prefName || ""}
         prefSlug={areaInfo?.prefSlug || ""}
+        initialSidebarTherapists={sidebarData.therapists}
+        initialSidebarShops={sidebarData.salons}
         seoContentHtml={
           <>
             {seoMap["salon_overview"] && (
