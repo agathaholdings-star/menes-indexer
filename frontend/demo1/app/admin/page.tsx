@@ -44,8 +44,13 @@ interface ReviewRow {
   body_type_id: number | null;
   service_level_id: number | null;
   moderation_status: ModerationStatus;
+  comment_reason: string | null;
   comment_first_impression: string | null;
+  comment_style: string | null;
   comment_service: string | null;
+  comment_service_detail: string | null;
+  comment_cost: string | null;
+  comment_revisit: string | null;
   comment_advice: string | null;
   created_at: string | null;
   user_id: string;
@@ -477,21 +482,51 @@ export default function AdminPage() {
 
                     {/* Review content */}
                     <div className="space-y-2 text-sm border-l-2 border-muted pl-3">
+                      {r.comment_reason && (
+                        <div>
+                          <span className="font-medium text-xs">きっかけ: </span>
+                          <span className="text-muted-foreground">{r.comment_reason}</span>
+                        </div>
+                      )}
+                      {r.comment_service && (
+                        <div>
+                          <span className="font-medium text-xs">施術・サービス: </span>
+                          <span className="text-muted-foreground">{r.comment_service}</span>
+                        </div>
+                      )}
+                      {r.comment_revisit && (
+                        <div>
+                          <span className="font-medium text-xs">リピート意向: </span>
+                          <span className="text-muted-foreground">{r.comment_revisit}</span>
+                        </div>
+                      )}
                       {r.comment_first_impression && (
                         <div>
                           <span className="font-medium text-xs">第一印象: </span>
                           <span className="text-muted-foreground">{r.comment_first_impression}</span>
                         </div>
                       )}
-                      {r.comment_service && (
+                      {r.comment_style && (
                         <div>
-                          <span className="font-medium text-xs">サービス: </span>
-                          <span className="text-muted-foreground">{r.comment_service}</span>
+                          <span className="font-medium text-xs">良かった点: </span>
+                          <span className="text-muted-foreground">{r.comment_style}</span>
+                        </div>
+                      )}
+                      {r.comment_service_detail && (
+                        <div>
+                          <span className="font-medium text-xs">気になった点: </span>
+                          <span className="text-muted-foreground">{r.comment_service_detail}</span>
+                        </div>
+                      )}
+                      {r.comment_cost && (
+                        <div>
+                          <span className="font-medium text-xs">コスパ: </span>
+                          <span className="text-muted-foreground">{r.comment_cost}</span>
                         </div>
                       )}
                       {r.comment_advice && (
                         <div>
-                          <span className="font-medium text-xs">アドバイス: </span>
+                          <span className="font-medium text-xs">その他: </span>
                           <span className="text-muted-foreground">{r.comment_advice}</span>
                         </div>
                       )}
