@@ -1,15 +1,11 @@
 import React from "react"
 import type { Metadata, Viewport } from 'next'
 import Script from 'next/script'
-import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { AuthProvider } from '@/lib/auth-context'
 import './globals.css'
 
 const GTM_ID = 'GTM-5Q9GX6S4'
-
-const _geist = Geist({ subsets: ["latin"] });
-const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://menes-skr.com';
 
