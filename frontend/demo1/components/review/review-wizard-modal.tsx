@@ -560,7 +560,7 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
       case 6: return selectedService !== null;
       case 7: return true; // Ratings are optional
       case 8: return true; // Score always has default
-      case 9: return reviewText.q0.trim().length >= 30 && reviewText.q3.trim().length >= 30 && reviewText.q6.trim().length >= 30;
+      case 9: return reviewText.q0.trim().length >= 30 && reviewText.q1.trim().length >= 30 && reviewText.q2.trim().length >= 30 && reviewText.q3.trim().length >= 30 && reviewText.q4.trim().length >= 30 && reviewText.q5.trim().length >= 30 && reviewText.q6.trim().length >= 30;
       case 10: return true; // 画像は任意なので常にtrue
       case 11: return guestForm.nickname.trim() !== "" && guestForm.email.trim() !== "" && guestForm.password.length >= 6 && guestAgreed;
       default: return false;
@@ -1446,17 +1446,17 @@ function StepText({
     { key: "q0" as const, label: "Q1. 行ったきっかけは？", placeholder: "ネットの口コミで高評価だったので初来店。指名なしで予約しました。", min: 30, max: 200, required: true },
     { key: "q3" as const, label: "Q2. 施術内容・サービスはどうでしたか？", placeholder: "アロマの香りが心地よく、指圧の強さも都度確認してくれて安心でした。会話のテンポも良く、あっという間の90分。", min: 30, max: 300, required: true },
     { key: "q6" as const, label: "Q3. また行きたいと思いますか？", placeholder: "確実にリピートします。次回は指名して120分で予約する予定です！", min: 30, max: 200, required: true },
-    { key: "q1" as const, label: "Q4. 第一印象は？", placeholder: "写真通りの清楚な雰囲気で、笑顔が素敵。部屋に入った瞬間に緊張がほぐれました。", min: 0, max: 200, required: false },
-    { key: "q2" as const, label: "Q5. 特に良かった点は？", placeholder: "力加減が絶妙で、肩まわりの凝りが一気に楽になりました。手技のバリエーションも豊富。", min: 0, max: 200, required: false },
-    { key: "q4" as const, label: "Q6. 気になった点・改善点は？", placeholder: "強いて言えば、施術中のBGMがもう少し静かだと更にリラックスできたかも。", min: 0, max: 200, required: false },
-    { key: "q5" as const, label: "Q7. コスパはどうでしたか？", placeholder: "90分12,000円で大満足。同エリアの他店と比べてもコスパは抜群だと思います。", min: 0, max: 200, required: false },
+    { key: "q1" as const, label: "Q4. 第一印象は？", placeholder: "写真通りの清楚な雰囲気で、笑顔が素敵。部屋に入った瞬間に緊張がほぐれました。", min: 30, max: 200, required: true },
+    { key: "q2" as const, label: "Q5. 特に良かった点は？", placeholder: "力加減が絶妙で、肩まわりの凝りが一気に楽になりました。手技のバリエーションも豊富。", min: 30, max: 200, required: true },
+    { key: "q4" as const, label: "Q6. 気になった点・改善点は？", placeholder: "強いて言えば、施術中のBGMがもう少し静かだと更にリラックスできたかも。", min: 30, max: 200, required: true },
+    { key: "q5" as const, label: "Q7. コスパはどうでしたか？", placeholder: "90分12,000円で大満足。同エリアの他店と比べてもコスパは抜群だと思います。", min: 30, max: 200, required: true },
     { key: "q7" as const, label: "Q8. その他コメント", placeholder: "お店の清潔感◎。シャワールームも広くて快適でした。アメニティも充実。", min: 0, max: 200, required: false },
   ];
 
   return (
     <div className="space-y-4">
       <h3 className="text-base font-semibold mb-1">最後に感想を教えて</h3>
-      <p className="text-sm text-muted-foreground">Q1〜Q3は必須です。Q4以降は任意ですが、書くほど他のユーザーの参考になります。</p>
+      <p className="text-sm text-muted-foreground">Q1〜Q7は必須（30字以上）です。Q8は任意ですが、書くほど他のユーザーの参考になります。</p>
       {questions.map((q) => (
         <div key={q.key}>
           <label htmlFor={q.key} className="block text-sm font-medium mb-1">
