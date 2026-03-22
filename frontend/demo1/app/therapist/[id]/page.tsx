@@ -325,21 +325,21 @@ export default async function TherapistPage({ params }: TherapistPageProps) {
             <div className="mx-auto max-w-7xl px-4 py-6">
               {/* Breadcrumb - SSR */}
               <nav className="mb-4 text-sm text-muted-foreground">
-                <Link href="/" className="hover:text-foreground">トップ</Link>
+                <Link href="/" prefetch={false} className="hover:text-foreground">トップ</Link>
                 <span className="mx-2">/</span>
                 {areaInfo?.prefName && (
                   <>
-                    <Link href={`/area/${therapist.area}`} className="hover:text-foreground">{areaInfo.prefName}</Link>
+                    <Link href={`/area/${therapist.area}`} prefetch={false} className="hover:text-foreground">{areaInfo.prefName}</Link>
                     <span className="mx-2">/</span>
                   </>
                 )}
                 {areaInfo?.areaName && (
                   <>
-                    <Link href={`/area/${therapist.area}/${therapist.district}`} className="hover:text-foreground">{areaInfo.areaName}</Link>
+                    <Link href={`/area/${therapist.area}/${therapist.district}`} prefetch={false} className="hover:text-foreground">{areaInfo.areaName}</Link>
                     <span className="mx-2">/</span>
                   </>
                 )}
-                <Link href={`/salon/${therapist.salonId}`} className="hover:text-foreground">{therapist.salonName}</Link>
+                <Link href={`/salon/${therapist.salonId}`} prefetch={false} className="hover:text-foreground">{therapist.salonName}</Link>
                 <span className="mx-2">/</span>
                 <span className="text-foreground">{therapist.name}</span>
               </nav>

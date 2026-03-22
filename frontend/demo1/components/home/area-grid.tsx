@@ -43,6 +43,7 @@ export function AreaGrid({ areasGrouped, popularAreas, regionOrder }: AreaGridPr
                 <Link
                   key={`${area.prefSlug}-${area.slug}`}
                   href={`/area/${area.prefSlug}/${area.slug}`}
+                  prefetch={false}
                   className="px-3 py-1.5 text-sm bg-primary/10 text-primary hover:bg-primary/20 rounded-full transition-colors font-medium"
                 >
                   {area.name}
@@ -79,6 +80,7 @@ export function AreaGrid({ areasGrouped, popularAreas, regionOrder }: AreaGridPr
                             <Link
                               key={area.slug}
                               href={`/area/${area.prefSlug}/${area.slug}`}
+                              prefetch={false}
                               className="px-3 py-1.5 text-sm bg-muted hover:bg-primary/10 hover:text-primary rounded-full transition-colors"
                             >
                               {area.name}
@@ -100,6 +102,7 @@ export function AreaGrid({ areasGrouped, popularAreas, regionOrder }: AreaGridPr
           <div className="mt-4 text-center">
             <Link
               href="/area"
+              prefetch={false}
               className="text-sm text-primary hover:underline"
             >
               全エリア一覧を見る
