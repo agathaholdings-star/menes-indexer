@@ -85,8 +85,11 @@ function BlurredContent({ review, onBlurClick }: { review: Review; onBlurClick?:
       )}
       <div className="relative">
         <div className="select-none pointer-events-none text-sm leading-relaxed space-y-3" style={{ filter: "blur(5px)" }}>
-          <p>会話がとても楽しく、施術も丁寧。時間があっという間に過ぎました。技術もしっかりしていてコリがほぐれました。</p>
-          <p>シャワー浴びて横になったら、足からマッサージスタート。本格的すぎて全然ドキドキしなかった。</p>
+          {review.commentStyle && <p>{review.commentStyle}</p>}
+          {review.commentService && <p>{review.commentService}</p>}
+          {!review.commentStyle && !review.commentService && (
+            <p>この口コミの続きはアンロックすると読めます。投稿者による詳細な体験レポートをお楽しみください。</p>
+          )}
         </div>
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/60 to-background" />
         <div className="absolute inset-0 flex items-center justify-center">

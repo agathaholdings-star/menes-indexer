@@ -48,10 +48,7 @@ export default function TokushohoPage() {
                   <th className="py-4 px-4 text-left bg-muted/50 font-medium">販売価格</th>
                   <td className="py-4 px-4">
                     基本サービスは無料です。口コミの投稿数に応じて機能が解放されます。<br />
-                    有料オプション（準備中）:<br />
-                    セラピスト情報アンロック: 1,000円（税込）<br />
-                    スタンダード会員: 月額4,980円（税込）<br />
-                    VIP会員: 月額14,980円（税込）
+                    有料オプションは現在準備中です。導入時に本ページを更新いたします。
                   </td>
                 </tr>
                 <tr>
@@ -84,9 +81,8 @@ export default function TokushohoPage() {
                 <tr>
                   <th className="py-4 px-4 text-left bg-muted/50 font-medium">返品・キャンセルについて</th>
                   <td className="py-4 px-4">
-                    デジタルコンテンツの性質上、お客様都合による返品・返金には応じておりません。<br />
-                    サブスクリプションの解約はマイページの「プラン管理」からいつでも手続きできます。<br />
-                    解約後も、当月の契約期間終了までサービスをご利用いただけます。
+                    現在すべてのサービスは無料で提供しています。<br />
+                    有料オプション導入時に本項目を更新いたします。
                   </td>
                 </tr>
                 <tr>

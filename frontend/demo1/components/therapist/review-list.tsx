@@ -420,9 +420,9 @@ function ReviewCardA3a({
             {/* ぼかし */}
             <div className="relative px-5">
               <div className="select-none pointer-events-none text-sm leading-relaxed space-y-3" style={{ filter: "blur(5px)" }}>
-                <div><p className="font-medium text-xs text-muted-foreground mb-1">スタイル</p><p>会話がとても楽しく、施術も丁寧。時間があっという間に過ぎました。技術もしっかりしていてコリがほぐれました。接客態度も素晴らしく、また指名したいと思いました。</p></div>
-                <div><p className="font-medium text-xs text-muted-foreground mb-1">施術の流れ</p><p>シャワー浴びて横になったら、足からマッサージスタート。本格的すぎて全然ドキドキしなかった。ってか足ツボが痛すぎて叫びそうになったレベル。</p></div>
-                <div><p className="font-medium text-xs text-muted-foreground mb-1">どこまでいけた</p><p>金額は覚えてないけど、このお店の通常料金。ただ、足ツボマッサージに高い金払った感じで全然コスパ良くなかった。</p></div>
+                {review.commentStyle && <div><p className="font-medium text-xs text-muted-foreground mb-1">スタイル</p><p>{review.commentStyle}</p></div>}
+                {review.commentService && <div><p className="font-medium text-xs text-muted-foreground mb-1">施術の流れ</p><p>{review.commentService}</p></div>}
+                {review.commentServiceDetail && <div><p className="font-medium text-xs text-muted-foreground mb-1">どこまでいけた</p><p>{review.commentServiceDetail}</p></div>}
               </div>
               <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/60 to-background" />
               <div className="absolute inset-0 flex items-center justify-center">
