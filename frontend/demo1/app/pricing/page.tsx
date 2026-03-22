@@ -37,7 +37,7 @@ const faqs = [
   {
     question: "クレジットとは何ですか？",
     answer:
-      "クレジットは口コミを閲覧するための通貨です。1クレジットで1人のセラピストの口コミを全件閲覧できます。口コミを投稿すると無料でクレジットが付与されます。",
+      "クレジットは口コミを閲覧するための通貨です。1クレジットで1人のセラピストの口コミを全件閲覧できます。キャンペーン中は口コミを投稿するとクレジットが付与されます。",
   },
   {
     question: "クレジットの有効期限はありますか？",
@@ -127,12 +127,12 @@ export default function PricingPage() {
 
       <main className="container mx-auto px-4 py-12">
         <div className="text-center mb-12">
-          <Badge className="mb-4">料金プラン</Badge>
+          <Badge className="mb-4 bg-red-500 text-white">サイト公開キャンペーン中</Badge>
           <h1 className="text-3xl md:text-4xl font-bold mb-4 text-balance">
             口コミを書くほど、できることが増える
           </h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            すべて無料。口コミの投稿数に応じて機能が解放されます。
+            キャンペーン期間中は口コミの投稿だけで全機能が使えます。
           </p>
         </div>
 
@@ -160,7 +160,7 @@ export default function PricingPage() {
                 <CardDescription>{tier.description}</CardDescription>
                 <div className="mt-4">
                   <span className="text-4xl font-bold">¥0</span>
-                  <span className="text-muted-foreground"> / 永久</span>
+                  <span className="text-muted-foreground"> / キャンペーン中</span>
                 </div>
               </CardHeader>
               <CardContent>
@@ -366,7 +366,7 @@ export default function PricingPage() {
             まずは1件、口コミを書いてみよう
           </h2>
           <p className="text-muted-foreground mb-6">
-            口コミを投稿するだけでクレジットを獲得。気になるセラピストの口コミを無料で閲覧できます。
+            キャンペーン中は口コミを投稿するだけでクレジットを獲得。気になるセラピストの口コミを閲覧できます。
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link href="/review">

@@ -121,7 +121,7 @@ function RegisterContent() {
             <CardHeader className="text-center">
               <CardTitle className="text-2xl">新規登録</CardTitle>
               <CardDescription>
-                無料会員登録で口コミを閲覧・投稿できます
+                会員登録で口コミを閲覧・投稿できます
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -271,7 +271,7 @@ function RegisterContent() {
                   className="w-full"
                   disabled={isLoading || !agreedToTerms}
                 >
-                  {isLoading ? "登録中..." : "無料で登録する"}
+                  {isLoading ? "登録中..." : "登録する"}
                 </Button>
               </form>
 

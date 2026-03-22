@@ -55,7 +55,7 @@ export function UnlockModal({
                 className="w-full text-base h-12"
               >
                 <PenSquare className="h-5 w-5 mr-2" />
-                口コミを投稿して無料で読む
+                口コミを投稿して読む
               </Button>
               <p className="text-xs text-muted-foreground text-center mt-2">
                 1投稿で5件の口コミが読めます（スクショ付きなら10件）
@@ -104,7 +104,7 @@ export function UnlockModal({
             >
               <a href="/register">
                 <UserPlus className="h-5 w-5 mr-2" />
-                無料登録して口コミを読む
+                登録して口コミを読む
               </a>
             </Button>
             <p className="text-sm text-muted-foreground text-center">

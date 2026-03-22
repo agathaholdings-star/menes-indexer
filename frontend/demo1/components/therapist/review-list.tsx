@@ -135,7 +135,7 @@ export function ReviewList({
           <div className="p-6">
             <div className="space-y-4 mb-6">
               <div>
-                <p className="text-center text-sm font-medium mb-3">- 無料で読む -</p>
+                <p className="text-center text-sm font-medium mb-3">- キャンペーン中 -</p>
                 <div className="flex items-center justify-center gap-1 text-xs">
                   <div className="bg-primary text-primary-foreground rounded-lg px-3 py-2 text-center">
                     <span className="block font-bold">1</span>
@@ -180,7 +180,7 @@ export function ReviewList({
             </div>
 
             <div className="space-y-3">
-              {/* Primary CTA: 口コミ投稿（無料） */}
+              {/* Primary CTA: 口コミ投稿（キャンペーン） */}
               <Button
                 onClick={() => {
                   pushEvent("unlock_cta_click", { cta_type: "write_review", therapist_id: therapistId || "" });
@@ -192,7 +192,7 @@ export function ReviewList({
               >
                 <PenLine className="h-5 w-5" />
                 <span className="flex flex-col items-start leading-tight">
-                  <span>口コミを書いて無料で読む</span>
+                  <span>口コミを書いて読む</span>
                   <span className="text-[10px] font-normal opacity-80">1件投稿で5件の口コミが読める</span>
                 </span>
                 <ChevronRight className="h-5 w-5 ml-auto flex-shrink-0" />

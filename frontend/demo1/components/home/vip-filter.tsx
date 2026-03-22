@@ -97,10 +97,10 @@ export function VipFilter() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
               <Sparkles className="h-6 w-6 text-primary" />
-              口コミを投稿して解放
+              キャンペーン中: 口コミ投稿で解放
             </DialogTitle>
             <DialogDescription className="text-slate-300">
-              口コミの投稿数に応じて機能が解放されます
+              サイト公開キャンペーン中は口コミの投稿だけで機能が使えます
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -111,7 +111,7 @@ export function VipFilter() {
             </ul>
             <div className="rounded-lg border border-primary/30 bg-primary/10 p-4 text-center">
               <p className="text-sm text-slate-300">すべて</p>
-              <p className="text-3xl font-bold text-primary">無料</p>
+              <p className="text-3xl font-bold text-primary">キャンペーン中</p>
             </div>
             <Button asChild className="w-full"><Link href="/pricing">詳細を見る</Link></Button>
             <Button variant="ghost" onClick={() => setShowStandardModal(false)} className="w-full text-slate-400 bg-transparent">あとで</Button>
@@ -125,10 +125,10 @@ export function VipFilter() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
               <Crown className="h-6 w-6 text-primary" />
-              全機能を解放するには
+              キャンペーン中: 全機能を解放
             </DialogTitle>
             <DialogDescription className="text-slate-300">
-              口コミの投稿数に応じて全機能が使えるようになります
+              サイト公開キャンペーン中は口コミの投稿だけで全機能が使えます
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -138,7 +138,7 @@ export function VipFilter() {
             </ul>
             <div className="rounded-lg border border-primary/30 bg-primary/10 p-4 text-center">
               <p className="text-sm text-slate-300">すべて</p>
-              <p className="text-3xl font-bold text-primary">無料</p>
+              <p className="text-3xl font-bold text-primary">キャンペーン中</p>
             </div>
             <Button asChild className="w-full"><Link href="/pricing">詳細を見る</Link></Button>
             <Button variant="ghost" onClick={() => setShowVipModal(false)} className="w-full text-slate-400 bg-transparent">あとで</Button>

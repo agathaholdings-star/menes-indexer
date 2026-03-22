@@ -28,7 +28,7 @@ export default function ReviewPage() {
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold mb-3">口コミ・体験談を投稿</h1>
           <p className="text-muted-foreground">
-            あなたの体験をシェアして、他のユーザーの口コミを無料で読もう。
+            あなたの体験をシェアして、他のユーザーの口コミを読もう。
             <br />
             1件投稿するだけで<strong>5クレジット</strong>獲得、5件の口コミが読めるようになります。
           </p>

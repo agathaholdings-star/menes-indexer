@@ -1058,7 +1058,7 @@ function SearchContent() {
                   </p>
                   <div className="bg-muted p-4 rounded-lg">
                     <p className="font-medium mb-2">解放方法</p>
-                    <p className="text-sm">口コミを1件投稿すると無料で解放されます</p>
+                    <p className="text-sm">キャンペーン中: 口コミを1件投稿すると解放されます</p>
                   </div>
                   <Button className="w-full" asChild>
                     <Link href="/review">口コミを投稿して解放</Link>
@@ -1073,7 +1073,7 @@ function SearchContent() {
                   <div className="bg-muted p-4 rounded-lg">
                     <p className="font-medium mb-2">解放条件</p>
                     <p className="text-lg font-bold text-primary">
-                      口コミを2件投稿で解放（無料）
+                      キャンペーン中: 口コミ2件投稿で解放
                     </p>
                   </div>
                   <Button className="w-full" asChild>
@@ -1089,7 +1089,7 @@ function SearchContent() {
                   <div className="bg-muted p-4 rounded-lg">
                     <p className="font-medium mb-2">解放条件</p>
                     <p className="text-lg font-bold text-primary">
-                      口コミを3件投稿で解放（無料）
+                      キャンペーン中: 口コミ3件投稿で解放
                     </p>
                   </div>
                   <Button className="w-full" asChild>
