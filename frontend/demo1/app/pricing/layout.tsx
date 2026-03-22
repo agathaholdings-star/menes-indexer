@@ -2,7 +2,7 @@ import { type Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "料金プラン",
-  description: "メンエスSKRの会員プラン。無料会員・スタンダード・VIPの3プラン。",
+  description: "メンエスSKRの料金プラン。口コミ投稿で全機能が無料で使えます。",
   alternates: { canonical: "/pricing" },
 };
 

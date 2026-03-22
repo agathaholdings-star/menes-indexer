@@ -91,27 +91,27 @@ export function VipFilter() {
         </div>
       </section>
 
-      {/* Standard Plan Modal */}
+      {/* Standard Plan Modal → 投稿ベース解放の説明に差し替え */}
       <Dialog open={showStandardModal} onOpenChange={setShowStandardModal}>
         <DialogContent className="max-w-md border-primary/30 bg-gradient-to-br from-slate-900 to-slate-950 text-white">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
               <Sparkles className="h-6 w-6 text-primary" />
-              全ての口コミが見放題に
+              口コミを投稿して解放
             </DialogTitle>
             <DialogDescription className="text-slate-300">
-              スタンダードプランで、口コミ・詳細情報にアクセス
+              口コミの投稿数に応じて機能が解放されます
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <ul className="space-y-2 text-sm text-slate-200">
-              <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" />全ての口コミを無制限閲覧</li>
-              <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" />詳細パラメーター表示</li>
-              <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" />お気に入り無制限</li>
+              <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" />2件投稿: SKRフィルター解放</li>
+              <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" />3件投稿: HRフィルター解放</li>
+              <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" />1件投稿で5件の口コミが読める</li>
             </ul>
             <div className="rounded-lg border border-primary/30 bg-primary/10 p-4 text-center">
-              <p className="text-sm text-slate-300">月額</p>
-              <p className="text-3xl font-bold text-primary">¥4,980</p>
+              <p className="text-sm text-slate-300">すべて</p>
+              <p className="text-3xl font-bold text-primary">無料</p>
             </div>
             <Button asChild className="w-full"><Link href="/pricing">詳細を見る</Link></Button>
             <Button variant="ghost" onClick={() => setShowStandardModal(false)} className="w-full text-slate-400 bg-transparent">あとで</Button>
@@ -119,29 +119,28 @@ export function VipFilter() {
         </DialogContent>
       </Dialog>
 
-      {/* VIP Upgrade Modal */}
+      {/* VIP Upgrade Modal → 投稿ベース解放の説明に差し替え */}
       <Dialog open={showVipModal} onOpenChange={setShowVipModal}>
         <DialogContent className="max-w-md border-primary/30 bg-gradient-to-br from-slate-900 to-black text-white">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
               <Crown className="h-6 w-6 text-primary" />
-              VIPにアップグレード
+              全機能を解放するには
             </DialogTitle>
             <DialogDescription className="text-slate-300">
-              SKR/HRフィルターを解除
+              口コミの投稿数に応じて全機能が使えるようになります
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <ul className="space-y-2 text-sm text-slate-200">
-              <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" />SKR/HRフィルター解除</li>
-              <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" />VIP専用掲示板</li>
-              <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" />優先サポート</li>
+              <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" />2件投稿: SKRフィルター解放</li>
+              <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" />3件投稿: HRフィルター + 全機能解放</li>
             </ul>
             <div className="rounded-lg border border-primary/30 bg-primary/10 p-4 text-center">
-              <p className="text-sm text-slate-300">月額</p>
-              <p className="text-3xl font-bold text-primary">¥14,980</p>
+              <p className="text-sm text-slate-300">すべて</p>
+              <p className="text-3xl font-bold text-primary">無料</p>
             </div>
-            <Button asChild className="w-full"><Link href="/pricing">VIPに登録</Link></Button>
+            <Button asChild className="w-full"><Link href="/pricing">詳細を見る</Link></Button>
             <Button variant="ghost" onClick={() => setShowVipModal(false)} className="w-full text-slate-400 bg-transparent">あとで</Button>
           </div>
         </DialogContent>

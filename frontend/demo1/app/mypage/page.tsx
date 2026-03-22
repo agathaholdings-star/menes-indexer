@@ -479,22 +479,22 @@ export default function MyPage() {
               </CardContent>
             </Card>
 
-            {/* Upgrade CTA */}
+            {/* 口コミ投稿で機能解放 CTA */}
             {memberLevel !== "vip" && (
-              <Card className={`border-primary/20 ${memberLevel === "free" ? "bg-gradient-to-r from-primary/10 to-primary/5" : "bg-gradient-to-r from-amber-500/10 to-amber-400/5"}`}>
+              <Card className="border-primary/20 bg-gradient-to-r from-primary/10 to-primary/5">
                 <CardContent className="p-6">
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
-                      <div className={`h-12 w-12 rounded-full flex items-center justify-center ${memberLevel === "free" ? "bg-primary/20" : "bg-amber-500/20"}`}>
-                        <Crown className={`h-6 w-6 ${memberLevel === "free" ? "text-primary" : "text-amber-500"}`} />
+                      <div className="h-12 w-12 rounded-full flex items-center justify-center bg-primary/20">
+                        <Sparkles className="h-6 w-6 text-primary" />
                       </div>
                       <div>
-                        <h3 className="font-bold">{memberLevel === "free" ? "スタンダード会員になる" : "VIP会員にアップグレード"}</h3>
-                        <p className="text-sm text-muted-foreground">{memberLevel === "free" ? "月額¥4,980で口コミ読み放題 + 投稿で機能解放" : "月額¥14,980で投稿不要の全機能使い放題"}</p>
+                        <h3 className="font-bold">口コミを投稿して機能を解放</h3>
+                        <p className="text-sm text-muted-foreground">1件投稿で5件の口コミが読める。2件でSKR、3件でHRフィルター解放</p>
                       </div>
                     </div>
                     <Link href="/pricing">
-                      <Button className={memberLevel === "standard" ? "bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-600 hover:to-amber-500" : ""}>
+                      <Button>
                         詳細を見る
                         <ChevronRight className="h-4 w-4" />
                       </Button>

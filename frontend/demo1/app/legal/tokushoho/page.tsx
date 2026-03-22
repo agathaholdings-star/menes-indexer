@@ -47,7 +47,8 @@ export default function TokushohoPage() {
                 <tr>
                   <th className="py-4 px-4 text-left bg-muted/50 font-medium">販売価格</th>
                   <td className="py-4 px-4">
-                    各商品ページに税込価格で表示します。<br />
+                    基本サービスは無料です。口コミの投稿数に応じて機能が解放されます。<br />
+                    有料オプション（準備中）:<br />
                     セラピスト情報アンロック: 1,000円（税込）<br />
                     スタンダード会員: 月額4,980円（税込）<br />
                     VIP会員: 月額14,980円（税込）

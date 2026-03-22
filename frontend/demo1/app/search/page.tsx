@@ -1071,13 +1071,13 @@ function SearchContent() {
                     SKRフィルターを使うと、特別なサービスがあるセラピストを検索できます。
                   </p>
                   <div className="bg-muted p-4 rounded-lg">
-                    <p className="font-medium mb-2">スタンダードプラン</p>
-                    <p className="text-2xl font-bold text-primary">
-                      ¥4,980<span className="text-sm font-normal">/月</span>
+                    <p className="font-medium mb-2">解放条件</p>
+                    <p className="text-lg font-bold text-primary">
+                      口コミを2件投稿で解放（無料）
                     </p>
                   </div>
                   <Button className="w-full" asChild>
-                    <Link href="/pricing">プランを確認</Link>
+                    <Link href="/pricing">詳細を見る</Link>
                   </Button>
                 </>
               )}
@@ -1087,13 +1087,13 @@ function SearchContent() {
                     HRフィルターを使うと、プレミアムなサービスがあるセラピストを検索できます。
                   </p>
                   <div className="bg-muted p-4 rounded-lg">
-                    <p className="font-medium mb-2">VIPプラン</p>
-                    <p className="text-2xl font-bold text-primary">
-                      ¥14,980<span className="text-sm font-normal">/月</span>
+                    <p className="font-medium mb-2">解放条件</p>
+                    <p className="text-lg font-bold text-primary">
+                      口コミを3件投稿で解放（無料）
                     </p>
                   </div>
                   <Button className="w-full" asChild>
-                    <Link href="/pricing">プランを確認</Link>
+                    <Link href="/pricing">詳細を見る</Link>
                   </Button>
                 </>
               )}

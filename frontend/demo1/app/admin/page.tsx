@@ -143,7 +143,7 @@ export default function AdminPage() {
   const [contacts, setContacts] = useState<ContactRow[]>([]);
   const [contactFilter, setContactFilter] = useState<ContactFilter>("new");
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ salons: 0, therapists: 0, reviews: 0, users: 0, pending: 0, new_contacts: 0 });
+  const [stats, setStats] = useState({ pending: 0, new_contacts: 0 });
   const [deleteTarget, setDeleteTarget] = useState<{ type: string; id: number | string } | null>(null);
   const [reviewFilter, setReviewFilter] = useState<ReviewFilter>("pending");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -151,36 +151,61 @@ export default function AdminPage() {
   const [rejectingReviewId, setRejectingReviewId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState<string>("他サイトからの転載の疑い");
   const [rejectCustomText, setRejectCustomText] = useState<string>("");
+  const [activeTab, setActiveTab] = useState("reviews");
+  const [reviewsLoaded, setReviewsLoaded] = useState(false);
+  const [usersLoaded, setUsersLoaded] = useState(false);
+  const [contactsLoaded, setContactsLoaded] = useState(false);
 
+  // Fetch stats (lightweight) on mount
   useEffect(() => {
     if (authLoading) return;
     if (!authUser) { setIsAdmin(false); setLoading(false); return; }
 
-    async function fetchData() {
-      const res = await fetch("/api/admin");
+    async function fetchStats() {
+      const res = await fetch("/api/admin?tab=stats");
       if (res.status === 401 || res.status === 403) {
         setIsAdmin(false);
         setLoading(false);
         return;
       }
-
       const data = await res.json();
       setIsAdmin(true);
       setStats(data.stats);
-      setReviews(
-        (data.reviews || []).map((r: any) => ({
-          ...r,
-          moderation_status: r.moderation_status as ModerationStatus,
-        }))
-      );
-      setThreads(data.threads || []);
-      setUsers((data.users as UserRow[]) || []);
-      setContacts((data.contacts as ContactRow[]) || []);
       setLoading(false);
     }
 
-    fetchData();
+    fetchStats();
   }, [authUser, authLoading]);
+
+  // Lazy-fetch tab data when tab becomes active
+  useEffect(() => {
+    if (!isAdmin) return;
+
+    async function fetchTab(tab: string) {
+      const res = await fetch(`/api/admin?tab=${tab}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      if (tab === "reviews") {
+        setReviews(
+          (data.reviews || []).map((r: any) => ({
+            ...r,
+            moderation_status: r.moderation_status as ModerationStatus,
+          }))
+        );
+        setReviewsLoaded(true);
+      } else if (tab === "users") {
+        setUsers((data.users as UserRow[]) || []);
+        setUsersLoaded(true);
+      } else if (tab === "contacts") {
+        setContacts((data.contacts as ContactRow[]) || []);
+        setContactsLoaded(true);
+      }
+    }
+
+    if (activeTab === "reviews" && !reviewsLoaded) fetchTab("reviews");
+    if (activeTab === "users" && !usersLoaded) fetchTab("users");
+    if (activeTab === "contacts" && !contactsLoaded) fetchTab("contacts");
+  }, [activeTab, isAdmin, reviewsLoaded, usersLoaded, contactsLoaded]);
 
   const handleApprove = async (reviewId: string) => {
     setActionLoading(reviewId);
@@ -346,14 +371,11 @@ export default function AdminPage() {
           <h1 className="text-2xl font-bold">管理ダッシュボード</h1>
         </div>
 
-        {/* Stats cards */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+        {/* Stats cards — only actionable counts */}
+        <div className="grid grid-cols-2 gap-4 mb-8 max-w-md">
           {[
-            { label: "店舗", value: stats.salons, icon: "🏪" },
-            { label: "セラピスト", value: stats.therapists, icon: "👤" },
-            { label: "口コミ", value: stats.reviews, icon: "⭐" },
             { label: "承認待ち", value: stats.pending, icon: "⏳" },
-            { label: "ユーザー", value: stats.users, icon: "👥" },
+            { label: "新規お問い合わせ", value: stats.new_contacts, icon: "📩" },
           ].map((s) => (
             <Card key={s.label}>
               <CardContent className="p-4 text-center">
@@ -365,7 +387,7 @@ export default function AdminPage() {
           ))}
         </div>
 
-        <Tabs defaultValue="reviews">
+        <Tabs defaultValue="reviews" onValueChange={setActiveTab}>
           <TabsList>
             <TabsTrigger value="reviews" className="gap-1">
               <Star className="h-4 w-4" />
@@ -418,7 +440,10 @@ export default function AdminPage() {
             </div>
 
             <div className="space-y-3">
-              {filteredReviews.length === 0 && !loading && (
+              {!reviewsLoaded && (
+                <p className="text-center text-muted-foreground py-8">読み込み中...</p>
+              )}
+              {reviewsLoaded && filteredReviews.length === 0 && (
                 <p className="text-center text-muted-foreground py-8">口コミがありません</p>
               )}
               {filteredReviews.map((r) => (
@@ -600,7 +625,7 @@ export default function AdminPage() {
 
           {/* BBS tab */}
           <TabsContent value="threads" className="space-y-3 mt-4">
-            {threads.length === 0 && !loading && (
+            {threads.length === 0 && (
               <p className="text-center text-muted-foreground py-8">スレッドがありません</p>
             )}
             {threads.map((t) => (
@@ -663,7 +688,10 @@ export default function AdminPage() {
             </div>
 
             <div className="space-y-3">
-              {filteredContacts.length === 0 && !loading && (
+              {!contactsLoaded && (
+                <p className="text-center text-muted-foreground py-8">読み込み中...</p>
+              )}
+              {contactsLoaded && filteredContacts.length === 0 && (
                 <p className="text-center text-muted-foreground py-8">お問い合わせがありません</p>
               )}
               {filteredContacts.map((c) => {
@@ -757,6 +785,9 @@ export default function AdminPage() {
 
           {/* Users tab */}
           <TabsContent value="users" className="space-y-3 mt-4">
+            {!usersLoaded && (
+              <p className="text-center text-muted-foreground py-8">読み込み中...</p>
+            )}
             {users.map((u) => (
               <Card key={u.id}>
                 <CardContent className="p-4">

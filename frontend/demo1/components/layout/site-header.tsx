@@ -22,6 +22,7 @@ import {
   Store,
   Users,
   Loader2,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -497,8 +498,8 @@ export function SiteHeader() {
                       <>
                         <DropdownMenuItem asChild>
                           <Link href="/pricing" prefetch={false} className="cursor-pointer text-primary font-medium">
-                            <Crown className="h-4 w-4 mr-2" />
-                            {memberLevel === "free" ? "有料会員になる" : "VIPにアップグレード"}
+                            <Sparkles className="h-4 w-4 mr-2" />
+                            口コミ投稿で機能解放
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
@@ -722,8 +723,8 @@ export function SiteHeader() {
                       {memberLevel !== "vip" && (
                         <Button variant="outline" className="text-primary border-primary bg-transparent" asChild>
                           <Link href="/pricing" prefetch={false}>
-                            <Crown className="mr-2 h-4 w-4" />
-                            {memberLevel === "free" ? "有料会員になる" : "VIPにアップグレード"}
+                            <Sparkles className="mr-2 h-4 w-4" />
+                            口コミ投稿で機能解放
                           </Link>
                         </Button>
                       )}
