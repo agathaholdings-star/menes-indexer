@@ -100,6 +100,11 @@ export function LatestReviews({ reviews }: LatestReviewsProps) {
               review={review}
               isBlurred={isBlurred}
               therapistImageUrl={therapistImageUrl}
+              onBlurClick={() => {
+                if (review.therapistId) {
+                  window.location.href = `/therapist/${review.therapistId}`;
+                }
+              }}
             />
           );
         })}
