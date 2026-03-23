@@ -128,7 +128,7 @@ export function ReviewList({
           <DialogHeader className="bg-gradient-to-r from-primary to-primary/80 p-6 pb-4 text-white">
             <DialogTitle className="text-xl text-center text-white">口コミを読むには</DialogTitle>
             <p className="text-center text-white/80 text-sm mt-1">
-              全国6,400以上の店舗の口コミが読める!
+              全国8,700以上の店舗の口コミが読める!
             </p>
           </DialogHeader>
 
