@@ -47,7 +47,7 @@
 | 管理画面 | ✅ | E2E確認済み | 承認/却下（直接DB操作方式）、タブ別lazy fetch |
 | SEO/Sitemap | ✅ | 実装済み | SSR化 + sitemap分割 + canonical + JSON-LD + Indexing API + SEOコンテンツ19,285件 |
 | Stripe決済 | ⬜ | 未接続 | env vars未設定（B2）。コード実装済み、フラグでUI非表示 |
-| メール通知 | ⬜ | 未接続 | Resend SMTP未設定（B3） |
+| メール通知 | ✅ | Resend接続済み | 承認/却下/お問い合わせ通知 + Supabase Auth SMTP |
 
 ## 残りブランチ
 
@@ -55,7 +55,7 @@
 |----|------|------|------|
 | B1 | 全量データ投入 | - | ✅ 完了（段階公開中、pg_cronで毎朝~1,000件公開） |
 | B2 | Stripe接続 | - | ⬜ コード実装済み、env vars未設定 |
-| B3 | メール通知(Resend) | - | ⬜ |
+| B3 | メール通知(Resend) | - | ✅ ドメイン認証・APIキー・SMTP全設定完了 |
 | B4 | インデックス最適化 | B1 | ✅ SSR化完了、サイトマップ修正、Indexing API設定済み、SEOコンテンツ投入済み |
 | B5 | 本番E2Eテスト | B2,B3 | ⬜ |
 
