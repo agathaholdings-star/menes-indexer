@@ -1,5 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import { getResend } from "@/lib/resend";
+import { sendEmail, approvalEmailHtml, rejectionEmailHtml } from "@/lib/email-templates";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
@@ -190,12 +190,7 @@ export async function POST(req: NextRequest) {
         const therapistName = therapistRes.data?.name || "セラピスト";
         const nickname = profileRes.data?.nickname || "ユーザー";
         if (email) {
-          await getResend()?.emails.send({
-            from: "メンエスSKR <info@menes-skr.com>",
-            to: email,
-            subject: "口コミが承認されました",
-            html: `<p>${nickname}様</p><p>${therapistName}への口コミが承認されました。クレジットが付与されました。</p><p>サイトにログインして口コミを閲覧しましょう。</p><p>メンエスSKR</p>`,
-          });
+          await sendEmail(email, "口コミが承認されました", approvalEmailHtml(nickname, therapistName, credits));
         }
       } catch (emailError) {
         console.error("Failed to send approval email:", emailError);
@@ -234,12 +229,7 @@ export async function POST(req: NextRequest) {
         const therapistName = therapistRes.data?.name || "セラピスト";
         const nickname = profileRes.data?.nickname || "ユーザー";
         if (email) {
-          await getResend()?.emails.send({
-            from: "メンエスSKR <info@menes-skr.com>",
-            to: email,
-            subject: "口コミについてのご連絡",
-            html: `<p>${nickname}様</p><p>${therapistName}への口コミについて、以下の理由により承認できませんでした。</p><p>理由: ${reason || "規約違反"}</p><p>内容を修正の上、再投稿をお願いいたします。</p><p>メンエスSKR</p>`,
-          });
+          await sendEmail(email, "口コミについてのご連絡", rejectionEmailHtml(nickname, therapistName, reason || "規約違反"));
         }
       } catch (emailError) {
         console.error("Failed to send rejection email:", emailError);

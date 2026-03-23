@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { sendAdminEmail, contactNotificationHtml } from "@/lib/email-templates";
 
 export async function POST(req: NextRequest) {
   try {
@@ -21,6 +22,12 @@ export async function POST(req: NextRequest) {
       console.error("Contact submission error:", error);
       return NextResponse.json({ error: "Failed to save" }, { status: 500 });
     }
+
+    // Notify admin (non-blocking)
+    sendAdminEmail(
+      `【お問い合わせ】${type}`,
+      contactNotificationHtml(type, name, email, rest)
+    ).catch(() => {});
 
     return NextResponse.json({ success: true });
   } catch (e) {
