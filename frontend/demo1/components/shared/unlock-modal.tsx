@@ -3,7 +3,11 @@
 // フラグ: 課金CTAを表示するか（口コミ数が十分溜まったらtrueに戻す）
 const SHOW_PAID_OPTIONS = false;
 
-import { PenSquare, Coins, CreditCard, UserPlus } from "lucide-react";
+// Payment provider: "sui" | "stripe"
+const PAYMENT_PROVIDER = process.env.NEXT_PUBLIC_PAYMENT_PROVIDER || "sui";
+
+import { useState } from "react";
+import { PenSquare, Coins, CreditCard, UserPlus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -13,6 +17,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import { submitSuiForm } from "@/lib/sui-form";
 
 interface UnlockModalProps {
   isOpen: boolean;
@@ -35,6 +40,40 @@ export function UnlockModal({
   onWriteReview,
   onUnlockWithCredits,
 }: UnlockModalProps) {
+  const [purchasing, setPurchasing] = useState(false);
+
+  async function handleSinglePurchase() {
+    setPurchasing(true);
+    try {
+      if (PAYMENT_PROVIDER === "sui") {
+        const res = await fetch("/api/checkout/sui-single-unlock", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ therapist_id: therapistId }),
+        });
+        const data = await res.json();
+        if (data.formUrl && data.fields) {
+          submitSuiForm(data.formUrl, data.fields);
+          return; // Page will redirect
+        }
+      } else {
+        const res = await fetch("/api/checkout/single-unlock", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ therapist_id: therapistId }),
+        });
+        const data = await res.json();
+        if (data.url) {
+          window.location.href = data.url;
+          return;
+        }
+      }
+    } catch (err) {
+      console.error("Checkout error:", err);
+    }
+    setPurchasing(false);
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-md">
@@ -83,13 +122,18 @@ export function UnlockModal({
                   <Separator className="flex-1" />
                 </div>
                 <div className="text-center">
-                  <a
-                    href={`/api/checkout/single-unlock?therapist_id=${therapistId}`}
-                    className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  <button
+                    onClick={handleSinglePurchase}
+                    disabled={purchasing}
+                    className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
                   >
-                    <CreditCard className="h-3.5 w-3.5" />
+                    {purchasing ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <CreditCard className="h-3.5 w-3.5" />
+                    )}
                     ¥1,000で永久アンロック
-                  </a>
+                  </button>
                 </div>
               </>
             )}
