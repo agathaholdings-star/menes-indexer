@@ -47,6 +47,8 @@ export function ReviewList({
   salonName = "",
 }: ReviewListProps) {
   const [showUnlockModal, setShowUnlockModal] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState<string | null>(null);
+  const [showCreditsEmptyDialog, setShowCreditsEmptyDialog] = useState(false);
   const [unlockLoading, setUnlockLoading] = useState<string | null>(null);
 
   // GA4 dataLayer push helper
@@ -69,13 +71,26 @@ export function ReviewList({
 
   const avgScore = reviews.length > 0 ? Math.round(reviews.reduce((acc, r) => acc + r.score, 0) / reviews.length) : 0;
 
-  const handleUnlock = async (reviewId: string) => {
+  const handleUnlockRequest = (reviewId: string) => {
     if (!onUnlockReview || unlockLoading) return;
+    if (reviewCredits > 0) {
+      setShowConfirmDialog(reviewId);
+    } else {
+      setShowUnlockModal(true);
+    }
+  };
+
+  const handleConfirmedUnlock = async () => {
+    const reviewId = showConfirmDialog;
+    setShowConfirmDialog(null);
+    if (!reviewId || !onUnlockReview) return;
     setUnlockLoading(reviewId);
     const success = await onUnlockReview(reviewId);
     setUnlockLoading(null);
     if (!success) {
       setShowUnlockModal(true);
+    } else if (reviewCredits - 1 <= 0) {
+      setShowCreditsEmptyDialog(true);
     }
   };
 
@@ -92,7 +107,7 @@ export function ReviewList({
             getBodyLabel={getBodyLabel}
             getServiceLabel={getServiceLabel}
             isLocked={!unlockedReviewIds.has(review.id)}
-            onUnlock={reviewCredits > 0 ? () => handleUnlock(review.id) : () => setShowUnlockModal(true)}
+            onUnlock={() => handleUnlockRequest(review.id)}
             therapistId={therapistId}
             therapistName={therapistName}
             therapistAge={therapistAge}
@@ -245,6 +260,67 @@ export function ReviewList({
                 </Button>
               </Link>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Credit Confirm Dialog */}
+      <Dialog open={!!showConfirmDialog} onOpenChange={(open) => !open && setShowConfirmDialog(null)}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-center">クレジットを使って読む</DialogTitle>
+          </DialogHeader>
+          <div className="text-center space-y-4 pt-2">
+            <div className="flex items-center justify-center gap-2">
+              <Coins className="h-5 w-5 text-primary" />
+              <span className="text-2xl font-bold text-primary">{reviewCredits}</span>
+              <span className="text-sm text-muted-foreground">クレジット残り</span>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              1クレジット消費してこの口コミを読みますか？
+            </p>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setShowConfirmDialog(null)}
+              >
+                やめる
+              </Button>
+              <Button
+                className="flex-1 gap-2"
+                onClick={handleConfirmedUnlock}
+              >
+                <Unlock className="h-4 w-4" />読む
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Credits Empty Dialog */}
+      <Dialog open={showCreditsEmptyDialog} onOpenChange={setShowCreditsEmptyDialog}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-center">クレジットを使い切りました</DialogTitle>
+          </DialogHeader>
+          <div className="text-center space-y-4 pt-2">
+            <div className="flex items-center justify-center">
+              <Coins className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <p className="text-sm text-muted-foreground">
+              口コミを投稿するとクレジットがもらえます。<br />
+              1件投稿で5クレジット（スクショ付きなら10）
+            </p>
+            <Button
+              className="w-full gap-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white"
+              onClick={() => {
+                setShowCreditsEmptyDialog(false);
+                onWriteReview?.();
+              }}
+            >
+              <PenLine className="h-4 w-4" />口コミを書いてクレジットGET
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -432,7 +508,7 @@ function ReviewCardA3a({
                   size="lg"
                 >
                   {reviewCredits > 0 ? (
-                    <><Unlock className="h-4 w-4" />クレジットで読む</>
+                    <><Unlock className="h-4 w-4" />クレジットで読む<span className="text-xs opacity-80 ml-1">（残{reviewCredits}）</span></>
                   ) : (
                     <><Lock className="h-4 w-4" />モザイクを外すには<ChevronRight className="h-4 w-4" /></>
                   )}

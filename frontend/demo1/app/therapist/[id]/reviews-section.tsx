@@ -36,21 +36,30 @@ export function ReviewsSection({
   const { permissions, reviewCredits, setReviewCredits, authUser, loading: tierLoading, effectiveTier } = useTier();
 
   // Check per-review unlock status on mount
+  // Also auto-unlock own reviews (no credit needed)
   useEffect(() => {
     if (tierLoading || reviews.length === 0) return;
     if (permissions.canViewReviewBody && effectiveTier !== "free_active") {
       setUnlockedReviewIds(new Set(reviews.map(r => r.id)));
       return;
     }
-    if (!authUser) return;
+    // Auto-unlock own reviews
+    const ownReviewIds = authUser
+      ? reviews.filter(r => r.userId === authUser.id).map(r => r.id)
+      : [];
+
+    if (!authUser) {
+      if (ownReviewIds.length > 0) setUnlockedReviewIds(new Set(ownReviewIds));
+      return;
+    }
     const supabase = createSupabaseBrowser();
     const reviewIds = reviews.map(r => r.id);
     supabase
       .rpc("are_reviews_unlocked", { p_review_ids: reviewIds })
       .then(({ data }) => {
-        if (data && Array.isArray(data)) {
-          setUnlockedReviewIds(new Set(data as string[]));
-        }
+        const serverUnlocked = data && Array.isArray(data) ? (data as string[]) : [];
+        // Merge: server-unlocked + own reviews
+        setUnlockedReviewIds(new Set([...serverUnlocked, ...ownReviewIds]));
       });
   }, [authUser, reviews, permissions.canViewReviewBody, effectiveTier, tierLoading]);
 

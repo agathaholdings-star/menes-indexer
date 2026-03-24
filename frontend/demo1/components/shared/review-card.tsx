@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Star, Lock, Crown, Clock, Eye, ThumbsUp, ChevronRight, ArrowRight, ShieldCheck, Camera, MessageSquare, Quote } from "lucide-react";
+import { Star, Lock, Unlock, Crown, Clock, Eye, ThumbsUp, ChevronRight, ArrowRight, ShieldCheck, Camera, MessageSquare, Quote } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ interface ReviewCardProps {
   variant?: "default" | "detailed";
   cardStyle?: "default" | "magazine" | "compact" | "social";
   therapistImageUrl?: string;
+  reviewCredits?: number;
   onBlurClick?: () => void;
 }
 
@@ -76,7 +77,7 @@ function StarRating({ score, isBlurred }: { score: number; isBlurred: boolean })
   );
 }
 
-function BlurredContent({ review, onBlurClick }: { review: Review; onBlurClick?: () => void }) {
+function BlurredContent({ review, onBlurClick, reviewCredits = 0 }: { review: Review; onBlurClick?: () => void; reviewCredits?: number }) {
   const previewText = review.commentFirstImpression || review.commentReason || review.commentStyle || review.commentService || "";
   return (
     <>
@@ -98,7 +99,11 @@ function BlurredContent({ review, onBlurClick }: { review: Review; onBlurClick?:
             className="gap-2 shadow-2xl bg-primary hover:bg-primary/90 hover:scale-105 transition-transform"
             size="lg"
           >
-            <Lock className="h-4 w-4" />モザイクを外すには<ChevronRight className="h-4 w-4" />
+            {reviewCredits > 0 ? (
+              <><Unlock className="h-4 w-4" />クレジットで読む<span className="text-xs opacity-80 ml-1">（残{reviewCredits}）</span></>
+            ) : (
+              <><Lock className="h-4 w-4" />モザイクを外すには<ChevronRight className="h-4 w-4" /></>
+            )}
           </Button>
         </div>
       </div>
@@ -155,7 +160,7 @@ function VerifiedBadge() {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // Pattern 1: Default（現行）
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-function DefaultCard({ review, isBlurred, showTherapist, therapistImageUrl, onBlurClick, typeLabel, bodyLabel, serviceLabel, formattedDate, isVerified }: CardInternalProps) {
+function DefaultCard({ review, isBlurred, showTherapist, therapistImageUrl, reviewCredits, onBlurClick, typeLabel, bodyLabel, serviceLabel, formattedDate, isVerified }: CardInternalProps) {
   return (
     <Card className="overflow-hidden shadow-md relative p-0 gap-0">
       {isVerified && <div className="absolute top-2 right-2 z-10"><VerifiedBadge /></div>}
@@ -217,7 +222,7 @@ function DefaultCard({ review, isBlurred, showTherapist, therapistImageUrl, onBl
         </div>
 
         <div className="px-5 pt-4 pb-4">
-          {isBlurred ? <BlurredContent review={review} onBlurClick={onBlurClick} /> : <FullContent review={review} />}
+          {isBlurred ? <BlurredContent review={review} onBlurClick={onBlurClick} reviewCredits={reviewCredits} /> : <FullContent review={review} />}
         </div>
 
         {showTherapist && <TherapistLink review={review} />}
@@ -230,7 +235,7 @@ function DefaultCard({ review, isBlurred, showTherapist, therapistImageUrl, onBl
 // Pattern 2: Magazine（雑誌風）
 // 大きな画像ヘッダー + 引用風テキスト + グラデーションフェード
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-function MagazineCard({ review, isBlurred, showTherapist, therapistImageUrl, onBlurClick, typeLabel, bodyLabel, serviceLabel, formattedDate, isVerified }: CardInternalProps) {
+function MagazineCard({ review, isBlurred, showTherapist, therapistImageUrl, reviewCredits, onBlurClick, typeLabel, bodyLabel, serviceLabel, formattedDate, isVerified }: CardInternalProps) {
   const previewText = review.commentFirstImpression || review.commentService || "";
 
   return (
@@ -279,7 +284,7 @@ function MagazineCard({ review, isBlurred, showTherapist, therapistImageUrl, onB
         {/* 引用風プレビュー */}
         <div className="px-6 pt-5 pb-4">
           {isBlurred ? (
-            <BlurredContent review={review} onBlurClick={onBlurClick} />
+            <BlurredContent review={review} onBlurClick={onBlurClick} reviewCredits={reviewCredits} />
           ) : (
             <>
               <div className="border-l-4 border-primary/30 pl-4 mb-4">
@@ -311,7 +316,7 @@ function MagazineCard({ review, isBlurred, showTherapist, therapistImageUrl, onB
 // Pattern 3: Compact（ME競合風・横並び）
 // 画像左 + 情報右 + テキストプレビュー + 「続きを読む」
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-function CompactCard({ review, isBlurred, showTherapist, therapistImageUrl, onBlurClick, typeLabel, bodyLabel, serviceLabel, formattedDate, isVerified }: CardInternalProps) {
+function CompactCard({ review, isBlurred, showTherapist, therapistImageUrl, reviewCredits, onBlurClick, typeLabel, bodyLabel, serviceLabel, formattedDate, isVerified }: CardInternalProps) {
   const previewText = review.commentFirstImpression || review.commentService || "";
 
   return (
@@ -381,7 +386,7 @@ function CompactCard({ review, isBlurred, showTherapist, therapistImageUrl, onBl
         {/* テキストプレビュー */}
         <div className="px-5 pt-3 pb-4 border-t">
           {isBlurred ? (
-            <BlurredContent review={review} onBlurClick={onBlurClick} />
+            <BlurredContent review={review} onBlurClick={onBlurClick} reviewCredits={reviewCredits} />
           ) : (
             <>
               <p className="text-sm leading-relaxed line-clamp-3">{previewText}</p>
@@ -403,7 +408,7 @@ function CompactCard({ review, isBlurred, showTherapist, therapistImageUrl, onBl
 // Pattern 4: Social（SNS投稿風）
 // 丸アバター + チャットバブル + エンゲージメント
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-function SocialCard({ review, isBlurred, showTherapist, therapistImageUrl, onBlurClick, typeLabel, bodyLabel, serviceLabel, formattedDate, isVerified }: CardInternalProps) {
+function SocialCard({ review, isBlurred, showTherapist, therapistImageUrl, reviewCredits, onBlurClick, typeLabel, bodyLabel, serviceLabel, formattedDate, isVerified }: CardInternalProps) {
   const previewText = review.commentFirstImpression || review.commentService || "";
 
   return (
@@ -460,7 +465,7 @@ function SocialCard({ review, isBlurred, showTherapist, therapistImageUrl, onBlu
         <div className="px-4 pb-3">
           <div className="bg-blue-50 rounded-2xl rounded-tl-sm px-4 py-3 relative">
             {isBlurred ? (
-              <BlurredContent review={review} onBlurClick={onBlurClick} />
+              <BlurredContent review={review} onBlurClick={onBlurClick} reviewCredits={reviewCredits} />
             ) : (
               <p className="text-sm leading-relaxed">{previewText.slice(0, 150)}{previewText.length > 150 ? "..." : ""}</p>
             )}
@@ -502,6 +507,7 @@ interface CardInternalProps {
   isBlurred: boolean;
   showTherapist: boolean;
   therapistImageUrl?: string;
+  reviewCredits: number;
   onBlurClick?: () => void;
   typeLabel: string;
   bodyLabel: string;
@@ -510,7 +516,7 @@ interface CardInternalProps {
   isVerified: boolean;
 }
 
-export function ReviewCard({ review, isBlurred = false, showTherapist = true, variant = "default", cardStyle = "default", therapistImageUrl, onBlurClick }: ReviewCardProps) {
+export function ReviewCard({ review, isBlurred = false, showTherapist = true, variant = "default", cardStyle = "default", therapistImageUrl, reviewCredits = 0, onBlurClick }: ReviewCardProps) {
   const typeLabel = therapistTypes.find((t) => t.id === review.typeId)?.label || review.typeId;
   const bodyLabel = bodyTypes.find((b) => b.id === review.bodyType)?.label || review.bodyType;
   const serviceLabel = serviceTypes.find((s) => s.id === review.serviceType)?.label || review.serviceType;
@@ -518,7 +524,7 @@ export function ReviewCard({ review, isBlurred = false, showTherapist = true, va
   const isVerified = !!review.verificationImagePath;
 
   const props: CardInternalProps = {
-    review, isBlurred, showTherapist, therapistImageUrl, onBlurClick,
+    review, isBlurred, showTherapist, therapistImageUrl, reviewCredits, onBlurClick,
     typeLabel, bodyLabel, serviceLabel, formattedDate, isVerified,
   };
 

@@ -72,7 +72,7 @@ function toReview(r: LatestReview): { review: Review; therapistImageUrl: string 
 }
 
 export function LatestReviews({ reviews }: LatestReviewsProps) {
-  const { permissions } = useTier();
+  const { permissions, reviewCredits, authUser } = useTier();
   const isBlurred = !permissions.canViewReviewBody;
   const [showUnlockModal, setShowUnlockModal] = useState(false);
 
@@ -110,7 +110,15 @@ export function LatestReviews({ reviews }: LatestReviewsProps) {
               review={review}
               isBlurred={isBlurred}
               therapistImageUrl={therapistImageUrl}
-              onBlurClick={() => setShowUnlockModal(true)}
+              reviewCredits={reviewCredits}
+              onBlurClick={() => {
+                if (reviewCredits > 0) {
+                  // クレジットがあるならセラピストページでアンロック
+                  window.location.href = `/therapist/${review.therapistId}`;
+                } else {
+                  setShowUnlockModal(true);
+                }
+              }}
             />
           );
         })}
