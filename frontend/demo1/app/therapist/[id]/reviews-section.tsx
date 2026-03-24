@@ -61,11 +61,23 @@ export function ReviewsSection({
     const { data, error } = await supabase.rpc("unlock_review", {
       p_review_id: reviewId,
     });
-    if (error || !data) return undefined;
+    if (error) {
+      console.error("unlock_review error:", error.message);
+      return undefined;
+    }
+    if (!data) {
+      // RPC returned false = credits expired or insufficient on server side
+      // Refresh credit balance to sync UI with DB
+      if (authUser) {
+        const { data: profile } = await supabase.rpc("get_profile_with_reset", { p_user_id: authUser.id }).single();
+        if (profile) setReviewCredits(profile.review_credits || 0);
+      }
+      return undefined;
+    }
     setUnlockedReviewIds(prev => new Set([...prev, reviewId]));
     setReviewCredits((prev: number) => Math.max(0, prev - 1));
     return true;
-  }, [unlockedReviewIds, reviewCredits, setReviewCredits]);
+  }, [unlockedReviewIds, reviewCredits, setReviewCredits, authUser]);
 
   const handleWriteReview = useCallback((forThisTherapist: boolean) => {
     if (forThisTherapist) {
