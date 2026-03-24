@@ -17,8 +17,8 @@ export async function GET(
 
   const now = new Date();
 
-  // RPC で全件一括取得（PostgREST 1000行制限なし）
-  const { data: allTherapists } = await supabase.rpc("get_sitemap_therapists");
+  // RPC で全件一括取得（PostgREST default 1000行制限を解除）
+  const { data: allTherapists } = await supabase.rpc("get_sitemap_therapists").limit(200000);
 
   if (!allTherapists || allTherapists.length === 0) {
     return new Response("Not Found", { status: 404 });
