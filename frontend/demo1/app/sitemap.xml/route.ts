@@ -6,17 +6,14 @@ export const revalidate = 3600;
 const THERAPISTS_PER_FILE = 5000;
 
 export async function GET() {
-  // 各テーブルの最新 updated_at を取得
+  // RPC で公開セラピスト数を取得 + 各テーブルの最新 updated_at
   const [
-    { count },
+    { data: therapistCount },
     { data: latestArea },
     { data: latestSalon },
     { data: latestTherapist },
   ] = await Promise.all([
-    supabase
-      .from("therapists")
-      .select("id, salons!inner(published_at)", { count: "exact", head: true })
-      .not("salons.published_at", "is", null),
+    supabase.rpc("get_sitemap_therapist_count"),
     supabase
       .from("areas")
       .select("updated_at")
@@ -37,7 +34,7 @@ export async function GET() {
       .single(),
   ]);
 
-  const therapistFileCount = Math.max(1, Math.ceil((count || 0) / THERAPISTS_PER_FILE));
+  const therapistFileCount = Math.max(1, Math.ceil((therapistCount ?? 0) / THERAPISTS_PER_FILE));
 
   const areaLastmod = latestArea?.updated_at ?? new Date().toISOString();
   const salonLastmod = latestSalon?.updated_at ?? new Date().toISOString();
