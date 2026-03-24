@@ -181,60 +181,7 @@ function SearchContent() {
       setTherapistLoading(true);
 
       try {
-        // 1) reviewsベースのフィルタが必要かチェック
-        const needsReviewFilter =
-          selectedTypes.length > 0 ||
-          selectedStyles.length > 0 ||
-          (scoreFilter && scoreFilter !== "none") ||
-          skrFilter ||
-          hrFilter;
-
-        let therapistIds: number[] | null = null;
-        const reviewAggMap = new Map<number, { avg_score: number; count: number; looks: Set<string>; bodies: Set<string>; services: Set<string> }>();
-
-        if (needsReviewFilter) {
-          const revRes = await fetch("/api/reviews?limit=10000");
-          const revJson = await revRes.json();
-          const revData = revJson.data;
-          if (Array.isArray(revData)) {
-            for (const r of revData) {
-              const tid = Number(r.therapist_id);
-              if (!reviewAggMap.has(tid)) {
-                reviewAggMap.set(tid, { avg_score: 0, count: 0, looks: new Set(), bodies: new Set(), services: new Set() });
-              }
-              const agg = reviewAggMap.get(tid)!;
-              agg.count++;
-              agg.avg_score += (r.score || 0);
-              if (r.looks_type_id) agg.looks.add(String(r.looks_type_id));
-              if (r.body_type_id) agg.bodies.add(String(r.body_type_id));
-              if (r.service_level_id) agg.services.add(String(r.service_level_id));
-            }
-
-            for (const [, agg] of reviewAggMap) {
-              agg.avg_score = Math.round(agg.avg_score / agg.count);
-            }
-
-            therapistIds = [];
-            for (const [tid, agg] of reviewAggMap) {
-              if (selectedTypes.length > 0 && !selectedTypes.some((t) => agg.looks.has(t))) continue;
-              if (selectedStyles.length > 0 && !selectedStyles.some((s) => agg.bodies.has(s))) continue;
-              if (scoreFilter && scoreFilter !== "none") {
-                const minScore = parseInt(scoreFilter);
-                if (agg.avg_score < minScore) continue;
-              }
-              if (skrFilter && !agg.services.has("2") && !agg.services.has("3")) continue;
-              if (hrFilter && !agg.services.has("3")) continue;
-              therapistIds.push(tid);
-            }
-
-            if (therapistIds.length === 0) {
-              setDbTherapists([]);
-              return;
-            }
-          }
-        }
-
-        // 2) セラピスト取得（API経由）
+        // サーバーサイドでフィルタリング（レビュー全件取得を廃止）
         const params = new URLSearchParams();
         if (selectedArea && selectedArea !== "all") {
           params.set("area_slug", selectedArea);
@@ -242,12 +189,29 @@ function SearchContent() {
             params.set("district", selectedDistrict);
           }
         }
-        if (therapistIds && therapistIds.length > 0) {
-          params.set("ids", therapistIds.join(","));
-        }
         if (query) {
           params.set("name", query);
         }
+
+        // レビューフィルタをサーバーに委譲
+        if (selectedTypes.length > 0) {
+          params.set("looks_types", selectedTypes.join(","));
+        }
+        if (selectedStyles.length > 0) {
+          params.set("body_types", selectedStyles.join(","));
+        }
+        if (scoreFilter && scoreFilter !== "none") {
+          params.set("min_score", scoreFilter);
+        }
+        if (skrFilter && hrFilter) {
+          params.set("service_levels", "3");
+        } else if (skrFilter) {
+          params.set("service_levels", "2,3");
+        } else if (hrFilter) {
+          params.set("service_levels", "3");
+        }
+
+        params.set("with_stats", "1");
         params.set("limit", String(PAGE_SIZE));
         params.set("offset", "0");
 
@@ -255,36 +219,12 @@ function SearchContent() {
         const data = await therapistRes.json();
 
         if (Array.isArray(data)) {
-          // レビュー集計データがない場合は取得
-          if (!needsReviewFilter) {
-            const allRevRes = await fetch("/api/reviews?limit=10000");
-            const allRevJson = await allRevRes.json();
-            if (Array.isArray(allRevJson.data)) {
-              for (const r of allRevJson.data) {
-                const tid = Number(r.therapist_id);
-                if (!reviewAggMap.has(tid)) {
-                  reviewAggMap.set(tid, { avg_score: 0, count: 0, looks: new Set(), bodies: new Set(), services: new Set() });
-                }
-                const agg = reviewAggMap.get(tid)!;
-                agg.count++;
-                agg.avg_score += (r.score || 0);
-                if (r.looks_type_id) agg.looks.add(String(r.looks_type_id));
-                if (r.body_type_id) agg.bodies.add(String(r.body_type_id));
-                if (r.service_level_id) agg.services.add(String(r.service_level_id));
-              }
-              for (const [, agg] of reviewAggMap) {
-                agg.avg_score = Math.round(agg.avg_score / agg.count);
-              }
-            }
-          }
-
           let filtered = data.filter((t: any) => {
             if (isPlaceholderName(t.name)) return false;
             const cleaned = cleanTherapistName(t.name);
             if (cleaned.length > 15) return false;
             const shop = t.salons as { name: string; display_name: string | null } | null;
             if (shop && (cleaned === shop.name || cleaned === shop.display_name)) return false;
-            if (therapistIds && !therapistIds.includes(Number(t.id))) return false;
             return true;
           });
 
@@ -292,7 +232,7 @@ function SearchContent() {
             filtered.map((t: any) => {
               const imgs = t.image_urls as string[] | null;
               const shop = t.salons as { name: string; display_name: string | null; access: string | null } | null;
-              const agg = reviewAggMap.get(Number(t.id));
+              const stats = t.review_stats;
               return {
                 id: Number(t.id),
                 name: cleanTherapistName(t.name),
@@ -301,11 +241,11 @@ function SearchContent() {
                 salon_id: Number(t.salon_id),
                 shop_name: shop?.display_name || shop?.name || "",
                 shop_access: shop?.access || null,
-                avg_score: agg?.avg_score || null,
-                review_count: agg?.count || 0,
-                looks_types: agg ? [...agg.looks] : [],
-                body_types: agg ? [...agg.bodies] : [],
-                service_levels: agg ? [...agg.services] : [],
+                avg_score: stats?.avg_score ?? t.avg_score ?? null,
+                review_count: stats?.count ?? t.review_count ?? 0,
+                looks_types: stats?.looks ?? [],
+                body_types: stats?.bodies ?? [],
+                service_levels: stats?.services ?? [],
               };
             })
           );
@@ -362,6 +302,23 @@ function SearchContent() {
       if (query) {
         params.set("name", query);
       }
+      if (selectedTypes.length > 0) {
+        params.set("looks_types", selectedTypes.join(","));
+      }
+      if (selectedStyles.length > 0) {
+        params.set("body_types", selectedStyles.join(","));
+      }
+      if (scoreFilter && scoreFilter !== "none") {
+        params.set("min_score", scoreFilter);
+      }
+      if (skrFilter && hrFilter) {
+        params.set("service_levels", "3");
+      } else if (skrFilter) {
+        params.set("service_levels", "2,3");
+      } else if (hrFilter) {
+        params.set("service_levels", "3");
+      }
+      params.set("with_stats", "1");
       params.set("limit", String(PAGE_SIZE));
       params.set("offset", String(currentOffset));
       const res = await fetch(`/api/therapists?${params.toString()}`);
@@ -370,6 +327,7 @@ function SearchContent() {
         const newTherapists = data.map((t: any) => {
           const imgs = t.image_urls as string[] | null;
           const shop = t.salons as { name: string; display_name: string | null; access: string | null } | null;
+          const stats = t.review_stats;
           return {
             id: Number(t.id),
             name: cleanTherapistName(t.name),
@@ -378,11 +336,11 @@ function SearchContent() {
             salon_id: Number(t.salon_id),
             shop_name: shop?.display_name || shop?.name || "",
             shop_access: shop?.access || null,
-            avg_score: null,
-            review_count: 0,
-            looks_types: [],
-            body_types: [],
-            service_levels: [],
+            avg_score: stats?.avg_score ?? t.avg_score ?? null,
+            review_count: stats?.count ?? t.review_count ?? 0,
+            looks_types: stats?.looks ?? [],
+            body_types: stats?.bodies ?? [],
+            service_levels: stats?.services ?? [],
           };
         }).filter((t: DBTherapist) => !isPlaceholderName(t.name) && t.name.length <= 15);
         setDbTherapists(prev => [...prev, ...newTherapists]);
@@ -396,7 +354,7 @@ function SearchContent() {
     } finally {
       setLoadingMore(false);
     }
-  }, [currentOffset, selectedArea, selectedDistrict, query]);
+  }, [currentOffset, selectedArea, selectedDistrict, query, selectedTypes, selectedStyles, scoreFilter, skrFilter, hrFilter]);
 
   // モーダル
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);

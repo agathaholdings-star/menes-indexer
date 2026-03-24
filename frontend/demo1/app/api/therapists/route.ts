@@ -30,6 +30,13 @@ export async function GET(req: NextRequest) {
   const ids = searchParams.get("ids"); // カンマ区切りのセラピストID
   const name = searchParams.get("name"); // セラピスト名検索
 
+  // レビューフィルタパラメータ
+  const looksTypes = searchParams.get("looks_types"); // カンマ区切り: "1,3,7"
+  const bodyTypes = searchParams.get("body_types");   // カンマ区切り: "1,3"
+  const serviceLevels = searchParams.get("service_levels"); // カンマ区切り: "2,3"
+  const minScore = searchParams.get("min_score"); // 最低スコア: "70"
+  const withStats = searchParams.get("with_stats"); // "1" でレビュー統計を含める
+
   // Fetch therapists for a specific salon
   if (salonId) {
     let q = supabaseAdmin
@@ -44,6 +51,72 @@ export async function GET(req: NextRequest) {
     q = q.order("name").range(offset, offset + limit - 1);
     const { data } = await q;
     return NextResponse.json(data ?? []);
+  }
+
+  // レビューベースのフィルタリング（サーバーサイド）
+  let reviewFilteredIds: number[] | null = null;
+  let reviewStatsMap: Map<number, { avg_score: number; count: number; looks: string[]; bodies: string[]; services: string[] }> | null = null;
+
+  const needsReviewFilter = looksTypes || bodyTypes || serviceLevels || minScore;
+
+  if (needsReviewFilter || withStats === "1") {
+    // レビュー集計をサーバーサイドで実行
+    let revQuery = supabaseAdmin
+      .from("reviews")
+      .select("therapist_id, looks_type_id, body_type_id, service_level_id, score")
+      .eq("moderation_status", "approved");
+
+    const { data: revData } = await revQuery;
+
+    if (revData) {
+      const aggMap = new Map<number, { total_score: number; count: number; looks: Set<string>; bodies: Set<string>; services: Set<string> }>();
+
+      for (const r of revData) {
+        const tid = Number(r.therapist_id);
+        if (!aggMap.has(tid)) {
+          aggMap.set(tid, { total_score: 0, count: 0, looks: new Set(), bodies: new Set(), services: new Set() });
+        }
+        const agg = aggMap.get(tid)!;
+        agg.count++;
+        agg.total_score += (r.score || 0);
+        if (r.looks_type_id) agg.looks.add(String(r.looks_type_id));
+        if (r.body_type_id) agg.bodies.add(String(r.body_type_id));
+        if (r.service_level_id) agg.services.add(String(r.service_level_id));
+      }
+
+      // フィルタ適用
+      const looksSet = looksTypes ? new Set(looksTypes.split(",")) : null;
+      const bodySet = bodyTypes ? new Set(bodyTypes.split(",")) : null;
+      const serviceSet = serviceLevels ? new Set(serviceLevels.split(",")) : null;
+      const minScoreVal = minScore ? parseInt(minScore, 10) : null;
+
+      reviewFilteredIds = [];
+      reviewStatsMap = new Map();
+
+      for (const [tid, agg] of aggMap) {
+        const avgScore = Math.round(agg.total_score / agg.count);
+
+        if (looksSet && ![...agg.looks].some(l => looksSet.has(l))) continue;
+        if (bodySet && ![...agg.bodies].some(b => bodySet.has(b))) continue;
+        if (serviceSet && ![...agg.services].some(s => serviceSet.has(s))) continue;
+        if (minScoreVal && avgScore < minScoreVal) continue;
+
+        reviewFilteredIds.push(tid);
+        reviewStatsMap.set(tid, {
+          avg_score: avgScore,
+          count: agg.count,
+          looks: [...agg.looks],
+          bodies: [...agg.bodies],
+          services: [...agg.services],
+        });
+      }
+
+      if (needsReviewFilter && reviewFilteredIds.length === 0) {
+        return NextResponse.json([], {
+          headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" },
+        });
+      }
+    }
   }
 
   // Area filter: resolve salon IDs
@@ -79,7 +152,7 @@ export async function GET(req: NextRequest) {
   // Main query
   let q = supabaseAdmin
     .from("therapists")
-    .select("id, name, age, image_urls, salon_id, salons(name, display_name, access)")
+    .select("id, name, age, image_urls, salon_id, review_count, avg_score, salons(name, display_name, access)")
     .eq("status", "active");
 
   q = applyPlaceholderFilters(q);
@@ -92,6 +165,11 @@ export async function GET(req: NextRequest) {
     q = q.in("salon_id", salonIds);
   }
 
+  // レビューフィルタによるID絞り込み
+  if (reviewFilteredIds) {
+    q = q.in("id", reviewFilteredIds);
+  }
+
   if (ids) {
     const idList = ids.split(",").map(Number).filter(Boolean);
     if (idList.length > 0) {
@@ -102,5 +180,17 @@ export async function GET(req: NextRequest) {
   q = q.order("created_at", { ascending: false }).range(offset, offset + limit - 1);
 
   const { data } = await q;
-  return NextResponse.json(data ?? []);
+
+  // レビュー統計をレスポンスに付加
+  const result = (data ?? []).map((t: any) => {
+    const stats = reviewStatsMap?.get(Number(t.id));
+    return {
+      ...t,
+      review_stats: stats || null,
+    };
+  });
+
+  return NextResponse.json(result, {
+    headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" },
+  });
 }
