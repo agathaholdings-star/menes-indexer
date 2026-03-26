@@ -112,9 +112,16 @@ function SearchContent() {
   // エリアデータ（Supabaseから取得）
   const [areas, setAreas] = useState<PrefectureOption[]>([]);
 
+  // 店舗検索結果（qパラメータがある場合）
+  const [shopResults, setShopResults] = useState<{ id: number; name: string; display_name: string | null; access: string | null; image_url: string | null; slug: string | null }[]>([]);
+  const [shopSearchLoading, setShopSearchLoading] = useState(false);
+
+  // 初回マウント: エリアと店舗検索を並列で取得（waterfall回避）
+  const isMountRef = useRef(true);
   useEffect(() => {
-    async function fetchAreas() {
-      try {
+    async function fetchInitialData() {
+      // エリアと店舗検索を並列実行
+      const fetchAreas = async () => {
         const [prefsRes, areasRes] = await Promise.all([
           fetch("/api/prefectures"),
           fetch("/api/areas"),
@@ -139,33 +146,31 @@ function SearchContent() {
               districts: areasByPref.get(p.id) || [],
             }))
         );
-      } catch (err) {
-        console.error("エリア取得エラー:", err);
-      }
-    }
-    fetchAreas();
-  }, []);
+      };
 
-  // 店舗検索結果（qパラメータがある場合）
-  const [shopResults, setShopResults] = useState<{ id: number; name: string; display_name: string | null; access: string | null; image_url: string | null; slug: string | null }[]>([]);
-  const [shopSearchLoading, setShopSearchLoading] = useState(false);
+      const fetchShops = async () => {
+        if (!initialQuery) return;
+        setShopSearchLoading(true);
+        try {
+          const res = await fetch(`/api/salons?search=${encodeURIComponent(initialQuery)}&limit=12`);
+          const data = await res.json();
+          setShopResults(Array.isArray(data) ? data : []);
+        } catch (err) {
+          console.error("店舗検索エラー:", err);
+        } finally {
+          setShopSearchLoading(false);
+        }
+      };
 
-  useEffect(() => {
-    if (!initialQuery) return;
-    setShopSearchLoading(true);
-    async function searchShops() {
       try {
-        const res = await fetch(`/api/salons?search=${encodeURIComponent(initialQuery)}&limit=12`);
-        const data = await res.json();
-        setShopResults(Array.isArray(data) ? data : []);
+        await Promise.all([fetchAreas(), fetchShops()]);
       } catch (err) {
-        console.error("店舗検索エラー:", err);
-      } finally {
-        setShopSearchLoading(false);
+        console.error("初期データ取得エラー:", err);
       }
     }
-    searchShops();
-  }, [initialQuery]);
+    fetchInitialData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // セラピスト検索結果（DBから取得 + reviewsフィルタ）
   const [dbTherapists, setDbTherapists] = useState<DBTherapist[]>([]);
@@ -271,12 +276,27 @@ function SearchContent() {
   const [sortBy, setSortBy] = useState("newest");
   const [selectedArea, setSelectedArea] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState("");
-  const [salonName, setShopName] = useState("");
+  const [salonName, setShopName] = useState(initialQuery);
 
-  // URLのqパラメータが変わったらqueryを同期して再検索
+  // URLのqパラメータが変わったらqueryを同期して再検索（マウント時はスキップ）
   useEffect(() => {
+    if (isMountRef.current) {
+      isMountRef.current = false;
+      return;
+    }
     setQuery(initialQuery);
     setShopName(initialQuery);
+    // URL変更時は店舗検索も再実行
+    if (initialQuery) {
+      setShopSearchLoading(true);
+      fetch(`/api/salons?search=${encodeURIComponent(initialQuery)}&limit=12`)
+        .then(res => res.json())
+        .then(data => setShopResults(Array.isArray(data) ? data : []))
+        .catch(err => console.error("店舗検索エラー:", err))
+        .finally(() => setShopSearchLoading(false));
+    } else {
+      setShopResults([]);
+    }
     setSearchTriggered((n) => n + 1);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialQuery]);

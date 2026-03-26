@@ -60,11 +60,60 @@ export async function GET(req: NextRequest) {
   const needsReviewFilter = looksTypes || bodyTypes || serviceLevels || minScore;
 
   if (needsReviewFilter || withStats === "1") {
-    // レビュー集計をサーバーサイドで実行
+    const looksTypesArr = looksTypes ? looksTypes.split(",").map(Number).filter(Boolean) : null;
+    const bodyTypesArr = bodyTypes ? bodyTypes.split(",").map(Number).filter(Boolean) : null;
+    const serviceLevelsArr = serviceLevels ? serviceLevels.split(",").map(Number).filter(Boolean) : null;
+    const minScoreVal = minScore ? parseInt(minScore, 10) : null;
+
+    // 各facetフィルタを個別にDB実行し、therapist_idの積集合を取る
+    // （旧ロジックと同じセマンティクス: レビュー横断でOR、facet間でAND）
+    const facetQueries: Promise<Set<number>>[] = [];
+
+    if (looksTypesArr) {
+      facetQueries.push(
+        supabaseAdmin.from("reviews").select("therapist_id").eq("moderation_status", "approved")
+          .in("looks_type_id", looksTypesArr).then(({ data }) => new Set((data ?? []).map(r => Number(r.therapist_id))))
+      );
+    }
+    if (bodyTypesArr) {
+      facetQueries.push(
+        supabaseAdmin.from("reviews").select("therapist_id").eq("moderation_status", "approved")
+          .in("body_type_id", bodyTypesArr).then(({ data }) => new Set((data ?? []).map(r => Number(r.therapist_id))))
+      );
+    }
+    if (serviceLevelsArr) {
+      facetQueries.push(
+        supabaseAdmin.from("reviews").select("therapist_id").eq("moderation_status", "approved")
+          .in("service_level_id", serviceLevelsArr).then(({ data }) => new Set((data ?? []).map(r => Number(r.therapist_id))))
+      );
+    }
+
+    // facetフィルタの積集合を計算（並列実行）
+    let facetFilteredIds: Set<number> | null = null;
+    if (facetQueries.length > 0) {
+      const results = await Promise.all(facetQueries);
+      facetFilteredIds = results[0];
+      for (let i = 1; i < results.length; i++) {
+        facetFilteredIds = new Set([...facetFilteredIds].filter(id => results[i].has(id)));
+      }
+      // 積集合が空 → マッチするセラピストなし
+      if (facetFilteredIds.size === 0) {
+        return NextResponse.json([], {
+          headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" },
+        });
+      }
+    }
+
+    // 承認済みレビューの統計を取得（withStats用 + minScoreフィルタ用）
+    // facetで絞り込んだtherapist_idに限定してクエリ
     let revQuery = supabaseAdmin
       .from("reviews")
       .select("therapist_id, looks_type_id, body_type_id, service_level_id, score")
       .eq("moderation_status", "approved");
+
+    if (facetFilteredIds) {
+      revQuery = revQuery.in("therapist_id", [...facetFilteredIds]);
+    }
 
     const { data: revData } = await revQuery;
 
@@ -84,23 +133,13 @@ export async function GET(req: NextRequest) {
         if (r.service_level_id) agg.services.add(String(r.service_level_id));
       }
 
-      // フィルタ適用
-      const looksSet = looksTypes ? new Set(looksTypes.split(",")) : null;
-      const bodySet = bodyTypes ? new Set(bodyTypes.split(",")) : null;
-      const serviceSet = serviceLevels ? new Set(serviceLevels.split(",")) : null;
-      const minScoreVal = minScore ? parseInt(minScore, 10) : null;
-
       reviewFilteredIds = [];
       reviewStatsMap = new Map();
 
       for (const [tid, agg] of aggMap) {
         const avgScore = Math.round(agg.total_score / agg.count);
-
-        if (looksSet && ![...agg.looks].some(l => looksSet.has(l))) continue;
-        if (bodySet && ![...agg.bodies].some(b => bodySet.has(b))) continue;
-        if (serviceSet && ![...agg.services].some(s => serviceSet.has(s))) continue;
+        // min_scoreは集計後の平均スコアでフィルタ（旧ロジックと同じ）
         if (minScoreVal && avgScore < minScoreVal) continue;
-
         reviewFilteredIds.push(tid);
         reviewStatsMap.set(tid, {
           avg_score: avgScore,
