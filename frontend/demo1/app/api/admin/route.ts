@@ -2,6 +2,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import { sendEmail, approvalEmailHtml, rejectionEmailHtml } from "@/lib/email-templates";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 
 async function getAuthUser() {
@@ -196,6 +197,10 @@ export async function POST(req: NextRequest) {
         console.error("Failed to send approval email:", emailError);
       }
 
+      // ISRキャッシュをパージ（トップページ+セラピストページ）
+      revalidatePath("/");
+      revalidatePath(`/therapist/${updatedReview.therapist_id}`);
+
       return NextResponse.json({ ok: true });
     }
 
@@ -235,6 +240,9 @@ export async function POST(req: NextRequest) {
         console.error("Failed to send rejection email:", emailError);
       }
 
+      revalidatePath("/");
+      revalidatePath(`/therapist/${rejectedReview.therapist_id}`);
+
       return NextResponse.json({ ok: true });
     }
 
@@ -255,6 +263,7 @@ export async function POST(req: NextRequest) {
         .delete()
         .eq("id", review_id);
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+      revalidatePath("/");
       return NextResponse.json({ ok: true });
     }
 
