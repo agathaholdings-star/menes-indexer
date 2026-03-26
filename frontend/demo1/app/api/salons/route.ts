@@ -9,6 +9,7 @@ export async function GET(req: NextRequest) {
   const areaSlug = searchParams.get("area_slug");
   const search = searchParams.get("search");
   const random = searchParams.get("random");
+  const all = searchParams.get("all") === "true"; // ウィザード用: 未公開サロンも含む
   const limit = Math.min(parseInt(searchParams.get("limit") || "50", 10), 200);
 
   const cacheHeaders = {
@@ -19,11 +20,12 @@ export async function GET(req: NextRequest) {
 
   // Search by name
   if (search) {
-    const { data } = await supabaseAdmin
+    let query = supabaseAdmin
       .from("salons")
       .select("id, name, display_name, access, image_url, slug")
-      .eq("is_active", true)
-      .not("published_at", "is", null)
+      .eq("is_active", true);
+    if (!all) query = query.not("published_at", "is", null);
+    const { data } = await query
       .or(`display_name.ilike.%${search}%,name.ilike.%${search}%`)
       .limit(limit);
     return NextResponse.json(data ?? [], cacheHeaders);
@@ -33,25 +35,26 @@ export async function GET(req: NextRequest) {
   if (ids) {
     const idArr = ids.split(",").map(Number).filter(Boolean);
     if (idArr.length === 0) return NextResponse.json([]);
-    const { data } = await supabaseAdmin
+    let query = supabaseAdmin
       .from("salons")
       .select("id, name, display_name, slug, image_url, access, description")
       .in("id", idArr)
-      .eq("is_active", true)
-      .not("published_at", "is", null);
+      .eq("is_active", true);
+    if (!all) query = query.not("published_at", "is", null);
+    const { data } = await query;
     return NextResponse.json(data ?? [], cacheHeaders);
   }
 
   // Fetch by prefecture_id (all salons in prefecture via areas -> salon_areas)
   if (prefectureId) {
     // Use inner join: salons -> salon_areas -> areas to get published salons in one query
-    const { data } = await supabaseAdmin
+    let query = supabaseAdmin
       .from("salons")
       .select("id, name, display_name, slug, image_url, access, description, salon_areas!inner(area_id, areas!inner(prefecture_id))")
       .eq("salon_areas.areas.prefecture_id", parseInt(prefectureId, 10))
-      .eq("is_active", true)
-      .not("published_at", "is", null)
-      .limit(limit);
+      .eq("is_active", true);
+    if (!all) query = query.not("published_at", "is", null);
+    const { data } = await query.limit(limit);
     if (!data || data.length === 0) return NextResponse.json([], cacheHeaders);
     // Deduplicate (a salon can appear in multiple areas)
     const seen = new Set<number>();
@@ -72,13 +75,13 @@ export async function GET(req: NextRequest) {
 
   // Fetch by area_id via inner join
   if (areaId) {
-    const { data } = await supabaseAdmin
+    let query = supabaseAdmin
       .from("salons")
       .select("id, name, display_name, slug, image_url, access, description, salon_areas!inner(area_id)")
       .eq("salon_areas.area_id", parseInt(areaId, 10))
-      .eq("is_active", true)
-      .not("published_at", "is", null)
-      .limit(limit);
+      .eq("is_active", true);
+    if (!all) query = query.not("published_at", "is", null);
+    const { data } = await query.limit(limit);
     if (!data || data.length === 0) return NextResponse.json([], cacheHeaders);
     const { data: counts } = await supabaseAdmin
       .from("therapists")
@@ -101,23 +104,23 @@ export async function GET(req: NextRequest) {
       .eq("slug", areaSlug)
       .single();
     if (!area) return NextResponse.json([], cacheHeaders);
-    const { data } = await supabaseAdmin
+    let query = supabaseAdmin
       .from("salons")
       .select("id, name, display_name, slug, image_url, access, description, salon_areas!inner(area_id)")
       .eq("salon_areas.area_id", area.id)
-      .eq("is_active", true)
-      .not("published_at", "is", null)
-      .limit(limit);
+      .eq("is_active", true);
+    if (!all) query = query.not("published_at", "is", null);
+    const { data } = await query.limit(limit);
     return NextResponse.json((data ?? []).map(({ salon_areas, ...s }) => s), cacheHeaders);
   }
 
   // Random or default listing
-  const { data } = await supabaseAdmin
+  let defaultQuery = supabaseAdmin
     .from("salons")
     .select("id, name, display_name, slug, access")
-    .eq("is_active", true)
-      .not("published_at", "is", null)
-    .limit(limit);
+    .eq("is_active", true);
+  if (!all) defaultQuery = defaultQuery.not("published_at", "is", null);
+  const { data } = await defaultQuery.limit(limit);
 
   return NextResponse.json(data ?? [], cacheHeaders);
 }

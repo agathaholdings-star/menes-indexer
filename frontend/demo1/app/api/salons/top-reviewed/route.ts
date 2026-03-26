@@ -39,5 +39,7 @@ export async function GET(request: NextRequest) {
     area_name: s.salon_areas?.[0]?.areas?.name || null,
   }));
 
-  return NextResponse.json(salons);
+  return NextResponse.json(salons, {
+    headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600" }
+  });
 }

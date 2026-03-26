@@ -130,7 +130,7 @@ function FullContent({ review }: { review: Review }) {
 function TherapistLink({ review }: { review: Review }) {
   return (
     <div className="p-4 border-t">
-      <Link href={`/therapist/${review.therapistId}`}>
+      <Link href={`/therapist/${review.therapistId}`} prefetch={false}>
         <Button className="w-full gap-2 bg-gradient-to-r from-primary to-blue-600" size="lg">
           このセラピストの詳細を見る<ArrowRight className="h-4 w-4" />
         </Button>
@@ -183,7 +183,7 @@ function DefaultCard({ review, isBlurred, showTherapist, therapistImageUrl, revi
         <div className="p-5 flex gap-5 border-b">
           <div className="relative flex-shrink-0">
             {therapistImageUrl ? (
-              <Link href={`/therapist/${review.therapistId}`}>
+              <Link href={`/therapist/${review.therapistId}`} prefetch={false}>
                 <img src={therapistImageUrl} alt={review.therapistName} className="w-28 h-28 rounded-xl object-cover shadow-md" onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder.svg"; }} />
               </Link>
             ) : (
@@ -267,7 +267,7 @@ function MagazineCard({ review, isBlurred, showTherapist, therapistImageUrl, rev
         <div className="absolute bottom-0 left-0 right-0 p-5">
           <p className="text-white/70 text-xs">{review.salonName}</p>
           <h3 className="text-white text-xl font-bold mt-0.5">
-            <Link href={`/therapist/${review.therapistId}`} className="hover:underline">
+            <Link href={`/therapist/${review.therapistId}`} prefetch={false} className="hover:underline">
               {review.therapistName}
             </Link>
             <span className="text-white/60 text-sm font-normal ml-2">さんの体験レポート</span>
@@ -327,7 +327,7 @@ function CompactCard({ review, isBlurred, showTherapist, therapistImageUrl, revi
           {/* 左: 画像 */}
           <div className="relative w-32 sm:w-40 flex-shrink-0">
             {therapistImageUrl ? (
-              <Link href={`/therapist/${review.therapistId}`}>
+              <Link href={`/therapist/${review.therapistId}`} prefetch={false}>
                 <img
                   src={therapistImageUrl}
                   alt={review.therapistName}
@@ -353,7 +353,7 @@ function CompactCard({ review, isBlurred, showTherapist, therapistImageUrl, revi
             <div>
               <p className="text-xs text-muted-foreground truncate">{review.salonName}</p>
               <h3 className="font-bold text-base mt-0.5">
-                <Link href={`/therapist/${review.therapistId}`} className="hover:text-primary transition-colors">
+                <Link href={`/therapist/${review.therapistId}`} prefetch={false} className="hover:text-primary transition-colors">
                   {review.therapistName}
                 </Link>
                 <span className="text-muted-foreground text-xs font-normal ml-1">さんの口コミ</span>
@@ -392,6 +392,7 @@ function CompactCard({ review, isBlurred, showTherapist, therapistImageUrl, revi
               <p className="text-sm leading-relaxed line-clamp-3">{previewText}</p>
               <Link
                 href={`/therapist/${review.therapistId}`}
+                prefetch={false}
                 className="mt-3 flex items-center justify-center gap-2 py-2.5 rounded-lg bg-muted/50 hover:bg-muted text-sm text-primary font-medium transition-colors"
               >
                 続きを読む<ChevronRight className="h-4 w-4" />
@@ -417,7 +418,7 @@ function SocialCard({ review, isBlurred, showTherapist, therapistImageUrl, revie
         {/* ヘッダー: アバター + 投稿者情報（SNS投稿風） */}
         <div className="px-4 pt-4 pb-3 flex items-start gap-3">
           {/* 投稿者アバター（セラピスト画像を丸く） */}
-          <Link href={`/therapist/${review.therapistId}`} className="flex-shrink-0">
+          <Link href={`/therapist/${review.therapistId}`} prefetch={false} className="flex-shrink-0">
             {therapistImageUrl ? (
               <img
                 src={therapistImageUrl}
@@ -435,7 +436,7 @@ function SocialCard({ review, isBlurred, showTherapist, therapistImageUrl, revie
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between">
               <div>
-                <Link href={`/therapist/${review.therapistId}`} className="font-bold text-sm hover:text-primary transition-colors">
+                <Link href={`/therapist/${review.therapistId}`} prefetch={false} className="font-bold text-sm hover:text-primary transition-colors">
                   {review.therapistName}
                 </Link>
                 <span className="text-xs text-muted-foreground ml-1">@ {review.salonName}</span>
@@ -489,7 +490,7 @@ function SocialCard({ review, isBlurred, showTherapist, therapistImageUrl, revie
             </span>
           </div>
           {showTherapist && (
-            <Link href={`/therapist/${review.therapistId}`} className="text-xs text-primary font-medium hover:underline flex items-center gap-1">
+            <Link href={`/therapist/${review.therapistId}`} prefetch={false} className="text-xs text-primary font-medium hover:underline flex items-center gap-1">
               詳細を見る<ArrowRight className="h-3 w-3" />
             </Link>
           )}

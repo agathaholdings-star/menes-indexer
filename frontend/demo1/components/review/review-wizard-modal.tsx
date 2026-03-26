@@ -189,7 +189,7 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
   useEffect(() => {
     if (directSalonSearch.length < 1) { setDirectSearchResults([]); return; }
     const timer = setTimeout(async () => {
-      const res = await fetch(`/api/salons?search=${encodeURIComponent(directSalonSearch)}&limit=30`);
+      const res = await fetch(`/api/salons?search=${encodeURIComponent(directSalonSearch)}&limit=30&all=true`);
       if (!res.ok) return;
       const data = await res.json();
       if (Array.isArray(data)) setDirectSearchResults(data);
@@ -219,7 +219,7 @@ export function ReviewWizardModal({ open, onOpenChange, preselectedTherapistId, 
   useEffect(() => {
     if (!selectedDistrict) { setDbSalons([]); return; }
     const fetchShops = async () => {
-      const salonsRes = await fetch(`/api/salons?area_id=${selectedDistrict.id}&limit=50`);
+      const salonsRes = await fetch(`/api/salons?area_id=${selectedDistrict.id}&limit=50&all=true`);
       if (!salonsRes.ok) { setDbSalons([]); return; }
       const salons = await salonsRes.json();
       if (!Array.isArray(salons) || salons.length === 0) { setDbSalons([]); return; }
@@ -1213,7 +1213,7 @@ function StepTherapist({
       ) : (
         <>
           <p className="text-xs text-muted-foreground mb-2">【50音順】</p>
-          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-64 overflow-y-auto">
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-80 overflow-y-auto">
             {filteredTherapists.map(t => (
               <button
                 key={t.id}
@@ -1230,7 +1230,7 @@ function StepTherapist({
                   src={t.image_urls?.[0]}
                   alt={t.name}
                   fill
-                  sizes="80px"
+                  sizes="(max-width: 640px) 30vw, 25vw"
                   className="object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />

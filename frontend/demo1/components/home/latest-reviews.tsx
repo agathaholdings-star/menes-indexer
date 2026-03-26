@@ -89,7 +89,7 @@ export function LatestReviews({ reviews }: LatestReviewsProps) {
             <p className="text-sm text-muted-foreground mb-6">
               あなたの体験を共有して、他のユーザーの「発見」を手助けしませんか？
             </p>
-            <Link href="/review">
+            <Link href="/review" prefetch={false}>
               <Button>口コミを投稿する</Button>
             </Link>
           </CardContent>
@@ -165,7 +165,7 @@ export function LatestReviews({ reviews }: LatestReviewsProps) {
             </div>
 
             <div className="space-y-3">
-              <Link href="/review">
+              <Link href="/review" prefetch={false}>
                 <Button
                   onClick={() => setShowUnlockModal(false)}
                   className="w-full gap-2 h-14 text-base font-bold bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-lg"
@@ -179,7 +179,7 @@ export function LatestReviews({ reviews }: LatestReviewsProps) {
                 </Button>
               </Link>
 
-              <Link href="/login" className="block">
+              <Link href="/login" className="block" prefetch={false}>
                 <Button
                   variant="ghost"
                   className="w-full text-muted-foreground h-9 text-xs"

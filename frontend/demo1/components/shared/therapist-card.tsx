@@ -20,7 +20,7 @@ export function TherapistCard({ therapist, showShop = true, size = "md" }: Thera
   const isLocked = !permissions.canViewReviewBody;
 
   return (
-    <Link href={`/therapist/${therapist.id}`}>
+    <Link href={`/therapist/${therapist.id}`} prefetch={false}>
       <Card className="group overflow-hidden transition-all hover:shadow-lg p-0 gap-0">
         <div className={`relative ${imageHeight} overflow-hidden`}>
           <TherapistImage

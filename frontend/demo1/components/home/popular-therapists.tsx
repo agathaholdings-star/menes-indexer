@@ -72,6 +72,7 @@ export function PopularTherapists({ initialTherapists }: PopularTherapistsProps 
             </CardTitle>
             <Link
               href="/ranking"
+              prefetch={false}
               className="flex items-center gap-1 text-sm text-primary hover:underline"
             >
               ランキングを見る
@@ -86,6 +87,7 @@ export function PopularTherapists({ initialTherapists }: PopularTherapistsProps 
                 <Link
                   key={therapist.id}
                   href={`/therapist/${therapist.id}`}
+                  prefetch={false}
                   className="w-[160px] flex-shrink-0"
                 >
                   <Card className="group h-full transition-all hover:shadow-md border-muted/50 overflow-hidden">

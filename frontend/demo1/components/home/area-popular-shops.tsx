@@ -74,7 +74,7 @@ function AreaSectionCard({ section, defaultOpen }: { section: AreaSection; defau
                       {salon.description}
                     </p>
                   )}
-                  <Link href={`/salon/${salon.id}`}>
+                  <Link href={`/salon/${salon.id}`} prefetch={false}>
                     <Button variant="outline" className="w-full text-primary border-primary hover:bg-primary/5 bg-transparent">
                       口コミと店舗詳細を見る
                       <ChevronRight className="h-4 w-4 ml-1" />
@@ -85,7 +85,7 @@ function AreaSectionCard({ section, defaultOpen }: { section: AreaSection; defau
             ))}
           </div>
           <div className="mt-4 text-center">
-            <Link href={`/area/${section.prefSlug}/${section.areaSlug}`}>
+            <Link href={`/area/${section.prefSlug}/${section.areaSlug}`} prefetch={false}>
               <Button variant="ghost" className="text-primary">
                 {section.areaName}の全店舗を見る
                 <ChevronRight className="h-4 w-4 ml-1" />
