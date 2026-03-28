@@ -26,7 +26,7 @@ const nextConfig = {
       },
       {
         source: "/img/:path*",
-        destination: "https://oycayfewhqrezvhbbhzm.supabase.co/storage/v1/object/public/:path*",
+        destination: "https://img.menes-skr.com/:path*",
       },
     ];
   },
@@ -35,7 +35,8 @@ const nextConfig = {
       {
         source: "/img/:path*",
         headers: [
-          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+          { key: "Cache-Control", value: "public, s-maxage=31536000, max-age=31536000, immutable" },
+          { key: "CDN-Cache-Control", value: "public, max-age=31536000, immutable" },
         ],
       },
       {
