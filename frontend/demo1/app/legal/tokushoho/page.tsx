@@ -22,11 +22,7 @@ export default function TokushohoPage() {
               <tbody className="divide-y">
                 <tr>
                   <th className="py-4 px-4 text-left bg-muted/50 w-1/3 font-medium">販売事業者名</th>
-                  <td className="py-4 px-4">SKR</td>
-                </tr>
-                <tr>
-                  <th className="py-4 px-4 text-left bg-muted/50 font-medium">運営責任者</th>
-                  <td className="py-4 px-4">高橋勇気</td>
+                  <td className="py-4 px-4">SKR運営事務局</td>
                 </tr>
                 <tr>
                   <th className="py-4 px-4 text-left bg-muted/50 font-medium">所在地</th>
@@ -103,7 +99,7 @@ export default function TokushohoPage() {
           </div>
 
           <p className="text-sm text-muted-foreground mt-8">
-            最終更新日: 2026年3月8日
+            最終更新日: 2026年4月1日
           </p>
         </div>
       </main>
