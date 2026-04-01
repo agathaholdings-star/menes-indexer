@@ -241,7 +241,29 @@ export default async function ShopPage({ params }: ShopPageProps) {
     aggregateRating: shop.reviewCount > 0
       ? { "@type": "AggregateRating", ratingValue: Number(shop.averageScore.toFixed(1)), reviewCount: shop.reviewCount, bestRating: 100, worstRating: 1 }
       : undefined,
+    review: shopReviews.length > 0
+      ? shopReviews.slice(0, 5).map((r) => ({
+          "@type": "Review" as const,
+          author: { "@type": "Person" as const, name: r.therapistName || "匿名" },
+          reviewRating: { "@type": "Rating" as const, ratingValue: r.score || 0, bestRating: 100, worstRating: 1 },
+          reviewBody: [r.commentReason, r.commentFirstImpression, r.commentService].filter(Boolean).join(" ").slice(0, 200),
+          datePublished: r.createdAt,
+        })).filter((r) => r.reviewBody || r.reviewRating.ratingValue)
+      : undefined,
   };
+
+  // ペイウォール構造化データ（Google推奨）
+  const paywallJsonLd = shopReviews.length > 0 ? {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: `${shop.name}の口コミ体験談`,
+    isAccessibleForFree: false,
+    hasPart: {
+      "@type": "WebPageElement",
+      isAccessibleForFree: false,
+      cssSelector: ".paywall-content",
+    },
+  } : null;
 
   const breadcrumbItems: { name: string; item: string }[] = [
     { name: "トップ", item: baseUrl },
@@ -284,6 +306,12 @@ export default async function ShopPage({ params }: ShopPageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd).replace(/</g, "\\u003c") }}
       />
+      {paywallJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(paywallJsonLd).replace(/</g, "\\u003c") }}
+        />
+      )}
       <ShopPageClient
         shop={shop}
         therapists={therapists}

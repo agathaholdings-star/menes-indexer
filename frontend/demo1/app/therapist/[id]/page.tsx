@@ -256,11 +256,11 @@ export default async function TherapistPage({ params }: TherapistPageProps) {
     "@type": "WebPage",
     name: `${salonName}「${therapist.name}」の口コミや評判が分かる体験談`,
     isAccessibleForFree: false,
-    hasPart: reviews.map((r) => ({
+    hasPart: {
       "@type": "WebPageElement",
       isAccessibleForFree: false,
-      cssSelector: `[data-review-id="${r.id}"]`,
-    })),
+      cssSelector: ".paywall-content",
+    },
   } : null;
 
   const breadcrumbItems: { name: string; item: string }[] = [
@@ -430,7 +430,7 @@ export default async function TherapistPage({ params }: TherapistPageProps) {
                           <h2 className="text-lg font-bold mb-4">{therapist.name}の口コミ ({reviewCount}件)</h2>
                           <div className="space-y-4">
                             {reviews.map((review) => (
-                              <article key={`ssr-${review.id}`} data-review-id={review.id} className="overflow-hidden shadow-md rounded-lg border bg-card">
+                              <article key={`ssr-${review.id}`} data-review-id={review.id} className="paywall-content overflow-hidden shadow-md rounded-lg border bg-card">
                                 <div className="bg-gradient-to-r from-primary to-blue-600 px-5 py-3">
                                   <h3 className="text-white font-bold text-base">{salonName || "サロン"}</h3>
                                   <p className="text-blue-100 text-sm mt-0.5">
