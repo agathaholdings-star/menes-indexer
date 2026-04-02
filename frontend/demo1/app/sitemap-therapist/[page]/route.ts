@@ -17,18 +17,14 @@ export async function GET(
 
   const now = new Date();
 
-  // RPC で全件一括取得（PostgREST default 1000行制限を解除）
-  const { data: allTherapists } = await supabase.rpc("get_sitemap_therapists").limit(200000);
+  // ページネーション付きRPCで自分の範囲だけ取得（全件取得のタイムアウトを回避）
+  const offset = pageIndex * PAGE_SIZE;
+  const { data: therapists } = await supabase.rpc("get_sitemap_therapists_page", {
+    p_offset: offset,
+    p_limit: PAGE_SIZE,
+  });
 
-  if (!allTherapists || allTherapists.length === 0) {
-    return new Response("Not Found", { status: 404 });
-  }
-
-  // ページ分割
-  const start = pageIndex * PAGE_SIZE;
-  const therapists = allTherapists.slice(start, start + PAGE_SIZE);
-
-  if (therapists.length === 0) {
+  if (!therapists || therapists.length === 0) {
     return new Response("Not Found", { status: 404 });
   }
 
